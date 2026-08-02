@@ -1,0 +1,48 @@
+{
+  "name": "Arohi AI - India's #1 Multilingual Opportunity & Growth Engine",
+  "short_name": "Arohi AI",
+  "description": "India's next-generation AI opportunity engine helping students, professionals, researchers, businesses, and MSMEs.",
+  "start_url": "/?pwa=true",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#030208",
+  "theme_color": "#7c3aed",
+  "categories": ["utilities", "education", "business"],
+  "icons": [
+    {
+      "src": "/arohi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/arohi.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Arohi AI Advisor",
+      "url": "/?tab=arohi",
+      "description": "Chat with Arohi AI Career Advisor"
+    },
+    {
+      "name": "Jobs Board",
+      "url": "/?tab=jobs",
+      "description": "Explore private and sarkari jobs"
+    },
+    {
+      "name": "Business Startup",
+      "url": "/?tab=business",
+      "description": "Check MSME schemes & business plan tools"
+    }
+  ]
+}

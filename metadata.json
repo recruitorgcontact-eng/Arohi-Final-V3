@@ -1,0 +1,11 @@
+{
+  "name": "Arohi AI ",
+  "description": "India\u0027s Next Generation Hiring Engine ",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

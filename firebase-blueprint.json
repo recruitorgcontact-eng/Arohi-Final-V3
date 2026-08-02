@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an authenticated user in Arohi AI and stores their career progress, bookmarks, and mock application history.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user ID from Firebase Authentication"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's full name"
+        },
+        "profile": {
+          "type": "object",
+          "description": "User profile details like phone, location, education, activeGoal"
+        },
+        "enrolledCourses": {
+          "type": "array",
+          "description": "List of courses user is enrolled in"
+        },
+        "completedModules": {
+          "type": "array",
+          "description": "List of completed module IDs from skills/courses"
+        },
+        "checkedChecklist": {
+          "type": "array",
+          "description": "List of checked career progress checklist IDs"
+        },
+        "earnedCertificates": {
+          "type": "array",
+          "description": "List of earned certificate metadata"
+        },
+        "savedItems": {
+          "type": "array",
+          "description": "Bookmarked postings, schemes, and courses"
+        },
+        "applications": {
+          "type": "array",
+          "description": "User's mock application history"
+        },
+        "arohiChats": {
+          "type": "array",
+          "description": "User's past chat sessions with Arohi AI"
+        },
+        "arohiCalls": {
+          "type": "array",
+          "description": "User's past voice call summaries with Arohi AI"
+        }
+      },
+      "required": ["uid", "email", "displayName"]
+    },
+    "VoiceCallLog": {
+      "title": "VoiceCallLog",
+      "description": "Detailed transcription and career/business analysis generated from real-time live voice sessions.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "User ID of the caller or guest"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO-8601 timestamp of the call log creation"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Call duration in seconds"
+        },
+        "turns": {
+          "type": "array",
+          "description": "List of conversational dialogue turns between caller and Arohi AI"
+        },
+        "analysis": {
+          "type": "object",
+          "description": "AI-generated strategic summaries, action plans, priorities, and career-related flags"
+        }
+      },
+      "required": ["uid", "timestamp", "duration", "turns"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Active user profiles containing career progress, bookmarks, and application history."
+    },
+    "/voice_call_logs/{logId}": {
+      "schema": "VoiceCallLog",
+      "description": "Audit trails and rich career-intent dialogue logs for real-time live voice calls."
+    }
+  }
+}
