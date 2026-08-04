@@ -312,6 +312,12 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [dislikedMessageIds, setDislikedMessageIds] = useState<string[]>([]);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+
+  // Live Voice Audio Refs for Arohi Read Aloud (Streams same Arohi voice as voice call!)
+  const ttsAudioCtxRef = useRef<AudioContext | null>(null);
+  const ttsAudioQueueRef = useRef<AudioBufferSourceNode[]>([]);
+  const ttsWsRef = useRef<WebSocket | null>(null);
+  const ttsNextStartTimeRef = useRef<number>(0);
   // Image Studio States
   const [isImageStudioOpen, setIsImageStudioOpen] = useState(false);
   const [studioPrompt, setStudioPrompt] = useState('');
@@ -693,89 +699,235 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     }
   };
 
+  const stopAudioPlayback = () => {
+    if (ttsWsRef.current) {
+      try { ttsWsRef.current.close(); } catch (e) {}
+      ttsWsRef.current = null;
+    }
+    ttsAudioQueueRef.current.forEach(source => {
+      try { source.stop(); } catch (e) {}
+    });
+    ttsAudioQueueRef.current = [];
+    if (ttsAudioCtxRef.current) {
+      try { ttsAudioCtxRef.current.close(); } catch (e) {}
+      ttsAudioCtxRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+    setSpeakingMessageId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopAudioPlayback();
+    };
+  }, []);
+
   const speakMessage = (id: string, text: string) => {
-    if ('speechSynthesis' in window) {
-      if (speakingMessageId === id) {
+    if (speakingMessageId === id) {
+      stopAudioPlayback();
+      return;
+    }
+
+    stopAudioPlayback();
+
+    const cleanText = text
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/[*#`_~]/g, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .trim();
+
+    if (!cleanText) return;
+
+    setSpeakingMessageId(id);
+
+    // Dynamic script language detection for any language response (Odia, Bengali, Hindi, CJK, etc.)
+    const detectTextLanguage = (txt: string): { langTag: string; langCode: string } => {
+      if (/[\u0B00-\u0B7F]/.test(txt)) return { langTag: 'or-IN', langCode: 'or' }; // Odia script
+      if (/[\u0980-\u09FF]/.test(txt)) return { langTag: 'bn-IN', langCode: 'bn' }; // Bengali script
+      if (/[\u0900-\u097F]/.test(txt)) return { langTag: 'hi-IN', langCode: 'hi' }; // Devanagari script (Hindi/Marathi)
+      if (/[\u0C00-\u0C7F]/.test(txt)) return { langTag: 'te-IN', langCode: 'te' }; // Telugu script
+      if (/[\u0B80-\u0BFF]/.test(txt)) return { langTag: 'ta-IN', langCode: 'ta' }; // Tamil script
+      if (/[\u0A80-\u0AFF]/.test(txt)) return { langTag: 'gu-IN', langCode: 'gu' }; // Gujarati script
+      if (/[\u0C80-\u0CFF]/.test(txt)) return { langTag: 'kn-IN', langCode: 'kn' }; // Kannada script
+      if (/[\u0D00-\u0D7F]/.test(txt)) return { langTag: 'ml-IN', langCode: 'ml' }; // Malayalam script
+      if (/[\u0A00-\u0A7F]/.test(txt)) return { langTag: 'pa-IN', langCode: 'pa' }; // Punjabi script
+      if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(txt)) return { langTag: 'ur-IN', langCode: 'ur' }; // Urdu / Arabic
+      if (/[\u3040-\u309F\u30A0-\u30FF]/.test(txt)) return { langTag: 'ja-JP', langCode: 'ja' }; // Japanese Hiragana/Katakana
+      if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(txt)) return { langTag: 'zh-CN', langCode: 'zh' }; // Chinese CJK
+      if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(txt)) return { langTag: 'ko-KR', langCode: 'ko' }; // Korean Hangul
+      if (/[\u0400-\u04FF]/.test(txt)) return { langTag: 'ru-RU', langCode: 'ru' }; // Cyrillic / Russian
+      if (/[\u0E00-\u0E7F]/.test(txt)) return { langTag: 'th-TH', langCode: 'th' }; // Thai script
+
+      const langMap: Record<string, string> = {
+        en: 'en-IN', hi: 'hi-IN', or: 'or-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN',
+        mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN',
+        zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE'
+      };
+      const code = language || 'en';
+      return { langTag: langMap[code] || `${code}-IN`, langCode: code };
+    };
+
+    const detectedLang = detectTextLanguage(cleanText);
+
+    // Browser TTS Fallback helper
+    const fallbackToBrowserTTS = () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = detectedLang.langTag;
+        utterance.rate = 0.98;
+        utterance.pitch = 1.25;
+
+        const setVoiceAndSpeak = () => {
+          try {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+              const shortLang = detectedLang.langCode.toLowerCase();
+              const tagLower = detectedLang.langTag.toLowerCase();
+
+              const nonMaleVoices = voices.filter(v => {
+                const nameLower = v.name.toLowerCase();
+                return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
+              });
+              const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
+
+              const preferredVoice = 
+                pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+                pool.find(v => v.lang.toLowerCase() === tagLower) ||
+                pool.find(v => v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) ||
+                pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+                pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
+                pool[0];
+
+              if (preferredVoice) {
+                utterance.voice = preferredVoice;
+              }
+            }
+
+            utterance.onend = () => setSpeakingMessageId(null);
+            utterance.onerror = () => setSpeakingMessageId(null);
+
+            setSpeakingMessageId(id);
+            window.speechSynthesis.speak(utterance);
+          } catch (e) {
+            console.error('Error in speakMessage fallback:', e);
+            setSpeakingMessageId(null);
+          }
+        };
+
+        if (window.speechSynthesis.getVoices().length === 0) {
+          window.speechSynthesis.onvoiceschanged = () => {
+            setVoiceAndSpeak();
+            window.speechSynthesis.onvoiceschanged = null;
+          };
+          setTimeout(setVoiceAndSpeak, 100);
+        } else {
+          setTimeout(setVoiceAndSpeak, 30);
+        }
+      } else {
         setSpeakingMessageId(null);
+      }
+    };
+
+    // Primary: Connect to Gemini Live Audio stream (same voice as Arohi live voice call!)
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        fallbackToBrowserTTS();
         return;
       }
 
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
+      const audioCtx = new AudioContextClass();
+      ttsAudioCtxRef.current = audioCtx;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      ttsNextStartTimeRef.current = audioCtx.currentTime;
 
-      const cleanText = text
-        .replace(/\[.*?\]\(.*?\)/g, '')
-        .replace(/[*#`_~]/g, '')
-        .replace(/<[^>]*>/g, '')
-        .trim();
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=Zypher&lang=${encodeURIComponent(detectedLang.langCode)}&mode=read_aloud`;
+      
+      const ws = new WebSocket(wsUrl);
+      ttsWsRef.current = ws;
 
-      if (!cleanText) return;
+      let hasReceivedAudio = false;
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      const langMap: Record<string, string> = {
-        en: 'en-IN',
-        hi: 'hi-IN',
-        or: 'or-IN',
-        bn: 'bn-IN',
-        ta: 'ta-IN',
-        te: 'te-IN',
-        mr: 'mr-IN',
-        es: 'es-ES',
-        fr: 'fr-FR',
-        de: 'de-DE'
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ text: cleanText }));
       };
-      const targetLang = langMap[language] || 'en-IN';
-      utterance.lang = targetLang;
-      utterance.rate = 0.98;
-      utterance.pitch = 1.25; // Warm feminine pitch
 
-      const setVoiceAndSpeak = () => {
+      ws.onmessage = (event) => {
         try {
-          const voices = window.speechSynthesis.getVoices();
-          if (voices && voices.length > 0) {
-            const shortLang = targetLang.split('-')[0].toLowerCase();
-            const nonMaleVoices = voices.filter(v => {
-              const nameLower = v.name.toLowerCase();
-              return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
-            });
-            const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
-
-            const preferredVoice = 
-              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
-                /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
-              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
-              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
-              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
-              pool[0];
-
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
+          const data = JSON.parse(event.data);
+          if (data.audio) {
+            hasReceivedAudio = true;
+            const base64Audio = data.audio;
+            const binary = window.atob(base64Audio);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+              bytes[i] = binary.charCodeAt(i);
             }
+
+            const numSamples = bytes.length / 2;
+            const float32Data = new Float32Array(numSamples);
+            const dataView = new DataView(bytes.buffer);
+
+            for (let i = 0; i < numSamples; i++) {
+              const pcm16 = dataView.getInt16(i * 2, true);
+              float32Data[i] = pcm16 / 32768;
+            }
+
+            const audioBuffer = audioCtx.createBuffer(1, numSamples, 24000);
+            audioBuffer.getChannelData(0).set(float32Data);
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioCtx.destination);
+
+            const currentTime = audioCtx.currentTime;
+            let startTime = ttsNextStartTimeRef.current;
+
+            if (startTime < currentTime) {
+              startTime = currentTime + 0.05;
+            }
+
+            source.start(startTime);
+            ttsAudioQueueRef.current.push(source);
+
+            ttsNextStartTimeRef.current = startTime + audioBuffer.duration;
+
+            const durationMs = audioBuffer.duration * 1000;
+            setTimeout(() => {
+              if (audioCtx.currentTime >= ttsNextStartTimeRef.current - 0.1) {
+                setSpeakingMessageId(null);
+              }
+            }, durationMs + 300);
           }
-
-          utterance.onend = () => setSpeakingMessageId(null);
-          utterance.onerror = () => setSpeakingMessageId(null);
-
-          setSpeakingMessageId(id);
-          window.speechSynthesis.speak(utterance);
-        } catch (e) {
-          console.error('Error in speakMessage:', e);
-          setSpeakingMessageId(null);
+        } catch (err) {
+          console.error('Error decoding/playing Arohi voice chunk:', err);
         }
       };
 
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          setVoiceAndSpeak();
-          window.speechSynthesis.onvoiceschanged = null;
-        };
-        setTimeout(setVoiceAndSpeak, 100);
-      } else {
-        setTimeout(setVoiceAndSpeak, 30);
-      }
-    } else {
-      alert('Text-to-speech is not supported in this browser.');
+      ws.onerror = (err) => {
+        console.warn('Arohi live voice WS error, falling back to browser TTS:', err);
+        if (!hasReceivedAudio) {
+          fallbackToBrowserTTS();
+        }
+      };
+
+      ws.onclose = () => {
+        if (!hasReceivedAudio) {
+          fallbackToBrowserTTS();
+        }
+      };
+    } catch (e) {
+      console.error('Failed to initialize Arohi live voice stream:', e);
+      fallbackToBrowserTTS();
     }
   };
 

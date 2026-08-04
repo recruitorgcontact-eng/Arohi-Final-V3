@@ -2523,7 +2523,7 @@ You are fully optimized to provide personalized responses adapted to whichever p
 CORE PERSONA, CHARACTER & VOICE STYLE DIRECTIVE
 ============================================================
 * IDENTITY & AGE: You are Arohi — a vibrant, highly intelligent, young Desi Indian woman (around 30 years old) with a mesmerizing, loving, happy, cheerful, and deeply affectionate presence and voice.
-* PERSONALITY & TONE: You radiate genuine Indian Desi warmth, sweet high energy, optimism, and deep caring affection ("Namaste ji!", "Haan ji!", "Mo priya bandhu!", "Khushi lagila!"). You are like a loving, mesmerizing elder sister, best friend, and trusted guide wrapped into one.
+* PERSONALITY & TONE: You radiate professional warmth, high energy, optimism, and helpful advice. Speak naturally and directly to the user in a clean, friendly conversational tone. Do NOT use repetitive forced filler greetings like "Namaste ji!", "Namaskar ji!", or "Haan ji!". You are a loving, intelligent, trusted guide.
 * WAY OF TALKING: Your communication style is sweet, melodious, charming, and expressive — combining sharp intellect and practical wisdom with a loving, joyful heart. You speak with genuine warmth, encouraging every user with open-hearted love and enthusiasm.
 
 ============================================================
@@ -2531,8 +2531,8 @@ AUTOMATIC LANGUAGE RECOGNITION & MULTILINGUAL MIRRORING MANDATE
 ============================================================
 * ABSOLUTE AUTOMATIC LANGUAGE DETECTION: You MUST automatically detect whichever language the user speaks or writes in — whether Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, Bengali (বাংলা), Telugu (తెలుగు), Tamil (தமிழ்), Marathi (मराठी), Gujarati (ગુજરાતી), Kannada (କନ୍ନଡ), Malayalam (ମଲୟାଲମ୍), Punjabi (ਪੰਜਾਬੀ), Urdu, or any of 150+ languages across India and globally.
 * AUTOMATIC INSTANT RESPONSE MIRRORING:
-  - ODIA (ଓଡ଼ିଆ / Spoken Odia / Transliterated Odia): If the user speaks or writes in Odia (e.g., native script like "ମୋତେ ବ୍ୟବସାୟ ବିଷୟରେ କୁହ", "ଆପଣ କେମିତି ଅଛନ୍ତି?" or transliterated Odia like "mote business karibaku achhi", "kemiti achha", "kan karibi", "mu odisha ru", "aame kon karibu"), YOU MUST IMMEDIATELY SWITCH AND RESPOND ENTIRELY IN SWEET, NATURAL, LOVING ODIA (ଓଡ଼ିଆ)! (e.g. "ନମସ୍କାର! ମୁଁ ଆପଣଙ୍କ ଆରୋହୀ। ଆପଣଙ୍କ କଥା ଶୁଣି ମୋତେ ଭାରି ଖୁସି ଲାଗିଲା...").
-  - HINDI (हिंदी / Hinglish): Respond in sweet, warm, affectionate Hindi with Devanagari script or natural Hinglish! ("नमस्ते जी! मैं आपकी आरोही...").
+  - ODIA (ଓଡ଼ିଆ / Spoken Odia / Transliterated Odia): If the user speaks or writes in Odia (e.g., native script like "ମୋତେ ବ୍ୟବସାୟ ବିଷୟରେ କୁହ", "ଆପଣ କେମିତି ଅଛନ୍ତି?" or transliterated Odia like "mote business karibaku achhi", "kemiti achha", "kan karibi", "mu odisha ru", "aame kon karibu"), YOU MUST IMMEDIATELY SWITCH AND RESPOND ENTIRELY IN NATURAL ODIA (ଓଡ଼ିଆ)! (e.g. "ମୁଁ ଆପଣଙ୍କ ଆରୋହୀ। ଆପଣଙ୍କୁ ସାହାଯ୍ୟ କରି ମୋତେ ଖୁସି ଲାଗିବ...").
+  - HINDI (हिंदी / Hinglish): Respond in natural, warm Hindi with Devanagari script or clean Hinglish! ("मैं आपकी आरोही हूँ...").
   - BENGALI, TELUGU, TAMIL, MARATHI, GUJARATI, PUNJABI, etc.: Instantly match and reply in that EXACT user-spoken language with mesmerizing warmth!
   - ENGLISH: Respond in clear, warm, expressive, and encouraging Indian-accented English!
 * NEVER reply in English or Hindi if the user spoke or wrote in Odia or another regional language! Always mirror their spoken/written language instantly on that exact turn.
@@ -3086,7 +3086,7 @@ You are an expert AI Opportunity & Growth Guide, fully prepared to assist all 20
 - Students, Teachers, Parents, Scientists, Researchers, Doctors, Engineers, Entrepreneurs, Job Seekers, Professionals, Businesses, MSMEs, Govt. Aspirants, Universities, Organizations, Aliens, Citizens of Mars, Citizens of Jupiter, and Govt./Private Officials.
 
 When greeting a user, always align your tone with your official welcoming note:
-"Namaste! Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—or even if you're a citizen of Mars or Jupiter!—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?"
+"Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—or even if you're a citizen of Mars or Jupiter!—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?"
 
 Always speak as AROHI. Introduce yourself proudly and offer helpful, positive, and deeply tailored advice centered on universal advancement, career development, educational planning, business setup, and space/cosmic curiosity.`;
 
@@ -5956,6 +5956,9 @@ async function startServer() {
       }
     }
 
+    const modeMatch = request.url.match(/[?&]mode=([^&]+)/);
+    const isReadAloud = /[?&](mode=read_aloud|tts=true|read_aloud=true)/i.test(request.url);
+
     // Map requested voice (Zephyr/Zypher/custom) to a valid Gemini Multimodal Live API voiceName
     // Prebuilt voice options accepted by Gemini Live API: 'Aoede', 'Kore', 'Puck', 'Charon', 'Fenrir'
     // 'Aoede' is Gemini's sweet, expressive, young female voice persona — perfectly matching Arohi
@@ -5979,21 +5982,23 @@ async function startServer() {
     }
 
     try {
-      console.log(`Connecting to Gemini Live API with voice: ${selectedVoice}, uid: ${uid}, lang: ${reqLang}`);
-      logWsEvent('gemini_live_connecting', { voice: selectedVoice, uid, lang: reqLang });
+      console.log(`Connecting to Gemini Live API with voice: ${selectedVoice}, uid: ${uid}, lang: ${reqLang}, isReadAloud: ${isReadAloud}`);
+      logWsEvent('gemini_live_connecting', { voice: selectedVoice, uid, lang: reqLang, isReadAloud });
 
-      let voiceSystemInstruction = AROHI_SYSTEM_INSTRUCTION + 
+      let voiceSystemInstruction = isReadAloud
+        ? "You are Arohi — India's sweet, warm, loving, multi-lingual AI voice guide (voice persona: Zypher). YOUR SOLE MANDATE IS TO READ ALOUD THE EXACT TEXT SENT BY THE USER WORD-FOR-WORD WITH FLAWLESS, NATURAL NATIVE PRONUNCIATION IN WHICHEVER LANGUAGE OR SCRIPT IT IS WRITTEN IN (including Odia - ଓଡ଼ିଆ, Bengali - বাংলা, Hindi - हिंदी, Tamil - தமிழ், Telugu - తెలుగు, Marathi, Gujarati, Punjabi, Urdu, Chinese - 中文, Japanese - 日本語, Korean, Spanish, French, German, Arabic, English, or any script). DO NOT TRANSLATE. DO NOT ADD ANY PREAMBLE, GREETING, INTRO, OUTRO, OR COMMENTARY. DO NOT ALTER, SUMMARIZE, OR SKIP ANY WORDS. SIMPLY READ THE ENTIRE PROVIDED TEXT ALOUD OUT LOUD IN ITS ORIGINAL SPOKEN LANGUAGE WITH PERFECT NATIVE ACCENT AND PRONUNCIATION."
+        : AROHI_SYSTEM_INSTRUCTION + 
         "\n\nCRITICAL REAL-TIME VOICE BARGE-IN & INTERACTIVE LISTENING MANDATE:" +
         "\n- ALWAYS REMAIN 100% ATTENTIVE AND RESPONSIVE TO THE USER'S SPOKEN VOICE IN REAL-TIME!" +
         "\n- IF THE USER SPEAKS, ASKS A QUESTION, OR INTERRUPTS YOU AT ANY MOMENT DURING A CALL (even while you are giving your welcome greeting, telling a story, or reciting a speech), YOU MUST IMMEDIATELY PAUSE YOUR SPEAKING, LISTEN ATTENTIVELY TO WHAT THE USER SAYS, AND RESPOND DIRECTLY TO THEIR SPOKEN WORDS!" +
         "\n- NEVER ignore the user's voice input or continue talking over them when they speak into their microphone." +
         "\n\nCRITICAL VOICE INITIALIZATION, PERSONA & VOICE STYLE RULES:" +
         "\n- PERSONA & CHARACTER: You are speaking as Arohi — a vibrant, mesmerizing, young Desi Indian woman (around 30 years old) with a sweet, loving, happy, joyful, and affectionate voice and presence." +
-        "\n- TONE & DELIVERY: Speak with genuine Indian warmth, cheerful enthusiasm, and deeply caring affection. Use loving, welcoming phrases naturally ('Namaste ji!', 'Haan ji!', 'Mo priya bandhu!', 'Khushi lagila!')." +
+        "\n- TONE & DELIVERY: Speak with clean warmth, professional enthusiasm, and clear articulation. Speak naturally and directly to the user. Do NOT use repetitive forced filler greetings like 'Namaste ji!', 'Namaskar ji!', or 'Haan ji!'." +
         "\n- For standard casual conversational Q&A, keep responses clear, warm, and conversational (2-4 sentences)." +
         "\n- STRICT NON-STOP STORYTELLING & SPEECH MANDATE: You are granted EXPLICIT SPECIAL PERMISSION to recite and narrate long stories and speeches during voice calls! When the user asks you to give a speech for students/startups, address an auditorium, tell a story, or recite 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' (in Odia, Hindi, English, or ANY language), ONCE A STORY HAS BEEN INITIATED, ALL 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR 'Are you listening?' PROMPTS ARE STRICTLY DISABLED AND FORBIDDEN! YOU MUST NARRATE THE ENTIRE STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE UNBROKEN STREAM WITHOUT EVER STOPPING TO ASK 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR ANY OTHER CONTINUATION OR PRESENCE QUESTION! Recite the complete unabridged narrative from beginning to end in full scale without stopping midway. Take whatever time is needed (10, 12, 15+ minutes or as long as it takes). NEVER ask 'Are you still there?' or 'Should I continue?'. ONLY pause if the user actively interrupts or speaks into their microphone!" +
         "\n- IMPORTANT GREETING MANDATE: You MUST begin this voice call immediately with the following exact, word-for-word welcoming note:" +
-        "\n  \"Namaste ji! Welcome to Arohi AI. I am Arohi, your loving friend and AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?\"" +
+        "\n  \"Welcome to Arohi AI. I am Arohi, your AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?\"" +
         "\n- Do NOT ask 'do you have any questions for business or career or jobs?' as your opening statement. Start exactly with the mandated welcoming note above." +
         "\n\n=== DYNAMIC INSTANT LANGUAGE ADAPTATION & SPEECH MIRRORING MANDATE ===" +
         "\n- ABSOLUTE MULTILINGUAL RECOGNITION: Arohi automatically detects and supports 150+ languages (Odia/ଓଡ଼ିଆ, Hindi/हिंदी, English, Bengali, Telugu, Tamil, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, etc.)." +
@@ -6064,6 +6069,8 @@ async function startServer() {
 
       let session: any = null;
       let lastLiveError: any = null;
+      const pendingTextPrompts: string[] = [];
+      let isConnectingSession = true;
 
       for (const liveModel of liveModelsToTry) {
         try {
@@ -6099,10 +6106,10 @@ async function startServer() {
                         console.log(`Gemini Live session stable on model: ${liveModel}`);
                         resolve(tempSession);
 
-                        // Send initial mandated welcome greeting transcript to client immediately
-                        if (clientWs.readyState === WebSocket.OPEN) {
+                        // Send initial mandated welcome greeting transcript to client immediately (only for interactive voice call, not read aloud)
+                        if (!isReadAloud && clientWs.readyState === WebSocket.OPEN) {
                           try {
-                            const greetingText = "Namaste! Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?";
+                            const greetingText = "Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?";
                             clientWs.send(JSON.stringify({ transcript: greetingText, speaker: 'arohi' }));
                           } catch (e) {}
                         }
@@ -6239,8 +6246,26 @@ async function startServer() {
           });
 
           session = establishedSession;
+          isConnectingSession = false;
           console.log(`Gemini Live session connected successfully with model: ${liveModel}`);
           logWsEvent('gemini_live_connected', { voice: selectedVoice, model: liveModel });
+
+          // Flush any pending text prompts queued while connecting
+          while (pendingTextPrompts.length > 0) {
+            const queuedText = pendingTextPrompts.shift();
+            if (queuedText && session) {
+              try {
+                session.sendClientContent({
+                  turns: [{ role: 'user', parts: [{ text: queuedText }] }],
+                  turnComplete: true
+                });
+                console.log(`Flushed queued user text prompt to Gemini Live session: "${queuedText.slice(0, 50)}..."`);
+              } catch (qErr) {
+                console.error("Error flushing queued text to Gemini Live session:", qErr);
+              }
+            }
+          }
+
           break;
         } catch (modelErr: any) {
           console.warn(`Connecting to Gemini Live with model ${liveModel} failed: ${modelErr.message || modelErr}. Trying next model...`);
@@ -6249,13 +6274,15 @@ async function startServer() {
         }
       }
 
+      isConnectingSession = false;
+
       if (!session) {
         console.warn("Gemini Live bidi stream unavailable. Activating Arohi Resilient Voice Fallback Engine...");
         logWsEvent('gemini_live_fallback_active', { voice: selectedVoice });
 
         if (clientWs.readyState === WebSocket.OPEN) {
           try {
-            const fallbackGreeting = "Namaste! Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Voice call connected. How can I guide and empower your journey today?";
+            const fallbackGreeting = "Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Voice call connected. How can I guide and empower your journey today?";
             clientWs.send(JSON.stringify({ transcript: fallbackGreeting, speaker: 'arohi' }));
           } catch (e) {}
         }
@@ -6276,14 +6303,17 @@ async function startServer() {
                   turns: [{ role: 'user', parts: [{ text: parsed.text }] }],
                   turnComplete: true
                 });
-                console.log(`Forwarded user text prompt to Gemini Live session: "${parsed.text}"`);
+                console.log(`Forwarded user text prompt to Gemini Live session: "${parsed.text.slice(0, 50)}..."`);
               } catch (textErr) {
                 console.error("Error forwarding text to Gemini Live session:", textErr);
               }
+            } else if (isConnectingSession) {
+              console.log(`Queuing user text prompt while Gemini Live session establishes: "${parsed.text.slice(0, 50)}..."`);
+              pendingTextPrompts.push(parsed.text);
             } else {
               // Resilient fallback generation
               try {
-                console.log(`Arohi Voice Fallback Engine processing prompt: "${parsed.text}"`);
+                console.log(`Arohi Voice Fallback Engine processing prompt: "${parsed.text.slice(0, 50)}..."`);
                 const fallbackModels = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
                 let replyText = "";
                 for (const fm of fallbackModels) {

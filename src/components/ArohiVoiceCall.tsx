@@ -43,7 +43,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const [currentSpeech, setCurrentSpeech] = useState('');
   const [textInput, setTextInput] = useState('');
 
-  const DEFAULT_GREETING = "Namaste ji! Welcome to Arohi AI. I am Arohi, your loving friend and AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?";
+  const DEFAULT_GREETING = "Welcome to Arohi AI. I am Arohi, your AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?";
 
   const [turns, setTurns] = useState<SpeechTurn[]>(() => [
     {
@@ -482,16 +482,34 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       let detectedLangTag = 'en-IN';
       if (/[\u0B00-\u0B7F]/.test(cleanText)) {
         detectedLangTag = 'or-IN'; // Odia script
-      } else if (/[\u0900-\u097F]/.test(cleanText)) {
-        detectedLangTag = 'hi-IN'; // Devanagari script
       } else if (/[\u0980-\u09FF]/.test(cleanText)) {
         detectedLangTag = 'bn-IN'; // Bengali script
+      } else if (/[\u0900-\u097F]/.test(cleanText)) {
+        detectedLangTag = 'hi-IN'; // Devanagari script (Hindi/Marathi)
       } else if (/[\u0C00-\u0C7F]/.test(cleanText)) {
         detectedLangTag = 'te-IN'; // Telugu script
       } else if (/[\u0B80-\u0BFF]/.test(cleanText)) {
         detectedLangTag = 'ta-IN'; // Tamil script
       } else if (/[\u0A80-\u0AFF]/.test(cleanText)) {
         detectedLangTag = 'gu-IN'; // Gujarati script
+      } else if (/[\u0C80-\u0CFF]/.test(cleanText)) {
+        detectedLangTag = 'kn-IN'; // Kannada script
+      } else if (/[\u0D00-\u0D7F]/.test(cleanText)) {
+        detectedLangTag = 'ml-IN'; // Malayalam script
+      } else if (/[\u0A00-\u0A7F]/.test(cleanText)) {
+        detectedLangTag = 'pa-IN'; // Punjabi script
+      } else if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(cleanText)) {
+        detectedLangTag = 'ur-IN'; // Urdu / Arabic
+      } else if (/[\u3040-\u309F\u30A0-\u30FF]/.test(cleanText)) {
+        detectedLangTag = 'ja-JP'; // Japanese Hiragana/Katakana
+      } else if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(cleanText)) {
+        detectedLangTag = 'zh-CN'; // Chinese CJK
+      } else if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(cleanText)) {
+        detectedLangTag = 'ko-KR'; // Korean Hangul
+      } else if (/[\u0400-\u04FF]/.test(cleanText)) {
+        detectedLangTag = 'ru-RU'; // Cyrillic / Russian
+      } else if (/[\u0E00-\u0E7F]/.test(cleanText)) {
+        detectedLangTag = 'th-TH'; // Thai script
       } else if (langMap[activeLanguage]) {
         detectedLangTag = langMap[activeLanguage];
       } else if (langMap[language]) {

@@ -1726,7 +1726,7 @@ export function getWelcomeContent(lang: Language): string {
 
 ଆଜି ଆପଣଙ୍କ ଲକ୍ଷ୍ୟ କଣ? ଆସନ୍ତୁ ମିଶି ସଫଳତା ଆଡ଼କୁ ଅଗ୍ରସର ହେବା!`;
   }
-  return `Namaste! I am **AROHI**, your universal AI Opportunity Advisor. 🌟
+  return `Welcome! I am **AROHI**, your universal AI Opportunity Advisor. 🌟
 
 I am here to assist you across the entire Arohi AI platform. We are proudly optimized to serve a wide range of **specialized audience categories**—from terrestrial **Students, Teachers, Scientists, Researchers, Doctors, Engineers, Entrepreneurs, and Public/Private Officials** to cosmic explorers like **Aliens and the Citizens of Mars & Jupiter**!
 
