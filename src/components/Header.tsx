@@ -144,6 +144,7 @@ export default function Header({ activeTab, onTabChange, onSearchChange, searchQ
     { id: 'dashboard', label: getTranslation('dashboard', language), hasDropdown: false },
     { id: 'jobs', label: getTranslation('jobs', language), hasDropdown: true },
     { id: 'courses', label: getTranslation('skills', language), hasDropdown: true },
+    { id: 'blogs', label: 'Blogs 📰', hasBadge: true, badgeText: 'SEO 100+' },
     { id: 'syllabus', label: getTranslation('syllabus', language), hasBadge: true, badgeText: 'Odia/CBSE' },
     { id: 'business', label: getTranslation('business', language), hasBadge: true, badgeText: 'New' },
     { id: 'franchise', label: 'Franchise (AECN)', hasBadge: true, badgeText: 'AI Hub' },

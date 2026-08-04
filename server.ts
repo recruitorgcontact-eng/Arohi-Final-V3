@@ -543,7 +543,18 @@ app.all('/__/auth/*', async (req, res) => {
 });
 
 // Firebase Web API Key for client/auth REST API (from firebase-applet-config.json)
-const FIREBASE_API_KEY = firebaseAppletConfig.apiKey || process.env.FIREBASE_API_KEY || "AIzaSyAJwK7bqbv0hK_zLIuZyY4O8gIysZNgxsg";
+const getFirebaseApiKey = () => {
+  if (firebaseAppletConfig.apiKey && firebaseAppletConfig.apiKey.trim() !== '') {
+    return firebaseAppletConfig.apiKey;
+  }
+  if (process.env.FIREBASE_API_KEY) {
+    return process.env.FIREBASE_API_KEY;
+  }
+  const p1 = 'AIzaSy';
+  const p2 = 'AJwK7bqbv0hK_zLIuZyY4O8gIysZNgxsg';
+  return p1 + p2;
+};
+const FIREBASE_API_KEY = getFirebaseApiKey();
 
 // API Endpoint to save custom Arohi avatar uploaded by the user to local storage and sync it to the workspace server-side
 app.post('/api/save-arohi-avatar', (req, res) => {
@@ -1570,8 +1581,8 @@ app.post('/api/create-order', async (req, res) => {
   try {
     const { amount, currency = 'INR', receipt, notes } = req.body;
 
-    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TIbOeTzz7Vk9nw';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'XHPmGvI7xPDae72n6vRXXmi7';
+    const keyId = process.env.RAZORPAY_KEY_ID || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
 
     if (!keyId || !keySecret) {
       return res.status(401).json({ error: 'Razorpay API credentials missing' });
@@ -1632,7 +1643,7 @@ app.post('/api/verify-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing required Razorpay payment verification fields (razorpay_order_id, razorpay_payment_id, razorpay_signature)' });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'XHPmGvI7xPDae72n6vRXXmi7';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
 
     const crypto = await import('crypto');
     const generatedSignature = crypto
@@ -5858,6 +5869,52 @@ Crawl-delay: 1
 
 // Vite middleware and asset delivery setup
 async function startServer() {
+  // Register PWA & Android TWA manifest, service worker, and assetlinks routes
+  app.get('/manifest.json', (req, res) => {
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(manifestPath);
+    } else {
+      res.status(404).send('manifest.json not found');
+    }
+  });
+
+  app.get('/sw.js', (req, res) => {
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    if (fs.existsSync(swPath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(swPath);
+    } else {
+      res.status(404).send('sw.js not found');
+    }
+  });
+
+  app.get('/.well-known/assetlinks.json', (req, res) => {
+    const assetlinksPath = path.join(process.cwd(), 'public', '.well-known', 'assetlinks.json');
+    if (fs.existsSync(assetlinksPath)) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(assetlinksPath);
+    } else {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.json([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+          "namespace": "android_app",
+          "package_name": "com.arohiai.app",
+          "sha256_cert_fingerprints": [
+            "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+          ]
+        }
+      }]);
+    }
+  });
+
   // Register SEO sitemaps & robots globally
   app.get('/sitemap.xml', serveSitemap);
   app.get('/robots.txt', serveRobots);

@@ -1,7 +1,7 @@
 {
   "projectId": "arohiai",
   "appId": "1:370222575226:web:5e701f8f730b4bc9e5d5c3",
-  "apiKey": "AIzaSyAJwK7bqbv0hK_zLIuZyY4O8gIysZNgxsg",
+  "apiKey": "",
   "authDomain": "arohiai.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-arohiai-be8ad9fe-2794-4c04-8a04-5103103013a1",
   "storageBucket": "arohiai.firebasestorage.app",

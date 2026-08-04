@@ -66,7 +66,7 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
   // 2. Open Razorpay Checkout Modal
   return new Promise((resolve, reject) => {
     const rzpOptions = {
-      key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TIbOeTzz7Vk9nw',
+      key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
       amount: orderData.amount,
       currency: orderData.currency,
       name: 'AROHI AI',

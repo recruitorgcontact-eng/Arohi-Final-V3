@@ -351,38 +351,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Monitor auth state from Firebase client SDK
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          const loggedUser: User = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-          };
-          setUser(loggedUser);
-          localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onAuthStateChanged(
+        auth,
+        async (firebaseUser) => {
+          try {
+            if (firebaseUser) {
+              const loggedUser: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+              };
+              setUser(loggedUser);
+              localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
 
-          const storedRole = sessionStorage.getItem('recruit_phone_signup_role') as 'candidate' | 'recruiter' | null;
-          if (storedRole) {
-            sessionStorage.removeItem('recruit_phone_signup_role');
+              const storedRole = sessionStorage.getItem('recruit_phone_signup_role') as 'candidate' | 'recruiter' | null;
+              if (storedRole) {
+                sessionStorage.removeItem('recruit_phone_signup_role');
+              }
+
+              // Fetch up-to-date userData through our multi-layer resilient function
+              const data = await loadAndSyncUserData(firebaseUser, storedRole || undefined);
+              setUserData(data);
+            } else {
+              setUser(null);
+              setUserData(null);
+              localStorage.removeItem('recruit_user');
+            }
+          } catch (err) {
+            console.error("Error inside onAuthStateChanged:", err);
+          } finally {
+            setLoading(false);
           }
-
-          // Fetch up-to-date userData through our multi-layer resilient function
-          const data = await loadAndSyncUserData(firebaseUser, storedRole || undefined);
-          setUserData(data);
-        } else {
-          setUser(null);
-          setUserData(null);
-          localStorage.removeItem('recruit_user');
+        },
+        (error) => {
+          console.warn("Firebase Auth listener error (e.g. invalid API key or offline mode):", error?.message || error);
+          try {
+            const stored = localStorage.getItem('recruit_user');
+            if (stored) {
+              setUser(JSON.parse(stored));
+            }
+          } catch (e) {
+            setUser(null);
+          }
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Error inside onAuthStateChanged:", err);
-      } finally {
-        setLoading(false);
-      }
-    });
+      );
+    } catch (err) {
+      console.warn("Failed to initialize onAuthStateChanged listener:", err);
+      setLoading(false);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

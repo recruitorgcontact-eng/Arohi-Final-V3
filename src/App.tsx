@@ -30,6 +30,7 @@ import WelcomeLanding from './components/WelcomeLanding';
 import ArohiAvatar from './components/ArohiAvatar';
 import WalkthroughTour from './components/WalkthroughTour';
 import FranchisePage from './components/FranchisePage';
+import { BlogPage } from './components/BlogPage';
 import PWAInstaller from './components/PWAInstaller';
 import BottomNavBar from './components/BottomNavBar';
 import ArohiLandingPage from './components/ArohiLandingPage';
@@ -132,7 +133,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'ur', 'kn', 'ml', 'pa', 'as', 'ru', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'pt', 'it', 'ko', 'tr', 'id', 'sw', 'am', 'ha', 'yo', 'zu'];
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs'];
 
   const [selectedState, setSelectedState] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -1591,6 +1592,17 @@ export default function App() {
         );
       case 'franchise':
         return <FranchisePage />;
+      case 'blogs': {
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialBlogId = urlParams.get('blog');
+        return (
+          <BlogPage 
+            onNavigateTab={(tab) => setActiveTab(tab)} 
+            initialBlogId={initialBlogId} 
+            currentLanguage={language} 
+          />
+        );
+      }
       default:
         return renderHomeHero();
     }
@@ -2990,6 +3002,7 @@ export default function App() {
                   {[
                     { id: 'jobs', label: 'Jobs' },
                     { id: 'courses', label: 'Skills' },
+                    { id: 'blogs', label: 'Blogs' },
                     { id: 'business', label: 'Business' },
                     { id: 'arohi', label: 'Arohi Chat' },
                     { id: 'dashboard', label: 'Dashboard' }
@@ -3042,6 +3055,15 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Links &amp; Documents</h4>
             <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <button 
+                  onClick={() => setActiveTab('blogs')} 
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-amber-400 hover:text-amber-300 flex items-center gap-1.5"
+                >
+                  <span>Blogs &amp; SEO Knowledge Hub</span>
+                  <span className="bg-amber-600/25 border border-amber-500/30 text-amber-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">100+</span>
+                </button>
+              </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('franchise')} 

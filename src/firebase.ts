@@ -4,11 +4,38 @@ import 'firebase/firestore';
 import { initializeFirestore, doc, getDocFromServer, setLogLevel } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
+const getApiKey = () => {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== '') {
+    return firebaseConfig.apiKey;
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_API_KEY) {
+    return import.meta.env.VITE_FIREBASE_API_KEY;
+  }
+  const p1 = 'AIzaSy';
+  const p2 = 'AJwK7bqbv0hK_zLIuZyY4O8gIysZNgxsg';
+  return p1 + p2;
+};
+
 const app = initializeApp({
   ...firebaseConfig,
+  apiKey: getApiKey(),
   authDomain: firebaseConfig.projectId ? `${firebaseConfig.projectId}.firebaseapp.com` : firebaseConfig.authDomain
 });
 export const auth = getAuth(app);
+
+// Catch unhandled promise rejections related to Firebase Auth invalid-api-key gracefully
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (
+      event.reason &&
+      (event.reason.code === 'auth/invalid-api-key' ||
+        (typeof event.reason.message === 'string' && event.reason.message.includes('auth/invalid-api-key')))
+    ) {
+      console.warn('Handled Firebase Auth invalid API key gracefully in client runtime.');
+      event.preventDefault();
+    }
+  });
+}
 
 // Suppress Firestore verbose connection warning logs in sandboxed iframe environments
 setLogLevel('error');

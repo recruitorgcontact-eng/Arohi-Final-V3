@@ -14,6 +14,7 @@ export const translations = {
     skills: "Skills & Courses",
     syllabus: "School Syllabus 1-10",
     business: "Business Guides",
+    blogs: "Trending Blogs",
     arohiChat: "Arohi AI Chat",
     dashboard: "User Dashboard",
     signIn: "Sign In",

@@ -45,6 +45,10 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   syllabus: {
     title: "School Syllabus Class 1-10 & Exam Guide (CBSE & State Boards) | Arohi AI",
     desc: "Tailored educational syllabus notes, mock quizzes, and study guidance for Class 1 to 10th students in Odia, Hindi, English, and regional languages."
+  },
+  blogs: {
+    title: "100+ Trending Blogs & Multilingual SEO Knowledge Hub | Arohi AI (arohiai.com)",
+    desc: "Read hundreds of trending articles on Sarkari Jobs, PM Schemes, MSME Funding, Resume ATS Hacks, CBSE Syllabus & AI in English, Hindi, Odia, Bengali & 12+ Indian languages."
   }
 };
 

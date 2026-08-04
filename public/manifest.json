@@ -1,14 +1,69 @@
 {
-  "name": "Arohi AI - India's #1 Multilingual Opportunity & Growth Engine",
+  "id": "/",
+  "name": "Arohi AI - India's #1 Multilingual Opportunity Engine",
   "short_name": "Arohi AI",
-  "description": "India's next-generation AI opportunity engine helping students, professionals, researchers, businesses, and MSMEs.",
+  "description": "India's next-generation AI opportunity engine helping students, professionals, researchers, businesses, and MSMEs with live voice coaching in 150+ languages.",
   "start_url": "/?pwa=true",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
   "background_color": "#030208",
   "theme_color": "#7c3aed",
-  "categories": ["utilities", "education", "business"],
+  "dir": "ltr",
+  "lang": "en-IN",
+  "categories": ["utilities", "education", "business", "productivity", "lifestyle"],
+  "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
+    {
+      "src": "/arohi.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/arohi.png",
       "sizes": "512x512",
@@ -20,29 +75,52 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/arohi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Arohi AI - Multilingual Opportunity Engine"
     },
     {
-      "src": "/arohi.jpg",
+      "src": "/arohi.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Arohi AI Mobile App"
     }
   ],
   "shortcuts": [
     {
-      "name": "Arohi AI Advisor",
+      "name": "Arohi Voice Assistant",
+      "short_name": "Voice AI",
       "url": "/?tab=arohi",
-      "description": "Chat with Arohi AI Career Advisor"
+      "description": "Talk to Arohi AI Voice Guide in 150+ languages",
+      "icons": [{ "src": "/arohi.png", "sizes": "192x192" }]
     },
     {
       "name": "Jobs Board",
+      "short_name": "Jobs",
       "url": "/?tab=jobs",
-      "description": "Explore private and sarkari jobs"
+      "description": "Explore private and Sarkari government jobs",
+      "icons": [{ "src": "/arohi.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Resume Analyzer",
+      "short_name": "Resume",
+      "url": "/?tab=resume",
+      "description": "Scan and score your resume instantly",
+      "icons": [{ "src": "/arohi.png", "sizes": "192x192" }]
     },
     {
       "name": "Business Startup",
+      "short_name": "Business",
       "url": "/?tab=business",
-      "description": "Check MSME schemes & business plan tools"
+      "description": "Check MSME schemes & startup guide",
+      "icons": [{ "src": "/arohi.png", "sizes": "192x192" }]
     }
   ]
 }
