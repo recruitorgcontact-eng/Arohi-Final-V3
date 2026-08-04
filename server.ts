@@ -2469,7 +2469,29 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   }
 
-  throw lastError || new Error('All models failed to generate content.');
+  // Extract user text prompt from options if possible
+  let extractedPrompt = "Hello Arohi AI";
+  try {
+    if (typeof options?.contents === 'string') {
+      extractedPrompt = options.contents;
+    } else if (Array.isArray(options?.contents)) {
+      const lastItem = options.contents[options.contents.length - 1];
+      if (typeof lastItem === 'string') {
+        extractedPrompt = lastItem;
+      } else if (lastItem?.parts && Array.isArray(lastItem.parts)) {
+        extractedPrompt = lastItem.parts.map((p: any) => p.text || '').join(' ');
+      }
+    } else if (options?.prompt) {
+      extractedPrompt = options.prompt;
+    }
+  } catch (e) {}
+
+  console.warn("All Gemini AI model attempts failed or hit rate limits. Returning smart AROHI fallback response.");
+  const fallbackText = getArohiFallbackResponse(extractedPrompt);
+  return {
+    text: fallbackText,
+    candidates: [{ content: { parts: [{ text: fallbackText }] } }]
+  };
 }
 
 const AROHI_SYSTEM_INSTRUCTION = `You are AROHI (India's AI Opportunity Advisor), the flagship intelligent assistant of Arohi AI (arohiai.com).

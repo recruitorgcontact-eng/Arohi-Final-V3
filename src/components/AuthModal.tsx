@@ -13,11 +13,13 @@ import {
   Phone,
   Smartphone,
   ChevronLeft,
-  Fingerprint
+  Fingerprint,
+  Check
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { isBiometricSupported } from '../lib/webauthn';
+import { PRICING_TIERS } from '../data/pricingData';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -43,6 +45,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
+  const [selectedPlanName, setSelectedPlanName] = useState<string>('Starter Plan');
   const [onboardName, setOnboardName] = useState('');
   const [onboardPhone, setOnboardPhone] = useState('');
 
@@ -361,7 +364,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
         const formattedPhone = `+91 ${signupPhone.trim().slice(0, 5)} ${signupPhone.trim().slice(5)}`;
         await signUp(email, password, name, role, formattedPhone);
-        setSuccess(`Account created successfully as ${role === 'recruiter' ? 'Startup Aspirant' : 'Student & Seeker'}! Welcome to Arohi AI.`);
+
+        const chosenPlan = PRICING_TIERS.find(p => p.name === selectedPlanName) || PRICING_TIERS[0];
+        try {
+          const savedDetails = JSON.parse(localStorage.getItem('arohi_subscription_details') || '{}');
+          savedDetails['path1'] = { tierName: chosenPlan.name, price: chosenPlan.price, margin: chosenPlan.margin };
+          localStorage.setItem('arohi_subscription_details', JSON.stringify(savedDetails));
+
+          const savedSubs = JSON.parse(localStorage.getItem('arohi_subscriptions') || '{}');
+          savedSubs['path1'] = true;
+          localStorage.setItem('arohi_subscriptions', JSON.stringify(savedSubs));
+        } catch (e) {}
+
+        setSuccess(`Account created successfully with ${chosenPlan.name} (₹${chosenPlan.price}/mo)! Welcome to Arohi AI.`);
         setTimeout(() => {
           onClose();
         }, 1500);
@@ -828,6 +843,56 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       </div>
                     </div>
                     <span className="text-[9px] text-slate-500 block">Enter your 10-digit mobile number for mandatory verification.</span>
+                  </div>
+
+                  {/* Choose Subscription Plan Selector */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
+                        Select Subscription Plan
+                      </label>
+                      <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                        Includes 2-Day Free Trial
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                      {PRICING_TIERS.map((tier) => {
+                        const isSelected = selectedPlanName === tier.name;
+                        return (
+                          <div
+                            key={tier.name}
+                            onClick={() => setSelectedPlanName(tier.name)}
+                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border-purple-400 shadow-md text-white'
+                                : 'bg-[#070414] border-[#231a4c] hover:border-purple-500/50 text-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                isSelected ? 'border-purple-400 bg-purple-500 text-white' : 'border-slate-600'
+                              }`}>
+                                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                              </div>
+                              <div>
+                                <p className="text-xs font-black leading-none">{tier.name}</p>
+                                <p className="text-[9px] text-slate-400 font-medium mt-0.5">{tier.callHoursText} • {tier.tokenUsageText}</p>
+                              </div>
+                            </div>
+                            <span className={`text-xs font-black shrink-0 px-2.5 py-1 rounded-lg border ${
+                              tier.price === 399
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : isSelected
+                                ? 'bg-purple-500/30 text-purple-200 border-purple-400/40'
+                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                            }`}>
+                              ₹{tier.price}/mo
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}

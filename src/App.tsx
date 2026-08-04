@@ -509,6 +509,40 @@ export default function App() {
     return { path1: false, path2: false, path3: false, path4: false };
   });
 
+  // 2-Day Free Trial & Mandatory ₹399 Subscription State
+  const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+  const [trialStartTime, setTrialStartTime] = useState<number>(() => {
+    const saved = getStorageItem('arohi_trial_start');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    const now = Date.now();
+    setStorageItem('arohi_trial_start', now.toString());
+    return now;
+  });
+
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const hasActiveSubscription = Object.values(subscriptions).some(Boolean);
+  const timeElapsed = currentTime - trialStartTime;
+  const isTrialActive = timeElapsed < TWO_DAYS_MS;
+  const isTrialExpired = !isTrialActive && !hasActiveSubscription;
+
+  const remainingMs = Math.max(0, TWO_DAYS_MS - timeElapsed);
+  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+  const [selectedModalPlan, setSelectedModalPlan] = useState<number>(0);
+
   const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
     const saved = getStorageItem('arohi_subscription_details');
     if (saved) {
@@ -2593,6 +2627,124 @@ export default function App() {
         onCountryChange={changeCountry}
       />
 
+      {/* 2-Day Free Trial Active Banner */}
+      {!hasActiveSubscription && isTrialActive && (
+        <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-fuchsia-950 border-b border-purple-500/30 px-4 py-2 text-center text-xs font-semibold text-white flex flex-wrap items-center justify-center gap-3 shadow-lg relative z-30">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span className="font-black text-amber-300 uppercase tracking-wider">🎁 2-Day Free Trial Active</span>
+            <span className="text-slate-300">| Time Remaining:</span>
+            <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded border border-purple-400/40 text-amber-200 font-bold shadow-inner">
+              {Math.floor(remainingHours / 24)}d {remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setCheckoutPath({
+                id: 'path1',
+                title: 'Starter Plan - Minimum ₹399 Subscription',
+                price: '₹399/mo'
+              });
+            }}
+            className="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            Upgrade for Minimum ₹399/mo
+          </button>
+        </div>
+      )}
+
+      {/* Force Signup & Minimum ₹399 Subscription Modal when 2-Day Free Trial Expires */}
+      {isTrialExpired && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md animate-in fade-in duration-300 select-none">
+          <div className="bg-[#120e2a] border-2 border-amber-500/60 text-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-[0_0_60px_rgba(245,158,11,0.3)] relative overflow-hidden text-center animate-in zoom-in-95 duration-200">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500 via-purple-500 to-fuchsia-500"></div>
+
+            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 text-amber-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+              <span className="text-3xl">⏰</span>
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                Trial Period Ended
+              </div>
+              <h2 className="text-2xl font-black text-white">Your 2-Day Free Trial Has Expired</h2>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                To continue using Arohi AI services, voice calls, interactive roadmaps, career diagnostics, and MSME mentorship, please subscribe to our minimum <strong className="text-amber-300">₹399/month Starter Plan</strong>.
+              </p>
+            </div>
+
+            <div className="bg-[#181335] border border-[#2d235e] rounded-2xl p-3 text-left space-y-2.5">
+              <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
+                Choose Subscription Plan
+              </label>
+
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                {PRICING_TIERS.map((tier, idx) => {
+                  const isSelected = selectedModalPlan === idx;
+                  return (
+                    <div
+                      key={tier.name}
+                      onClick={() => setSelectedModalPlan(idx)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-purple-400 shadow-md text-white'
+                          : 'bg-[#100b26] border-[#291e54] hover:border-purple-500/50 text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          isSelected ? 'border-purple-400 bg-purple-500 text-white' : 'border-slate-600'
+                        }`}>
+                          {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-black leading-tight">{tier.name}</p>
+                          <p className="text-[9px] text-slate-400 font-medium mt-0.5">{tier.callHoursText} • {tier.tokenUsageText}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-black shrink-0 px-2.5 py-1 rounded-lg border ${
+                        tier.price === 399
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : isSelected
+                          ? 'bg-purple-500/30 text-purple-200 border-purple-400/40'
+                          : 'bg-slate-800 text-slate-300 border-slate-700'
+                      }`}>
+                        ₹{tier.price}/mo
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={() => {
+                  const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
+                  setCheckoutPath({
+                    id: 'path1',
+                    title: `${chosenTier.name} Subscription`,
+                    price: `₹${chosenTier.price}`
+                  });
+                }}
+                className="w-full bg-gradient-to-r from-amber-500 via-purple-600 to-fuchsia-600 hover:from-amber-400 hover:to-fuchsia-500 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span>💳 Subscribe to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
+              </button>
+
+              {!user && (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Already a member? Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Security Auth Modal overlay */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
@@ -2949,7 +3101,7 @@ export default function App() {
               </li>
               <li>
                 <div className="text-slate-500 font-medium text-[11px]">
-                  Authorized Payment Gateway Routing Only
+                  Official Razorpay Standard Web Gateway
                 </div>
               </li>
             </ul>
@@ -3168,534 +3320,103 @@ export default function App() {
         </div>
       )}
 
-      {/* Simulated Premium Checkout Modal */}
+      {/* Direct Razorpay Premium Checkout Modal */}
       {checkoutPath && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#120e2a] border border-[#2d2163] text-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#7c3aed]/10 rounded-full blur-2xl pointer-events-none"></div>
             
-            {/* Payment Method Tabs */}
-            <div className="flex bg-[#181335] p-1 rounded-xl border border-[#2e2365] gap-1">
-              <button
-                onClick={() => {
-                  setSelectedPaymentGateway('upi');
-                  setPlayStoreSuccess(false);
-                  setIsProcessingPlayStore(false);
-                }}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  selectedPaymentGateway === 'upi'
-                    ? 'bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                🇮🇳 UPI / Web Gateway
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedPaymentGateway('googleplay');
-                  setPlayStoreSuccess(false);
-                  setIsProcessingPlayStore(false);
-                }}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  selectedPaymentGateway === 'googleplay'
-                    ? 'bg-[#00875a] text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <span className="text-[14px]">🤖</span> Google Play Store
-              </button>
+            <div className="text-center space-y-2">
+              <div className="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                Official Razorpay Payment Gateway
+              </div>
+              <h3 className="text-xl font-black text-white">Razorpay Standard Checkout</h3>
+              <p className="text-xs text-slate-300 font-semibold leading-relaxed">
+                Instant & secure checkout via UPI, Cards, NetBanking & Wallets with automatic HMAC-SHA256 signature verification.
+              </p>
             </div>
 
-            {selectedPaymentGateway === 'upi' ? (
-              // 1. STANDARD INDIAN WEB GATEWAY MODE
-              <div className="space-y-4 animate-in fade-in duration-150">
-                {/* Mode Selector */}
-                <div className="flex bg-[#181335] p-1 rounded-xl border border-[#2e2365] gap-1">
-                  <button
-                    onClick={() => {
-                      setCheckoutSubMode('razorpay');
-                      setUtrSubmissionSuccess(false);
-                    }}
-                    className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      checkoutSubMode === 'razorpay'
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md border border-blue-400/40'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <span>💳</span> Razorpay Pay
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCheckoutSubMode('instant');
-                      setUtrSubmissionSuccess(false);
-                    }}
-                    className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                      checkoutSubMode === 'instant'
-                        ? 'bg-[#291e5e] border border-purple-500/40 text-white'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    ⚡ Sandbox
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCheckoutSubMode('qr');
-                      setUtrSubmissionSuccess(false);
-                    }}
-                    className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      checkoutSubMode === 'qr'
-                        ? 'bg-[#291e5e] border border-purple-500/40 text-white'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <span>🇮🇳</span> QR Code Sync
-                  </button>
+            <div className="bg-[#121833] border border-[#232e5c] rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[9px] text-blue-400 font-black uppercase tracking-wider">Subscription Plan</span>
+                  <p className="text-sm font-black text-white mt-0.5">{checkoutPath.title}</p>
                 </div>
-
-                {checkoutSubMode === 'razorpay' ? (
-                  <div className="space-y-4 animate-in fade-in duration-200">
-                    <div className="text-center space-y-1">
-                      <div className="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                        Razorpay Standard Web Checkout
-                      </div>
-                      <h3 className="text-lg font-black text-white">Official Razorpay Gateway</h3>
-                      <p className="text-[10px] text-slate-300 font-semibold leading-relaxed">
-                        Secure instant checkout via UPI, Cards, NetBanking, & Wallets with automatic HMAC-SHA256 signature verification.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#121833] border border-[#232e5c] rounded-2xl p-4 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[9px] text-blue-400 font-black uppercase tracking-wider">Subscription Plan</span>
-                          <p className="text-xs font-black text-white mt-0.5">{checkoutPath.title}</p>
-                        </div>
-                        <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded font-black shrink-0">
-                          {checkoutPath.price}
-                        </span>
-                      </div>
-
-                      <div className="border-t border-[#1d274f] pt-2 space-y-1 text-[10px] text-slate-300">
-                        <div className="flex justify-between">
-                          <span>Gateway:</span>
-                          <span className="font-bold text-blue-300">Razorpay Standard Web Checkout</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Security:</span>
-                          <span className="font-bold text-emerald-400">HMAC-SHA256 Signature Verified</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Test Key ID:</span>
-                          <span className="font-mono text-purple-300 text-[9px]">rzp_test_TIbOeTzz7Vk9nw</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <button
-                        disabled={isProcessingRazorpay}
-                        onClick={async () => {
-                          const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
-                          setIsProcessingRazorpay(true);
-                          try {
-                            await openRazorpayCheckout({
-                              amountInRupees: numericPrice,
-                              planName: checkoutPath.title,
-                              userEmail: 'elitetraderjunoon@gmail.com',
-                              userName: 'Arohi AI Premium Member',
-                              onSuccess: (res) => {
-                                setIsProcessingRazorpay(false);
-                                handleSubscribe(checkoutPath.id, checkoutPath.title, 'Razorpay Standard Checkout');
-                                setCheckoutPath(null);
-                                setActiveTab('dashboard');
-                                alert(`Payment Verified & Activated!\n\nRazorpay Payment ID: ${res.razorpay_payment_id}\nOrder ID: ${res.razorpay_order_id}`);
-                              },
-                              onError: (err) => {
-                                setIsProcessingRazorpay(false);
-                                alert(`Razorpay Payment Error: ${err.message || 'Transaction could not be completed.'}`);
-                              },
-                              onDismiss: () => {
-                                setIsProcessingRazorpay(false);
-                              }
-                            });
-                          } catch (err: any) {
-                            setIsProcessingRazorpay(false);
-                            alert(`Razorpay Error: ${err.message || 'Failed to launch checkout'}`);
-                          }
-                        }}
-                        className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-                      >
-                        {isProcessingRazorpay ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                            <span>Launching Razorpay Modal...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>💳 Pay {checkoutPath.price} via Razorpay Checkout</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => setCheckoutPath(null)}
-                        className="w-full bg-[#181335] hover:bg-[#211a47] text-slate-300 border border-[#2d235e] font-black text-[10px] uppercase py-2.5 rounded-xl cursor-pointer transition-all"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : checkoutSubMode === 'instant' ? (
-                  <div className="space-y-4">
-                    <div className="text-center space-y-1">
-                      <div className="bg-[#fbbf24]/10 text-[#fcd34d] border border-[#fbbf24]/30 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider w-fit mx-auto">
-                        Instant Simulator
-                      </div>
-                      <h3 className="text-lg font-black text-white">Sandbox Subscription Checkout</h3>
-                      <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
-                        Simulate quick activation instantly in your local browser sandbox context.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#18133a] border border-[#2b1f5c] rounded-2xl p-4 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[9px] text-[#a78bfa] font-black uppercase tracking-wider">Plan Selected</span>
-                          <p className="text-xs font-black text-white mt-0.5">{checkoutPath.title}</p>
-                        </div>
-                        <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-bold shrink-0">{checkoutPath.price}</span>
-                      </div>
-                      <div className="border-t border-[#231a4f] pt-2 flex justify-between text-[10px] font-bold text-slate-300">
-                        <span>Billing Frequency</span>
-                        <span className="text-slate-200">Continuous updates</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="space-y-1 text-left">
-                        <label className="text-[9px] uppercase font-black tracking-wider text-slate-400">Mock Payment Method</label>
-                        <div className="bg-[#19143d] border border-[#3b2b73] rounded-xl p-3 flex items-center justify-between text-xs font-bold text-slate-300">
-                          <span className="flex items-center gap-2">🇮🇳 UPI / Net Banking Mock Gateway</span>
-                          <span className="text-emerald-400 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Active</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1 text-left">
-                        <label className="text-[9px] uppercase font-black tracking-wider text-slate-400">Simulate Candidate Name</label>
-                        <input 
-                          type="text" 
-                          defaultValue="Rajesh Kumar Singh" 
-                          className="w-full bg-[#19143d] border border-[#3b2b73] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed]"
-                        />
-                      </div>
-
-                      <p className="text-[9px] text-slate-400 font-medium text-center leading-normal">
-                        This is a secure simulation checkout. Clicking authorized billing will charge no real currency, but will immediately activate your premium subscription.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <button
-                        onClick={() => setCheckoutPath(null)}
-                        className="w-full bg-[#1a153b] hover:bg-[#251e54] text-white border border-[#2b215e] font-black text-[11px] uppercase tracking-wider py-3 rounded-xl cursor-pointer transition-all"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleSubscribe(checkoutPath.id, checkoutPath.title, 'UPI/Web Gateway');
-                          setCheckoutPath(null);
-                          setActiveTab('dashboard');
-                        }}
-                        className="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] text-white font-black text-[11px] uppercase tracking-wider py-3 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
-                      >
-                        Authorize
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  // REAL LIVE UPI QR AND SYNC HANDLER
-                  <div className="space-y-4">
-                    {utrSubmissionSuccess ? (
-                      <div className="py-6 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-200">
-                        <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/30 text-[#00e676] rounded-full flex items-center justify-center">
-                          <span className="text-2xl">✓</span>
-                        </div>
-                        <div>
-                          <p className="text-base font-black text-white">Payment Sync Registered!</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase font-mono mt-1">UTR REF: {candidateUtr}</p>
-                        </div>
-                        <p className="text-slate-300 text-xs font-semibold leading-relaxed px-2">
-                          Your transaction reference has been logged into the Admin console's **Financial Ledger**. Once verified by the Admin, your premium path features will unlock instantly!
-                        </p>
-                        <button
-                          onClick={() => setCheckoutPath(null)}
-                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase py-3 rounded-xl shadow-lg cursor-pointer transition-all"
-                        >
-                          Acknowledge & Exit
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="text-center space-y-1">
-                          <div className="bg-[#00e676]/10 text-[#00e676] border border-[#00e676]/30 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider w-fit mx-auto">
-                            Direct Indian UPI Gateway
-                          </div>
-                          <h3 className="text-base font-black text-white">Scan & Pay via Airtel Payments Bank / PhonePe</h3>
-                          <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
-                            Collect and sync UPI payouts directly into your secure workspace database.
-                          </p>
-                        </div>
-
-                        {/* Real Dynamic QR code visualization */}
-                        <div className="bg-white p-3.5 rounded-2xl w-fit mx-auto border border-[#2d1b54] shadow-inner flex flex-col items-center gap-1.5">
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=090715&data=${encodeURIComponent(
-                              `upi://pay?pa=${upiGatewaySettings.upiId}&pn=${encodeURIComponent(
-                                upiGatewaySettings.merchantName
-                              )}&am=${checkoutPath.price.replace(/[^0-9]/g, '') || '399'}&cu=INR&tn=${encodeURIComponent(
-                                `Arohi AI Premium: ${checkoutPath.title}`
-                              )}`
-                            )}`}
-                            alt="UPI Payment QR Code"
-                            referrerPolicy="no-referrer"
-                            className="w-[140px] h-[140px] select-none pointer-events-none"
-                          />
-                          <p className="text-[9px] text-[#0d0725] font-black tracking-wider uppercase">
-                            Amount: ₹{checkoutPath.price.replace(/[^0-9]/g, '') || '399'}.00
-                          </p>
-                        </div>
-
-                        <div className="bg-[#0a0621]/80 border border-[#24174d] rounded-2xl p-3 space-y-2 text-left">
-                          <div className="flex justify-between text-[10px] text-slate-400">
-                            <span>Beneficiary UPI Name:</span>
-                            <span className="font-extrabold text-white">{upiGatewaySettings.merchantName}</span>
-                          </div>
-                          <div className="flex justify-between text-[10px] text-slate-400">
-                            <span>Airtel / PhonePe UPI ID:</span>
-                            <span className="font-mono font-bold text-purple-300">{upiGatewaySettings.upiId}</span>
-                          </div>
-                          <div className="flex justify-between text-[10px] text-slate-400 border-t border-[#1a0f3d] pt-2">
-                            <span>Gateway Provider:</span>
-                            <span className="font-bold text-emerald-400">{upiGatewaySettings.bankName}</span>
-                          </div>
-                        </div>
-
-                        {/* UTR Input Form */}
-                        <div className="space-y-1.5 text-left">
-                          <label className="text-[9px] uppercase font-black tracking-wider text-slate-400 flex justify-between">
-                            <span>Enter 12-Digit UPI Ref No. / UTR</span>
-                            <span className="text-purple-400 font-bold">PhonePe / Airtel / GPay Receipt</span>
-                          </label>
-                          <input
-                            type="text"
-                            maxLength={12}
-                            value={candidateUtr}
-                            onChange={(e) => setCandidateUtr(e.target.value.replace(/[^0-9]/g, ''))}
-                            placeholder="e.g. 618294103859"
-                            className="w-full text-center tracking-widest font-mono bg-[#19143d] border border-[#3b2b73] rounded-xl px-3 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed]"
-                          />
-                        </div>
-
-                        {/* Actions */}
-                        <div className="grid grid-cols-2 gap-3 pt-1">
-                          <button
-                            onClick={() => {
-                              setCheckoutSubMode('instant');
-                            }}
-                            className="w-full bg-[#120d2c] hover:bg-[#1a143f] text-slate-300 border border-[#2d1b54] font-black text-[10px] uppercase py-3 rounded-xl cursor-pointer transition-all"
-                          >
-                            Back
-                          </button>
-                          <button
-                            onClick={async () => {
-                              if (candidateUtr.length !== 12) {
-                                alert('Please enter the valid 12-digit transaction UTR reference from your payment receipt.');
-                                return;
-                              }
-                              setIsSubmittingUtr(true);
-                              try {
-                                const res = await fetch('/api/admin/submit-pending-payment', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    userEmail: 'elitetraderjunoon@gmail.com',
-                                    amount: Number(checkoutPath.price.replace(/[^0-9]/g, '') || '399'),
-                                    planName: checkoutPath.title,
-                                    utr: candidateUtr
-                                  })
-                                });
-                                if (res.ok) {
-                                  setUtrSubmissionSuccess(true);
-                                } else {
-                                  const err = await res.json();
-                                  alert(`Error: ${err.error || 'Failed to submit payment.'}`);
-                                }
-                              } catch (err) {
-                                console.error(err);
-                                alert('Simulated backend synchronization successful.');
-                                setUtrSubmissionSuccess(true);
-                              } finally {
-                                setIsSubmittingUtr(false);
-                              }
-                            }}
-                            disabled={isSubmittingUtr || candidateUtr.length !== 12}
-                            className="w-full bg-[#00875a] hover:bg-[#00704a] disabled:bg-slate-800 text-white font-black text-[10px] uppercase py-3 rounded-xl shadow-lg cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-                          >
-                            <span>✓</span> Submit & Sync
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <span className="text-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-lg font-black shrink-0">
+                  {checkoutPath.price}
+                </span>
               </div>
-            ) : (
-              // 2. AUTHENTIC GOOGLE PLAY STORE BILLING INTERFACE SIMULATOR
-              <div className="space-y-4 text-left animate-in fade-in duration-150">
-                {isProcessingPlayStore ? (
-                  /* Processing Payment Animation state */
-                  <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-full border-4 border-slate-800 border-t-[#00875a] border-r-[#4285f4] border-b-[#ea4335] border-l-[#fbbc05] animate-spin"></div>
-                    </div>
-                    <p className="text-sm font-black text-white">Google Play Billing: Processing...</p>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Securing token with elitetraderjunoon@gmail.com</p>
-                  </div>
-                ) : playStoreSuccess ? (
-                  /* Successful activation animation state */
-                  <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-350">
-                    <div className="w-14 h-14 bg-[#00875a]/10 border border-[#00875a]/40 text-[#00e676] rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-[#00e676]" />
-                    </div>
-                    <p className="text-base font-black text-white">Subscription Successful!</p>
-                    <p className="text-slate-300 text-xs font-semibold leading-relaxed px-4">
-                      Your monthly assistance subscription has been linked securely to Google Play. Premium features activated.
-                    </p>
-                    <button
-                      onClick={() => {
-                        handleSubscribe(checkoutPath.id, checkoutPath.title, 'Google Play Billing');
+
+              <div className="border-t border-[#1d274f] pt-3 space-y-1.5 text-xs text-slate-300">
+                <div className="flex justify-between">
+                  <span>Gateway Provider:</span>
+                  <span className="font-bold text-blue-300">Razorpay Standard Web Checkout</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Supported Methods:</span>
+                  <span className="font-bold text-emerald-400">UPI, Credit/Debit Cards, NetBanking</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Security Protection:</span>
+                  <span className="font-bold text-purple-300">HMAC-SHA256 Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                disabled={isProcessingRazorpay}
+                onClick={async () => {
+                  const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
+                  setIsProcessingRazorpay(true);
+                  try {
+                    await openRazorpayCheckout({
+                      amountInRupees: numericPrice,
+                      planName: checkoutPath.title,
+                      userEmail: 'elitetraderjunoon@gmail.com',
+                      userName: 'Arohi AI Premium Member',
+                      onSuccess: (res) => {
+                        setIsProcessingRazorpay(false);
+                        handleSubscribe(checkoutPath.id, checkoutPath.title, 'Razorpay Standard Checkout');
                         setCheckoutPath(null);
                         setActiveTab('dashboard');
-                      }}
-                      className="bg-[#00875a] hover:bg-[#00704a] text-white font-bold text-xs uppercase tracking-widest px-6 py-2.5 rounded-xl cursor-pointer transition-all mt-4"
-                    >
-                      Finish Setup
-                    </button>
-                  </div>
+                        alert(`Payment Verified & Activated!\n\nRazorpay Payment ID: ${res.razorpay_payment_id}\nOrder ID: ${res.razorpay_order_id}`);
+                      },
+                      onError: (err) => {
+                        setIsProcessingRazorpay(false);
+                        alert(`Razorpay Payment Error: ${err.message || 'Transaction could not be completed.'}`);
+                      },
+                      onDismiss: () => {
+                        setIsProcessingRazorpay(false);
+                      }
+                    });
+                  } catch (err: any) {
+                    setIsProcessingRazorpay(false);
+                    alert(`Razorpay Error: ${err.message || 'Failed to launch checkout'}`);
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+              >
+                {isProcessingRazorpay ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                    <span>Launching Razorpay Modal...</span>
+                  </>
                 ) : (
-                  /* Authentic Google Play Sheet Dialog Details */
-                  <div className="space-y-4">
-                    {/* Google Play Brand Header */}
-                    <div className="flex items-center justify-between border-b border-[#231a4f] pb-3">
-                      <div className="flex items-center gap-2">
-                        {/* Custom Google Play CSS triangle Logo */}
-                        <div className="flex items-center justify-center gap-0.5 bg-slate-900 border border-slate-800 p-1.5 rounded-lg shrink-0">
-                          <span className="text-base font-bold leading-none tracking-tighter text-[#4285f4]">G</span>
-                          <span className="text-base font-bold leading-none tracking-tighter text-[#ea4335]">P</span>
-                          <span className="text-base font-bold leading-none tracking-tighter text-[#fbbc05]">l</span>
-                          <span className="text-base font-bold leading-none tracking-tighter text-[#00875a]">a</span>
-                          <span className="text-base font-bold leading-none tracking-tighter text-[#4285f4]">y</span>
-                        </div>
-                        <div>
-                          <span className="text-xs font-black text-white block">Google Play Billing</span>
-                          <span className="text-[9px] font-bold text-[#00e676] block">✓ Certified Play Secure Gateway</span>
-                        </div>
-                      </div>
-                      
-                      {/* Active Google Account Indicator */}
-                      <div className="text-right text-[10px] text-slate-400 font-semibold max-w-[150px] truncate" title="Active Play Account">
-                        elitetraderjunoon@gmail.com
-                      </div>
-                    </div>
-
-                    {/* Subscription billing details */}
-                    <div className="space-y-1 bg-slate-900/60 border border-[#2d2060] rounded-xl p-3.5">
-                      <p className="text-[9px] uppercase tracking-widest text-[#a78bfa] font-black">App / Developer</p>
-                      <p className="text-xs font-black text-white leading-tight">Arohi AI — Empowering India’s Students, Professionals, and MSMEs</p>
-                      
-                      <p className="text-[9px] uppercase tracking-widest text-[#a78bfa] font-black pt-2">Subscription Option</p>
-                      <p className="text-xs font-semibold text-slate-200 leading-tight">{checkoutPath.title}</p>
-
-                      <div className="pt-2.5 mt-2.5 border-t border-[#1f1647] flex items-center justify-between">
-                        <span className="text-xs text-slate-300 font-bold">Billing Cycle</span>
-                        <span className="text-xs text-white font-extrabold">{checkoutPath.price}</span>
-                      </div>
-                    </div>
-
-                    {/* Google Payment Methods list */}
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Select Google Play Payment Method</span>
-                      
-                      <div className="space-y-1.5">
-                        {/* Balance Option */}
-                        <div className="bg-[#181236]/60 border border-[#2c1e5b] p-3 rounded-xl flex items-center justify-between hover:bg-[#22184d] transition-all cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold text-xs">₹</div>
-                            <div>
-                              <p className="text-xs font-black text-white leading-none">Google Play Balance</p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-1">Available balance: ₹5,000.00</p>
-                            </div>
-                          </div>
-                          <span className="w-3.5 h-3.5 rounded-full border-2 border-[#00e676] bg-[#00e676]"></span>
-                        </div>
-
-                        {/* Credit Card Option */}
-                        <div className="bg-[#181236]/30 border border-[#1f1647] p-3 rounded-xl flex items-center justify-between opacity-75 hover:opacity-100 transition-all cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <span className="text-base">💳</span>
-                            <div>
-                              <p className="text-xs font-bold text-slate-200 leading-none">Visa •••• 4026</p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-1">Google Pay Saved Card</p>
-                            </div>
-                          </div>
-                          <span className="w-3.5 h-3.5 rounded-full border border-slate-600"></span>
-                        </div>
-
-                        {/* UPI Option */}
-                        <div className="bg-[#181236]/30 border border-[#1f1647] p-3 rounded-xl flex items-center justify-between opacity-75 hover:opacity-100 transition-all cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <span className="text-base">🇮🇳</span>
-                            <div>
-                              <p className="text-xs font-bold text-slate-200 leading-none">elitetraderjunoon@oksbi</p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-1">Direct Google Pay UPI link</p>
-                            </div>
-                          </div>
-                          <span className="w-3.5 h-3.5 rounded-full border border-slate-600"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[9px] text-slate-400 font-medium leading-relaxed bg-[#0c0821] p-3 rounded-xl border border-[#201546]">
-                      By clicking "1-Tap Subscribe", you agree to the Google Play Terms of Service and authorize Arohi AI to process recurring monthly charges. Cancel anytime via Play Store Subscription panel.
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <button
-                        onClick={() => setCheckoutPath(null)}
-                        className="w-full bg-[#181236] hover:bg-[#251b54] text-slate-300 font-bold text-xs uppercase py-3.5 rounded-xl cursor-pointer transition-all border border-[#2d2060]"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsProcessingPlayStore(true);
-                          setTimeout(() => {
-                            setIsProcessingPlayStore(false);
-                            setPlayStoreSuccess(true);
-                          }, 1800);
-                        }}
-                        className="w-full bg-[#00875a] hover:bg-[#00704a] text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-lg cursor-pointer transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5"
-                      >
-                        <span>🟢</span> 1-Tap Subscribe
-                      </button>
-                    </div>
-                  </div>
+                  <>
+                    <span>💳 Pay {checkoutPath.price} via Razorpay Checkout</span>
+                  </>
                 )}
-              </div>
-            )}
+              </button>
+
+              <button
+                onClick={() => setCheckoutPath(null)}
+                className="w-full bg-[#181335] hover:bg-[#211a47] text-slate-300 border border-[#2d235e] font-black text-xs uppercase py-2.5 rounded-xl cursor-pointer transition-all"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
