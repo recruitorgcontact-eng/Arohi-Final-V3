@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+firebase-service-account.json
+*service-account*.json
+users-local-db.json
+site-stats.json
+websocket-debug.json

@@ -737,9 +737,46 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {/* Error/Success alerts */}
             {error && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-200 text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span className="font-semibold leading-relaxed">{error}</span>
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-200 text-xs space-y-2">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span className="font-semibold leading-relaxed flex-1">{error}</span>
+                </div>
+                {(error.includes('unauthorized-domain') || error.includes('Authorized Domains') || error.includes('Domain Authorization')) && (
+                  <div className="pt-2 border-t border-red-500/20 text-[11px] text-slate-300 space-y-2">
+                    <p className="font-bold text-amber-300">How to fix for Google/Apple Sign-In on Railway or custom domain:</p>
+                    <ol className="list-decimal pl-4 space-y-1 text-slate-300">
+                      <li>Go to <strong>Firebase Console</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Authorized Domains</strong>.</li>
+                      <li>Click <strong>Add domain</strong> and enter: <code className="bg-purple-950/80 text-purple-300 px-1.5 py-0.5 rounded font-mono border border-purple-800">{typeof window !== 'undefined' ? window.location.hostname : 'your-domain.up.railway.app'}</code></li>
+                      <li>Save changes. Direct client SDK authentication will work instantly!</li>
+                    </ol>
+                    <div className="pt-1.5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            navigator.clipboard.writeText(window.location.hostname);
+                            setSuccess(`Copied "${window.location.hostname}" to clipboard!`);
+                            setTimeout(() => setSuccess(null), 3000);
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-[10px] font-bold rounded-lg border border-purple-500/40 transition-all cursor-pointer"
+                      >
+                        Copy Domain to Clipboard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setActiveMode('signin');
+                        }}
+                        className="px-2.5 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 text-[10px] font-bold rounded-lg border border-indigo-500/40 transition-all cursor-pointer"
+                      >
+                        Use Email/Password Server Proxy
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

@@ -409,7 +409,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/auth/signin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, entrySource: getEntrySource() })
+          body: JSON.stringify({ email: email.trim(), password, entrySource: getEntrySource() })
         });
         
         const resData = await response.json();
@@ -424,16 +424,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserData(resData.userData);
           return resData.userData;
         } else {
-          throw new Error(resData?.error || 'Server-side sign-in failed.');
+          let errText = resData?.error || 'Invalid email or password.';
+          if (errText.includes('INVALID_PASSWORD') || errText.includes('INVALID_LOGIN_CREDENTIALS')) {
+            errText = 'Invalid email or password. Please check your credentials.';
+          } else if (errText.includes('EMAIL_NOT_FOUND')) {
+            errText = 'No account found with this email. Please click CREATE ACCOUNT to register.';
+          }
+          throw new Error(errText);
         }
       } catch (serverErr: any) {
         console.error("Server-side proxy fallback failed:", serverErr);
-        // Highlight the possible API Key restriction in Google Cloud Console
-        let customMessage = clientErr.message || 'Authentication failed.';
-        if (customMessage.includes('api-key-not-valid')) {
-          customMessage = 'Firebase Client Error: (auth/api-key-not-valid). Please check if your Google Cloud API Key is restricted to select domains/APIs in your GCP Console -> Credentials, or let us assist you!';
+        // Use server error if available, or clean message instead of raw technical domain error
+        let finalMessage = serverErr.message || 'Authentication failed.';
+        if (finalMessage.includes('auth/unauthorized-domain') || clientErr.message?.includes('auth/unauthorized-domain')) {
+          if (serverErr.message && !serverErr.message.includes('auth/unauthorized-domain')) {
+            finalMessage = serverErr.message;
+          } else {
+            finalMessage = `Domain Authorization Required: To sign in with client SDK on ${window.location.hostname}, please add this domain to Firebase Console -> Auth -> Settings -> Authorized Domains. Otherwise, verify your email and password to use server authentication.`;
+          }
+        } else if (finalMessage.includes('api-key-not-valid')) {
+          finalMessage = 'Firebase Client Error: (auth/api-key-not-valid). Please check if your Google Cloud API Key is restricted in your GCP Console -> Credentials!';
         }
-        throw new Error(customMessage);
+        throw new Error(finalMessage);
       }
     }
   };
@@ -527,7 +539,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, name, role: role || 'candidate', mobile: phone || '', entrySource: getEntrySource() })
+          body: JSON.stringify({ email: email.trim(), password, name, role: role || 'candidate', mobile: phone || '', entrySource: getEntrySource() })
         });
         
         const resData = await response.json();
@@ -542,57 +554,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserData(resData.userData);
           return;
         } else {
-          throw new Error(resData?.error || 'Server-side registration failed.');
+          let errText = resData?.error || 'Server-side registration failed.';
+          if (errText.includes('EMAIL_EXISTS')) {
+            errText = 'An account with this email address already exists. Please SIGN IN instead.';
+          }
+          throw new Error(errText);
         }
       } catch (serverErr: any) {
         console.error("Server-side proxy fallback failed:", serverErr);
-        let customMessage = clientErr.message || 'Registration failed.';
-        if (customMessage.includes('api-key-not-valid')) {
-          customMessage = 'Firebase Client Error: (auth/api-key-not-valid). Please check if your Google Cloud API Key is restricted in your GCP Console -> Credentials!';
+        let finalMessage = serverErr.message || 'Registration failed.';
+        if (finalMessage.includes('auth/unauthorized-domain') || clientErr.message?.includes('auth/unauthorized-domain')) {
+          if (serverErr.message && !serverErr.message.includes('auth/unauthorized-domain')) {
+            finalMessage = serverErr.message;
+          } else {
+            finalMessage = `Domain Authorization Notice: Add ${window.location.hostname} to Firebase Console -> Authentication -> Authorized Domains to use direct client SDK, or submit registration again to use server proxy.`;
+          }
+        } else if (finalMessage.includes('api-key-not-valid')) {
+          finalMessage = 'Firebase Client Error: (auth/api-key-not-valid). Please check if your Google Cloud API Key is restricted in your GCP Console -> Credentials!';
         }
-        throw new Error(customMessage);
+        throw new Error(finalMessage);
       }
     }
   };
 
   const signInWithGoogle = async (role?: 'candidate' | 'recruiter') => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
 
-    const result = await signInWithPopup(auth, provider);
-    const firebaseUser = result.user;
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
 
-    const loggedUser: User = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName
-    };
-    setUser(loggedUser);
-    localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+      const loggedUser: User = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName
+      };
+      setUser(loggedUser);
+      localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
 
-    // Fetch user document
-    const data = await loadAndSyncUserData(firebaseUser, role);
-    setUserData(data);
-    return data;
+      // Fetch user document
+      const data = await loadAndSyncUserData(firebaseUser, role);
+      setUserData(data);
+      return data;
+    } catch (err: any) {
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+        throw new Error(`Google Sign-In Domain Error: "${window.location.hostname}" is not authorized in your Firebase Console. Please add "${window.location.hostname}" to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
+      }
+      throw err;
+    }
   };
 
   const signInWithApple = async (role?: 'candidate' | 'recruiter') => {
-    const provider = new OAuthProvider('apple.com');
-    const result = await signInWithPopup(auth, provider);
-    const firebaseUser = result.user;
+    try {
+      const provider = new OAuthProvider('apple.com');
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
 
-    const loggedUser: User = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName || 'Apple User'
-    };
-    setUser(loggedUser);
-    localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+      const loggedUser: User = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || 'Apple User'
+      };
+      setUser(loggedUser);
+      localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
 
-    // Fetch user document
-    const data = await loadAndSyncUserData(firebaseUser, role);
-    setUserData(data);
-    return data;
+      // Fetch user document
+      const data = await loadAndSyncUserData(firebaseUser, role);
+      setUserData(data);
+      return data;
+    } catch (err: any) {
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+        throw new Error(`Apple Sign-In Domain Error: "${window.location.hostname}" is not authorized in your Firebase Console. Please add "${window.location.hostname}" to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
+      }
+      throw err;
+    }
   };
 
   const signInWithPhone = async (phoneNumber: string, recaptchaVerifier: any, role?: 'candidate' | 'recruiter') => {

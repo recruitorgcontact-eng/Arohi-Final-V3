@@ -535,7 +535,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           keyTakeaways: data.keyTakeaways || [],
           documentName: data.documentName || docResearchFile?.name || 'Research Report',
           mode: data.mode || docResearchMode,
-          provider: data.provider || 'gemini-2.5-flash',
+          provider: data.provider || 'gemini-3.6-flash',
         };
         setDocResearchReport(reportObj);
         setDocResearchHistory(prev => [
@@ -597,7 +597,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           routeInfo: data.routeInfo || null,
           centerCoord: data.centerCoord || { lat: 28.6139, lng: 77.2090, zoom: 12 },
           mode: data.mode || mapsMode,
-          provider: data.provider || 'gemini-2.5-flash-google-maps'
+          provider: data.provider || 'gemini-3.6-flash-google-maps'
         };
         setMapsReport(reportObj);
         setMapsHistory(prev => [
@@ -702,11 +702,15 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       }
 
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
       const cleanText = text
         .replace(/\[.*?\]\(.*?\)/g, '')
         .replace(/[*#`_~]/g, '')
         .replace(/<[^>]*>/g, '')
         .trim();
+
+      if (!cleanText) return;
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
       const langMap: Record<string, string> = {
@@ -721,19 +725,55 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         fr: 'fr-FR',
         de: 'de-DE'
       };
-      utterance.lang = langMap[language] || 'en-IN';
+      const targetLang = langMap[language] || 'en-IN';
+      utterance.lang = targetLang;
       utterance.rate = 0.98;
+      utterance.pitch = 1.25; // Warm feminine pitch
 
-      utterance.onend = () => {
-        setSpeakingMessageId(null);
+      const setVoiceAndSpeak = () => {
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices && voices.length > 0) {
+            const shortLang = targetLang.split('-')[0].toLowerCase();
+            const nonMaleVoices = voices.filter(v => {
+              const nameLower = v.name.toLowerCase();
+              return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
+            });
+            const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
+
+            const preferredVoice = 
+              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
+                /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
+              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
+              pool[0];
+
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+          }
+
+          utterance.onend = () => setSpeakingMessageId(null);
+          utterance.onerror = () => setSpeakingMessageId(null);
+
+          setSpeakingMessageId(id);
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.error('Error in speakMessage:', e);
+          setSpeakingMessageId(null);
+        }
       };
 
-      utterance.onerror = () => {
-        setSpeakingMessageId(null);
-      };
-
-      setSpeakingMessageId(id);
-      window.speechSynthesis.speak(utterance);
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          setVoiceAndSpeak();
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+        setTimeout(setVoiceAndSpeak, 100);
+      } else {
+        setTimeout(setVoiceAndSpeak, 30);
+      }
     } else {
       alert('Text-to-speech is not supported in this browser.');
     }

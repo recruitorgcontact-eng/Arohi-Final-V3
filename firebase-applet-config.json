@@ -1,12 +1,12 @@
 {
-  "projectId": "psychic-tide-htj8l",
-  "appId": "1:178329049358:web:9e3ec8488e9f4e4a3bdf5f",
-  "apiKey": "AIzaSyC_jd2c5-43NakD9bgRNXtCbi7p0-6Lnlk",
-  "authDomain": "psychic-tide-htj8l.firebaseapp.com",
+  "projectId": "arohiai",
+  "appId": "1:370222575226:web:5e701f8f730b4bc9e5d5c3",
+  "apiKey": "AIzaSyAJwK7bqbv0hK_zLIuZyY4O8gIysZNgxsg",
+  "authDomain": "arohiai.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-arohiai-be8ad9fe-2794-4c04-8a04-5103103013a1",
-  "storageBucket": "psychic-tide-htj8l.firebasestorage.app",
-  "messagingSenderId": "178329049358",
+  "storageBucket": "arohiai.firebasestorage.app",
+  "messagingSenderId": "370222575226",
   "measurementId": "",
-  "oAuthClientId": "178329049358-tqv4n8tft4ovsmb0h0tdej4s148nlq0h.apps.googleusercontent.com",
+  "oAuthClientId": "370222575226-5qqgatebqa58vbnq4342atpjbvkqlv81.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

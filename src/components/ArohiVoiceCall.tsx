@@ -29,7 +29,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const [status, setStatus] = useState<'connecting' | 'listening' | 'speaking' | 'muted' | 'error' | 'ended'>('connecting');
   const [errorMessage, setErrorMessage] = useState('');
   const [isMuted, setIsMuted] = useState(false);
-  const selectedVoice = 'Zephyr';
+  const selectedVoice = 'Zypher'; // Preferred Zypher voice persona for Arohi
+  const [activeLanguage, setActiveLanguage] = useState<string>(() => {
+    if (language && language !== 'en') return language;
+    return 'or'; // Default to Odia & Auto-Detect for India's regional warmth
+  });
   const [sessionKey, setSessionKey] = useState(0);
   const reconnectAttemptsRef = useRef<number>(0);
 
@@ -39,7 +43,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const [currentSpeech, setCurrentSpeech] = useState('');
   const [textInput, setTextInput] = useState('');
 
-  const DEFAULT_GREETING = "Namaste! Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?";
+  const DEFAULT_GREETING = "Namaste ji! Welcome to Arohi AI. I am Arohi, your loving friend and AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?";
 
   const [turns, setTurns] = useState<SpeechTurn[]>(() => [
     {
@@ -91,6 +95,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const audioQueueRef = useRef<AudioBufferSourceNode[]>([]);
   const isMutedRef = useRef<boolean>(false);
   const isNormalCloseRef = useRef<boolean>(false);
+  const statusRef = useRef<string>(status);
+  const hasReceivedAudioStreamRef = useRef<boolean>(false);
+
+  // Sync status to ref
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   // Sync mute state to ref
   useEffect(() => {
@@ -117,8 +128,20 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     let isMounted = true;
 
-    if (SpeechRecognition && (status as string) !== 'ended' && (status as string) !== 'error') {
+    if (!SpeechRecognition) {
+      console.warn('SpeechRecognition is not supported natively in this browser.');
+      return;
+    }
+
+    const startRecognition = () => {
+      if (!isMounted || statusRef.current === 'ended' || statusRef.current === 'error') return;
+
       try {
+        if (speechRecognitionRef.current) {
+          try { speechRecognitionRef.current.stop(); } catch (e) {}
+          speechRecognitionRef.current = null;
+        }
+
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -138,12 +161,23 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           ur: 'ur-IN',
           en: 'en-IN'
         };
-        recognition.lang = langMap[language] || 'en-IN';
+        const targetLangCode = activeLanguage === 'auto' ? (language === 'or' ? 'or-IN' : 'hi-IN') : (langMap[activeLanguage] || langMap[language] || 'or-IN');
+        recognition.lang = targetLangCode;
 
         let silenceTimer: any = null;
 
         recognition.onresult = (event: any) => {
           if (!isMounted || isMutedRef.current) return;
+
+          // ECHO PREVENTION: Do NOT process or transcribe speech while Arohi is actively speaking out loud
+          if (
+            statusRef.current === 'speaking' || 
+            audioQueueRef.current.length > 0 || 
+            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking)
+          ) {
+            return;
+          }
+
           let interimTranscript = '';
           let finalTranscript = '';
 
@@ -156,74 +190,92 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           }
 
           const activeText = (finalTranscript || interimTranscript).trim();
-          if (activeText) {
-            setLiveUserSpeech(activeText);
 
-            if (silenceTimer) clearTimeout(silenceTimer);
+          // FILTER NOISE ARTIFACTS OR ECHOED NUMBERS LIKE "150", "150+", "150 languages", "namaste"
+          const cleanLower = activeText.toLowerCase();
+          const isNumericEcho = /^(150|150\+|150 languages|languages|namaste|welcome|hello|\d{1,3})$/i.test(cleanLower);
+          if (!activeText || isNumericEcho) return;
 
-            const textToCommit = (finalTranscript.trim() || activeText).trim();
+          setLiveUserSpeech(activeText);
 
-            const commitUserTurn = (text: string) => {
-              if (!text) return;
-              setTurns(prev => {
-                const last = prev[prev.length - 1];
-                if (last && last.speaker === 'user') {
-                  if (last.text === text || last.text.endsWith(text)) return prev;
-                  if (text.startsWith(last.text)) {
-                    return [
-                      ...prev.slice(0, -1),
-                      { speaker: 'user', text: text, timestamp: last.timestamp }
-                    ];
-                  }
-                  const updated = (last.text + ' ' + text).replace(/\s+/g, ' ').trim();
+          if (silenceTimer) clearTimeout(silenceTimer);
+
+          const commitUserTurn = (text: string) => {
+            if (!text) return;
+            const textLower = text.toLowerCase().trim();
+            if (/^(150|150\+|150 languages|languages|\d{1,3})$/i.test(textLower)) return;
+
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              try {
+                wsRef.current.send(JSON.stringify({ text: text }));
+              } catch (e) {
+                console.error('Error sending transcribed text prompt over WebSocket:', e);
+              }
+            }
+            setTurns(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.speaker === 'user') {
+                if (last.text === text || last.text.endsWith(text)) return prev;
+                if (text.startsWith(last.text)) {
                   return [
                     ...prev.slice(0, -1),
-                    { speaker: 'user', text: updated, timestamp: last.timestamp }
-                  ];
-                } else {
-                  return [
-                    ...prev,
-                    {
-                      speaker: 'user',
-                      text: text,
-                      timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                    }
+                    { speaker: 'user', text: text, timestamp: last.timestamp }
                   ];
                 }
-              });
-            };
+                const updated = (last.text + ' ' + text).replace(/\s+/g, ' ').trim();
+                return [
+                  ...prev.slice(0, -1),
+                  { speaker: 'user', text: updated, timestamp: last.timestamp }
+                ];
+              } else {
+                return [
+                  ...prev,
+                  {
+                    speaker: 'user',
+                    text: text,
+                    timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                  }
+                ];
+              }
+            });
+          };
 
-            if (finalTranscript.trim()) {
-              commitUserTurn(finalTranscript.trim());
-              setLiveUserSpeech('');
-            } else {
-              // Auto-commit interim transcript if user pauses for 1.2s
-              silenceTimer = setTimeout(() => {
-                if (isMounted && activeText) {
-                  commitUserTurn(activeText);
-                  setLiveUserSpeech('');
-                }
-              }, 1200);
-            }
+          if (finalTranscript.trim()) {
+            commitUserTurn(finalTranscript.trim());
+            setLiveUserSpeech('');
+          } else {
+            // Auto-commit interim transcript if user pauses for 1.2s
+            silenceTimer = setTimeout(() => {
+              if (isMounted && activeText) {
+                commitUserTurn(activeText);
+                setLiveUserSpeech('');
+              }
+            }, 1200);
           }
         };
 
         recognition.onerror = (err: any) => {
-          // Silent recovery on non-fatal speech errors
+          console.warn('SpeechRecognition notice:', err?.error);
         };
 
         recognition.onend = () => {
-          if (isMounted && speechRecognitionRef.current && !isMutedRef.current && (status as string) !== 'ended' && (status as string) !== 'error') {
-            try { recognition.start(); } catch (e) {}
+          if (isMounted && !isMutedRef.current && statusRef.current !== 'ended' && statusRef.current !== 'error') {
+            setTimeout(() => {
+              if (isMounted && !isMutedRef.current && statusRef.current !== 'ended' && statusRef.current !== 'error') {
+                try { recognition.start(); } catch (e) { startRecognition(); }
+              }
+            }, 300);
           }
         };
 
         try { recognition.start(); } catch (e) {}
         speechRecognitionRef.current = recognition;
       } catch (err) {
-        console.warn('SpeechRecognition notice:', err);
+        console.warn('SpeechRecognition initialization notice:', err);
       }
-    }
+    };
+
+    startRecognition();
 
     return () => {
       isMounted = false;
@@ -232,7 +284,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         speechRecognitionRef.current = null;
       }
     };
-  }, [language, status]);
+  }, [activeLanguage, language]);
 
   // Auto-scroll transcript log to bottom smoothly
   useEffect(() => {
@@ -337,6 +389,9 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const playAudioChunk = (base64Audio: string) => {
     const ctx = outputAudioCtxRef.current;
     if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
 
     try {
       const binary = window.atob(base64Audio);
@@ -386,7 +441,134 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     }
   };
 
+  // Active utterance ref to prevent Chrome/Android garbage collection stopping speech
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Robust Browser TTS Helper that resumes SpeechSynthesis & handles voice selection
+  const speakTextWithBrowserTTS = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+        window.speechSynthesis.cancel();
+      }
+      window.speechSynthesis.resume();
+
+      const cleanText = text
+        .replace(/\[.*?\]\(.*?\)/g, '')
+        .replace(/[*#`_~]/g, '')
+        .replace(/<[^>]*>/g, '')
+        .trim();
+
+      if (!cleanText) return;
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      activeUtteranceRef.current = utterance; // Retain reference to prevent premature GC
+
+      const langMap: Record<string, string> = {
+        hi: 'hi-IN',
+        or: 'or-IN',
+        bn: 'bn-IN',
+        te: 'te-IN',
+        ta: 'ta-IN',
+        mr: 'mr-IN',
+        gu: 'gu-IN',
+        kn: 'kn-IN',
+        ml: 'ml-IN',
+        pa: 'pa-IN',
+        ur: 'ur-IN',
+        en: 'en-IN'
+      };
+      // Automatic Language Script Detection from Response Text
+      let detectedLangTag = 'en-IN';
+      if (/[\u0B00-\u0B7F]/.test(cleanText)) {
+        detectedLangTag = 'or-IN'; // Odia script
+      } else if (/[\u0900-\u097F]/.test(cleanText)) {
+        detectedLangTag = 'hi-IN'; // Devanagari script
+      } else if (/[\u0980-\u09FF]/.test(cleanText)) {
+        detectedLangTag = 'bn-IN'; // Bengali script
+      } else if (/[\u0C00-\u0C7F]/.test(cleanText)) {
+        detectedLangTag = 'te-IN'; // Telugu script
+      } else if (/[\u0B80-\u0BFF]/.test(cleanText)) {
+        detectedLangTag = 'ta-IN'; // Tamil script
+      } else if (/[\u0A80-\u0AFF]/.test(cleanText)) {
+        detectedLangTag = 'gu-IN'; // Gujarati script
+      } else if (langMap[activeLanguage]) {
+        detectedLangTag = langMap[activeLanguage];
+      } else if (langMap[language]) {
+        detectedLangTag = langMap[language];
+      }
+
+      utterance.lang = detectedLangTag;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.25; // Warm feminine pitch
+
+      const setVoiceAndSpeak = () => {
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices && voices.length > 0) {
+            const shortLang = detectedLangTag.split('-')[0].toLowerCase(); // e.g. 'or', 'hi', 'bn'
+
+            // STRICT EXCLUSION OF MALE SYSTEM VOICES
+            const nonMaleVoices = voices.filter(v => {
+              const nameLower = v.name.toLowerCase();
+              return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
+            });
+
+            const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
+
+            const preferredVoice = 
+              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
+                /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
+              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
+              pool[0];
+
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+          }
+
+          utterance.onstart = () => {
+            setStatus('speaking');
+          };
+          utterance.onend = () => {
+            setStatus(isMutedRef.current ? 'muted' : 'listening');
+            activeUtteranceRef.current = null;
+          };
+          utterance.onerror = (e) => {
+            console.warn('SpeechSynthesis error:', e);
+            setStatus(isMutedRef.current ? 'muted' : 'listening');
+            activeUtteranceRef.current = null;
+          };
+
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.error('Error executing speechSynthesis.speak:', err);
+        }
+      };
+
+      // Ensure voices are loaded on Chrome/Safari before triggering speak
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          setVoiceAndSpeak();
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+        setTimeout(setVoiceAndSpeak, 100);
+      } else {
+        setTimeout(setVoiceAndSpeak, 30);
+      }
+    } catch (e) {
+      console.error('Browser TTS error:', e);
+    }
+  };
+
   const stopAllPlayback = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
     audioQueueRef.current.forEach(source => {
       try {
         source.stop();
@@ -435,9 +617,10 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     const startSession = async () => {
       try {
         setStatus('connecting');
+        hasReceivedAudioStreamRef.current = false;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(activeLanguage || language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -471,6 +654,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               return;
             }
             if (data.audio) {
+              hasReceivedAudioStreamRef.current = true;
               playAudioChunk(data.audio);
             }
             if (data.interrupted) {
@@ -483,6 +667,12 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               const text = data.transcript.trim();
               if (text) {
                 setCurrentSpeech(text);
+
+                // Speech TTS playback fallback when raw PCM audio stream isn't supplied
+                // ONLY trigger if NO live audio stream was ever received in this call session
+                if (data.speaker === 'arohi' && !data.audio && !hasReceivedAudioStreamRef.current && statusRef.current !== 'speaking') {
+                  speakTextWithBrowserTTS(text);
+                }
 
                 setTurns(prev => {
                   const last = prev[prev.length - 1];
@@ -617,7 +807,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       active = false;
       cleanup();
     };
-  }, [selectedVoice, sessionKey]);
+  }, [selectedVoice, activeLanguage, sessionKey]);
 
   const cleanup = () => {
     isNormalCloseRef.current = true;
@@ -828,6 +1018,8 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         </div>
       </header>
 
+
+
       {/* MAIN FUTURISTIC ORB & WAVEFORM VISUALIZER DISPLAY AREA */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto my-2 px-3 sm:px-6 select-none">
         
@@ -963,6 +1155,8 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                 </p>
               </div>
             )}
+
+
           </div>
 
         </div>
