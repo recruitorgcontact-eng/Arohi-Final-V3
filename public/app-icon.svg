@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e0249" />
+      <stop offset="50%" stop-color="#570A57" />
+      <stop offset="100%" stop-color="#0f051d" />
+    </linearGradient>
+
+    <linearGradient id="yellowGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE600" />
+      <stop offset="100%" stop-color="#FFB800" />
+    </linearGradient>
+
+    <linearGradient id="purpleGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#bgGradient)" />
+
+  <!-- Outer Glowing Accent Ring -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="none" stroke="url(#purpleGlow)" stroke-width="3" opacity="0.4" />
+
+  <!-- Abstract 'A' with AI Sparkle -->
+  <g filter="url(#subtleShadow)">
+    <!-- Left Leg of A -->
+    <path d="M 170 380 L 225 150 C 230 130, 250 130, 256 150 L 256 380 Z" fill="url(#purpleGlow)" opacity="0.95" />
+    
+    <!-- Right Swoosh / Main Curve forming A & AI Energy -->
+    <path d="M 256 150 L 340 380 C 345 395, 365 395, 370 380 L 315 220 C 300 175, 275 140, 256 150 Z" fill="url(#yellowGold)" />
+
+    <!-- Crossbar / Circuit Bridge -->
+    <path d="M 195 300 L 325 300 C 335 300, 335 316, 325 316 L 195 316 C 185 316, 185 300, 195 300 Z" fill="url(#yellowGold)" />
+
+    <!-- AI Sparkle Icon at Top Right -->
+    <g filter="url(#glow)">
+      <!-- 4-point AI Star -->
+      <path d="M 370 120 Q 370 150 400 150 Q 370 150 370 180 Q 370 150 340 150 Q 370 150 370 120 Z" fill="url(#yellowGold)" />
+      <circle cx="370" cy="150" r="4" fill="#FFFFFF" />
+    </g>
+
+    <!-- Small Accent Sparkle -->
+    <path d="M 140 180 Q 140 195 155 195 Q 140 195 140 210 Q 140 195 125 195 Q 140 195 140 180 Z" fill="#A855F7" opacity="0.8" />
+  </g>
+
+  <!-- Sleek Brand Label Bar at Bottom -->
+  <text x="256" y="445" text-anchor="middle" fill="#E2E8F0" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" letter-spacing="3" opacity="0.9">AROHI AI</text>
+</svg>

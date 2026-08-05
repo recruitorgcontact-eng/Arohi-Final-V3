@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Arohi AI - Ask me Anything!</string>
+    <string name="title_activity_main">Arohi AI - Ask me Anything!</string>
+    <string name="package_name">com.arohiai.app</string>
+    <string name="custom_url_scheme">com.arohiai.app</string>
+</resources>
