@@ -295,6 +295,44 @@ export default function App() {
         description: 'Anonymous visitor loaded Arohiai.com landing interface'
       })
     }).catch(err => console.log('Telemetry offline:', err));
+
+    // Prompt for Microphone & Geolocation permissions on startup for Android App & Web
+    const requestInitialPermissions = async () => {
+      // 1. Geolocation permission request
+      if ('geolocation' in navigator) {
+        try {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              console.log('Startup location permission granted:', pos.coords.latitude, pos.coords.longitude);
+            },
+            (err) => {
+              console.warn('Startup location permission note:', err.message);
+            },
+            { timeout: 8000, enableHighAccuracy: false }
+          );
+        } catch (e) {
+          console.warn('Startup location check failed:', e);
+        }
+      }
+
+      // 2. Microphone permission request
+      if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          // Release stream immediately so mic does not stay locked
+          stream.getTracks().forEach((track) => track.stop());
+          console.log('Startup microphone permission granted.');
+        } catch (err) {
+          console.warn('Startup microphone permission note:', err);
+        }
+      }
+    };
+
+    const permTimer = setTimeout(() => {
+      requestInitialPermissions();
+    }, 1000);
+
+    return () => clearTimeout(permTimer);
   }, []);
 
   useEffect(() => {
