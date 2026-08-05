@@ -48,16 +48,25 @@ jobs:
             npx cap sync android
           fi
 
-      - name: Make Gradle executable
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle executable and verify wrapper
         run: |
-          if [ -f "android/gradlew" ]; then
-            chmod +x android/gradlew
+          cd android
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || ! java -jar gradle/wrapper/gradle-wrapper.jar --version > /dev/null 2>&1; then
+            echo "Gradle wrapper jar is invalid or missing, generating new wrapper..."
+            gradle wrapper --gradle-version 8.12
+            chmod +x gradlew
           fi
 
       - name: Build Android APK (Debug)
         run: |
           cd android
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace || gradle assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
