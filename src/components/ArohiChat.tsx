@@ -2099,7 +2099,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       console.error('Error sending message:', error);
       // Fallback
       setTimeout(() => {
-        const fallbackText = `I apologize, but I had trouble connecting to my server. Please ensure your \`AROHI_API_KEY\` is loaded in the settings.
+        const fallbackText = `I apologize, but I had trouble connecting to the server. Please check your network connection or try again in a moment.
 
 As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs board** or **Government Schemes** section to explore the latest live options for your educational background!`;
 

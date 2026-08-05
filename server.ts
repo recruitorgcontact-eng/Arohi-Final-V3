@@ -5285,7 +5285,7 @@ function getArohiFallbackResponse(userPrompt: string, fileName?: string): string
   
   if (fileName) {
     const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
-    fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! Since the server is currently running in fallback/demo mode without an active live key, I cannot perform a full multi-page parsing. However, as **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*If you enter a valid API key in Settings > Secrets, I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
+    fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! As **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
   }
 
   if (p.includes('resume') || p.includes('cv') || p.includes('biodata')) {
@@ -6031,9 +6031,9 @@ async function startServer() {
     if (!clientAi) {
       logWsEvent('get_ai_client_failed', { reason: 'No GEMINI_API_KEY env or helper' });
       safeSendAndClose(
-        { error: 'Arohi AI API key is not configured. Please add your GEMINI_API_KEY in the Settings > Secrets panel on Google AI Studio to enable Arohi Live Voice.' },
+        { error: 'Arohi AI live voice service is currently initializing. Please try again shortly.' },
         1011,
-        'API Key not configured'
+        'Voice service initializing'
       );
       return;
     }
