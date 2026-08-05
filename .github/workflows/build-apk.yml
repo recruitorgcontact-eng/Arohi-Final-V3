@@ -28,16 +28,24 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: Build web application
         run: npm run build
 
-      - name: Sync Capacitor Android
-        run: npx cap sync android
+      - name: Add or Sync Capacitor Android
+        run: |
+          if [ ! -d "android/app" ]; then
+            npx cap add android
+          else
+            npx cap sync android
+          fi
 
       - name: Make Gradle executable
-        run: chmod +x android/gradlew
+        run: |
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+          fi
 
       - name: Build Android APK (Debug)
         run: |
