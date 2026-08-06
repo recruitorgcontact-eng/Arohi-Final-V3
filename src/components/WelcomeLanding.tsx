@@ -1177,14 +1177,16 @@ export default function WelcomeLanding({
             {getTranslation('dreamPrepare', language)}
           </p>
 
-          <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-[#120d2a]/85 border border-[#7c3aed]/40 text-purple-200 px-4 py-1 rounded-full text-[10px] sm:text-xs font-extrabold tracking-wider shadow-[0_4px_20px_rgba(124,58,237,0.15)] mt-2 backdrop-blur-sm uppercase select-none">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5ff] opacity-80"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00e5ff]"></span>
-            </span>
-            <span>NATIVE ODIA / ଓଡ଼ିଆ FULLY ACTIVE & OPTIMIZED</span>
-            <span className="text-slate-500 font-normal">|</span>
-            <span className="text-cyan-400 font-extrabold">150+ LANGUAGES CHAT & CALL</span>
+          <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 bg-[#120d2a]/85 border border-[#7c3aed]/40 px-4 py-2 sm:py-1.5 rounded-2xl sm:rounded-full shadow-[0_4px_20px_rgba(124,58,237,0.15)] mt-2 backdrop-blur-sm uppercase select-none text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="flex h-2.5 w-2.5 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5ff] opacity-80"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00e5ff]"></span>
+              </span>
+              <span className="text-cyan-400 text-xs sm:text-sm font-black tracking-wider">150+ LANGUAGES CHAT & CALL</span>
+            </div>
+            <span className="hidden sm:inline text-slate-500 font-normal">|</span>
+            <span className="text-purple-300/80 text-[9px] sm:text-[11px] font-semibold tracking-normal">NATIVE ODIA / ଓଡ଼ିଆ FULLY ACTIVE & OPTIMIZED</span>
           </div>
         </div>
 

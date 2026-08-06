@@ -962,7 +962,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   };
 
   return (
-    <div className={`fixed inset-0 z-50 text-white flex flex-col justify-between p-3 sm:p-6 font-sans select-none overflow-hidden transition-colors duration-700 ${getThemeBackgroundClasses()}`}>
+    <div className={`fixed inset-0 z-[9999] bg-[#070514] text-white flex flex-col justify-between p-3 sm:p-6 font-sans select-none overflow-hidden transition-colors duration-700 ${getThemeBackgroundClasses()}`}>
       
       {/* Dynamic Atmospheric Ambient Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

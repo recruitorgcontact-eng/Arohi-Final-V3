@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Send, Bot, User, Sparkles, Plus, RefreshCw, Trash2, Mic, Paperclip, CheckCircle, 
   ArrowRight, Lightbulb, MapPin, Briefcase, Landmark, Award, Minus, X, Globe, Phone, 
@@ -2331,7 +2332,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
   }
 
   return (
-    <div className="flex bg-[#000000] text-slate-100 overflow-hidden h-full w-full font-sans relative">
+    <div className={`flex bg-[#000000] text-slate-100 overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
       {/* GEMINI-STYLE NAVIGATION DRAWER / SIDEBAR (Matches Screenshot 2) */}
       <aside 
@@ -3046,15 +3047,18 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
         </div>
       )}
 
-      {/* VOICE CALL MODAL */}
-      {isVoiceCallOpen && (
-        <ArohiVoiceCall 
-          onClose={() => setIsVoiceCallOpen(false)} 
-          language={language} 
-          onNavigateTab={onNavigateTab}
-          uid={user?.uid}
-          onCallComplete={handleVoiceCallComplete}
-        />
+      {/* VOICE CALL MODAL PORTAL (Renders full-screen over document.body to prevent flickering & background chat overlap) */}
+      {isVoiceCallOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] bg-[#070514] text-white overflow-hidden">
+          <ArohiVoiceCall 
+            onClose={() => setIsVoiceCallOpen(false)} 
+            language={language} 
+            onNavigateTab={onNavigateTab}
+            uid={user?.uid}
+            onCallComplete={handleVoiceCallComplete}
+          />
+        </div>,
+        document.body
       )}
 
       {/* CALL SUMMARY DETAIL MODAL */}
