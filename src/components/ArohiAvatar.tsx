@@ -134,7 +134,7 @@ export default function ArohiAvatar({ className = 'w-full h-full' }: ArohiAvatar
 
         {/* 9. Small orbiting green/cyan dot near the concentric ring */}
         <g className="animate-spin" style={{ transformOrigin: 'center', animationDuration: '6s' }}>
-          <circle cx="74" cy="50" r="2" fill="#00e5ff" filter="url(#luminous-glow)" />
+          <circle cx="74" cy="50" r="2.5" fill="#00e5ff" />
         </g>
 
         {/* 10. Glowing pulsing green active status light (integrated) */}

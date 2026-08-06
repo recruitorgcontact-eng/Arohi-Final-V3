@@ -7,6 +7,17 @@ html, body {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* GPU Hardware Acceleration Utilities */
+.gpu-layer, .transform-gpu {
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 @keyframes marquee {
@@ -14,23 +25,35 @@ html, body {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+/* Smooth non-blinking fade keyframe instead of step-end jarring cuts */
+@keyframes blink-smooth {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale3d(1, 1, 1);
+  }
+  50% { 
+    opacity: 0.45; 
+    transform: scale3d(0.96, 0.96, 1);
+  }
 }
 
 .animate-marquee {
   display: inline-flex;
   white-space: nowrap;
   animation: marquee 40s linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .animate-blink {
-  animation: blink 1s step-end infinite;
+  animation: blink-smooth 2s ease-in-out infinite;
+  will-change: opacity, transform;
 }
 
 /* Custom styles for government tables */

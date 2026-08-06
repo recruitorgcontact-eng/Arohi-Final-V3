@@ -83,8 +83,8 @@ export default function ArohiLandingPage({
       
       {/* 2. SPECTACULAR HERO SECTION */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#090714] via-[#05030a] to-[#020205] border border-slate-800/50 rounded-[3rem] p-8 md:p-14 shadow-2xl">
-        <div className="absolute right-0 bottom-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -translate-y-10 translate-x-10 animate-pulse pointer-events-none"></div>
-        <div className="absolute left-1/4 top-1/4 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl animate-pulse delay-700 pointer-events-none"></div>
+        <div className="absolute right-0 bottom-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none transform-gpu"></div>
+        <div className="absolute left-1/4 top-1/4 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl pointer-events-none transform-gpu"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
           
@@ -94,7 +94,7 @@ export default function ArohiLandingPage({
             {/* Top Badge and Tour Button Row */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 bg-[#091515] border border-teal-500/30 text-teal-300 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#00e676] animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-[#00e676] shadow-[0_0_8px_#00e676]"></span>
                 <span>#1 AI ASSISTANT FOR LEARNING, RESEARCH & GROWTH ★</span>
               </div>
               {isTourEnabled && (

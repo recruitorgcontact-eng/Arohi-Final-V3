@@ -46,6 +46,11 @@ public class MainActivity extends BridgeActivity {
     public void onStart() {
         super.onStart();
         if (this.bridge != null && this.bridge.getWebView() != null) {
+            android.webkit.WebView webView = this.bridge.getWebView();
+            webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+            android.webkit.WebSettings settings = webView.getSettings();
+            settings.setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
+            
             this.bridge.getWebView().setWebChromeClient(new WebChromeClient() {
                 @Override
                 public void onPermissionRequest(final PermissionRequest request) {

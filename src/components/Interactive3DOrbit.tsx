@@ -211,14 +211,14 @@ export default function Interactive3DOrbit({ setActiveTab, setSelectedPosting, o
         <div className="w-full md:w-1/2 flex items-center justify-center relative min-h-[320px] preserve-3d perspective-2000">
           
           {/* Virtual Center Hub */}
-          <div className="absolute w-24 h-24 rounded-full bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex flex-col items-center justify-center shadow-[0_0_40px_rgba(124,58,237,0.2)] animate-pulse z-10">
-            <span className="text-3xl animate-bounce">🇮🇳</span>
+          <div className="absolute w-24 h-24 rounded-full bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex flex-col items-center justify-center shadow-[0_0_40px_rgba(124,58,237,0.25)] transform-gpu z-10">
+            <span className="text-3xl">🇮🇳</span>
             <span className="text-[8px] font-black tracking-widest text-[#a78bfa] uppercase mt-1">NCS Hub</span>
           </div>
 
           {/* Interactive 3D Rotational Cylinder Grid */}
           <div 
-            className="w-full h-full absolute flex items-center justify-center transition-transform duration-700 ease-out preserve-3d"
+            className="w-full h-full absolute flex items-center justify-center transition-transform duration-700 ease-out preserve-3d transform-gpu will-change-transform"
             style={{
               transform: `rotateX(${tilt}deg) rotateY(${rotation}deg)`,
             }}

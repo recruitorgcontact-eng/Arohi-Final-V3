@@ -107,8 +107,8 @@ export default function Smooth3DShowcase({ setActiveTab, setSelectedPosting }: S
     },
   ];
 
-  // We repeat items multiple times to allow infinite looping and cover extra wide viewports seamlessly
-  const repeatedItems = [...showcaseItems, ...showcaseItems, ...showcaseItems, ...showcaseItems];
+  // We repeat items twice to allow seamless infinite looping with minimal DOM footprint
+  const repeatedItems = [...showcaseItems, ...showcaseItems];
 
   // Resolve active animation class based on settings
   const getAnimationClass = () => {
@@ -263,7 +263,7 @@ export default function Smooth3DShowcase({ setActiveTab, setSelectedPosting }: S
                       <div className={`p-2 rounded-xl border ${item.iconColor} transition-transform group-hover:scale-110 duration-300`}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className={`text-[9px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-md ${item.badgeColor} animate-pulse`}>
+                      <span className={`text-[9px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-md ${item.badgeColor}`}>
                         {item.tag}
                       </span>
                     </div>
