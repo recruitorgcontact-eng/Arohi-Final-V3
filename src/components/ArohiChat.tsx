@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow
+  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid
 } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import ArohiAvatar from './ArohiAvatar';
@@ -57,9 +57,9 @@ function renderMarkdown(content: string) {
       if (piece.startsWith('**') && piece.endsWith('**')) {
         return <strong key={idx} className="font-extrabold text-[#c084fc]">{piece.slice(2, -2)}</strong>;
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
-        return <em key={idx} className="italic text-slate-200">{piece.slice(1, -1)}</em>;
+        return <em key={idx} className="italic text-slate-100">{piece.slice(1, -1)}</em>;
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return <code key={idx} className="bg-slate-950/60 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-400 border border-slate-800">{piece.slice(1, -1)}</code>;
+        return <code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>;
       }
       return piece;
     });
@@ -83,14 +83,14 @@ function renderMarkdown(content: string) {
     if (currentList.length > 0) {
       if (listType === 'ul') {
         elements.push(
-          <ul key={`ul-${key}`} className="list-disc pl-5 my-2 space-y-1 text-slate-200">
+          <ul key={`ul-${key}`} className="list-disc pl-5 my-2 space-y-1 text-slate-100 dark:text-slate-100">
             {currentList.map((item) => (
-              <li key={item.key} className="text-xs md:text-sm font-medium leading-relaxed">
+              <li key={item.key} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100">
                 {parseInline(item.content)}
                 {item.subItems.length > 0 && (
-                  <ul className="list-circle pl-5 my-1 space-y-1 text-slate-300">
+                  <ul className="list-circle pl-5 my-1 space-y-1 text-slate-200 dark:text-slate-200">
                     {item.subItems.map((sub, sIdx) => (
-                      <li key={sIdx}>{parseInline(sub)}</li>
+                      <li key={sIdx} className="text-slate-200 dark:text-slate-200">{parseInline(sub)}</li>
                     ))}
                   </ul>
                 )}
@@ -100,14 +100,14 @@ function renderMarkdown(content: string) {
         );
       } else if (listType === 'ol') {
         elements.push(
-          <ol key={`ol-${key}`} className="list-decimal pl-5 my-2 space-y-2 text-slate-200">
+          <ol key={`ol-${key}`} className="list-decimal pl-5 my-2 space-y-2 text-slate-100 dark:text-slate-100">
             {currentList.map((item) => (
-              <li key={item.key} value={item.value} className="text-xs md:text-sm font-medium leading-relaxed">
+              <li key={item.key} value={item.value} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100">
                 {parseInline(item.content)}
                 {item.subItems.length > 0 && (
-                  <ul className="list-disc pl-5 my-1 space-y-1 text-slate-300">
+                  <ul className="list-disc pl-5 my-1 space-y-1 text-slate-200 dark:text-slate-200">
                     {item.subItems.map((sub, sIdx) => (
-                      <li key={sIdx}>{parseInline(sub)}</li>
+                      <li key={sIdx} className="text-slate-200 dark:text-slate-200">{parseInline(sub)}</li>
                     ))}
                   </ul>
                 )}
@@ -135,14 +135,14 @@ function renderMarkdown(content: string) {
         elements.push(
           <div key={index} className="my-3 rounded-xl overflow-hidden border border-[#7c3aed]/50 shadow-2xl bg-[#0b081f] p-2 text-center group">
             <img src={src} alt={alt} className="w-full h-auto max-h-[420px] object-cover rounded-lg shadow-md transition-all group-hover:scale-[1.01]" referrerPolicy="no-referrer" />
-            <p className="text-[11px] text-slate-300 mt-2 font-semibold flex items-center justify-center gap-1.5">
+            <p className="text-[11px] text-slate-200 mt-2 font-semibold flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-violet-400" /> {alt || 'Generated Image'}
             </p>
           </div>
         );
       } else {
         elements.push(
-          <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-200 mb-1">
+          <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100 mb-1.5">
             {parseInline(line)}
           </p>
         );
@@ -216,7 +216,7 @@ function renderMarkdown(content: string) {
     else {
       pushList(index);
       elements.push(
-        <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-200 mb-1">
+        <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100 mb-1.5">
           {parseInline(line)}
         </p>
       );
@@ -225,7 +225,7 @@ function renderMarkdown(content: string) {
 
   pushList(lines.length);
 
-  return <div className="space-y-1">{elements}</div>;
+  return <div className="space-y-1 text-slate-100 dark:text-slate-100">{elements}</div>;
 }
 
 function parseMessageResume(content: string) {
@@ -781,8 +781,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = detectedLang.langTag;
-        utterance.rate = 0.98;
-        utterance.pitch = 1.25;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.35; // Arohi's signature soft warm female pitch
 
         const setVoiceAndSpeak = () => {
           try {
@@ -791,19 +791,22 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
               const shortLang = detectedLang.langCode.toLowerCase();
               const tagLower = detectedLang.langTag.toLowerCase();
 
-              const nonMaleVoices = voices.filter(v => {
+              // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
+              const strictlyFemaleVoices = voices.filter(v => {
                 const nameLower = v.name.toLowerCase();
-                return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
+                const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
+                                       /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
+                return !isExplicitMale;
               });
-              const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
+              const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
 
               const preferredVoice = 
-                pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+                pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
                 pool.find(v => v.lang.toLowerCase() === tagLower) ||
+                pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
                 pool.find(v => v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) ||
-                pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
-                pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
-                pool[0];
+                pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+                pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in'));
 
               if (preferredVoice) {
                 utterance.voice = preferredVoice;
@@ -1244,25 +1247,96 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
         const initialMock: SavedChat[] = [
           {
             id: '1',
-            title: 'Full Stack Career Roadmap',
+            title: 'Front Screen Rating',
             date: 'Today',
             messages: [
               {
                 id: '1-1',
                 role: 'user',
-                content: 'Give me a roadmap for transitioning to full stack development in India.',
+                content: 'How would you rate the overall user experience and visual layout of our front screen design?',
                 timestamp: '10:00 AM'
               },
               {
                 id: '1-2',
                 role: 'assistant',
-                content: `### 🚀 Full Stack Web Development Transition Blueprint
-Here is your customized learning journey:
-1. **Frontend Fundamentals:** HTML5, CSS3, and JavaScript (ES6+). Focus on modern responsive grids and utility frameworks like **Tailwind CSS**.
-2. **Component Frameworks:** React 18+ with Vite. Build structured modular user interfaces and state models.
-3. **Backend Stack:** Node.js, Express, and Firestore/SQL databases. Design lightweight REST proxy layers to secure private secrets.
-4. **Cloud Execution:** Deploy static assets on host buckets, and full-stack servers on Cloud Run using container configurations.`,
+                content: 'Your front screen layout scores **9.2/10** for contrast, responsive typography, and clear action buttons!',
                 timestamp: '10:01 AM'
+              }
+            ]
+          },
+          {
+            id: '2',
+            title: 'ArohiAI App Architecture',
+            date: 'Yesterday',
+            messages: [
+              {
+                id: '2-1',
+                role: 'user',
+                content: 'Explain the core system architecture and data flow for ArohiAI.',
+                timestamp: '03:15 PM'
+              },
+              {
+                id: '2-2',
+                role: 'assistant',
+                content: 'ArohiAI utilizes a full-stack Node/Express server on Cloud Run with WebSocket bidirectional streaming for Gemini Live audio and Firestore for multi-device data synchronization.',
+                timestamp: '03:16 PM'
+              }
+            ]
+          },
+          {
+            id: '3',
+            title: 'Architecture Report Summary',
+            date: '2 days ago',
+            messages: [
+              {
+                id: '3-1',
+                role: 'user',
+                content: 'Summarize the architectural review findings.',
+                timestamp: '11:20 AM'
+              },
+              {
+                id: '3-2',
+                role: 'assistant',
+                content: 'Key recommendations include server-side API proxying for key security, sub-millisecond audio streaming buffers, and dark mode contrast optimizations.',
+                timestamp: '11:21 AM'
+              }
+            ]
+          },
+          {
+            id: '4',
+            title: 'AarohiAI.com Overview',
+            date: '3 days ago',
+            messages: [
+              {
+                id: '4-1',
+                role: 'user',
+                content: 'Give an overview of AarohiAI platform capabilities.',
+                timestamp: '02:00 PM'
+              },
+              {
+                id: '4-2',
+                role: 'assistant',
+                content: 'AarohiAI provides real-time AI voice calling, course study modules, ATS resume analysis, job matching, and live multi-modal media studios.',
+                timestamp: '02:01 PM'
+              }
+            ]
+          },
+          {
+            id: '5',
+            title: 'Unique AI Name Ideas',
+            date: '4 days ago',
+            messages: [
+              {
+                id: '5-1',
+                role: 'user',
+                content: 'Give me 5 unique name ideas for an AI assistant.',
+                timestamp: '05:40 PM'
+              },
+              {
+                id: '5-2',
+                role: 'assistant',
+                content: '1. Arohi\n2. Synapse\n3. Zenon\n4. Lumin\n5. Aura',
+                timestamp: '05:41 PM'
               }
             ]
           }
@@ -2334,142 +2408,50 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
   return (
     <div className={`flex bg-[#000000] text-slate-100 overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
-      {/* GEMINI-STYLE NAVIGATION DRAWER / SIDEBAR (Matches Screenshot 2) */}
+      {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
       <aside 
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-72 md:w-64 bg-[#08060f] border-r border-[#1e1738] p-4 shrink-0 transition-transform duration-300 ease-in-out`}
+        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 bg-[#090714] border-r border-[#1a142e] p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans text-slate-100 select-none shadow-2xl`}
       >
-        {/* Sidebar Header: Branding & Close */}
-        <div className="flex items-center justify-between mb-6 px-2">
+        {/* Sidebar Header: Brand + Search + Close */}
+        <div className="flex items-center justify-between pb-3 mb-2 px-1 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7c3aed] to-[#c084fc] flex items-center justify-center text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-white shadow-md">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
-              Arohi <span className="text-xs bg-[#7c3aed]/30 text-[#c084fc] px-1.5 py-0.5 rounded font-black uppercase border border-[#7c3aed]/40">AI</span>
+            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+              Arohi <span className="text-[10px] bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 px-2 py-0.5 rounded font-black uppercase border border-purple-500/30">AI</span>
             </h2>
           </div>
-          <button 
-            onClick={() => setIsSidebarOpen(false)}
-            className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => setShowSearchInput(!showSearchInput)}
+              className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              title="Search Recents"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="md:hidden p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Top Action Menu Items */}
-        <div className="space-y-1 mb-6">
-          <button
-            onClick={() => {
-              startNewChat();
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-semibold text-white bg-[#1a1435] hover:bg-[#251d4a] border border-[#3b2a80] transition-all shadow-sm cursor-pointer"
-          >
-            <Edit3 className="w-4 h-4 text-[#c084fc]" />
-            <span>New chat</span>
-          </button>
-
-          <button
-            onClick={() => setShowSearchInput(!showSearchInput)}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer"
-          >
-            <Search className="w-4 h-4 text-slate-400" />
-            <span>Search chats</span>
-          </button>
-
-          {showSearchInput && (
-            <div className="px-1 py-1">
-              <input
-                type="text"
-                placeholder="Type to filter chats..."
-                value={sidebarSearchQuery}
-                onChange={(e) => setSidebarSearchQuery(e.target.value)}
-                className="w-full bg-[#110d28] border border-[#2d2163] rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#7c3aed]"
-                autoFocus
-              />
-            </div>
-          )}
-
+        {/* Top Quick Navigation List (Matches ChatGPT Sidebar) */}
+        <div className="space-y-1 mb-3 py-1">
           <button
             onClick={() => {
               setIsImageStudioOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer border border-purple-500/30 bg-purple-500/5"
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
           >
-            <ImageIcon className="w-4 h-4 text-purple-400 animate-pulse shrink-0" />
-            <span className="truncate">Control image aspect ratios</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsMusicStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer"
-          >
-            <Music className="w-4 h-4 text-cyan-400 animate-pulse" />
-            <span className="flex items-center gap-1.5">
-              <span>Music Studio</span>
-              <span className="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.2 rounded-full font-bold">Lyria</span>
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsVideoStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer border border-rose-500/30 bg-rose-500/5"
-          >
-            <Video className="w-4 h-4 text-rose-400 animate-pulse shrink-0" />
-            <span className="truncate">Generate video from text</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsDocResearchStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer border border-amber-500/20 bg-amber-500/5"
-          >
-            <Globe className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
-            <span className="truncate">Google Search Data</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsMapsStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer border border-blue-500/30 bg-blue-500/5"
-          >
-            <MapPin className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
-            <span className="truncate">Use Google Maps Data</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsIntelligenceStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer border border-emerald-500/30 bg-emerald-500/5"
-          >
-            <Brain className="w-4 h-4 text-emerald-400 animate-pulse shrink-0" />
-            <span className="truncate">Add Arohi AI intelligence</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsVoiceCallOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer"
-          >
-            <Video className="w-4 h-4 text-emerald-400" />
-            <span>Voice & Calls</span>
+            <ImageIcon className="w-5 h-5 text-slate-300 shrink-0" />
+            <span>Images</span>
           </button>
 
           <button
@@ -2477,56 +2459,84 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               setActiveTab('calls');
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] transition-all cursor-pointer"
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
           >
-            <Library className="w-4 h-4 text-amber-400" />
-            <span>Library & Summaries</span>
+            <Library className="w-5 h-5 text-slate-300 shrink-0" />
+            <span>Library</span>
           </button>
-        </div>
-
-        {/* Notebooks Section */}
-        <div className="mb-6 px-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-400 tracking-wider">Notebooks</span>
-            <button 
-              onClick={() => setShowNewNotebookModal(true)}
-              className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
-              title="New Notebook"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
           <button
-            onClick={() => setShowNewNotebookModal(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-[#140f2d] rounded-xl transition-all cursor-pointer"
+            onClick={() => {
+              setShowNewNotebookModal(true);
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
           >
-            <Plus className="w-3.5 h-3.5 text-violet-400" />
-            <span>New notebook</span>
+            <Folder className="w-5 h-5 text-slate-300 shrink-0" />
+            <span>Projects</span>
           </button>
 
-          <div className="mt-1 space-y-0.5">
-            {activeNotebooks.map((nb, idx) => (
-              <div key={idx} className="px-3 py-1.5 text-xs text-slate-300 truncate hover:text-white hover:bg-[#140f2d] rounded-lg cursor-pointer flex items-center gap-2">
-                <BookOpen className="w-3 h-3 text-indigo-400 shrink-0" />
-                <span className="truncate">{nb}</span>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={() => {
+              setIsVoiceCallOpen(true);
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+          >
+            <Clock className="w-5 h-5 text-slate-300 shrink-0" />
+            <span>Scheduled</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsIntelligenceStudioOpen(true);
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+          >
+            <Grid className="w-5 h-5 text-slate-300 shrink-0" />
+            <span>Plugins & Tools</span>
+          </button>
         </div>
 
-        {/* Recents Section (Pill Highlight Style - Matches Screenshot 2!) */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 px-1 custom-scrollbar">
-          <div className="text-[11px] font-bold text-slate-400 tracking-wider mb-2">Recents</div>
+        {/* Search input when toggled */}
+        {showSearchInput && (
+          <div className="mb-3 px-1">
+            <input
+              type="text"
+              placeholder="Search conversation titles..."
+              value={sidebarSearchQuery}
+              onChange={(e) => setSidebarSearchQuery(e.target.value)}
+              className="w-full bg-[#18132d] border border-[#30225d] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#7c3aed]"
+              autoFocus
+            />
+          </div>
+        )}
 
+        {/* Recents Section Heading */}
+        <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3 pt-2">
+          <span>Recents</span>
+          {activeTab === 'calls' && (
+            <button
+              onClick={() => setActiveTab('chats')}
+              className="text-[10px] text-blue-400 hover:underline normal-case font-medium cursor-pointer"
+            >
+              Show Chats
+            </button>
+          )}
+        </div>
+
+        {/* Scrollable Conversation History */}
+        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 px-1 custom-scrollbar">
           {activeTab === 'chats' ? (
             filteredChats.length === 0 ? (
-              <div className="text-center py-6 text-xs text-slate-500 font-medium">
-                No matching chats
+              <div className="text-center py-8 text-xs text-slate-500 font-medium">
+                No recent conversations
               </div>
             ) : (
               filteredChats.map((item) => {
                 const isActive = activeChatId === item.id;
+                const msgCount = item.messages ? item.messages.filter(m => m.id !== 'welcome').length : 0;
                 return (
                   <div
                     key={item.id}
@@ -2535,82 +2545,88 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                       setMessages(item.messages);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2.5 rounded-full text-xs transition-all cursor-pointer flex items-center justify-between group ${
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer flex items-center justify-between group ${
                       isActive
-                        ? 'bg-[#1c1633] text-white font-bold border border-[#48338e]/60 shadow-md'
-                        : 'text-slate-300 hover:bg-[#140e2b] hover:text-white'
+                        ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white font-semibold border border-purple-500/40 shadow-sm'
+                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    <span className="truncate pr-2 font-medium">{item.title}</span>
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? 'text-purple-400' : 'text-slate-400'}`} />
+                      <div className="min-w-0">
+                        <div className="truncate text-sm leading-tight">{item.title}</div>
+                        <div className="text-[10px] text-slate-400 font-normal flex items-center gap-1.5 mt-0.5">
+                          <span>{item.date || 'Recent'}</span>
+                          {msgCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span>{msgCount} {msgCount === 1 ? 'msg' : 'msgs'}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                     <Trash2
                       onClick={(e) => deleteChat(item.id, e)}
-                      className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
+                      className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
                     />
                   </div>
                 );
               })
             )
+          ) : savedCalls.length === 0 ? (
+            <div className="text-center py-8 text-xs text-slate-500 font-medium">
+              No saved call logs
+            </div>
           ) : (
-            savedCalls.length === 0 ? (
-              <div className="text-center py-6 text-xs text-slate-500 font-medium">
-                No saved call logs
-              </div>
-            ) : (
-              savedCalls.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedCallDetail(item);
-                    if (window.innerWidth < 768) setIsSidebarOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:bg-[#140e2b] hover:text-white transition-all cursor-pointer flex items-center justify-between group"
-                >
-                  <div className="truncate flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span className="truncate">{item.date}</span>
-                  </div>
-                  <Trash2
-                    onClick={(e) => deleteCall(item.id, e)}
-                    className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
-                  />
+            savedCalls.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  setSelectedCallDetail(item);
+                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer flex items-center justify-between group"
+              >
+                <div className="truncate flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="truncate">{item.date}</span>
                 </div>
-              ))
-            )
+                <Trash2
+                  onClick={(e) => deleteCall(item.id, e)}
+                  className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
+                />
+              </div>
+            ))
           )}
         </div>
 
-        {/* Bottom User Profile Section (Matches Screenshot 2!) */}
-        <div className="pt-4 border-t border-[#1e1738] mt-2 px-1">
-          <div 
-            onClick={() => onNavigateTab?.('dashboard')}
-            className="flex items-center justify-between p-2 rounded-2xl hover:bg-[#140e2b] transition-all cursor-pointer"
+        {/* Bottom Bar: Chat Pill + User Profile Circle */}
+        <div className="pt-3 border-t border-white/10 mt-2 px-1 flex items-center justify-between gap-2">
+          <button
+            onClick={() => {
+              startNewChat();
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-full font-bold text-xs tracking-wide shadow-lg transition-all cursor-pointer active:scale-95"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              {/* Gradient border ring around user avatar */}
-              <div className="p-[2.5px] bg-gradient-to-tr from-[#8b5cf6] via-[#ec4899] to-[#f59e0b] rounded-full shrink-0 shadow-md">
-                <div className="w-8 h-8 rounded-full bg-[#120d2b] overflow-hidden flex items-center justify-center">
-                  {(user as any)?.photoURL ? (
-                    <img src={(user as any).photoURL} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-black text-[#c084fc]">
-                      {currentUserName.substring(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate leading-tight">
-                  {currentUserName}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider shadow-sm">
-                    PRO
-                  </span>
-                  <span className="text-[10px] text-slate-400 truncate">Arohi Ultra</span>
-                </div>
-              </div>
-            </div>
-            <Settings className="w-4 h-4 text-slate-400 hover:text-white transition-colors shrink-0 ml-1" />
+            <Edit3 className="w-4 h-4" />
+            <span>Chat</span>
+          </button>
+
+          <div
+            onClick={() => {
+              onNavigateTab?.('dashboard');
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="w-9 h-9 rounded-full bg-[#2563eb] text-white font-extrabold flex items-center justify-center text-xs border border-white/20 shadow-md cursor-pointer hover:scale-105 transition-all shrink-0"
+            title="User Profile"
+          >
+            {(user as any)?.photoURL ? (
+              <img src={(user as any).photoURL} alt="Profile" className="w-full h-full object-cover rounded-full" />
+            ) : (
+              currentUserName ? currentUserName.substring(0, 2).toUpperCase() : 'JU'
+            )}
           </div>
         </div>
       </aside>
@@ -2762,7 +2778,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     : 'text-slate-100 p-1 sm:p-2 font-normal text-base leading-relaxed'
                 }`}>
                   {/* Parse standard markdown formatting */}
-                  <div className={`prose max-w-none text-sm sm:text-base leading-relaxed ${
+                  <div className={`prose prose-invert prose-p:text-slate-100 prose-p:leading-relaxed prose-li:text-slate-100 prose-strong:text-[#c084fc] prose-strong:font-bold prose-headings:text-white max-w-none text-sm sm:text-base leading-relaxed ${
                     msg.role === 'assistant' ? 'text-slate-100 font-sans tracking-wide space-y-3' : 'text-white'
                   }`}>
                     {renderMarkdown(parsed.cleanedContent)}

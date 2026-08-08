@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 html, body {
-  background-color: #030208;
   margin: 0;
   padding: 0;
   width: 100%;
@@ -10,6 +9,122 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme rules */
+html.dark, html.dark body, body.dark {
+  background-color: #070814;
+  color: #f8fafc;
+  color-scheme: dark;
+}
+
+/* Bright / Light theme rules */
+html.light, html.light body, body.light {
+  background-color: #f8f9fe;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+/* Ensure crisp, high contrast font visibility in light mode */
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light .text-slate-400,
+body.light .text-slate-200,
+body.light .text-slate-300,
+body.light .text-slate-400 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-500,
+body.light .text-slate-500 {
+  color: #475569 !important;
+}
+
+html.light .text-white\/40,
+html.light .text-white\/50,
+html.light .text-white\/60,
+html.light .text-white\/70,
+body.light .text-white\/40,
+body.light .text-white\/50,
+body.light .text-white\/60,
+body.light .text-white\/70 {
+  color: #1e293b !important;
+}
+
+/* Force high contrast dark text inside light background cards/buttons */
+html.light .bg-white,
+html.light .bg-white\/90,
+html.light .bg-white\/95,
+body.light .bg-white,
+body.light .bg-white\/90,
+body.light .bg-white\/95,
+.light .bg-white,
+.light .bg-white\/90,
+.light .bg-white\/95 {
+  color: #0f172a !important;
+}
+
+/* Bright Light Mode overrides for hardcoded dark background containers */
+html.light .bg-\[\#070814\],
+html.light .bg-\[\#090714\],
+html.light .bg-\[\#05040a\],
+html.light .bg-\[\#0c0822\]\/98,
+html.light .bg-\[\#0b081c\],
+body.light .bg-\[\#070814\],
+body.light .bg-\[\#090714\],
+body.light .bg-\[\#05040a\],
+body.light .bg-\[\#0c0822\]\/98,
+body.light .bg-\[\#0b081c\],
+.light .bg-\[\#070814\],
+.light .bg-\[\#090714\],
+.light .bg-\[\#05040a\],
+.light .bg-\[\#0c0822\]\/98,
+.light .bg-\[\#0b081c\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#120d2a\],
+html.light .bg-\[\#120d2a\]\/80,
+html.light .bg-\[\#120d2a\]\/90,
+html.light .bg-\[\#120d2a\]\/95,
+html.light .bg-\[\#120e2a\],
+html.light .bg-\[\#181335\],
+html.light .bg-\[\#1a143a\],
+html.light .bg-\[\#171238\]\/60,
+html.light .bg-\[\#121833\],
+html.light .bg-\[\#0d0a20\],
+body.light .bg-\[\#120d2a\],
+body.light .bg-\[\#120d2a\]\/80,
+body.light .bg-\[\#120d2a\]\/90,
+body.light .bg-\[\#120d2a\]\/95,
+body.light .bg-\[\#120e2a\],
+body.light .bg-\[\#181335\],
+body.light .bg-\[\#1a143a\],
+body.light .bg-\[\#171238\]\/60,
+body.light .bg-\[\#121833\],
+body.light .bg-\[\#0d0a20\],
+.light .bg-\[\#120d2a\],
+.light .bg-\[\#120d2a\]\/80,
+.light .bg-\[\#120d2a\]\/90,
+.light .bg-\[\#120d2a\]\/95,
+.light .bg-\[\#120e2a\],
+.light .bg-\[\#181335\],
+.light .bg-\[\#1a143a\],
+.light .bg-\[\#171238\]\/60,
+.light .bg-\[\#121833\],
+.light .bg-\[\#0d0a20\] {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Fallback default based on prefers-color-scheme or default light if not dark */
+html:not(.dark), html:not(.dark) body {
+  background-color: #f8f9fe;
+  color: #0f172a;
 }
 
 /* GPU Hardware Acceleration Utilities */

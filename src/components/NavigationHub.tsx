@@ -37,7 +37,8 @@ const navigationCategories = [
     title: 'Core Ecosystem',
     items: [
       { id: 'home', label: 'Ecosystem Home', icon: Home, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-      { id: 'dashboard', label: 'User Dashboard', icon: User, color: 'text-[#00e676] bg-[#00e676]/10 border-[#00e676]/20' },
+      { id: 'dashboard', label: 'User Dashboard / Profile', icon: User, color: 'text-[#00e676] bg-[#00e676]/10 border-[#00e676]/20' },
+      { id: 'tools', label: 'AI Tools & Utilities Hub', icon: Lightbulb, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'Hub' },
       { id: 'arohi', label: 'Arohi AI Chat & Voice', icon: Bot, color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20' },
       { id: 'franchise', label: 'AECN Franchise Center', icon: Sparkles, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'Partner' },
     ]
@@ -131,7 +132,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.92 }}
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center justify-center p-3.5 bg-[#0f0b24]/90 hover:bg-[#181238] border border-[#302166] hover:border-[#6342cb] text-white rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(124,58,237,0.2)] transition-all duration-300 cursor-pointer backdrop-blur-xl group relative ${
+          className={`flex items-center justify-center p-3.5 bg-white dark:bg-[#0f0b24]/90 hover:bg-purple-50 dark:hover:bg-[#181238] border border-slate-200 dark:border-[#302166] hover:border-purple-300 dark:hover:border-[#6342cb] text-slate-800 dark:text-white rounded-full shadow-xl transition-all duration-300 cursor-pointer backdrop-blur-xl group relative ${
             isOpen ? 'ring-2 ring-indigo-500/80 border-indigo-400' : ''
           }`}
           title={isOpen ? "Close Navigation" : "Open Navigation"}
@@ -180,20 +181,20 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="absolute top-0 left-0 bottom-0 w-[88vw] sm:w-[380px] max-w-[400px] h-full bg-[#0c081e]/95 border-r border-[#2d2163] shadow-[20px_0_60px_rgba(0,0,0,0.8),0_0_40px_rgba(124,58,237,0.15)] flex flex-col z-50 backdrop-blur-2xl"
+              className="absolute top-0 left-0 bottom-0 w-[88vw] sm:w-[380px] max-w-[400px] h-full bg-white dark:bg-[#0c081e]/95 text-slate-900 dark:text-white border-r border-slate-200 dark:border-[#2d2163] shadow-2xl flex flex-col z-50 backdrop-blur-2xl"
             >
               {/* Drawer Top Branding Header */}
-              <div className="p-5 border-b border-[#201847] flex items-center justify-between shrink-0 bg-[#0e0924]/80">
+              <div className="p-5 border-b border-slate-200 dark:border-[#201847] flex items-center justify-between shrink-0 bg-slate-50 dark:bg-[#0e0924]/80">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/30 border border-indigo-400/30">
                     <Sparkles className="w-5 h-5 text-white animate-pulse" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-black text-sm text-white tracking-tight uppercase">
-                        AROHI <span className="text-indigo-400">AI</span>
+                      <h3 className="font-black text-sm text-slate-900 dark:text-white tracking-tight uppercase">
+                        AROHI <span className="text-indigo-600 dark:text-indigo-400">AI</span>
                       </h3>
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300">
                         Ecosystem
                       </span>
                     </div>
@@ -202,7 +203,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-xl bg-[#1a143b] hover:bg-[#281f5c] border border-[#342775] text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95"
+                  className="p-2 rounded-xl bg-slate-200 dark:bg-[#1a143b] hover:bg-slate-300 dark:hover:bg-[#281f5c] border border-slate-300 dark:border-[#342775] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer active:scale-95"
                   title="Close Navigation (Esc)"
                 >
                   <X className="w-4 h-4" />
@@ -219,7 +220,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                     placeholder="Quick search sections..."
-                    className="w-full bg-[#140e33] border border-[#2b1f5e] focus:border-[#7c3aed] text-white text-xs rounded-xl pl-9 pr-8 py-2.5 outline-none placeholder:text-slate-500 transition-colors"
+                    className="w-full bg-slate-100 dark:bg-[#140e33] border border-slate-200 dark:border-[#2b1f5e] focus:border-purple-500 text-slate-900 dark:text-white text-xs rounded-xl pl-9 pr-8 py-2.5 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
                   />
                   {filterQuery && (
                     <button

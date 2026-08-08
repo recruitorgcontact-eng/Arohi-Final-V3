@@ -274,10 +274,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role || 'candidate',
           entrySource: entrySource,
           profile: {
-            name: displayName,
+            name: displayName || email.split('@')[0] || 'User',
             email: email,
-            phone: '+91 98765 43210',
-            location: 'Delhi NCR',
+            phone: '',
+            location: '',
             education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
             activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
           },
@@ -322,10 +322,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName,
       role: role || 'candidate',
       profile: {
-        name: displayName,
+        name: displayName || email.split('@')[0] || 'User',
         email: email,
-        phone: '+91 98765 43210',
-        location: 'Delhi NCR',
+        phone: '',
+        location: '',
         education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
         activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
       },
@@ -490,10 +490,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: role || 'candidate',
         entrySource: getEntrySource(),
         profile: {
-          name: name,
+          name: name || firebaseUser.email?.split('@')[0] || 'User',
           email: firebaseUser.email || '',
-          phone: phone || '+91 98765 43210',
-          location: 'Delhi NCR',
+          phone: phone || '',
+          location: '',
           education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
           activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
         },

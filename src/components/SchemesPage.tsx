@@ -129,20 +129,32 @@ export default function SchemesPage() {
     <div className="space-y-6">
       
       {/* Title */}
-      <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-850">
-        <span className="bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-emerald-500/30">AROHI Schemes Module</span>
-        <h2 className="text-2xl md:text-3xl font-black mt-2 tracking-tight">Government Schemes Matchmaker</h2>
-        <p className="text-xs text-slate-400 mt-1 max-w-xl">Search and verify eligibility for central and state welfare benefits. Input your background demographics to let AROHI pull aligned grants, capital subsidies, and scholarship options.</p>
+      <div className="bg-gradient-to-br from-[#0a0718] via-[#0d0922] to-[#06040e] border border-slate-800/80 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden text-left">
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute left-1/3 -top-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 bg-[#091515] border border-teal-500/30 text-teal-300 px-3.5 py-1 rounded-full text-[11px] font-bold tracking-wide shadow-sm mb-3">
+            <span className="w-2 h-2 rounded-full bg-[#00e676] animate-pulse"></span>
+            AROHI Schemes Module
+          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
+            Government Schemes <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">Matchmaker</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
+            Search and verify eligibility for central and state welfare benefits. Input your background demographics to let AROHI pull aligned grants, capital subsidies, and scholarship options.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Eligibility Tester */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-md space-y-4">
+          <div className="bg-[#0c091f]/80 backdrop-blur-xl p-5 md:p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-4 text-slate-100">
             
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-50 pb-2 flex items-center gap-1.5">
-              <Sparkles className="w-4.5 h-4.5 text-blue-600" /> Instant Eligibility Analyzer
+            <h3 className="text-xs font-black uppercase tracking-wider text-purple-300 mb-2 border-b border-slate-800/80 pb-2.5 flex items-center gap-2">
+              <Sparkles className="w-4.5 h-4.5 text-purple-400" /> Instant Eligibility Analyzer
             </h3>
 
             <div className="grid grid-cols-2 gap-3.5">
@@ -152,7 +164,7 @@ export default function SchemesPage() {
                   type="number"
                   value={userAge}
                   onChange={(e) => setUserAge(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
@@ -162,7 +174,7 @@ export default function SchemesPage() {
                   type="number"
                   value={userIncome}
                   onChange={(e) => setUserIncome(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
@@ -173,7 +185,7 @@ export default function SchemesPage() {
                 <select
                   value={userGender}
                   onChange={(e) => setUserGender(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
@@ -186,7 +198,7 @@ export default function SchemesPage() {
                 <select
                   value={userCaste}
                   onChange={(e) => setUserCaste(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="General">General Category</option>
                   <option value="OBC">OBC</option>
@@ -198,7 +210,7 @@ export default function SchemesPage() {
 
             <button
               onClick={handleTestEligibility}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-4 rounded-xl shadow-[0_4px_25px_rgba(124,58,237,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               Analyze Aligned Schemes
             </button>
@@ -206,23 +218,23 @@ export default function SchemesPage() {
           </div>
 
           {matchedSchemes && (
-            <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl shadow-sm text-emerald-800 space-y-3.5">
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5 border-b border-emerald-100 pb-2">
-                <ShieldCheck className="w-4.5 h-4.5 text-emerald-600" /> Matched Benefits Found ({matchedSchemes.length})
+            <div className="bg-emerald-950/40 border border-emerald-500/30 p-5 rounded-2xl shadow-xl text-emerald-300 space-y-3.5">
+              <h4 className="text-xs font-black uppercase tracking-wider text-[#00e676] flex items-center gap-2 border-b border-emerald-500/30 pb-2">
+                <ShieldCheck className="w-4.5 h-4.5 text-[#00e676]" /> Matched Benefits Found ({matchedSchemes.length})
               </h4>
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {matchedSchemes.length > 0 ? (
                   matchedSchemes.map((item) => (
-                    <div key={item.id} className="text-xs bg-white border border-emerald-150 p-2.5 rounded-xl font-bold text-slate-800 flex justify-between items-center shadow-sm">
+                    <div key={item.id} className="text-xs bg-[#080614] border border-emerald-500/20 p-3 rounded-xl font-bold text-white flex justify-between items-center shadow-sm">
                       <div className="truncate">
-                        <span className="block truncate">{item.title}</span>
+                        <span className="block truncate text-white">{item.title}</span>
                         <span className="block text-[9px] text-slate-400 font-medium">{item.ministry}</span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-[#00e676] shrink-0" />
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500 font-semibold text-center">No precise scheme matches family income thresholds. Try lower limits.</p>
+                  <p className="text-xs text-slate-400 font-semibold text-center">No precise scheme matches family income thresholds. Try lower limits.</p>
                 )}
               </div>
             </div>
@@ -232,7 +244,7 @@ export default function SchemesPage() {
         {/* Right Search and Schemes listings */}
         <div className="lg:col-span-7 space-y-4">
           
-          <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-md flex flex-col md:flex-row gap-3 items-center">
+          <div className="bg-[#0c091f]/80 backdrop-blur-xl p-4.5 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row gap-3 items-center">
             
             {/* Search Input */}
             <div className="relative flex-1 w-full">
@@ -241,16 +253,16 @@ export default function SchemesPage() {
                 placeholder="Search by scheme title, benefits or keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2 pl-9 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 pl-9 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
               />
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
             </div>
 
             {/* Category Filter */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none w-full md:w-auto"
+              className="bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none w-full md:w-auto"
             >
               <option value="all">All Categories</option>
               <option value="msme">MSME Businesses</option>
@@ -263,7 +275,7 @@ export default function SchemesPage() {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none w-full md:w-auto"
+              className="bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none w-full md:w-auto"
             >
               <option value="all">All Scopes</option>
               <option value="Central">Central Schemes</option>
@@ -275,44 +287,44 @@ export default function SchemesPage() {
           {/* Scheme cards */}
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             {filteredSchemes.map((sch) => (
-              <div key={sch.id} className="bg-white rounded-xl border border-slate-150/65 shadow-sm p-5 space-y-3.5 hover:border-blue-200 transition-colors">
+              <div key={sch.id} className="bg-[#0c091f]/80 backdrop-blur-xl rounded-2xl border border-slate-800/80 shadow-xl p-5 md:p-6 space-y-3.5 hover:border-purple-500/40 transition-colors text-slate-100">
                 
                 <div className="flex justify-between items-start gap-2">
                   <div className="text-left">
                     <div className="flex items-center gap-2">
                       <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase ${
-                        sch.scope === 'Central' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-800'
+                        sch.scope === 'Central' ? 'bg-purple-950 text-purple-300 border border-purple-500/30' : 'bg-amber-950 text-amber-300 border border-amber-500/30'
                       }`}>{sch.scope} Scheme</span>
                       <span className="text-[10px] text-slate-400 font-bold">{sch.state || 'National scope'}</span>
                     </div>
-                    <h4 className="font-extrabold text-xs md:text-sm text-slate-800 mt-1.5">{sch.title}</h4>
+                    <h4 className="font-extrabold text-xs md:text-sm text-white mt-1.5">{sch.title}</h4>
                     <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{sch.ministry}</p>
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-600 font-medium leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-150/50">
+                <p className="text-xs text-slate-300 font-medium leading-relaxed bg-[#080614] p-3.5 rounded-xl border border-slate-800">
                   **Key Benefits:** {sch.benefits}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
                   <div>
-                    <span className="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Standard Eligibility</span>
-                    <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">{sch.eligibilityInfo}</p>
+                    <span className="block text-[9px] text-purple-300 font-black uppercase tracking-wider mb-1">Standard Eligibility</span>
+                    <p className="text-[11px] text-slate-300 font-semibold leading-relaxed">{sch.eligibilityInfo}</p>
                   </div>
                   <div>
-                    <span className="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Required Documents</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-[10px] text-slate-500 font-medium">
+                    <span className="block text-[9px] text-purple-300 font-black uppercase tracking-wider mb-1">Required Documents</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-[10px] text-slate-400 font-medium">
                       {sch.requiredDocuments.slice(0, 3).map((d, i) => <li key={i} className="truncate">{d}</li>)}
                     </ul>
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-2 border-t border-slate-100">
+                <div className="flex justify-end pt-3 border-t border-slate-800/80">
                   <a
                     href={sch.applyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-2 px-3.5 rounded-lg flex items-center gap-1 transition-colors"
+                    className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors border border-slate-700"
                   >
                     Apply on Official Portal <ChevronRight className="w-4 h-4" />
                   </a>

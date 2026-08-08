@@ -42,20 +42,20 @@ export default function BackgroundScrollEffects() {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none aria-hidden:true transform-gpu">
-      {/* 1. Animated Radial Ambient Gradient Orbs (Optimized GPU blur) */}
+      {/* 1. Animated Radial Ambient Gradient Orbs (Lightweight GPU blur) */}
       <div
         ref={orb1Ref}
-        className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full opacity-25 blur-3xl bg-gradient-to-br from-purple-700 via-indigo-800 to-cyan-600 transform-gpu will-change-transform"
+        className="absolute -top-[10%] -left-[5%] w-[40vw] max-w-[400px] h-[40vw] max-h-[400px] rounded-full opacity-20 blur-xl bg-gradient-to-br from-purple-700 via-indigo-800 to-cyan-600 transform-gpu will-change-transform"
       />
 
       <div
         ref={orb2Ref}
-        className="absolute top-[40%] -right-[15%] w-[55vw] h-[55vw] rounded-full opacity-20 blur-3xl bg-gradient-to-bl from-teal-600 via-purple-900 to-emerald-700 transform-gpu will-change-transform"
+        className="absolute top-[40%] -right-[10%] w-[45vw] max-w-[450px] h-[45vw] max-h-[450px] rounded-full opacity-15 blur-xl bg-gradient-to-bl from-teal-600 via-purple-900 to-emerald-700 transform-gpu will-change-transform"
       />
 
       <div
         ref={orb3Ref}
-        className="absolute -bottom-[20%] left-[20%] w-[45vw] h-[45vw] rounded-full opacity-15 blur-3xl bg-gradient-to-tr from-fuchsia-700 via-purple-900 to-amber-600 transform-gpu will-change-transform"
+        className="absolute -bottom-[10%] left-[10%] w-[35vw] max-w-[350px] h-[35vw] max-h-[350px] rounded-full opacity-15 blur-xl bg-gradient-to-tr from-fuchsia-700 via-purple-900 to-amber-600 transform-gpu will-change-transform"
       />
 
       {/* 2. Cyber Mesh Grid Pattern */}
@@ -69,7 +69,7 @@ export default function BackgroundScrollEffects() {
 
       {/* 3. Horizon fading vignette gradient */}
       <div className="absolute inset-x-0 bottom-0 h-[25vh] opacity-15 overflow-hidden transform-gpu pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030208] via-[#030208]/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 dark:from-[#030208] via-purple-900/10 dark:via-[#030208]/70 to-transparent" />
       </div>
 
       {/* 4. Drifting Floating Particles Starfield (Smooth GPU dots) */}

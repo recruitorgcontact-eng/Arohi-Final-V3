@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LottieSuccessAnimation } from './LottieSuccess';
 import { 
   Sparkles, 
   Users, 
@@ -891,8 +892,9 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
           </div>
 
           {successMsg && (
-            <div className="bg-emerald-50 text-emerald-800 p-4 rounded-2xl border border-emerald-100 text-xs md:text-sm font-extrabold animate-pulse">
-              🎉 Job posted successfully! Your listing is now active and immediately searchable on Arohi.ai. Redirecting...
+            <div className="bg-emerald-500/15 border border-emerald-500/40 p-4 rounded-2xl text-emerald-200 text-xs md:text-sm font-bold flex flex-col items-center text-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/10">
+              <LottieSuccessAnimation size={80} loop={false} />
+              <span>Job posted successfully! Your listing is now active and immediately searchable on Arohi.ai. Redirecting...</span>
             </div>
           )}
 

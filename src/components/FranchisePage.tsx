@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { LottieSuccessAnimation } from './LottieSuccess';
 import { 
   Sparkles, 
   MapPin, 
@@ -1998,8 +1999,8 @@ export default function FranchisePage() {
             {/* Success Step */}
             {formStep === 6 && formSuccessMessage && (
               <div className="text-center py-10 space-y-6 animate-in scale-in duration-300">
-                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                  <Check className="w-8 h-8" />
+                <div className="flex justify-center">
+                  <LottieSuccessAnimation size={130} loop={false} />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-black text-white uppercase tracking-tight">Deed Request Registered</h3>

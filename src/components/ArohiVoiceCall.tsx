@@ -40,6 +40,8 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   // Call duration & audio volume states
   const [duration, setDuration] = useState(0);
   const [userVolume, setUserVolume] = useState(0);
+  const smoothedVolumeRef = useRef<number>(0);
+  const lastVolumeUpdateRef = useRef<number>(0);
   const [currentSpeech, setCurrentSpeech] = useState('');
   const [textInput, setTextInput] = useState('');
 
@@ -169,15 +171,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         recognition.onresult = (event: any) => {
           if (!isMounted || isMutedRef.current) return;
 
-          // ECHO PREVENTION: Do NOT process or transcribe speech while Arohi is actively speaking out loud
-          if (
-            statusRef.current === 'speaking' || 
-            audioQueueRef.current.length > 0 || 
-            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking)
-          ) {
-            return;
-          }
-
           let interimTranscript = '';
           let finalTranscript = '';
 
@@ -190,20 +183,27 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           }
 
           const activeText = (finalTranscript || interimTranscript).trim();
+          if (!activeText) return;
 
-          // FILTER NOISE ARTIFACTS OR ECHOED NUMBERS LIKE "150", "150+", "150 languages", "namaste"
-          const cleanLower = activeText.toLowerCase();
-          const isNumericEcho = /^(150|150\+|150 languages|languages|namaste|welcome|hello|\d{1,3})$/i.test(cleanLower);
-          if (!activeText || isNumericEcho) return;
+          // REAL-TIME BARGE-IN: If user speaks into microphone while AI audio is playing, interrupt AI audio & switch to listening
+          if (
+            statusRef.current === 'speaking' || 
+            audioQueueRef.current.length > 0 || 
+            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking)
+          ) {
+            stopAllPlayback();
+            setStatus('listening');
+          }
 
           setLiveUserSpeech(activeText);
 
           if (silenceTimer) clearTimeout(silenceTimer);
 
           const commitUserTurn = (text: string) => {
-            if (!text) return;
-            const textLower = text.toLowerCase().trim();
-            if (/^(150|150\+|150 languages|languages|\d{1,3})$/i.test(textLower)) return;
+            if (!text || !text.trim()) return;
+
+            // Reset audio stream received flag for new turn so browser TTS speaks if model PCM audio is absent
+            hasReceivedAudioStreamRef.current = false;
 
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               try {
@@ -244,13 +244,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
             commitUserTurn(finalTranscript.trim());
             setLiveUserSpeech('');
           } else {
-            // Auto-commit interim transcript if user pauses for 1.2s
+            // Auto-commit interim transcript if user pauses speaking for 750ms
             silenceTimer = setTimeout(() => {
               if (isMounted && activeText) {
                 commitUserTurn(activeText);
                 setLiveUserSpeech('');
               }
-            }, 1200);
+            }, 750);
           }
         };
 
@@ -362,6 +362,30 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     setTimeout(() => setCopiedSnapshotId(null), 2000);
   };
 
+  // Downsample Float32 array from input sample rate to target sample rate (16000Hz for Gemini)
+  const downsampleBuffer = (buffer: Float32Array, inputSampleRate: number, outputSampleRate = 16000): Float32Array => {
+    if (!buffer || buffer.length === 0 || inputSampleRate === outputSampleRate) {
+      return buffer;
+    }
+    const sampleRateRatio = inputSampleRate / outputSampleRate;
+    const newLength = Math.round(buffer.length / sampleRateRatio);
+    const result = new Float32Array(newLength);
+    let offsetResult = 0;
+    let offsetBuffer = 0;
+    while (offsetResult < result.length) {
+      const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+      let accum = 0, count = 0;
+      for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        accum += buffer[i];
+        count++;
+      }
+      result[offsetResult] = count > 0 ? accum / count : 0;
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+    return result;
+  };
+
   // Convert Float32 array to 16-bit PCM
   const floatTo16BitPCM = (input: Float32Array): ArrayBuffer => {
     const buffer = new ArrayBuffer(input.length * 2);
@@ -384,6 +408,32 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     }
     return window.btoa(binary);
   };
+
+  // Global user gesture listener to unlock AudioContext & SpeechSynthesis on browsers
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (inputAudioCtxRef.current && inputAudioCtxRef.current.state === 'suspended') {
+        inputAudioCtxRef.current.resume().catch(() => {});
+      }
+      if (outputAudioCtxRef.current && outputAudioCtxRef.current.state === 'suspended') {
+        outputAudioCtxRef.current.resume().catch(() => {});
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try { window.speechSynthesis.resume(); } catch (e) {}
+      }
+    };
+
+    unlockAudio();
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+    window.addEventListener('click', unlockAudio);
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    };
+  }, []);
 
   // Play incoming audio chunks gaplessly
   const playAudioChunk = (base64Audio: string) => {
@@ -518,7 +568,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
       utterance.lang = detectedLangTag;
       utterance.rate = 1.0;
-      utterance.pitch = 1.25; // Warm feminine pitch
+      utterance.pitch = 1.35; // Soft warm feminine pitch
 
       const setVoiceAndSpeak = () => {
         try {
@@ -526,21 +576,22 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           if (voices && voices.length > 0) {
             const shortLang = detectedLangTag.split('-')[0].toLowerCase(); // e.g. 'or', 'hi', 'bn'
 
-            // STRICT EXCLUSION OF MALE SYSTEM VOICES
-            const nonMaleVoices = voices.filter(v => {
+            // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
+            const strictlyFemaleVoices = voices.filter(v => {
               const nameLower = v.name.toLowerCase();
-              return !/\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos)\b/i.test(nameLower);
+              const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
+                                     /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
+              return !isExplicitMale;
             });
 
-            const pool = nonMaleVoices.length > 0 ? nonMaleVoices : voices;
+            const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
 
             const preferredVoice = 
               pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
-                /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
+                /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
               pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
-              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri)\b/i.test(v.name)) ||
-              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
-              pool[0];
+              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in'));
 
             if (preferredVoice) {
               utterance.voice = preferredVoice;
@@ -600,6 +651,9 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const handleSendTextPrompt = () => {
     if (!textInput.trim()) return;
     const msg = textInput.trim();
+
+    // Reset audio stream received flag for new turn
+    hasReceivedAudioStreamRef.current = false;
 
     // Append to turns as user speaker
     const newTurn: SpeechTurn = {
@@ -686,10 +740,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               if (text) {
                 setCurrentSpeech(text);
 
-                // Speech TTS playback fallback when raw PCM audio stream isn't supplied
-                // ONLY trigger if NO live audio stream was ever received in this call session
-                if (data.speaker === 'arohi' && !data.audio && !hasReceivedAudioStreamRef.current && statusRef.current !== 'speaking') {
-                  speakTextWithBrowserTTS(text);
+                const currentSpeaker = data.speaker || 'arohi';
+                if (currentSpeaker === 'arohi') {
+                  if (!hasReceivedAudioStreamRef.current || outputAudioCtxRef.current?.state === 'suspended') {
+                    speakTextWithBrowserTTS(text);
+                  }
                 }
 
                 setTurns(prev => {
@@ -765,18 +820,36 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             channelCount: 1,
-            sampleRate: 16000,
             echoCancellation: true,
             noiseSuppression: true,
+            autoGainControl: true,
           }
         });
         micStreamRef.current = stream;
 
-        const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        let inputCtx: AudioContext;
+        try {
+          inputCtx = new AudioContextClass({ sampleRate: 16000 });
+        } catch (e) {
+          inputCtx = new AudioContextClass();
+        }
         inputAudioCtxRef.current = inputCtx;
 
-        const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        let outputCtx: AudioContext;
+        try {
+          outputCtx = new AudioContextClass({ sampleRate: 24000 });
+        } catch (e) {
+          outputCtx = new AudioContextClass();
+        }
         outputAudioCtxRef.current = outputCtx;
+
+        if (inputCtx.state === 'suspended') {
+          inputCtx.resume().catch(() => {});
+        }
+        if (outputCtx.state === 'suspended') {
+          outputCtx.resume().catch(() => {});
+        }
 
         const source = inputCtx.createMediaStreamSource(stream);
         const processor = inputCtx.createScriptProcessor(4096, 1, 1);
@@ -795,16 +868,24 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
             sum += float32Data[i] * float32Data[i];
           }
           const rms = Math.sqrt(sum / float32Data.length);
-          const vol = Math.min(100, Math.floor(rms * 450));
-          setUserVolume(vol);
+          const rawVol = Math.min(100, Math.floor(rms * 450));
+
+          // Smooth volume and throttle React state updates to 100ms to eliminate visual flickering
+          smoothedVolumeRef.current = Math.round(smoothedVolumeRef.current * 0.65 + rawVol * 0.35);
+          const now = Date.now();
+          if (now - lastVolumeUpdateRef.current > 100) {
+            lastVolumeUpdateRef.current = now;
+            setUserVolume(smoothedVolumeRef.current);
+          }
 
           // Instant Client-side Barge-In: If user speaks into mic (vol > 16) while Arohi is playing audio, stop audio playback immediately so Arohi listens
-          if (vol > 16 && audioQueueRef.current.length > 0) {
+          if (rawVol > 16 && (audioQueueRef.current.length > 0 || statusRef.current === 'speaking')) {
             stopAllPlayback();
             setStatus(isMutedRef.current ? 'muted' : 'listening');
           }
 
-          const rawBuffer = floatTo16BitPCM(float32Data);
+          const downsampledData = downsampleBuffer(float32Data, inputCtx.sampleRate || 16000, 16000);
+          const rawBuffer = floatTo16BitPCM(downsampledData);
           const base64Pcm = arrayBufferToBase64(rawBuffer);
 
           ws.send(JSON.stringify({ audio: base64Pcm }));
@@ -971,16 +1052,14 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         
         {/* Volume Level Reactive Secondary Pulse Ring */}
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] transition-all duration-150 pointer-events-none"
+          className="absolute top-1/2 left-1/2 w-[380px] h-[380px] sm:w-[480px] sm:h-[480px] rounded-full blur-[100px] transition-transform duration-300 ease-out pointer-events-none"
           style={{
-            width: `${350 + Math.min(250, userVolume * 5)}px`,
-            height: `${350 + Math.min(250, userVolume * 5)}px`,
             backgroundColor: status === 'speaking' 
               ? 'rgba(217, 70, 239, 0.15)' 
               : userVolume > 10 
-              ? 'rgba(16, 185, 129, 0.25)' 
+              ? 'rgba(16, 185, 129, 0.22)' 
               : 'rgba(99, 102, 241, 0.08)',
-            transform: `translate(-50%, -50%) scale(${1 + Math.min(0.5, userVolume / 80)})`
+            transform: `translate(-50%, -50%) scale(${1 + Math.min(0.25, userVolume / 100)})`
           }}
         />
       </div>

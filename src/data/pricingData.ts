@@ -4,6 +4,9 @@ export interface PricingTier {
   margin: number; // 50% of price
   callHoursText: string;
   tokenUsageText: string;
+  aiCreditsText: string;
+  aiCallsText: string;
+  unlimitedChatText: string;
   limits: {
     path1: {
       atsScans: string;
@@ -64,7 +67,10 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Starter Plan",
     margin: 199.50,
     callHoursText: "5 Hours of AI Calls / mo",
-    tokenUsageText: "10,000 AI Tokens",
+    tokenUsageText: "10,000 AI Credits",
+    aiCreditsText: "10,000 AI Credits",
+    aiCallsText: "5 Hours AI Voice Calls",
+    unlimitedChatText: "✨ UNLIMITED AI CHAT INCLUDED",
     limits: {
       path1: {
         atsScans: "5 ATS scans / mo",
@@ -96,7 +102,10 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Professional Plan",
     margin: 349.50,
     callHoursText: "10 Hours of AI Calls / mo",
-    tokenUsageText: "15,000 AI Tokens",
+    tokenUsageText: "15,000 AI Credits",
+    aiCreditsText: "15,000 AI Credits",
+    aiCallsText: "10 Hours AI Voice Calls",
+    unlimitedChatText: "✨ UNLIMITED AI CHAT INCLUDED",
     limits: {
       path1: {
         atsScans: "15 ATS scans / mo",
@@ -128,7 +137,10 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Growth Business Plan",
     margin: 849.50,
     callHoursText: "25 Hours of AI Calls / mo",
-    tokenUsageText: "35,000 AI Tokens",
+    tokenUsageText: "35,000 AI Credits",
+    aiCreditsText: "35,000 AI Credits",
+    aiCallsText: "25 Hours AI Voice Calls",
+    unlimitedChatText: "✨ UNLIMITED AI CHAT INCLUDED",
     limits: {
       path1: {
         atsScans: "50 ATS scans / mo",
@@ -160,7 +172,10 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Elite Executive Plan",
     margin: 1999.50,
     callHoursText: "60 Hours of AI Calls / mo",
-    tokenUsageText: "80,000 AI Tokens",
+    tokenUsageText: "80,000 AI Credits",
+    aiCreditsText: "80,000 AI Credits",
+    aiCallsText: "60 Hours AI Voice Calls",
+    unlimitedChatText: "✨ UNLIMITED AI CHAT INCLUDED",
     limits: {
       path1: {
         atsScans: "150 ATS scans / mo",
@@ -192,7 +207,10 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Ultimate Premium Plan",
     margin: 2499.50,
     callHoursText: "80 Hours of AI Calls / mo",
-    tokenUsageText: "100,000 AI Tokens",
+    tokenUsageText: "100,000 AI Credits",
+    aiCreditsText: "100,000 AI Credits",
+    aiCallsText: "80 Hours AI Voice Calls",
+    unlimitedChatText: "✨ UNLIMITED AI CHAT INCLUDED",
     limits: {
       path1: {
         atsScans: "Unlimited scans",

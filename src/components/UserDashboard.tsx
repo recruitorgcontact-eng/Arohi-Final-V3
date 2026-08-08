@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, MapPin, Award, CheckCircle2, Bookmark, FileText, 
   Bot, Briefcase, Landmark, ExternalLink, Sparkles, AlertCircle, 
-  ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, 
+  ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, Crown,
   Download, RefreshCw, Trophy, Calendar, Check, Play, GraduationCap, Map, Clock, Share2,
-  Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX
+  Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { initialCourses } from '../data/coursesData';
 import { isBiometricSupported, registerBiometricDevice, authenticateBiometricDevice } from '../lib/webauthn';
 import { PATH_DETAILS, PRICING_TIERS, getTokenLimitForPrice } from '../data/pricingData';
+import PricingPage from './PricingPage';
 
 interface UserDashboardProps {
+  initialSection?: 'all' | 'subscriptions' | 'profile' | 'applications' | 'courses';
   subscriptions?: Record<string, boolean>;
   subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
   onSubscribe?: (pathId: string) => void;
@@ -33,6 +35,7 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ 
+  initialSection = 'all',
   subscriptions = { path1: false, path2: false, path3: false, path4: false }, 
   subscriptionDetails = {},
   onSubscribe, 
@@ -55,20 +58,47 @@ export default function UserDashboard({
   
   const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
 
+  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'subscriptions' | 'profile' | 'applications' | 'courses'>(
+    initialSection === 'subscriptions' ? 'subscriptions' : 'all'
+  );
+
+  useEffect(() => {
+    if (initialSection === 'subscriptions') {
+      setActiveSectionTab('subscriptions');
+      const timer = setTimeout(() => {
+        const anchor = document.getElementById('monthly-subscriptions-anchor');
+        if (anchor) {
+          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [initialSection]);
+
   const [showSandboxControls, setShowSandboxControls] = useState<boolean>(() => {
     if (user?.email === 'elitetraderjunoon@gmail.com') return true;
     return localStorage.getItem('recruit_show_dev_sandbox') === 'true';
   });
 
   // Basic profile state
-  const [profile, setProfile] = useState({
-    name: 'Rajesh Kumar Singh',
-    email: 'rajesh.kumar@recruitindia.org',
-    phone: '+91 98765 43210',
-    location: 'Bhubaneswar, Odisha',
-    education: 'Graduate Degree (Patna University)',
-    activeGoal: 'Government & Public Sector Career',
-    resumeUrl: ''
+  const [profile, setProfile] = useState(() => {
+    const savedName = localStorage.getItem('recruit_user_name') || '';
+    const savedEmail = localStorage.getItem('recruit_user_email') || '';
+    const savedPhone = localStorage.getItem('recruit_user_phone') || '';
+    const savedLocation = localStorage.getItem('recruit_user_location') || '';
+    const savedEducation = localStorage.getItem('recruit_user_education') || '';
+    const savedGoal = localStorage.getItem('recruit_user_active_goal') || '';
+    const savedResume = localStorage.getItem('recruit_guest_resume_url') || '';
+
+    return {
+      name: savedName || 'Candidate Profile',
+      email: savedEmail || '',
+      phone: savedPhone,
+      location: savedLocation,
+      education: savedEducation,
+      activeGoal: savedGoal,
+      resumeUrl: savedResume
+    };
   });
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -201,22 +231,30 @@ export default function UserDashboard({
       }
 
       if (userData.profile) {
+        const pName = userData.profile.name || user.displayName || user.email?.split('@')[0] || 'Candidate Profile';
+        const pEmail = userData.profile.email || user.email || '';
+        const pPhone = userData.profile.phone || '';
+        const pLoc = userData.profile.location || '';
+        const pEdu = userData.profile.education || '';
+        const pGoal = userData.profile.activeGoal || '';
+        const pResume = (userData as any).profile?.resumeUrl || '';
+
         setProfile({
-          name: userData.profile.name || user.displayName || 'Honored Guest',
-          email: userData.profile.email || user.email || 'user@example.com',
-          phone: userData.profile.phone || '',
-          location: userData.profile.location || '',
-          education: userData.profile.education || '',
-          activeGoal: userData.profile.activeGoal || '',
-          resumeUrl: (userData as any).profile.resumeUrl || ''
+          name: pName,
+          email: pEmail,
+          phone: pPhone,
+          location: pLoc,
+          education: pEdu,
+          activeGoal: pGoal,
+          resumeUrl: pResume
         });
         
-        setEditedName(userData.profile.name || '');
-        setEditedPhone(userData.profile.phone || '');
-        setEditedLocation(userData.profile.location || '');
-        setEditedEducation(userData.profile.education || '');
-        setEditedGoal(userData.profile.activeGoal || '');
-        setEditedResume((userData as any).profile.resumeUrl || '');
+        setEditedName(pName);
+        setEditedPhone(pPhone);
+        setEditedLocation(pLoc);
+        setEditedEducation(pEdu);
+        setEditedGoal(pGoal);
+        setEditedResume(pResume);
       }
 
       // Sync applications
@@ -227,17 +265,17 @@ export default function UserDashboard({
           org: app.postingId?.includes('ssc') ? 'Staff Selection Commission' : app.postingId?.includes('rrb') ? 'Railway Recruitment Board' : 'Ecosystem Match',
           postingId: app.postingId || '',
           status: app.status || 'Submitted',
-          date: app.appliedDate || '2026-06-29',
+          date: app.appliedDate || new Date().toLocaleDateString('en-GB'),
           registrationNumber: app.registrationNumber || `REC-GEN-${Math.floor(100000 + Math.random() * 900000)}`,
           candidateName: app.candidateName || userData.profile?.name || user.displayName || 'Candidate',
-          fatherName: app.fatherName || 'Vijay Kumar Singh',
-          dob: app.dob || '1999-08-15',
-          gender: app.gender || 'Male',
-          category: app.category || 'OBC',
-          email: app.email || user.email || 'user@example.com',
+          fatherName: app.fatherName || 'Not specified',
+          dob: app.dob || 'Not specified',
+          gender: app.gender || 'Not specified',
+          category: app.category || 'General',
+          email: app.email || user.email || '',
           phone: app.phone || userData.profile?.phone || '',
-          qualification: app.qualification || userData.profile?.education || 'Graduate Degree',
-          address: app.address || userData.profile?.location || 'Bhubaneswar, Odisha',
+          qualification: app.qualification || userData.profile?.education || 'Not specified',
+          address: app.address || userData.profile?.location || 'Not specified',
           photoUrl: app.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
           signatureUrl: app.signatureUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
           color: app.status === 'Approved' ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25' : app.status === 'Rejected' ? 'text-rose-300 bg-rose-500/10 border-rose-500/25' : 'text-blue-300 bg-blue-500/10 border-blue-500/25'
@@ -299,23 +337,30 @@ export default function UserDashboard({
         businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 84
       });
 
-      const guestName = localStorage.getItem('recruit_user_name') || 'Honored Guest';
+      const guestName = localStorage.getItem('recruit_user_name') || 'Guest Candidate';
+      const guestEmail = localStorage.getItem('recruit_user_email') || '';
+      const guestPhone = localStorage.getItem('recruit_user_phone') || '';
+      const guestLocation = localStorage.getItem('recruit_user_location') || '';
+      const guestEducation = localStorage.getItem('recruit_user_education') || '';
+      const guestGoal = localStorage.getItem('recruit_user_active_goal') || '';
+      const guestResume = localStorage.getItem('recruit_guest_resume_url') || '';
+
       setProfile({
         name: guestName,
-        email: 'guest@recruitindia.org',
-        phone: '+91 98765 43210',
-        location: 'Bhubaneswar, Odisha',
-        education: 'Graduate Degree (Patna University)',
-        activeGoal: 'Government & Public Sector Career',
-        resumeUrl: localStorage.getItem('recruit_guest_resume_url') || ''
+        email: guestEmail,
+        phone: guestPhone,
+        location: guestLocation,
+        education: guestEducation,
+        activeGoal: guestGoal,
+        resumeUrl: guestResume
       });
 
       setEditedName(guestName);
-      setEditedPhone('+91 98765 43210');
-      setEditedLocation('Bhubaneswar, Odisha');
-      setEditedEducation('Graduate Degree (Patna University)');
-      setEditedGoal('Government & Public Sector Career');
-      setEditedResume(localStorage.getItem('recruit_guest_resume_url') || '');
+      setEditedPhone(guestPhone);
+      setEditedLocation(guestLocation);
+      setEditedEducation(guestEducation);
+      setEditedGoal(guestGoal);
+      setEditedResume(guestResume);
 
       // Pull mock / guest applications
       const savedAppsStr = localStorage.getItem('recruit_applications');
@@ -328,17 +373,17 @@ export default function UserDashboard({
             org: app.postingId?.includes('ssc') ? 'Staff Selection Commission' : app.postingId?.includes('rrb') ? 'Railway Recruitment Board' : 'Ecosystem Match',
             postingId: app.postingId || '',
             status: app.status || 'Submitted',
-            date: app.appliedDate || '2026-06-29',
+            date: app.appliedDate || new Date().toLocaleDateString('en-GB'),
             registrationNumber: app.registrationNumber || `REC-GEN-${Math.floor(100000 + Math.random() * 900000)}`,
             candidateName: app.candidateName || guestName,
-            fatherName: app.fatherName || 'Vijay Kumar Singh',
-            dob: app.dob || '1999-08-15',
-            gender: app.gender || 'Male',
-            category: app.category || 'OBC',
-            email: app.email || 'guest@recruitindia.org',
-            phone: app.phone || '+91 98765 43210',
-            qualification: app.qualification || 'Graduate Degree',
-            address: app.address || 'Bhubaneswar, Odisha',
+            fatherName: app.fatherName || 'Not specified',
+            dob: app.dob || 'Not specified',
+            gender: app.gender || 'Not specified',
+            category: app.category || 'General',
+            email: app.email || guestEmail,
+            phone: app.phone || guestPhone,
+            qualification: app.qualification || guestEducation || 'Not specified',
+            address: app.address || guestLocation || 'Not specified',
             photoUrl: app.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
             signatureUrl: app.signatureUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
             color: 'text-blue-300 bg-blue-500/10 border-blue-500/25'
@@ -348,51 +393,7 @@ export default function UserDashboard({
           setAppliedJobs([]);
         }
       } else {
-        // Mock default applications for visual beauty in guest mode
-        setAppliedJobs([
-          { 
-            id: 'mock-1', 
-            title: 'SSC MTS & Havaldar Online Form 2026', 
-            org: 'Staff Selection Commission', 
-            postingId: 'ssc-mts-2026',
-            status: 'Approved', 
-            date: '22 June 2026', 
-            color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25',
-            registrationNumber: 'REC-SSCMT-2026-894103',
-            candidateName: guestName,
-            fatherName: 'Vijay Kumar Singh',
-            dob: '1999-08-15',
-            gender: 'Male',
-            category: 'OBC',
-            email: 'guest@recruitindia.org',
-            phone: '+91 98765 43210',
-            qualification: 'Graduate Degree (Patna University) - Marks: 74.20%',
-            address: 'H.No 45, Rajendra Nagar, Patna, Bihar - 800016',
-            photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-            signatureUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer'
-          },
-          { 
-            id: 'mock-2', 
-            title: 'Railway RRB Assistant Loco Pilot (ALP) Form', 
-            org: 'Railway Recruitment Board', 
-            postingId: 'rrb-alp-2026',
-            status: 'Submitted', 
-            date: '24 June 2026', 
-            color: 'text-blue-300 bg-blue-500/10 border-blue-500/25',
-            registrationNumber: 'REC-RRBAL-2026-150492',
-            candidateName: guestName,
-            fatherName: 'Suresh Patil',
-            dob: '2001-04-12',
-            gender: 'Male',
-            category: 'General',
-            email: 'guest@recruitindia.org',
-            phone: '+91 98765 43210',
-            qualification: 'ITI Technical pass (NCT Board) - Marks: 82.50%',
-            address: 'Sector 4, Plot 12, Kamothe, Navi Mumbai, Maharashtra - 410206',
-            photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-            signatureUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer'
-          }
-        ]);
+        setAppliedJobs([]);
       }
 
       // Guest Bookmarks
@@ -569,6 +570,10 @@ export default function UserDashboard({
         setIsEditingProfile(false);
       } else {
         localStorage.setItem('recruit_user_name', editedName);
+        localStorage.setItem('recruit_user_phone', editedPhone);
+        localStorage.setItem('recruit_user_location', editedLocation);
+        localStorage.setItem('recruit_user_education', editedEducation);
+        localStorage.setItem('recruit_user_active_goal', editedGoal);
         localStorage.setItem('recruit_guest_resume_url', editedResume);
         setProfile(prev => ({
           ...prev,
@@ -600,8 +605,8 @@ export default function UserDashboard({
   // Profile Completeness math (out of 100%)
   const calculateCompleteness = () => {
     let score = 0;
-    if (profile.name && profile.name !== 'Honored Guest') score += 15;
-    if (profile.email && profile.email !== 'guest@recruitindia.org') score += 15;
+    if (profile.name && profile.name !== 'Honored Guest' && profile.name !== 'Guest Candidate') score += 15;
+    if (profile.email) score += 15;
     if (profile.phone) score += 15;
     if (profile.location) score += 15;
     if (profile.education) score += 15;
@@ -894,6 +899,51 @@ export default function UserDashboard({
         </div>
       </div>
 
+      {/* DASHBOARD SECTION NAVIGATION BAR */}
+      <div className="bg-[#120e2e] border-2 border-[#31226e] p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-2xl">
+        {[
+          { id: 'all', label: '📊 Dashboard Overview', icon: Sparkles },
+          { id: 'subscriptions', label: '👑 Subscription Plans & Tiers', icon: Crown, badge: '₹399+' },
+          { id: 'profile', label: '👤 Profile Registry', icon: User },
+          { id: 'applications', label: '💼 Job Applications', icon: Briefcase, badge: `${appliedJobs.length}` },
+          { id: 'courses', label: '📚 Enrolled Courses', icon: GraduationCap, badge: `${totalEnrolledCount}` }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeSectionTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveSectionTab(tab.id as any);
+                if (tab.id === 'subscriptions') {
+                  setTimeout(() => {
+                    const el = document.getElementById('monthly-subscriptions-anchor');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-[1.02] border border-purple-400/40'
+                  : 'bg-[#1b143c] text-slate-300 hover:text-white hover:bg-[#251d54] border border-slate-800/60'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300 animate-pulse' : 'text-purple-400'}`} />
+              <span>{tab.label}</span>
+              {tab.badge && (
+                <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full border ml-1 ${
+                  isActive 
+                    ? 'bg-amber-400 text-slate-950 border-amber-300' 
+                    : 'bg-purple-950/80 text-purple-300 border-purple-500/30'
+                }`}>
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* CORE STATS GRID - NEW WORKSPACE SUMMARY */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
@@ -1096,229 +1146,15 @@ export default function UserDashboard({
       )}
 
       {/* MONTHLY SUBSCRIPTIONS CONTROL AREA */}
-      <div id="monthly-subscriptions-anchor" className="bg-[#120e2b] border border-[#2d2163] p-6 rounded-[2rem] text-left text-white shadow-2xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#211b4d] pb-4">
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <Sparkles className="w-4.5 h-4.5 text-yellow-300 animate-pulse" /> My Assistance Subscription Plans & Tiers
-            </h3>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">
-              Active subscription holders receive continuous real-time support, prioritized server workloads, and customized usage limits.
-            </p>
-          </div>
-          <div className="bg-[#1c183a] px-3.5 py-1.5 rounded-xl border border-[#3b2a80] text-xs font-extrabold text-[#c084fc] flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            5 Flexible Plans: ₹399 to ₹4999/mo
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {pathsDetail.map((path) => {
-            const isActive = subscriptions[path.id];
-            const details = subscriptionDetails[path.id];
-            
-            // Look up limits based on details or default to Starter
-            const selectedTierPrice = details?.price || 399;
-            const activeTier = PRICING_TIERS.find(t => t.price === selectedTierPrice) || PRICING_TIERS[0];
-            const limits = activeTier.limits[path.id as 'path1' | 'path2' | 'path3' | 'path4'] as any;
-
-            return (
-              <div 
-                key={path.id} 
-                className={`p-5 rounded-3xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden ${
-                  isActive 
-                    ? 'bg-gradient-to-br from-[#1d164d] to-[#0e0a29] border-[#a78bfa] shadow-[0_0_25px_rgba(167,139,250,0.25)]' 
-                    : 'bg-[#0f0b24] border-[#221a4f] hover:border-[#382b7c]'
-                }`}
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="text-xs font-black text-white leading-snug">{path.title}</span>
-                    <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shrink-0 ${
-                      isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md animate-pulse' : 'bg-slate-800 text-slate-400'
-                    }`}>
-                      {isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  
-                  <p className="text-[11px] text-slate-300 leading-normal font-semibold">{path.desc}</p>
-                  
-                  {isActive ? (
-                    <div className="space-y-3">
-                      {/* Active Tier Info */}
-                      <div className="bg-[#120d2c] border border-violet-500/30 p-3 rounded-2xl space-y-1">
-                        <span className="text-[9px] text-violet-300 uppercase font-black tracking-widest block">Active Subscription</span>
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-xs font-black text-white">{details?.tierName || 'Starter Plan'}</span>
-                          <span className="text-xs font-bold text-emerald-400">₹{details?.price || 399}/mo</span>
-                        </div>
-                      </div>
-
-                      {/* Dynamic Usage Limits list */}
-                      <div className="space-y-2.5 pt-2 border-t border-[#231a4d]">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Your Tier Usage Limits:</span>
-                        <div className="space-y-2 text-[10px] font-bold text-slate-200">
-                          {path.id === 'path1' && (
-                            <>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>ATS Scans: {limits.atsScans}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Mock Interviews: {limits.mockInterviews}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Job Matches: {limits.jobMatches}</span></div>
-                            </>
-                          )}
-                          {path.id === 'path2' && (
-                            <>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Active Courses: {limits.activeCourses}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Mentor AI: {limits.mentorHours}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Certificates: {limits.certificates}</span></div>
-                            </>
-                          )}
-                          {path.id === 'path3' && (
-                            <>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>MSME Filings: {limits.msmeFilings}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Mudra Checks: {limits.mudraChecks}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Startup Roadmaps: {limits.startupReports}</span></div>
-                            </>
-                          )}
-                          {path.id === 'path4' && (
-                            <>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>Chapter Downloads: {limits.chapterDownloads}</span></div>
-                              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> <span>AI Helper Queries: {limits.aiQueries}</span></div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* AI Token Quota Simulator */}
-                      <div className="bg-[#150f38] border border-violet-500/25 rounded-2xl p-3.5 space-y-2 mt-3 text-left">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-violet-300 font-extrabold uppercase tracking-widest">AI Token Quota:</span>
-                          <span className="text-slate-300 font-black font-mono">
-                            {tokenUsage[path.id] || 0} / {getTokenLimitForPrice(selectedTierPrice)}
-                          </span>
-                        </div>
-
-                        {showSandboxControls ? (
-                          <>
-                            {/* Interactive Slide control */}
-                            <div className="space-y-1">
-                              <input 
-                                type="range"
-                                min="0"
-                                max={getTokenLimitForPrice(selectedTierPrice)}
-                                value={tokenUsage[path.id] || 0}
-                                onChange={(e) => onSetTokenUsage && onSetTokenUsage(path.id, parseInt(e.target.value, 10))}
-                                className="w-full h-1.5 bg-[#251b54] rounded-lg appearance-none cursor-pointer accent-violet-500"
-                              />
-                            </div>
-
-                            {/* Progress Bar & percentage */}
-                            <div className="flex items-center justify-between gap-2 pt-1">
-                              <span className={`text-[9px] font-black uppercase tracking-wider ${
-                                ((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) >= 0.8
-                                  ? 'text-rose-400 animate-pulse font-extrabold'
-                                  : 'text-slate-400 font-bold'
-                              }`}>
-                                {((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) >= 0.8
-                                  ? '⚠️ 80%+ Limit Warning'
-                                  : `${Math.round(((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) * 100)}% Consumed`
-                                }
-                              </span>
-                              
-                              <div className="flex gap-1.5 shrink-0">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onIncrementTokenUsage && onIncrementTokenUsage(path.id);
-                                  }}
-                                  className="text-[9px] bg-violet-500/15 hover:bg-violet-500/30 text-violet-300 font-extrabold px-1.5 py-0.5 rounded border border-violet-500/25 cursor-pointer active:scale-95 transition-all"
-                                  title="Consume +10% tokens"
-                                >
-                                  +10%
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onResetTokenUsage && onResetTokenUsage(path.id);
-                                  }}
-                                  className="text-[9px] bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold px-1.5 py-0.5 rounded border border-slate-700 cursor-pointer active:scale-95 transition-all"
-                                  title="Reset usage"
-                                >
-                                  Reset
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            {/* Read-only Progress Bar for General Public */}
-                            <div className="w-full bg-[#1b144a] rounded-full h-1.5 overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all duration-500 ${
-                                  ((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) >= 0.8
-                                    ? 'bg-rose-500 animate-pulse'
-                                    : 'bg-violet-500'
-                                }`}
-                                style={{ width: `${Math.min(100, Math.round(((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) * 100))}%` }}
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-0.5">
-                              <span className={`text-[9px] font-black uppercase tracking-wider ${
-                                ((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) >= 0.8
-                                  ? 'text-rose-400 animate-pulse font-extrabold'
-                                  : 'text-slate-400 font-bold'
-                              }`}>
-                                {((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) >= 0.8
-                                  ? '⚠️ 80%+ Limit Warning'
-                                  : `${Math.round(((tokenUsage[path.id] || 0) / getTokenLimitForPrice(selectedTierPrice)) * 100)}% Consumed`
-                                }
-                              </span>
-                              <span className="text-[8px] text-slate-500 font-bold uppercase">Arohi Engine</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {/* Pricing range preview */}
-                      <div className="text-[10px] bg-[#171234] border border-[#281f5e] px-3 py-2 rounded-xl flex justify-between items-center text-slate-300 font-bold">
-                        <span>Plan Price:</span>
-                        <span className="text-yellow-400 font-extrabold">₹399 - ₹4,999/mo</span>
-                      </div>
-
-                      <div className="space-y-1.5 pt-1 border-t border-[#231a4d]">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Starter Perks Preview:</span>
-                        {path.perks.slice(0, 3).map((p, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981] shrink-0" />
-                            <span className="truncate">{p}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-[#231a4d] flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-black text-violet-300">
-                    {isActive ? `₹${details?.price || 399}/mo` : '5 Plans Available'}
-                  </span>
-                  <button
-                    onClick={() => onSubscribe && onSubscribe(path.id)}
-                    className={`text-[9px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-95 ${
-                      isActive 
-                        ? 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30' 
-                        : 'bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white hover:from-[#6d28d9] shadow-md border border-[#a78bfa]/20'
-                    }`}
-                  >
-                    {isActive ? 'Cancel Plan' : 'View Tiers'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div id="monthly-subscriptions-anchor" className="bg-[#120e2b] border border-[#2d2163] p-4 sm:p-6 rounded-[2rem] text-left text-white shadow-2xl space-y-5">
+        <PricingPage 
+          embedMode={true}
+          subscriptions={subscriptions}
+          subscriptionDetails={subscriptionDetails}
+          onSubscribe={onSubscribe}
+          onNavigateTab={onNavigateTab}
+          onOpenAuth={onOpenAuth}
+        />
 
         {/* PROGRESS BLOCK FOR ACTIVE SUBSCRIPTIONS */}
         {hasAnyActive ? (
@@ -1348,7 +1184,7 @@ export default function UserDashboard({
             <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
             <div className="text-xs">
               <p className="font-bold">No Active Assistance Subscription</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Please subscribe to any strategic path above or on the homepage to unlock unlimited continuous support guidelines starting from ₹399/month.</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Please subscribe to any plan above to unlock unlimited continuous support guidelines starting from ₹399/month.</p>
             </div>
           </div>
         )}

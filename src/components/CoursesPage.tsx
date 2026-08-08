@@ -350,9 +350,9 @@ function renderMarkdown(content: string) {
       if (piece.startsWith('**') && piece.endsWith('**')) {
         return <strong key={idx} className="font-extrabold text-[#c084fc]">{piece.slice(2, -2)}</strong>;
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
-        return <em key={idx} className="italic text-slate-200">{piece.slice(1, -1)}</em>;
+        return <em key={idx} className="italic text-slate-100">{piece.slice(1, -1)}</em>;
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return <code key={idx} className="bg-slate-950/60 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-400 border border-slate-800">{piece.slice(1, -1)}</code>;
+        return <code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>;
       }
       return piece;
     });
@@ -367,13 +367,13 @@ function renderMarkdown(content: string) {
     if (currentList.length > 0) {
       if (listType === 'ul') {
         elements.push(
-          <ul key={`ul-${key}`} className="list-disc pl-5 my-2 space-y-1 text-slate-200">
+          <ul key={`ul-${key}`} className="list-disc pl-5 my-2 space-y-1 text-slate-100">
             {...currentList}
           </ul>
         );
       } else if (listType === 'ol') {
         elements.push(
-          <ol key={`ol-${key}`} className="list-decimal pl-5 my-2 space-y-1 text-slate-200">
+          <ol key={`ol-${key}`} className="list-decimal pl-5 my-2 space-y-1 text-slate-100">
             {...currentList}
           </ol>
         );
@@ -391,7 +391,7 @@ function renderMarkdown(content: string) {
         listType = 'ul';
       }
       currentList.push(
-        <li key={idx} className="leading-relaxed">
+        <li key={idx} className="leading-relaxed text-slate-100">
           {parseInline(trimmed.substring(2))}
         </li>
       );
@@ -403,7 +403,7 @@ function renderMarkdown(content: string) {
       const match = trimmed.match(/^\d+\.\s(.*)/);
       const content = match ? match[1] : trimmed;
       currentList.push(
-        <li key={idx} className="leading-relaxed">
+        <li key={idx} className="leading-relaxed text-slate-100">
           {parseInline(content)}
         </li>
       );
@@ -411,7 +411,7 @@ function renderMarkdown(content: string) {
       pushList(idx);
       if (trimmed) {
         elements.push(
-          <p key={idx} className="my-1.5 leading-relaxed">
+          <p key={idx} className="my-1.5 leading-relaxed text-slate-100">
             {parseInline(line)}
           </p>
         );
@@ -422,7 +422,7 @@ function renderMarkdown(content: string) {
   });
 
   pushList(lines.length);
-  return <div className="space-y-1">{elements}</div>;
+  return <div className="space-y-1 text-slate-100">{elements}</div>;
 }
 
 export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?: () => void, onNavigateTab?: (tab: string) => void }) {
@@ -440,7 +440,7 @@ export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?
   const [courses, setCourses] = useState<Course[]>(initialCourses);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [candidateName, setCandidateName] = useState('Rajesh Kumar Singh');
+  const [candidateName, setCandidateName] = useState(() => user?.displayName || localStorage.getItem('recruit_user_name') || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>(() => {
     const saved = localStorage.getItem('recruit_course_search_history');

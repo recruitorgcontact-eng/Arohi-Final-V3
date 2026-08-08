@@ -1,76 +1,144 @@
-import { Landmark, Briefcase, Bot, User } from 'lucide-react';
-import { motion } from 'motion/react';
-import { Language, getTranslation } from '../translations';
+import React from 'react';
+import { Home, MessageSquare, Grid, User } from 'lucide-react';
+import { Language } from '../translations';
+import ArohiAvatar from './ArohiAvatar';
 
 interface BottomNavBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   language: Language;
+  onQuickChat?: (prompt: string) => void;
+  setIsChatOpen?: (isOpen: boolean) => void;
+  isChatOpen?: boolean;
+  isChatMinimized?: boolean;
+  setIsChatMinimized?: (isMin: boolean) => void;
+  isDarkMode?: boolean;
 }
 
-export default function BottomNavBar({ activeTab, onTabChange, language }: BottomNavBarProps) {
-  const tabs = [
-    { id: 'home', label: getTranslation('home', language), icon: Landmark },
-    { id: 'jobs', label: getTranslation('jobs', language), icon: Briefcase },
-    { id: 'arohi', label: 'AROHI AI', icon: Bot },
-    { id: 'dashboard', label: getTranslation('dashboard', language), icon: User }
-  ];
-
+export default function BottomNavBar({ 
+  activeTab, 
+  onTabChange, 
+  onQuickChat,
+  setIsChatOpen,
+  isChatOpen,
+  isChatMinimized,
+  setIsChatMinimized,
+  isDarkMode = true
+}: BottomNavBarProps) {
   return (
-    <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#06040b]/95 backdrop-blur-xl border-t border-purple-500/15 shadow-[0_-8px_30px_rgba(0,0,0,0.85)] px-4 pt-2.5 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-      {/* iOS Home Indicator Safe Area Offset spacer */}
-      <div className="max-w-md mx-auto flex items-center justify-between">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+    <div className="fixed bottom-0 left-0 right-0 z-[80] p-3 pointer-events-none font-sans">
+      <div className={`max-w-md mx-auto rounded-3xl border px-5 py-2.5 flex items-center justify-between pointer-events-auto backdrop-blur-xl shadow-2xl transition-colors ${
+        isDarkMode 
+          ? 'bg-[#0a0b18]/95 border-purple-500/20 text-slate-400 shadow-[0_10px_30px_rgba(0,0,0,0.85)]' 
+          : 'bg-white/95 border-slate-200 text-slate-500 shadow-xl'
+      }`}>
+        
+        {/* Home Tab */}
+        <button
+          onClick={() => {
+            onTabChange('home');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'home' 
+              ? 'text-purple-500 dark:text-purple-400 font-black scale-105' 
+              : 'hover:text-purple-500 dark:hover:text-purple-400 text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          <Home className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Home</span>
+        </button>
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className="flex flex-col items-center justify-center flex-1 py-1 px-2 relative group focus:outline-none"
-            >
-              {/* Active Backlight Glow */}
-              {isActive && (
-                <motion.div
-                  layoutId="bottom-nav-glow"
-                  className="absolute -top-2 w-10 h-10 bg-purple-500/15 rounded-full blur-md pointer-events-none"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
+        {/* Chat Tab */}
+        <button
+          onClick={() => {
+            onTabChange('arohi');
+            if (setIsChatOpen) setIsChatOpen(true);
+            if (setIsChatMinimized) setIsChatMinimized(false);
+            if (onQuickChat) onQuickChat("Hi Arohi, let's chat!");
+          }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'arohi' 
+              ? 'text-purple-500 dark:text-purple-400 font-black scale-105' 
+              : 'hover:text-purple-500 dark:hover:text-purple-400 text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          <MessageSquare className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Chat</span>
+        </button>
 
-              {/* Active Accent Dot on Top */}
-              {isActive && (
-                <motion.div
-                  layoutId="bottom-nav-dot"
-                  className="absolute top-0 w-1 h-1 bg-purple-500 rounded-full"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
+        {/* Central Ask Arohi Floating Avatar Button */}
+        <div className="relative -mt-9 flex flex-col items-center justify-center">
+          {/* ASK AROHI! Floating Animated Pill Badge */}
+          <div className="mb-1 bg-gradient-to-r from-[#17103a] via-[#4c1d95] to-[#6327d4] text-white px-3 py-0.5 rounded-full border border-[#7c3aed]/70 text-[9px] font-black tracking-wider uppercase shadow-[0_4px_18px_rgba(124,58,237,0.55)] backdrop-blur-md flex items-center gap-1.5 whitespace-nowrap select-none pointer-events-none z-20 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
+            <span>ASK AROHI! ✨</span>
+          </div>
 
-              {/* Icon Container */}
-              <div
-                className={`relative p-1.5 rounded-xl transition-all ${
-                  isActive
-                    ? 'text-purple-400 scale-110 bg-purple-950/40 border border-purple-500/20'
-                    : 'text-slate-400 group-hover:text-slate-200'
-                }`}
-              >
-                <Icon className="w-5.5 h-5.5" />
-              </div>
+          {/* Core Circular Avatar Button */}
+          <button
+            onClick={() => {
+              if (isChatOpen) {
+                if (isChatMinimized) {
+                  if (setIsChatMinimized) setIsChatMinimized(false);
+                } else {
+                  if (setIsChatOpen) setIsChatOpen(false);
+                }
+              } else {
+                if (setIsChatOpen) setIsChatOpen(true);
+                if (setIsChatMinimized) setIsChatMinimized(false);
+                onTabChange('arohi');
+              }
+            }}
+            className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_8px_32px_rgba(124,58,237,0.6)] border-2 border-[#a78bfa] hover:border-purple-300 cursor-pointer overflow-visible group"
+            title="Talk to AROHI"
+          >
+            {/* The Arohi image filling the entire button */}
+            <div className="w-full h-full rounded-full overflow-hidden bg-[#090714]">
+              <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 group-hover:scale-120" />
+            </div>
 
-              {/* Tab Label */}
-              <span
-                className={`text-[10px] font-extrabold mt-1 tracking-tight transition-all truncate max-w-[75px] ${
-                  isActive ? 'text-purple-300 font-black' : 'text-slate-500'
-                }`}
-              >
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
+            {/* Glowing ring animation */}
+            <span className="absolute inset-0 rounded-full border-2 border-purple-400/40 animate-ping opacity-60 pointer-events-none"></span>
+
+            {/* Active green status light */}
+            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-[#00e676] rounded-full border-2 border-[#090714] z-10 shadow-[0_0_8px_#00e676]"></span>
+          </button>
+        </div>
+
+        {/* Tools Tab */}
+        <button
+          onClick={() => {
+            onTabChange('tools');
+          }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'tools' || activeTab === 'syllabus'
+              ? 'text-purple-500 dark:text-purple-400 font-black scale-105' 
+              : 'hover:text-purple-500 dark:hover:text-purple-400 text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          <Grid className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Tools</span>
+        </button>
+
+        {/* Profile Tab */}
+        <button
+          onClick={() => {
+            onTabChange('dashboard');
+          }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'dashboard' || activeTab === 'account' || activeTab === 'profile'
+              ? 'text-purple-500 dark:text-purple-400 font-black scale-105' 
+              : 'hover:text-purple-500 dark:hover:text-purple-400 text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Profile</span>
+        </button>
+
       </div>
     </div>
   );
 }
+
+

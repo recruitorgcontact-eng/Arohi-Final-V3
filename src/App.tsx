@@ -18,8 +18,11 @@ import BusinessPage from './components/BusinessPage';
 import SchemesPage from './components/SchemesPage';
 import CoursesPage from './components/CoursesPage';
 import SchoolSyllabusPage from './components/SchoolSyllabusPage';
+import ToolsHub from './components/ToolsHub';
 import UserDashboard from './components/UserDashboard';
+import PricingPage from './components/PricingPage';
 import TierSelectorGrid from './components/TierSelectorGrid';
+import { LottieSuccessModal, LottieSuccessAnimation } from './components/LottieSuccess';
 import EmployerPortal from './components/EmployerPortal';
 import LegalPages from './components/LegalPages';
 import NavigationHub from './components/NavigationHub';
@@ -66,46 +69,7 @@ function setStorageItem(key: string, value: string): void {
   }
 }
 
-const INITIAL_MOCK_APPLICATIONS: Application[] = [
-  {
-    id: 'app-mock-1',
-    postingId: 'ssc-mts-2026',
-    postingTitle: 'SSC MTS & Havaldar Online Form 2026',
-    candidateName: 'Rajesh Kumar Singh',
-    fatherName: 'Vijay Kumar Singh',
-    dob: '1999-08-15',
-    gender: 'Male',
-    category: 'OBC',
-    email: 'rajesh.kumar@example.com',
-    phone: '9876543210',
-    qualification: 'Graduate Degree (Patna University) - Marks: 74.20%',
-    address: 'H.No 45, Rajendra Nagar, Patna, Bihar - 800016',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-    signatureUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-    registrationNumber: 'REC-SSCMT-2026-894103',
-    appliedDate: '23/06/2026',
-    status: 'Approved'
-  },
-  {
-    id: 'app-mock-2',
-    postingId: 'rrb-alp-2026',
-    postingTitle: 'Railway RRB Assistant Loco Pilot (ALP) Form',
-    candidateName: 'Amit Suresh Patil',
-    fatherName: 'Suresh Patil',
-    dob: '2001-04-12',
-    gender: 'Male',
-    category: 'General',
-    email: 'amit.patil@example.com',
-    phone: '9123456789',
-    qualification: 'ITI Technical pass (NCT Board) - Marks: 82.50%',
-    address: 'Sector 4, Plot 12, Kamothe, Navi Mumbai, Maharashtra - 410206',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-    signatureUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=150&auto=format&fit=crop&q=60&referrerpolicy=no-referrer',
-    registrationNumber: 'REC-RRBAL-2026-150492',
-    appliedDate: '24/06/2026',
-    status: 'Submitted'
-  }
-];
+const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 
 // INITIAL_REVIEWS and Review interface are imported from ./data/reviewsData
 
@@ -133,7 +97,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'ur', 'kn', 'ml', 'pa', 'as', 'ru', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'pt', 'it', 'ko', 'tr', 'id', 'sw', 'am', 'ha', 'yo', 'zu'];
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'];
 
   const [selectedState, setSelectedState] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -177,6 +141,44 @@ export default function App() {
     setSelectedCountry(country);
     setStorageItem('arohi_country', country);
   };
+
+  // Global Theme State (Dark / Light Mode)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('arohi_theme_mode');
+    return saved ? saved === 'dark' : true;
+  });
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('arohi_theme_mode', next ? 'dark' : 'light');
+      } catch (e) {
+        console.warn(e);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const rootEl = document.documentElement;
+    const bodyEl = document.body;
+    if (isDarkMode) {
+      rootEl.classList.add('dark');
+      rootEl.classList.remove('light');
+      bodyEl.classList.add('dark');
+      bodyEl.classList.remove('light');
+      bodyEl.style.backgroundColor = '#070814';
+      bodyEl.style.color = '#f8fafc';
+    } else {
+      rootEl.classList.add('light');
+      rootEl.classList.remove('dark');
+      bodyEl.classList.add('light');
+      bodyEl.classList.remove('dark');
+      bodyEl.style.backgroundColor = '#f8f9fe';
+      bodyEl.style.color = '#0f172a';
+    }
+  }, [isDarkMode]);
 
   const [userName, setUserName] = useState(() => {
     return getStorageItem('arohi_user_name') || 'Honored Guest';
@@ -295,44 +297,6 @@ export default function App() {
         description: 'Anonymous visitor loaded Arohiai.com landing interface'
       })
     }).catch(err => console.log('Telemetry offline:', err));
-
-    // Prompt for Microphone & Geolocation permissions on startup for Android App & Web
-    const requestInitialPermissions = async () => {
-      // 1. Geolocation permission request
-      if ('geolocation' in navigator) {
-        try {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              console.log('Startup location permission granted:', pos.coords.latitude, pos.coords.longitude);
-            },
-            (err) => {
-              console.warn('Startup location permission note:', err.message);
-            },
-            { timeout: 8000, enableHighAccuracy: false }
-          );
-        } catch (e) {
-          console.warn('Startup location check failed:', e);
-        }
-      }
-
-      // 2. Microphone permission request
-      if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // Release stream immediately so mic does not stay locked
-          stream.getTracks().forEach((track) => track.stop());
-          console.log('Startup microphone permission granted.');
-        } catch (err) {
-          console.warn('Startup microphone permission note:', err);
-        }
-      }
-    };
-
-    const permTimer = setTimeout(() => {
-      requestInitialPermissions();
-    }, 1000);
-
-    return () => clearTimeout(permTimer);
   }, []);
 
   useEffect(() => {
@@ -662,6 +626,14 @@ export default function App() {
   const [candidateUtr, setCandidateUtr] = useState('');
   const [isSubmittingUtr, setIsSubmittingUtr] = useState(false);
   const [utrSubmissionSuccess, setUtrSubmissionSuccess] = useState(false);
+  const [lottieSuccessData, setLottieSuccessData] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    details?: { label: string; value: string }[];
+    buttonText?: string;
+    badgeText?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (checkoutPath) {
@@ -1519,9 +1491,42 @@ export default function App() {
         );
       case 'syllabus':
         return <SchoolSyllabusPage />;
+      case 'tools':
+        return (
+          <ToolsHub 
+            onNavigateTab={(tab) => setActiveTab(tab)} 
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onQuickChat={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
+          />
+        );
+      case 'pricing':
+      case 'plans':
+      case 'subscriptions':
+        return (
+          <PricingPage 
+            subscriptions={subscriptions}
+            subscriptionDetails={subscriptionDetails}
+            onSubscribe={handleSubscribe}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+            onOpenCheckout={(path, detail) => {
+              setPendingSubscriptionDetail(detail);
+              setCheckoutPath(path);
+            }}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+          />
+        );
       case 'dashboard':
+      case 'profile':
+      case 'account':
         return (
           <UserDashboard 
+            initialSection="all"
             subscriptions={subscriptions} 
             subscriptionDetails={subscriptionDetails}
             onSubscribe={handleSubscribe} 
@@ -1646,23 +1651,32 @@ export default function App() {
     }
   };
 
-  // Spectacular Home view with 100vh Hero section and central abstract illustration
+  // Modern 100% matched UI for Home tab
   const renderHomeHero = () => {
     return (
-      <ArohiLandingPage 
-        user={user}
+      <WelcomeLanding 
+        activeTab={activeTab}
         language={language}
-        setActiveTab={setActiveTab}
+        onLanguageChange={changeLanguage}
+        onEnter={() => {
+          setHasEntered(true);
+        }} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setHasEntered(true);
+        }}
         setIsChatOpen={setIsChatOpen}
-        setIsChatMinimized={setIsChatMinimized}
-        setChatInitialPrompt={setChatInitialPrompt}
-        setIsAuthModalOpen={setIsAuthModalOpen}
-        subscriptions={subscriptions}
-        handleSubscribe={handleSubscribe}
-        setIsWalkthroughOpen={setIsWalkthroughOpen}
-        setCheckoutPath={setCheckoutPath}
-        setPendingSubscriptionDetail={setPendingSubscriptionDetail}
-        isTourEnabled={IS_TOUR_ENABLED}
+        onQuickChat={(prompt) => {
+          setChatInitialPrompt(prompt);
+          setIsChatOpen(true);
+          setIsChatMinimized(false);
+          setHasEntered(true);
+          setActiveTab('arohi');
+        }}
+        onShare={() => handleOpenShare()}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
       />
     );
   };
@@ -2532,7 +2546,7 @@ export default function App() {
 
   if (!hasEntered) {
     return (
-      <div className="relative w-full min-h-screen bg-[#020208] overflow-x-hidden">
+      <div className={`relative w-full min-h-screen overflow-x-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#070814] text-slate-100 dark' : 'bg-[#f8f9fe] text-slate-900 light'}`}>
         <BackgroundScrollEffects />
         <WelcomeLanding 
           language={language}
@@ -2553,6 +2567,9 @@ export default function App() {
             setActiveTab('arohi');
           }}
           onShare={() => handleOpenShare()}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
         />
 
         {/* Floating Chat Overlay Container */}
@@ -2571,85 +2588,36 @@ export default function App() {
             />
           </div>
         )}
-        {/* Floating assistant bubble in bottom right corner */}
+        {/* Persistent Global Bottom Navigation Bar */}
         {(!isChatOpen || isChatMinimized) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1, 
-              y: [0, -10, 0],
+          <BottomNavBar
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setSelectedPosting(null);
+              setHasEntered(true);
             }}
-            transition={{
-              opacity: { duration: 0.5 },
-              scale: { duration: 0.5 },
-              y: {
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }
+            language={language}
+            isDarkMode={isDarkMode}
+            setIsChatOpen={setIsChatOpen}
+            isChatOpen={isChatOpen}
+            isChatMinimized={isChatMinimized}
+            setIsChatMinimized={setIsChatMinimized}
+            onQuickChat={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
             }}
-            className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2"
-          >
-            {/* Creative floating prompt with heartbeat effect to attract the user */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, x: 10 }}
-              animate={{ 
-                opacity: [0.95, 1, 0.95],
-                scale: [0.98, 1.02, 0.98],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="bg-gradient-to-r from-[#17103a] to-[#6327d4] text-white px-3.5 py-1.5 rounded-2xl rounded-br-none border border-[#7c3aed]/55 text-[11px] font-extrabold tracking-wide uppercase shadow-[0_6px_20px_rgba(124,58,237,0.4)] backdrop-blur-md flex items-center gap-2 select-none"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
-              <span>Ask Arohi! ✨</span>
-            </motion.div>
-
-            {/* Core circular button fully showing Arohi's image */}
-            <button
-              onClick={() => {
-                if (isChatOpen) {
-                  if (isChatMinimized) {
-                    setIsChatMinimized(false);
-                  } else {
-                    setIsChatOpen(false);
-                  }
-                } else {
-                  setIsChatOpen(true);
-                  setIsChatMinimized(false);
-                }
-              }}
-              className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_8px_32px_rgba(124,58,237,0.5)] border-2 border-[#a78bfa]/50 hover:border-[#a78bfa] cursor-pointer overflow-visible group"
-              title="Talk to AROHI"
-            >
-              {/* The Arohi image filling the entire button */}
-              <div className="w-full h-full rounded-full overflow-hidden">
-                <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 group-hover:scale-120" />
-              </div>
-
-              {/* Glowing ring animation */}
-              <span className="absolute inset-0 rounded-full border-2 border-purple-400/40 animate-ping opacity-60 pointer-events-none"></span>
-
-              {/* Hover tooltip label */}
-              <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-950/95 border border-purple-500/50 text-slate-100 font-bold px-3 py-1.5 rounded-xl text-xs whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none tracking-wide">
-                {isChatOpen && !isChatMinimized ? 'Close AROHI' : 'Ask AROHI'}
-              </span>
-
-              {/* Active green status light */}
-              <span className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-[#00e676] rounded-full border-2 border-[#090714] z-10 shadow-[0_0_8px_#00e676]"></span>
-            </button>
-          </motion.div>
+          />
         )}
       </div>
     );
   }
 
   return (
-    <div key={language} className="relative bg-[#090714] min-h-screen flex flex-col font-sans antialiased text-slate-100 selection:bg-purple-500 selection:text-white pb-24 xl:pb-12">
+    <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white pb-24 xl:pb-12 transition-colors duration-300 ${isDarkMode ? 'bg-[#070814] text-slate-100 dark' : 'bg-[#f8f9fe] text-slate-900 light'}`}>
       
       {/* Interactive Parallax Background Scroll Effects */}
       <BackgroundScrollEffects />
@@ -2657,25 +2625,7 @@ export default function App() {
       {/* Dynamic SEO Head Title and Meta Description Updates */}
       <SEOHead activeTab={activeTab} selectedState={selectedState} currentLanguage={language} />
 
-      {/* 1. Brand Header */}
-      <Header
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          setSelectedPosting(null); // Clear selected posting
-        }}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        onRevisitWelcome={() => {
-          setHasEntered(false);
-        }}
-        onStartTour={IS_TOUR_ENABLED ? (() => setIsWalkthroughOpen(true)) : undefined}
-        onOpenSeoHub={() => setIsSeoHubOpen(true)}
-        language={language}
-        onLanguageChange={changeLanguage}
-        onShare={() => handleOpenShare()}
-        selectedCountry={selectedCountry}
-        onCountryChange={changeCountry}
-      />
+      {/* 1. Brand Header (Removed as per user request) */}
 
       {/* 2-Day Free Trial Active Banner */}
       {!hasActiveSubscription && isTrialActive && (
@@ -2769,17 +2719,65 @@ export default function App() {
 
             <div className="space-y-3 pt-2">
               <button
-                onClick={() => {
+                disabled={isProcessingRazorpay}
+                onClick={async () => {
                   const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
+                  const title = `${chosenTier.name} Subscription`;
+                  const price = `₹${chosenTier.price}`;
                   setCheckoutPath({
                     id: 'path1',
-                    title: `${chosenTier.name} Subscription`,
-                    price: `₹${chosenTier.price}`
+                    title: title,
+                    price: price
                   });
+                  setIsProcessingRazorpay(true);
+                  try {
+                    await openRazorpayCheckout({
+                      amountInRupees: chosenTier.price,
+                      planName: title,
+                      userEmail: user?.email || 'elitetraderjunoon@gmail.com',
+                      userName: user?.displayName || 'Arohi AI Premium Member',
+                      onSuccess: (res) => {
+                        setIsProcessingRazorpay(false);
+                        handleSubscribe('path1', title, 'Razorpay Standard Checkout');
+                        setCheckoutPath(null);
+                        setActiveTab('dashboard');
+                        setLottieSuccessData({
+                          isOpen: true,
+                          title: "Purchase & Subscription Confirmed!",
+                          message: `Your ${title} membership has been successfully verified and activated.`,
+                          details: [
+                            { label: "Payment ID", value: res.razorpay_payment_id || `pay_${Date.now()}` },
+                            { label: "Order ID", value: res.razorpay_order_id || `ord_${Date.now()}` },
+                            { label: "Plan Name", value: title },
+                            { label: "Status", value: "HMAC-SHA256 Verified" }
+                          ],
+                          buttonText: "Go to Pro Dashboard",
+                          badgeText: "RAZORPAY VERIFIED"
+                        });
+                      },
+                      onError: (err) => {
+                        setIsProcessingRazorpay(false);
+                        console.warn('Razorpay checkout error:', err);
+                      },
+                      onDismiss: () => {
+                        setIsProcessingRazorpay(false);
+                      }
+                    });
+                  } catch (err: any) {
+                    setIsProcessingRazorpay(false);
+                    console.warn('Razorpay error fallback:', err);
+                  }
                 }}
                 className="w-full bg-gradient-to-r from-amber-500 via-purple-600 to-fuchsia-600 hover:from-amber-400 hover:to-fuchsia-500 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
               >
-                <span>💳 Subscribe to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
+                {isProcessingRazorpay ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin text-white" />
+                    <span>Processing Payment Gateway...</span>
+                  </>
+                ) : (
+                  <span>💳 Subscribe to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
+                )}
               </button>
 
               {!user && (
@@ -2982,84 +2980,38 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {activeTab !== 'home' && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-[#120d2a]/60 border border-[#211b3d] p-4 rounded-2xl select-none animate-in fade-in slide-in-from-top-2 duration-200">
-                {/* Left: Breadcrumbs / Back button */}
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <div className="flex items-center justify-between gap-3 mb-6 select-none animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xs font-semibold">
                   <button
                     onClick={() => {
                       setActiveTab('home');
                       setSelectedPosting(null);
                     }}
-                    className="flex items-center gap-1.5 text-slate-300 hover:text-[#00e676] bg-[#1a143c] border border-[#2d2163] px-3 py-1.5 rounded-xl transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer bg-white/5 hover:bg-white/10 dark:bg-slate-900/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-sm"
                   >
-                    <Home className="w-3.5 h-3.5 text-purple-400" />
+                    <Home className="w-3.5 h-3.5 text-purple-500" />
                     <span>Home</span>
                   </button>
-                  
-                  <span className="text-slate-600">/</span>
-
-                  {prevTab !== 'home' && prevTab !== activeTab && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setActiveTab(prevTab);
-                          setSelectedPosting(null);
-                        }}
-                        className="text-slate-400 hover:text-white underline decoration-[#7c3aed]/50 hover:decoration-white transition-all capitalize"
-                      >
-                        {prevTab === 'courses' ? 'Skills' : prevTab === 'arohi' ? 'Arohi Chat' : prevTab}
-                      </button>
-                      <span className="text-slate-600">/</span>
-                    </>
-                  )}
-
-                  <span className="text-[#a78bfa] font-bold capitalize bg-[#221f42] border border-[#4c3ba0]/40 px-2 py-0.5 rounded-md">
-                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'AROHI Guide' : activeTab}
+                  <span className="text-slate-400 dark:text-slate-600">/</span>
+                  <span className="font-extrabold uppercase tracking-wider text-xs px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300">
+                    {activeTab === 'courses' ? 'Skills & Academy' : activeTab === 'arohi' ? 'AROHI Guide' : activeTab}
                   </span>
                 </div>
 
-                {/* Right: History back or direct jump */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {prevTab !== activeTab && (
-                    <button
-                      onClick={() => {
-                        const temp = activeTab;
-                        setActiveTab(prevTab);
-                        setPrevTab(temp);
-                        setSelectedPosting(null);
-                      }}
-                      className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer mr-2"
-                      title={`Go back to ${prevTab}`}
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>Go Back</span>
-                    </button>
-                  )}
-
-                  <span className="text-[10px] uppercase tracking-widest font-black text-slate-500 mr-1 hidden lg:inline">Quick Jump:</span>
-                  {[
-                    { id: 'jobs', label: 'Jobs' },
-                    { id: 'courses', label: 'Skills' },
-                    { id: 'blogs', label: 'Blogs' },
-                    { id: 'business', label: 'Business' },
-                    { id: 'arohi', label: 'Arohi Chat' },
-                    { id: 'dashboard', label: 'Dashboard' }
-                  ].map((link) => {
-                    if (link.id === activeTab) return null;
-                    return (
-                      <button
-                        key={link.id}
-                        onClick={() => {
-                          setActiveTab(link.id);
-                          setSelectedPosting(null);
-                        }}
-                        className="text-[11px] font-bold text-slate-300 hover:text-white bg-[#151032]/40 hover:bg-[#1f1947]/80 border border-[#281f54]/60 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                      >
-                        {link.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                {prevTab !== activeTab && prevTab !== 'home' && (
+                  <button
+                    onClick={() => {
+                      const temp = activeTab;
+                      setActiveTab(prevTab);
+                      setPrevTab(temp);
+                      setSelectedPosting(null);
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Back to {prevTab}</span>
+                  </button>
+                )}
               </div>
             )}
             {renderActiveContent()}
@@ -3254,79 +3206,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating assistant bubble in bottom right corner */}
-      {(!isChatOpen || isChatMinimized) && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 50 }}
-          animate={{ 
-            opacity: 1, 
-            scale: 1, 
-            y: [0, -10, 0],
-          }}
-          transition={{
-            opacity: { duration: 0.5 },
-            scale: { duration: 0.5 },
-            y: {
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }
-          }}
-          className="fixed bottom-24 xl:bottom-6 right-4 xl:right-6 z-[60] flex flex-col items-end gap-2"
-        >
-          {/* Creative floating prompt with heartbeat effect to attract the user */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: 10 }}
-            animate={{ 
-              opacity: [0.95, 1, 0.95],
-              scale: [0.98, 1.02, 0.98],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="bg-gradient-to-r from-[#17103a] to-[#6327d4] text-white px-3.5 py-1.5 rounded-2xl rounded-br-none border border-[#7c3aed]/55 text-[11px] font-extrabold tracking-wide uppercase shadow-[0_6px_20px_rgba(124,58,237,0.4)] backdrop-blur-md flex items-center gap-2 select-none"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
-            <span>Ask Arohi! ✨</span>
-          </motion.div>
 
-          {/* Core circular button fully showing Arohi's image */}
-          <button
-            onClick={() => {
-              if (isChatOpen) {
-                if (isChatMinimized) {
-                  setIsChatMinimized(false);
-                } else {
-                  setIsChatOpen(false);
-                }
-              } else {
-                setIsChatOpen(true);
-                setIsChatMinimized(false);
-              }
-            }}
-            className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_8px_32px_rgba(124,58,237,0.5)] border-2 border-[#a78bfa]/50 hover:border-[#a78bfa] cursor-pointer overflow-visible group"
-            title="Talk to AROHI"
-          >
-            {/* The Arohi image filling the entire button */}
-            <div className="w-full h-full rounded-full overflow-hidden">
-              <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 group-hover:scale-120" />
-            </div>
-
-            {/* Glowing ring animation */}
-            <span className="absolute inset-0 rounded-full border-2 border-purple-400/40 animate-ping opacity-60 pointer-events-none"></span>
-
-            {/* Hover tooltip label */}
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-950/95 border border-purple-500/50 text-slate-100 font-bold px-3 py-1.5 rounded-xl text-xs whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none tracking-wide">
-              {isChatOpen && !isChatMinimized ? 'Close AROHI' : 'Ask AROHI'}
-            </span>
-
-            {/* Active green status light */}
-            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-[#00e676] rounded-full border-2 border-[#090714] z-10 shadow-[0_0_8px_#00e676]"></span>
-          </button>
-        </motion.div>
-      )}
 
 
 
@@ -3334,7 +3214,7 @@ export default function App() {
 
       {/* TIER SELECTION OVERLAY MODAL */}
       {tierSelectPathId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-[#0c0822]/98 border-2 border-[#5b21b6]/60 text-white rounded-[2.5rem] max-w-6xl w-full p-6 sm:p-8 space-y-6 shadow-[0_0_60px_rgba(124,58,237,0.4)] relative my-8 animate-in zoom-in-95 duration-200">
             {/* Background glows */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -3382,7 +3262,7 @@ export default function App() {
 
       {/* Direct Razorpay Premium Checkout Modal */}
       {checkoutPath && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#120e2a] border border-[#2d2163] text-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#7c3aed]/10 rounded-full blur-2xl pointer-events-none"></div>
             
@@ -3434,14 +3314,27 @@ export default function App() {
                     await openRazorpayCheckout({
                       amountInRupees: numericPrice,
                       planName: checkoutPath.title,
-                      userEmail: 'elitetraderjunoon@gmail.com',
-                      userName: 'Arohi AI Premium Member',
+                      userEmail: user?.email || 'elitetraderjunoon@gmail.com',
+                      userName: user?.displayName || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
                         setIsProcessingRazorpay(false);
+                        const planTitle = checkoutPath.title;
                         handleSubscribe(checkoutPath.id, checkoutPath.title, 'Razorpay Standard Checkout');
                         setCheckoutPath(null);
                         setActiveTab('dashboard');
-                        alert(`Payment Verified & Activated!\n\nRazorpay Payment ID: ${res.razorpay_payment_id}\nOrder ID: ${res.razorpay_order_id}`);
+                        setLottieSuccessData({
+                          isOpen: true,
+                          title: "Purchase & Subscription Confirmed!",
+                          message: `Your ${planTitle} membership has been successfully verified and activated.`,
+                          details: [
+                            { label: "Payment ID", value: res.razorpay_payment_id || `pay_${Date.now()}` },
+                            { label: "Order ID", value: res.razorpay_order_id || `ord_${Date.now()}` },
+                            { label: "Plan Name", value: planTitle },
+                            { label: "Status", value: "HMAC-SHA256 Verified" }
+                          ],
+                          buttonText: "Go to Pro Dashboard",
+                          badgeText: "RAZORPAY VERIFIED"
+                        });
                       },
                       onError: (err) => {
                         setIsProcessingRazorpay(false);
@@ -3695,6 +3588,30 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Persistent Global Bottom Navigation Bar on Mobile */}
+      {(!isChatOpen || isChatMinimized) && (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            setSelectedPosting(null);
+          }}
+          language={language}
+          isDarkMode={isDarkMode}
+          setIsChatOpen={setIsChatOpen}
+          isChatOpen={isChatOpen}
+          isChatMinimized={isChatMinimized}
+          setIsChatMinimized={setIsChatMinimized}
+          onQuickChat={(prompt) => {
+            setChatInitialPrompt(prompt);
+            setIsChatOpen(true);
+            setIsChatMinimized(false);
+            setHasEntered(true);
+            setActiveTab('arohi');
+          }}
+        />
+      )}
+
       {/* Floating Bottom-Left Navigation Hub */}
       {(!isChatOpen || isChatMinimized) && (
         <NavigationHub
@@ -3786,6 +3703,19 @@ export default function App() {
           setHasEntered(true);
         }}
       />
+
+      {/* Lottie Purchase & Action Confirmation Modal */}
+      {lottieSuccessData && (
+        <LottieSuccessModal
+          isOpen={lottieSuccessData.isOpen}
+          onClose={() => setLottieSuccessData(null)}
+          title={lottieSuccessData.title}
+          message={lottieSuccessData.message}
+          details={lottieSuccessData.details}
+          buttonText={lottieSuccessData.buttonText}
+          badgeText={lottieSuccessData.badgeText}
+        />
+      )}
 
     </div>
   );

@@ -170,15 +170,27 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
     <div className="space-y-6">
       
       {/* Title */}
-      <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-850">
-        <span className="bg-rose-500/20 text-rose-400 text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-rose-500/30">AROHI Career Module</span>
-        <h2 className="text-2xl md:text-3xl font-black mt-2 tracking-tight">AI Career Counselor</h2>
-        <p className="text-xs text-slate-400 mt-1 max-w-xl">Take a smart personality/skills assessment or directly input your career goal to let AROHI blueprint a personalized roadmap to landing your dream job.</p>
+      <div className="bg-gradient-to-br from-[#0a0718] via-[#0d0922] to-[#06040e] border border-slate-800/80 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden text-left">
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute left-1/3 -top-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 bg-[#091515] border border-teal-500/30 text-teal-300 px-3.5 py-1 rounded-full text-[11px] font-bold tracking-wide shadow-sm mb-3">
+            <span className="w-2 h-2 rounded-full bg-[#00e676] animate-pulse"></span>
+            AROHI Career Module
+          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
+            AI Career Counselor & <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">Pathfinder</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
+            Take a smart personality/skills assessment or directly input your career goal to let AROHI blueprint a personalized roadmap to landing your dream job.
+          </p>
+        </div>
       </div>
 
       {/* SECURITY REGISTRATION NOTICE BANNER FOR ROADMAPS */}
       {!user && (
-        <div className="bg-gradient-to-r from-rose-950/20 via-[#3a1520]/30 to-rose-950/20 border border-rose-500/25 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left">
+        <div className="bg-gradient-to-r from-rose-950/40 via-[#3a1520]/40 to-rose-950/40 border border-rose-500/30 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left shadow-lg">
           <div className="space-y-1">
             <span className="text-[9px] font-black uppercase text-rose-400 font-mono tracking-widest block">🎓 AI CAREER COUNSELOR REGISTRY</span>
             <h4 className="text-xs font-black text-white">
@@ -205,23 +217,23 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
         {/* Left Side: Assessment questionnaire */}
         <div className="lg:col-span-5 space-y-6">
           
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-md">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5 border-b border-slate-50 pb-2.5">
-              <Clipboard className="w-4.5 h-4.5 text-blue-600" /> AROHI Skills & Career Assessment
+          <div className="bg-[#0c091f]/80 backdrop-blur-xl p-5 md:p-6 rounded-2xl border border-slate-800/80 shadow-xl text-slate-100">
+            <h3 className="text-xs font-black uppercase tracking-wider text-purple-300 mb-4 flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
+              <Clipboard className="w-4.5 h-4.5 text-purple-400" /> AROHI Skills & Career Assessment
             </h3>
 
             {assessmentResult ? (
               <div className="space-y-4">
-                <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-100 flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="bg-emerald-950/40 text-emerald-300 p-4 rounded-xl border border-emerald-500/30 flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <div className="text-xs font-semibold leading-relaxed">
-                    <span className="block font-bold text-slate-800 mb-1">Your Diagnostic Result:</span>
+                    <span className="block font-bold text-white mb-1">Your Diagnostic Result:</span>
                     {assessmentResult}
                   </div>
                 </div>
                 <button
                   onClick={resetAssessment}
-                  className="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center border border-slate-700"
                 >
                   Restart Assessment
                 </button>
@@ -232,11 +244,11 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                   <span>Question {assessmentStep + 1} of {assessmentQuestions.length}</span>
                   <span>Progress {Math.round(((assessmentStep) / assessmentQuestions.length) * 100)}%</span>
                 </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-blue-600 h-full transition-all" style={{ width: `${((assessmentStep) / assessmentQuestions.length) * 100}%` }}></div>
+                <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all" style={{ width: `${((assessmentStep) / assessmentQuestions.length) * 100}%` }}></div>
                 </div>
 
-                <h4 className="font-extrabold text-xs md:text-sm text-slate-800 leading-snug mt-2">
+                <h4 className="font-extrabold text-xs md:text-sm text-white leading-snug mt-2">
                   {assessmentQuestions[assessmentStep].q}
                 </h4>
 
@@ -245,7 +257,7 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                     <button
                       key={i}
                       onClick={() => handleAssessmentAnswer(opt.category)}
-                      className="w-full text-left p-3 border border-slate-150 hover:border-blue-300 hover:bg-blue-50/20 text-xs font-bold text-slate-700 rounded-xl transition-all cursor-pointer block leading-normal shadow-sm bg-slate-50"
+                      className="w-full text-left p-3.5 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-900/20 text-xs font-bold text-slate-200 rounded-xl transition-all cursor-pointer block leading-normal shadow-sm bg-[#080614]/80 active:scale-95"
                     >
                       {opt.label}
                     </button>
@@ -256,8 +268,8 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
           </div>
 
           {/* Industry Trends Box */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-md">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+          <div className="bg-[#0c091f]/80 backdrop-blur-xl p-5 md:p-6 rounded-2xl border border-slate-800/80 shadow-xl text-slate-100">
+            <h3 className="text-xs font-black uppercase tracking-wider text-rose-400 mb-4 flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
               <TrendingUp className="w-4.5 h-4.5 text-rose-500" /> Future High-Growth Sectors in India (2026)
             </h3>
             
@@ -268,14 +280,14 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                 { name: 'MSME Manufacturing & Textiles', growth: '+74%', demand: 'Medium', color: 'bg-indigo-500' },
                 { name: 'Cloud Architects & Security', growth: '+112%', demand: 'Critical', color: 'bg-purple-500' }
               ].map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center text-xs border-b border-slate-50 pb-2.5 last:border-0 last:pb-0 font-semibold">
+                <div key={idx} className="flex justify-between items-center text-xs border-b border-slate-800/60 pb-2.5 last:border-0 last:pb-0 font-semibold">
                   <div className="space-y-0.5">
-                    <span className="block text-slate-800 font-bold">{item.name}</span>
+                    <span className="block text-slate-200 font-bold">{item.name}</span>
                     <span className={`inline-block text-[9px] px-1.5 py-0.5 rounded uppercase font-black tracking-wider leading-none ${
-                      item.demand === 'Critical' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'
+                      item.demand === 'Critical' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                     }`}>{item.demand} Demand</span>
                   </div>
-                  <span className="text-emerald-600 font-black text-sm">{item.growth}</span>
+                  <span className="text-[#00e676] font-black text-sm">{item.growth}</span>
                 </div>
               ))}
             </div>
@@ -286,9 +298,9 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
         {/* Right Side: Career Roadmap Generator */}
         <div className="lg:col-span-7 space-y-6">
           
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5 border-b border-slate-50 pb-2.5">
-              <Map className="w-4.5 h-4.5 text-blue-600" /> AROHI Roadmap Generator
+          <div className="bg-[#0c091f]/80 backdrop-blur-xl p-6 rounded-2xl border border-slate-800/80 shadow-xl text-slate-100">
+            <h3 className="text-xs font-black uppercase tracking-wider text-purple-300 mb-4 flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
+              <Map className="w-4.5 h-4.5 text-purple-400" /> AROHI Roadmap Generator
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4">
@@ -297,7 +309,7 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                 <select
                   value={targetField}
                   onChange={(e) => setTargetField(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="Technology">Technology & Software</option>
                   <option value="Banking">Banking & Financial Services</option>
@@ -313,7 +325,7 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                   value={targetRole}
                   onChange={(e) => setTargetRole(e.target.value)}
                   placeholder="e.g. AWS Cloud Architect"
-                  className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
@@ -321,52 +333,52 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
             <button
               onClick={handleGenerateRoadmap}
               disabled={isGenerating || !targetRole.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-4 rounded-xl shadow-[0_4px_25px_rgba(124,58,237,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               {isGenerating ? 'Mapping Career Pathway...' : 'Generate Roadmap Blueprint'}
             </button>
           </div>
 
           {roadmap ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-md p-6 space-y-6">
+            <div className="bg-[#0c091f]/80 backdrop-blur-xl rounded-2xl border border-slate-800/80 shadow-xl p-6 space-y-6 text-slate-100">
               
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-100 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-800/80 pb-4">
                 <div>
-                  <h4 className="text-base font-black text-slate-900">{roadmap.title}</h4>
-                  <p className="text-xs text-slate-400 font-bold uppercase mt-1">Estimated Prep: {roadmap.estimatedMonths} Months to Job Ready</p>
+                  <h4 className="text-base font-black text-white">{roadmap.title}</h4>
+                  <p className="text-xs text-purple-300 font-bold uppercase mt-1">Estimated Prep: {roadmap.estimatedMonths} Months to Job Ready</p>
                 </div>
-                <div className="bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-black shrink-0">
+                <div className="bg-purple-950/60 text-purple-200 px-3 py-1.5 rounded-lg border border-purple-500/30 text-[11px] font-black shrink-0">
                   Avg Salary: {roadmap.salaryExpectation}
                 </div>
               </div>
 
               {/* Phases */}
-              <div className="space-y-6 relative border-l border-blue-100 pl-5 ml-2">
+              <div className="space-y-6 relative border-l border-purple-500/30 pl-5 ml-2">
                 {roadmap.phases.map((phase) => (
                   <div key={phase.phaseNumber} className="relative space-y-2">
                     {/* Circle Node */}
-                    <div className="absolute -left-[27px] top-1 w-3.5 h-3.5 rounded-full bg-blue-600 border-4 border-white shadow"></div>
+                    <div className="absolute -left-[27px] top-1 w-3.5 h-3.5 rounded-full bg-purple-500 border-4 border-[#070814] shadow-[0_0_10px_#a78bfa]"></div>
                     
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded uppercase">{phase.duration}</span>
-                      <h5 className="font-extrabold text-xs md:text-sm text-slate-800">{phase.title}</h5>
+                      <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 px-2.5 py-0.5 rounded uppercase">{phase.duration}</span>
+                      <h5 className="font-extrabold text-xs md:text-sm text-white">{phase.title}</h5>
                     </div>
 
                     {/* Skill Pills */}
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       {phase.skillsToLearn.map((skill, idx) => (
-                        <span key={idx} className="bg-slate-50 border border-slate-150 text-slate-600 font-bold text-[10px] px-2 py-0.5 rounded">
+                        <span key={idx} className="bg-[#080614] border border-slate-700/80 text-slate-300 font-bold text-[10px] px-2.5 py-1 rounded-lg">
                           {skill}
                         </span>
                       ))}
                     </div>
 
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    <p className="text-xs text-slate-300 font-medium leading-relaxed">
                       **Recommended Resources:** {phase.recommendedResources.join(', ')}
                     </p>
 
-                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-2.5 text-[11px] font-semibold text-emerald-800 leading-relaxed">
-                      <span className="font-black text-[9px] uppercase tracking-wider text-emerald-600 block mb-0.5">Checkpoint Milestones Project</span>
+                    <div className="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-3 text-[11px] font-semibold text-emerald-300 leading-relaxed">
+                      <span className="font-black text-[9px] uppercase tracking-wider text-[#00e676] block mb-0.5">Checkpoint Milestones Project</span>
                       {phase.checkpointProject}
                     </div>
 
@@ -375,11 +387,11 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
               </div>
 
               {/* Certifications Box */}
-              <div className="bg-slate-50 border border-slate-150/60 p-4 rounded-xl mt-4">
+              <div className="bg-[#080614]/80 border border-slate-800 p-4 rounded-xl mt-4">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">AROHI Recommended Certifications</span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {roadmap.criticalCertifications.map((cert, idx) => (
-                    <span key={idx} className="bg-white border border-slate-150 text-slate-700 font-extrabold text-xs px-2.5 py-1 rounded-lg">
+                    <span key={idx} className="bg-slate-900 border border-purple-500/30 text-purple-200 font-extrabold text-xs px-3 py-1.5 rounded-lg shadow-sm">
                       🏆 {cert}
                     </span>
                   ))}
@@ -388,9 +400,9 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
 
             </div>
           ) : (
-            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-2">
-              <Map className="w-8 h-8 text-slate-400 animate-pulse" />
-              <h4 className="font-extrabold text-slate-800 text-xs md:text-sm">No Roadmap Generated</h4>
+            <div className="bg-[#0c091f]/60 border border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-2">
+              <Map className="w-8 h-8 text-purple-400 animate-pulse" />
+              <h4 className="font-extrabold text-white text-xs md:text-sm">No Roadmap Generated</h4>
               <p className="text-xs text-slate-400 max-w-sm">Enter your preferred job title or select options above to map your study phase checkpoints directly.</p>
             </div>
           )}

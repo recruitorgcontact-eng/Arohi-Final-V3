@@ -1,880 +1,201 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import ArohiAvatar from './ArohiAvatar';
-import Interactive3DOrbit from './Interactive3DOrbit';
 import { 
   GraduationCap, 
   Briefcase, 
-  Laptop, 
+  BookOpen, 
+  Users, 
   Landmark, 
-  Star, 
-  Lightbulb, 
-  User, 
-  ArrowLeftRight, 
+  Grid, 
   Sparkles, 
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle,
-  MessageSquare,
-  Globe,
-  ChevronDown,
-  MessageCircle,
-  BookOpen,
-  Users,
-  FlaskConical,
-  Activity,
-  Cpu,
-  Stethoscope,
-  Building,
-  Network,
-  Rocket,
-  Bot,
-  UserCheck,
-  Crown,
-  Heart,
-  HelpCircle,
-  Mail,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Youtube,
-  Twitter,
-  ChevronRight,
-  Menu,
-  X,
-  Share2,
-  Mic,
-  Send,
-  Search,
-  Paperclip
+  Mic, 
+  Send, 
+  FileText, 
+  Calculator, 
+  PenTool, 
+  Calendar, 
+  ChevronRight, 
+  ShieldCheck, 
+  Globe, 
+  Zap, 
+  CheckCircle2, 
+  Crown, 
+  Home, 
+  MessageSquare, 
+  User, 
+  ArrowRight, 
+  Search, 
+  Menu, 
+  X, 
+  Bell, 
+  Sun, 
+  Moon, 
+  Lightbulb, 
+  FlaskConical, 
+  Activity, 
+  Stethoscope, 
+  Cpu, 
+  UserCheck, 
+  Building, 
+  Network, 
+  Bot, 
+  Share2
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
 import { useAuth } from '../context/AuthContext';
+import ArohiAvatar from './ArohiAvatar';
 
 interface WelcomeLandingProps {
   onEnter: () => void;
   setActiveTab: (tab: string) => void;
+  activeTab?: string;
   language: Language;
   onLanguageChange: (lang: Language) => void;
   setIsChatOpen?: (isOpen: boolean) => void;
   onQuickChat?: (prompt: string) => void;
   onShare?: () => void;
-}
-
-const categoryColors: Record<string, {
-  border: string;
-  hoverBorder: string;
-  bg: string;
-  iconBg: string;
-  iconText: string;
-  selectedBg: string;
-  selectedBorder: string;
-  selectedText: string;
-  selectedGlow: string;
-  indicator: string;
-  badge: string;
-}> = {
-  students: {
-    border: 'border-indigo-500/25',
-    hoverBorder: 'hover:border-indigo-400/80',
-    bg: 'bg-indigo-950/20 hover:bg-indigo-950/40',
-    iconBg: 'bg-indigo-500/15 group-hover:bg-indigo-500/25',
-    iconText: 'text-indigo-400',
-    selectedBg: 'bg-gradient-to-r from-indigo-600/40 via-purple-600/30 to-blue-600/30',
-    selectedBorder: 'border-indigo-400',
-    selectedText: 'text-indigo-200',
-    selectedGlow: '0 0 25px rgba(99, 102, 241, 0.65)',
-    indicator: 'bg-indigo-400',
-    badge: 'STUDENT CORE'
-  },
-  teachers: {
-    border: 'border-emerald-500/25',
-    hoverBorder: 'hover:border-emerald-400/80',
-    bg: 'bg-emerald-950/20 hover:bg-emerald-950/40',
-    iconBg: 'bg-emerald-500/15 group-hover:bg-emerald-500/25',
-    iconText: 'text-emerald-400',
-    selectedBg: 'bg-gradient-to-r from-emerald-600/40 via-teal-600/30 to-green-600/30',
-    selectedBorder: 'border-emerald-400',
-    selectedText: 'text-emerald-200',
-    selectedGlow: '0 0 25px rgba(16, 185, 129, 0.65)',
-    indicator: 'bg-emerald-400',
-    badge: 'ACADEMIC HUBS'
-  },
-  parents: {
-    border: 'border-pink-500/25',
-    hoverBorder: 'hover:border-pink-400/80',
-    bg: 'bg-pink-950/20 hover:bg-pink-950/40',
-    iconBg: 'bg-pink-500/15 group-hover:bg-pink-500/25',
-    iconText: 'text-pink-400',
-    selectedBg: 'bg-gradient-to-r from-pink-600/40 via-rose-600/30 to-purple-600/30',
-    selectedBorder: 'border-pink-400',
-    selectedText: 'text-pink-200',
-    selectedGlow: '0 0 25px rgba(236, 72, 153, 0.65)',
-    indicator: 'bg-pink-400',
-    badge: 'FAMILY INSIGHTS'
-  },
-  scientists: {
-    border: 'border-cyan-500/25',
-    hoverBorder: 'hover:border-cyan-400/80',
-    bg: 'bg-cyan-950/20 hover:bg-cyan-950/40',
-    iconBg: 'bg-cyan-500/15 group-hover:bg-cyan-500/25',
-    iconText: 'text-cyan-400',
-    selectedBg: 'bg-gradient-to-r from-cyan-600/40 via-blue-600/30 to-teal-600/30',
-    selectedBorder: 'border-cyan-400',
-    selectedText: 'text-cyan-200',
-    selectedGlow: '0 0 25px rgba(6, 182, 212, 0.65)',
-    indicator: 'bg-cyan-400',
-    badge: 'HYPOTHESIS MAPPING'
-  },
-  researchers: {
-    border: 'border-blue-500/25',
-    hoverBorder: 'hover:border-blue-400/80',
-    bg: 'bg-blue-950/20 hover:bg-blue-950/40',
-    iconBg: 'bg-blue-500/15 group-hover:bg-blue-500/25',
-    iconText: 'text-blue-400',
-    selectedBg: 'bg-gradient-to-r from-blue-600/40 via-indigo-600/30 to-sky-600/30',
-    selectedBorder: 'border-blue-400',
-    selectedText: 'text-blue-200',
-    selectedGlow: '0 0 25px rgba(59, 130, 246, 0.65)',
-    indicator: 'bg-blue-400',
-    badge: 'DATA AUDITING'
-  },
-  doctors: {
-    border: 'border-rose-500/25',
-    hoverBorder: 'hover:border-rose-400/80',
-    bg: 'bg-rose-950/20 hover:bg-rose-950/40',
-    iconBg: 'bg-rose-500/15 group-hover:bg-rose-500/25',
-    iconText: 'text-rose-400',
-    selectedBg: 'bg-gradient-to-r from-rose-600/40 via-pink-600/30 to-orange-600/30',
-    selectedBorder: 'border-rose-400',
-    selectedText: 'text-rose-200',
-    selectedGlow: '0 0 25px rgba(244, 63, 94, 0.65)',
-    indicator: 'bg-rose-400',
-    badge: 'CLINICAL AIDS'
-  },
-  engineers: {
-    border: 'border-emerald-500/25',
-    hoverBorder: 'hover:border-emerald-400/80',
-    bg: 'bg-emerald-950/20 hover:bg-emerald-950/40',
-    iconBg: 'bg-emerald-500/15 group-hover:bg-emerald-500/25',
-    iconText: 'text-emerald-400',
-    selectedBg: 'bg-gradient-to-r from-emerald-600/40 via-green-600/30 to-cyan-600/30',
-    selectedBorder: 'border-emerald-400',
-    selectedText: 'text-emerald-200',
-    selectedGlow: '0 0 25px rgba(16, 185, 129, 0.65)',
-    indicator: 'bg-emerald-400',
-    badge: 'DEV OPERATIONS'
-  },
-  entrepreneurs: {
-    border: 'border-amber-500/25',
-    hoverBorder: 'hover:border-amber-400/80',
-    bg: 'bg-amber-950/20 hover:bg-amber-950/40',
-    iconBg: 'bg-amber-500/15 group-hover:bg-amber-500/25',
-    iconText: 'text-amber-400',
-    selectedBg: 'bg-gradient-to-r from-amber-600/40 via-orange-600/30 to-yellow-600/30',
-    selectedBorder: 'border-amber-400',
-    selectedText: 'text-amber-200',
-    selectedGlow: '0 0 25px rgba(245, 158, 11, 0.65)',
-    indicator: 'bg-amber-400',
-    badge: 'BUSINESS SCALE'
-  },
-  jobSeeker: {
-    border: 'border-teal-500/25',
-    hoverBorder: 'hover:border-teal-400/80',
-    bg: 'bg-teal-950/20 hover:bg-teal-950/40',
-    iconBg: 'bg-teal-500/15 group-hover:bg-teal-500/25',
-    iconText: 'text-teal-400',
-    selectedBg: 'bg-gradient-to-r from-teal-600/40 via-emerald-600/30 to-cyan-600/30',
-    selectedBorder: 'border-teal-400',
-    selectedText: 'text-teal-200',
-    selectedGlow: '0 0 25px rgba(20, 184, 166, 0.65)',
-    indicator: 'bg-teal-400',
-    badge: 'ACTIVE BOARDS'
-  },
-  professionals: {
-    border: 'border-violet-500/25',
-    hoverBorder: 'hover:border-violet-400/80',
-    bg: 'bg-violet-950/20 hover:bg-violet-950/40',
-    iconBg: 'bg-violet-500/15 group-hover:bg-violet-500/25',
-    iconText: 'text-violet-400',
-    selectedBg: 'bg-gradient-to-r from-violet-600/40 via-purple-600/30 to-indigo-600/30',
-    selectedBorder: 'border-violet-400',
-    selectedText: 'text-violet-200',
-    selectedGlow: '0 0 25px rgba(139, 92, 246, 0.65)',
-    indicator: 'bg-violet-400',
-    badge: 'CAREER PATH'
-  },
-  businesses: {
-    border: 'border-teal-500/25',
-    hoverBorder: 'hover:border-teal-400/80',
-    bg: 'bg-teal-950/20 hover:bg-teal-950/40',
-    iconBg: 'bg-teal-500/15 group-hover:bg-teal-500/25',
-    iconText: 'text-teal-400',
-    selectedBg: 'bg-gradient-to-r from-teal-600/40 via-cyan-600/30 to-indigo-600/30',
-    selectedBorder: 'border-teal-400',
-    selectedText: 'text-teal-200',
-    selectedGlow: '0 0 25px rgba(20, 184, 166, 0.65)',
-    indicator: 'bg-teal-400',
-    badge: 'WORKFLOW HUBS'
-  },
-  govAspirant: {
-    border: 'border-sky-500/25',
-    hoverBorder: 'hover:border-sky-400/80',
-    bg: 'bg-sky-950/20 hover:bg-sky-950/40',
-    iconBg: 'bg-sky-500/15 group-hover:bg-sky-500/25',
-    iconText: 'text-sky-400',
-    selectedBg: 'bg-gradient-to-r from-sky-600/40 via-blue-600/30 to-indigo-600/30',
-    selectedBorder: 'border-sky-400',
-    selectedText: 'text-sky-200',
-    selectedGlow: '0 0 25px rgba(14, 165, 233, 0.65)',
-    indicator: 'bg-sky-400',
-    badge: 'CIVIL EXAMS'
-  },
-  universities: {
-    border: 'border-pink-500/25',
-    hoverBorder: 'hover:border-pink-400/80',
-    bg: 'bg-pink-950/20 hover:bg-pink-950/40',
-    iconBg: 'bg-pink-500/15 group-hover:bg-pink-500/25',
-    iconText: 'text-pink-400',
-    selectedBg: 'bg-gradient-to-r from-pink-600/40 via-fuchsia-600/30 to-violet-600/30',
-    selectedBorder: 'border-pink-400',
-    selectedText: 'text-pink-200',
-    selectedGlow: '0 0 25px rgba(236, 72, 153, 0.65)',
-    indicator: 'bg-pink-400',
-    badge: 'ACADEMIC PORTALS'
-  },
-  organizations: {
-    border: 'border-purple-500/25',
-    hoverBorder: 'hover:border-purple-400/80',
-    bg: 'bg-purple-950/20 hover:bg-purple-950/40',
-    iconBg: 'bg-purple-500/15 group-hover:bg-purple-500/25',
-    iconText: 'text-purple-400',
-    selectedBg: 'bg-gradient-to-r from-purple-600/40 via-indigo-600/30 to-blue-600/30',
-    selectedBorder: 'border-purple-400',
-    selectedText: 'text-purple-200',
-    selectedGlow: '0 0 25px rgba(168, 85, 247, 0.65)',
-    indicator: 'bg-purple-400',
-    badge: 'CROSS-TEAM FLOW'
-  },
-  aliens: {
-    border: 'border-lime-500/25',
-    hoverBorder: 'hover:border-lime-400/80',
-    bg: 'bg-lime-950/20 hover:bg-lime-950/40',
-    iconBg: 'bg-lime-500/15 group-hover:bg-lime-500/25',
-    iconText: 'text-lime-400',
-    selectedBg: 'bg-gradient-to-r from-lime-600/40 via-emerald-600/30 to-green-600/30',
-    selectedBorder: 'border-lime-400',
-    selectedText: 'text-lime-200',
-    selectedGlow: '0 0 25px rgba(132, 204, 22, 0.65)',
-    indicator: 'bg-lime-400',
-    badge: 'QUANTUM COMM'
-  },
-  marsCitizens: {
-    border: 'border-red-500/25',
-    hoverBorder: 'hover:border-red-400/80',
-    bg: 'bg-red-950/20 hover:bg-red-950/40',
-    iconBg: 'bg-red-500/15 group-hover:bg-red-500/25',
-    iconText: 'text-red-400',
-    selectedBg: 'bg-gradient-to-r from-red-600/40 via-orange-600/30 to-amber-600/30',
-    selectedBorder: 'border-red-400',
-    selectedText: 'text-red-200',
-    selectedGlow: '0 0 25px rgba(239, 68, 68, 0.65)',
-    indicator: 'bg-red-400',
-    badge: 'COLONY SYSTEMS'
-  },
-  jupiterCitizens: {
-    border: 'border-amber-500/25',
-    hoverBorder: 'hover:border-amber-400/80',
-    bg: 'bg-amber-950/20 hover:bg-amber-950/40',
-    iconBg: 'bg-amber-500/15 group-hover:bg-amber-500/25',
-    iconText: 'text-amber-400',
-    selectedBg: 'bg-gradient-to-r from-amber-600/40 via-orange-600/30 to-yellow-600/30',
-    selectedBorder: 'border-amber-400',
-    selectedText: 'text-amber-200',
-    selectedGlow: '0 0 25px rgba(245, 158, 11, 0.65)',
-    indicator: 'bg-amber-400',
-    badge: 'JOVIAN SYSTEMS'
-  },
-  govOfficials: {
-    border: 'border-orange-500/25',
-    hoverBorder: 'hover:border-orange-400/80',
-    bg: 'bg-orange-950/20 hover:bg-orange-950/40',
-    iconBg: 'bg-orange-500/15 group-hover:bg-orange-500/25',
-    iconText: 'text-orange-400',
-    selectedBg: 'bg-gradient-to-r from-orange-600/40 via-amber-600/30 to-yellow-600/30',
-    selectedBorder: 'border-orange-400',
-    selectedText: 'text-orange-200',
-    selectedGlow: '0 0 25px rgba(249, 115, 22, 0.65)',
-    indicator: 'bg-orange-400',
-    badge: 'POLICY AUDITS'
-  },
-  privateOfficials: {
-    border: 'border-teal-500/25',
-    hoverBorder: 'hover:border-teal-400/80',
-    bg: 'bg-teal-950/20 hover:bg-teal-950/40',
-    iconBg: 'bg-teal-500/15 group-hover:bg-teal-500/25',
-    iconText: 'text-teal-400',
-    selectedBg: 'bg-gradient-to-r from-teal-600/40 via-sky-600/30 to-blue-600/30',
-    selectedBorder: 'border-teal-400',
-    selectedText: 'text-teal-200',
-    selectedGlow: '0 0 25px rgba(20, 184, 166, 0.65)',
-    indicator: 'bg-teal-400',
-    badge: 'CORPORATE STEER'
-  },
-  humans: {
-    border: 'border-fuchsia-500/25',
-    hoverBorder: 'hover:border-fuchsia-400/80',
-    bg: 'bg-fuchsia-950/20 hover:bg-fuchsia-950/40',
-    iconBg: 'bg-fuchsia-500/15 group-hover:bg-fuchsia-500/25',
-    iconText: 'text-fuchsia-400',
-    selectedBg: 'bg-gradient-to-r from-fuchsia-600/40 via-purple-600/30 to-pink-600/30',
-    selectedBorder: 'border-fuchsia-400',
-    selectedText: 'text-fuchsia-200',
-    selectedGlow: '0 0 25px rgba(217, 70, 239, 0.65)',
-    indicator: 'bg-fuchsia-400',
-    badge: 'HUMAN POTENTIAL'
-  },
-};
-
-interface InteractiveBubbleProps {
-  id: string;
-  key?: any;
-  cat: {
-    key: string;
-    label: string;
-    icon: any;
-    color: string;
-    tabId: string;
-    slogan: string;
-    desc: string;
-  };
-  isSelected: boolean;
-  onClick: () => void;
-  index: number;
-}
-
-function InteractiveBubble({ id, cat, isSelected, onClick, index }: InteractiveBubbleProps) {
-  const Icon = cat.icon;
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
-  const [clickParticles, setClickParticles] = useState<{ id: number; x: number; y: number; size: number; color: string; targetX: number; targetY: number }[]>([]);
-  const particleIdCounter = useRef(0);
-
-  const cTheme = categoryColors[cat.key] || categoryColors.students;
-
-  // Magnetic Pull on Mouse Move
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const distanceX = e.clientX - centerX;
-    const distanceY = e.clientY - centerY;
-    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-
-    if (distance < 160) {
-      // Pull strength increases closer to center but caps out
-      const pullStrength = 0.12;
-      setMouseOffset({
-        x: distanceX * pullStrength,
-        y: distanceY * pullStrength
-      });
-    } else {
-      setMouseOffset({ x: 0, y: 0 });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setMouseOffset({ x: 0, y: 0 });
-  };
-
-  // Click physics + Spawn bursting micro-bubbles
-  const handleBubbleClick = (e: React.MouseEvent) => {
-    onClick();
-
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-
-    // Spawn 6 small floating bubble particles from the click center
-    const newParticles = Array.from({ length: 6 }).map(() => {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 15 + Math.random() * 35;
-      const size = 4 + Math.random() * 8;
-      const colors = ['#00e5ff', '#a855f7', '#ec4899', '#3b82f6', '#10b981'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      return {
-        id: particleIdCounter.current++,
-        x: clickX,
-        y: clickY,
-        targetX: clickX + Math.cos(angle) * distance,
-        targetY: clickY + Math.sin(angle) * distance,
-        size,
-        color: randomColor
-      };
-    });
-
-    setClickParticles(prev => [...prev, ...newParticles]);
-  };
-
-  // Clean up finished particles
-  useEffect(() => {
-    if (clickParticles.length > 0) {
-      const timer = setTimeout(() => {
-        setClickParticles([]);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [clickParticles]);
-
-  // Stagger/Randomize continuous idle float period
-  const bobbingDuration = 3.5 + (index % 3) * 0.8;
-  const bobbingDelay = index * 0.2;
-
-  return (
-    <motion.div
-      className="relative w-full"
-      animate={{
-        y: [0, -6, 0],
-      }}
-      transition={{
-        duration: bobbingDuration,
-        delay: bobbingDelay,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    >
-      <motion.button
-        ref={buttonRef}
-        id={id}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleBubbleClick}
-        animate={{
-          x: mouseOffset.x,
-          y: mouseOffset.y,
-          scale: isSelected ? 1.05 : 1,
-        }}
-        whileHover={{
-          scale: 1.04,
-          boxShadow: isSelected 
-            ? cTheme.selectedGlow 
-            : `0 0 20px rgba(255, 255, 255, 0.08)`,
-        }}
-        whileTap={{
-          scale: 0.94,
-          rotate: (index % 2 === 0 ? 1.5 : -1.5),
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 140,
-          damping: 12,
-          mass: 0.5
-        }}
-        className={`relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl border transition-all duration-300 cursor-pointer text-left w-full justify-start overflow-hidden select-none group ${
-          isSelected 
-            ? `${cTheme.selectedBg} ${cTheme.selectedBorder} text-white`
-            : `bg-gradient-to-br from-[#120d2a]/95 to-[#08051a]/95 ${cTheme.border} ${cTheme.hoverBorder} text-slate-200 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]`
-        }`}
-        style={{
-          boxShadow: isSelected ? cTheme.selectedGlow : undefined
-        }}
-      >
-        {/* Background bubble sheen overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none opacity-40 rounded-2xl"></div>
-        
-        {/* 3D highlight edge mimicking user's screenshot */}
-        <div className={`absolute top-0 left-0 right-0 h-[1.5px] rounded-full pointer-events-none ${
-          isSelected 
-            ? 'bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-90' 
-            : `bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40 group-hover:via-white/40 transition-all`
-        }`}></div>
-
-        <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 transition-all duration-300 ${
-          isSelected 
-            ? 'bg-white/20 text-white border border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.4)] scale-110' 
-            : `${cTheme.iconBg} ${cTheme.iconText} border border-transparent group-hover:scale-105`
-        }`}>
-          <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${isSelected ? 'animate-bounce' : 'group-hover:rotate-12'}`} />
-        </div>
-        
-        <div className="flex flex-col">
-          <span className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-widest leading-snug transition-colors ${
-            isSelected ? 'text-white' : 'text-slate-100 group-hover:text-white'
-          }`}>{cat.label}</span>
-          <span className={`hidden sm:inline-block text-[8px] uppercase tracking-widest font-bold mt-0.5 opacity-90 transition-colors ${
-            isSelected ? 'text-white/80' : `${cTheme.iconText}`
-          }`}>
-            {cTheme.badge}
-          </span>
-        </div>
-
-        {/* Pulsing colored indicator dot on the right */}
-        <div className="ml-auto flex items-center justify-center pl-1">
-          <span className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-              isSelected ? 'bg-white' : cTheme.indicator
-            }`}></span>
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${
-              isSelected ? 'bg-white' : cTheme.indicator
-            }`}></span>
-          </span>
-        </div>
-
-        {/* Floating click particles inside the button context */}
-        <AnimatePresence>
-          {clickParticles.map((p) => (
-            <motion.span
-              key={p.id}
-              initial={{ x: p.x, y: p.y, scale: 1, opacity: 0.9 }}
-              animate={{ 
-                x: p.targetX, 
-                y: p.targetY, 
-                scale: [1, 1.4, 0], 
-                opacity: [0.9, 0.7, 0] 
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                width: p.size,
-                height: p.size,
-                backgroundColor: p.color,
-                boxShadow: `0 0 8px ${p.color}`,
-                left: 0,
-                top: 0
-              }}
-            />
-          ))}
-        </AnimatePresence>
-      </motion.button>
-    </motion.div>
-  );
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export default function WelcomeLanding({ 
   onEnter, 
   setActiveTab, 
+  activeTab = 'home',
   language, 
   onLanguageChange, 
   setIsChatOpen,
   onQuickChat,
-  onShare
+  onShare,
+  isDarkMode: propIsDarkMode,
+  onToggleTheme: propToggleTheme,
+  onOpenAuth
 }: WelcomeLandingProps) {
   const { user, userData } = useAuth();
+  
+  // Local theme state fallback if parent props are not provided
+  const [localIsDarkMode, setLocalIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('arohi_theme_mode');
+    return saved ? saved === 'dark' : true;
+  });
+
+  const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : localIsDarkMode;
+
+  const toggleTheme = () => {
+    if (propToggleTheme) {
+      propToggleTheme();
+    } else {
+      const newMode = !localIsDarkMode;
+      setLocalIsDarkMode(newMode);
+      localStorage.setItem('arohi_theme_mode', newMode ? 'dark' : 'light');
+    }
+  };
+
   const currentUserName = user 
     ? (userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || 'User') 
     : 'User';
-  const defaultGreetingPrompt = user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!";
 
-  const [selectedCategory, setSelectedCategory] = useState('students');
-  const [activeOrbText, setActiveOrbText] = useState<string | null>(null);
   const [landingInputText, setLandingInputText] = useState('');
-  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
-  const [simulatedInput, setSimulatedInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'success'>('idle');
 
-  const CATEGORY_PROMPTS: Record<string, string[]> = {
-    students: [
-      "🎓 Find student scholarships & grants",
-      "📚 SSC & Entrance Exam Prep Guide",
-      "🗺️ Career Roadmap after 12th"
-    ],
-    teachers: [
-      "📝 Generate weekly lesson plans",
-      "🧠 Student skill assessment tools",
-      "📊 Digital classroom management"
-    ],
-    parents: [
-      "👨‍👩‍👧 Student growth milestones tracker",
-      "🎯 Safe career options after 10th & 12th",
-      "💡 Govt scholarship schemes for kids"
-    ],
-    scientists: [
-      "🔬 Research paper summarizing & audit",
-      "📊 Data simulation modeling steps",
-      "🌌 Grant proposal structuring guide"
-    ],
-    researchers: [
-      "📈 Whitepaper data analysis framework",
-      "📚 Academic citation & reference index",
-      "🧪 Scientific methodology templates"
-    ],
-    doctors: [
-      "🩺 Latest clinical study summaries",
-      "💊 Medical licensing exam roadmaps",
-      "📋 Consultation preparation guide"
-    ],
-    engineers: [
-      "💻 Full-stack system architecture guide",
-      "⚙️ DevOps pipeline optimization",
-      "🚀 Technical interview preparation"
-    ],
-    entrepreneurs: [
-      "🚀 Startup pitch deck outline",
-      "💰 MSME government subsidy schemes",
-      "📊 Business Canvas Model generator"
-    ],
-    jobSeeker: [
-      "💼 Active jobs matching my profile",
-      "📄 Optimize resume for ATS screening",
-      "🎯 Top interview preparation Q&A"
-    ],
-    professionals: [
-      "📈 Executive career transition guide",
-      "🏅 Professional certification roadmap",
-      "🤝 High-value networking strategies"
-    ],
-    businesses: [
-      "🏢 B2B lead generation workflow",
-      "📜 Corporate compliance template",
-      "⚡ Automate team operations with AI"
-    ],
-    govAspirant: [
-      "🏛️ SSC CGL & UPSC Exam Syllabus",
-      "📰 Daily Current Affairs Summary",
-      "📑 Free Govt Scheme Eligibility"
-    ],
-    universities: [
-      "🎓 Modern AI curriculum integration",
-      "🏛️ Student placement portal setup",
-      "📚 Academic accreditation guidance"
-    ],
-    organizations: [
-      "🌐 Cross-department workflow audit",
-      "📊 Resource management dashboard",
-      "🤝 Strategic partnership templates"
-    ],
-    aliens: [
-      "🛸 Interstellar communication protocols",
-      "🌌 Atmospheric quantum data logs",
-      "🪐 Cosmic navigation coordinates"
-    ],
-    marsCitizens: [
-      "🔴 Terraforming lifecycle parameters",
-      "🚀 Earth-Mars transfer orbit calculator",
-      "🔋 Colony life-support diagnostics"
-    ],
-    jupiterCitizens: [
-      "⚡ Jovian magnetosphere weather alerts",
-      "🛰️ Gas-giant atmospheric mining ops",
-      "🪐 Europa sub-surface colony logs"
-    ],
-    govOfficials: [
-      "🏛️ Public policy draft template",
-      "📜 Civic compliance & audit checklist",
-      "📊 Public welfare dataset analysis"
-    ],
-    privateOfficials: [
-      "💼 Corporate governance framework",
-      "🤝 Private equity partnership structure",
-      "📈 Strategic enterprise roadmap"
-    ],
-    humans: [
-      "🤖 Ask Arohi anything about career/jobs",
-      "💡 Discover government schemes for me",
-      "🎯 Custom skill roadmap for 2026"
-    ]
-  };
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
+  }, []);
 
-  const categoryBubbleItems = [
-    {
-      key: 'students',
-      label: 'Students',
-      icon: GraduationCap,
-      color: 'from-indigo-600/30 to-blue-600/10 border-indigo-500/40 text-indigo-300',
-      tabId: 'syllabus',
-      slogan: 'STUDENTS',
-      desc: 'Access student curriculum, adaptive learning syllabus, and career advice.'
-    },
-    {
-      key: 'teachers',
-      label: 'Teachers',
-      icon: BookOpen,
-      color: 'from-emerald-600/30 to-teal-600/10 border-emerald-500/40 text-emerald-300',
-      tabId: 'syllabus',
-      slogan: 'TEACHERS',
-      desc: 'Create lesson plans, structure academic maps, and manage digital classrooms.'
-    },
-    {
-      key: 'parents',
-      label: 'Parents',
-      icon: Users,
-      color: 'from-pink-600/30 to-rose-600/10 border-pink-500/40 text-pink-300',
-      tabId: 'syllabus',
-      slogan: 'PARENTS',
-      desc: 'Monitor educational progress, syllabus coverage, and child growth milestones.'
-    },
-    {
-      key: 'scientists',
-      label: 'Scientists',
-      icon: FlaskConical,
-      color: 'from-cyan-600/30 to-blue-600/10 border-cyan-500/40 text-cyan-300',
-      tabId: 'courses',
-      slogan: 'SCIENTISTS',
-      desc: 'Run simulations, query research publications, and structure hypotheses.'
-    },
-    {
-      key: 'researchers',
-      label: 'Researchers',
-      icon: Activity,
-      color: 'from-blue-600/30 to-sky-600/10 border-blue-500/40 text-blue-300',
-      tabId: 'courses',
-      slogan: 'RESEARCHERS',
-      desc: 'Compile reference databases, summarize whitepapers, and perform data audits.'
-    },
-    {
-      key: 'doctors',
-      label: 'Doctors',
-      icon: Stethoscope,
-      color: 'from-rose-600/30 to-pink-600/10 border-rose-500/40 text-rose-300',
-      tabId: 'courses',
-      slogan: 'DOCTORS',
-      desc: 'Keep up-to-date with medical publications, clinical insights, and patient logs.'
-    },
-    {
-      key: 'engineers',
-      label: 'Engineers',
-      icon: Cpu,
-      color: 'from-emerald-600/30 to-green-600/10 border-emerald-500/40 text-emerald-300',
-      tabId: 'courses',
-      slogan: 'ENGINEERS',
-      desc: 'Develop structural schematics, manage systems architectures, and write code.'
-    },
-    {
-      key: 'entrepreneurs',
-      label: 'Entrepreneurs',
-      icon: Lightbulb,
-      color: 'from-amber-600/30 to-yellow-600/10 border-amber-500/40 text-amber-300',
-      tabId: 'business',
-      slogan: 'ENTREPRENEURS',
-      desc: 'Generate compliance files, financial projections, and business canvas models.'
-    },
-    {
-      key: 'jobSeeker',
-      label: 'Job Seekers',
-      icon: Briefcase,
-      color: 'from-teal-600/30 to-emerald-600/10 border-teal-500/40 text-teal-300',
-      tabId: 'jobs',
-      slogan: 'JOB SEEKERS',
-      desc: 'Search active high-fidelity recruitment boards and optimize entry profiles.'
-    },
-    {
-      key: 'professionals',
-      label: 'Professionals',
-      icon: UserCheck,
-      color: 'from-indigo-600/30 to-violet-600/10 border-indigo-500/40 text-indigo-300',
-      tabId: 'jobs',
-      slogan: 'PROFESSIONALS',
-      desc: 'Advance career milestones, expand industry networks, and track certifications.'
-    },
-    {
-      key: 'businesses',
-      label: 'Businesses',
-      icon: Building,
-      color: 'from-teal-600/30 to-cyan-600/10 border-teal-500/40 text-teal-300',
-      tabId: 'business',
-      slogan: 'BUSINESSES',
-      desc: 'Automate operational workflows, design B2B pipelines, and handle client logs.'
-    },
-    {
-      key: 'govAspirant',
-      label: 'Govt. Aspirants',
-      icon: Landmark,
-      color: 'from-sky-600/30 to-blue-600/10 border-sky-500/40 text-sky-300',
-      tabId: 'jobs',
-      slogan: 'GOVT. ASPIRANTS',
-      desc: 'Apply for central SSC, railway, and state commissions with offline study guides.'
-    },
-    {
-      key: 'universities',
-      label: 'Universities',
-      icon: GraduationCap,
-      color: 'from-pink-600/30 to-fuchsia-600/10 border-pink-500/40 text-pink-300',
-      tabId: 'syllabus',
-      slogan: 'UNIVERSITIES',
-      desc: 'Establish modern academic curriculum standards and manage student portals.'
-    },
-    {
-      key: 'organizations',
-      label: 'Organizations',
-      icon: Network,
-      color: 'from-violet-600/30 to-indigo-600/10 border-violet-500/40 text-violet-300',
-      tabId: 'business',
-      slogan: 'ORGANIZATIONS',
-      desc: 'Coordinate cross-team projects, establish workflows, and audit resources.'
-    },
-    {
-      key: 'aliens',
-      label: 'Aliens',
-      icon: Bot,
-      color: 'from-lime-600/30 to-green-600/10 border-lime-500/40 text-lime-300',
-      tabId: 'career',
-      slogan: 'ALIENS',
-      desc: 'Interstellar task-coordination, atmospheric data processing, and quantum logic.'
-    },
-    {
-      key: 'marsCitizens',
-      label: 'The citizens of Mars',
-      icon: Globe,
-      color: 'from-red-600/30 to-orange-600/10 border-red-500/40 text-red-300',
-      tabId: 'career',
-      slogan: 'MARS CITIZENS',
-      desc: 'Manage colony lifesupport parameters, terraforming timelines, and red-planet charts.'
-    },
-    {
-      key: 'jupiterCitizens',
-      label: 'The citizens of Jupiter',
-      icon: Sparkles,
-      color: 'from-amber-600/30 to-orange-600/10 border-amber-500/40 text-amber-300',
-      tabId: 'career',
-      slogan: 'JUPITER CITIZENS',
-      desc: 'Navigate gas-giant weather patterns, high-gravity logistics, and Jovian moon bases.'
-    },
-    {
-      key: 'govOfficials',
-      label: 'All Govt. Officials',
-      icon: ShieldCheck,
-      color: 'from-orange-600/30 to-amber-600/10 border-orange-500/40 text-orange-300',
-      tabId: 'business',
-      slogan: 'GOVT. OFFICIALS',
-      desc: 'Implement regulatory policies, manage compliance standards, and administer public datasets.'
-    },
-    {
-      key: 'privateOfficials',
-      label: 'All Private officials',
-      icon: Briefcase,
-      color: 'from-teal-600/30 to-sky-600/10 border-teal-500/40 text-teal-300',
-      tabId: 'business',
-      slogan: 'PRIVATE OFFICIALS',
-      desc: 'Direct corporate strategy, draft partnership templates, and coordinate corporate growth.'
-    },
-    {
-      key: 'humans',
-      label: 'Humans',
-      icon: User,
-      color: 'from-fuchsia-600/30 to-purple-600/10 border-fuchsia-500/40 text-fuchsia-300',
-      tabId: 'career',
-      slogan: 'HUMANS',
-      desc: 'All human individuals looking for general guidance, learning roadmaps, and personal development advice.'
+  const toggleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      if (onQuickChat) {
+        onQuickChat("Talk to me over voice in my native language.");
+      } else {
+        onEnter();
+      }
+      return;
     }
-  ];
 
-  const leftCategories = categoryBubbleItems.slice(0, 10);
-  const rightCategories = categoryBubbleItems.slice(10);
-  const selectedItem = categoryBubbleItems.find(c => c.key === selectedCategory) || categoryBubbleItems[0];
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+      setIsListening(false);
+      return;
+    }
 
-  // Smooth scroll helper
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    try {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = true;
+
+      const langMap: Record<string, string> = {
+        en: 'en-IN',
+        hi: 'hi-IN',
+        or: 'or-IN',
+        bn: 'bn-IN',
+        te: 'te-IN',
+        ta: 'ta-IN',
+        mr: 'mr-IN',
+        gu: 'gu-IN',
+        pa: 'pa-IN'
+      };
+      rec.lang = langMap[language] || 'en-IN';
+
+      rec.onstart = () => {
+        setIsListening(true);
+        setSpeechError(null);
+      };
+
+      rec.onresult = (event: any) => {
+        let fullTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          fullTranscript += event.results[i][0].transcript;
+        }
+        if (fullTranscript) {
+          setLandingInputText(fullTranscript);
+        }
+      };
+
+      rec.onerror = (event: any) => {
+        console.warn("Speech recognition error:", event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          setSpeechError("Microphone permission denied. Please allow microphone access in your browser.");
+        } else if (event.error === 'no-speech') {
+          setSpeechError("No speech detected. Please speak into your microphone.");
+        } else {
+          setSpeechError(`Voice error: ${event.error}`);
+        }
+        setTimeout(() => setSpeechError(null), 4000);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (err) {
+      console.error("Speech recognition start failed:", err);
+      setIsListening(false);
+      if (onQuickChat) {
+        onQuickChat("Talk to me over voice in my native language.");
+      }
     }
   };
 
@@ -888,627 +209,969 @@ export default function WelcomeLanding({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handler for opening the actual functional chatbot directly with pre-selected prompts
-  const triggerActualChat = (prompt?: string) => {
-    if (setIsChatOpen) {
-      setIsChatOpen(true);
-      if (prompt) {
-        // Send simulated input to the actual Chat session
-        setTimeout(() => {
-          const chatInputEl = document.querySelector('textarea[placeholder*="Ask Arohi"], input[placeholder*="Ask Arohi"]') as HTMLTextAreaElement | HTMLInputElement | null;
-          if (chatInputEl) {
-            chatInputEl.value = prompt;
-            const event = new Event('input', { bubbles: true });
-            chatInputEl.dispatchEvent(event);
-          }
-        }, 300);
-      }
+  const handlePromptSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = landingInputText.trim() || "Hello Arohi, I want to learn more!";
+    if (onQuickChat) {
+      onQuickChat(query);
     } else {
       onEnter();
     }
   };
 
-  // List of everyone
-  const categories = [
-    { name: 'Students', icon: GraduationCap, color: 'text-indigo-400' },
-    { name: 'Teachers', icon: BookOpen, color: 'text-emerald-400' },
-    { name: 'Parents', icon: Users, color: 'text-pink-400' },
-    { name: 'Scientists', icon: FlaskConical, color: 'text-cyan-400' },
-    { name: 'Researchers', icon: Activity, color: 'text-blue-400' },
-    { name: 'Doctors', icon: Stethoscope, color: 'text-rose-400' },
-    { name: 'Engineers', icon: Cpu, color: 'text-amber-400' },
-    { name: 'Entrepreneurs', icon: Lightbulb, color: 'text-yellow-400' },
-    { name: 'Job Seekers', icon: Briefcase, color: 'text-[#00e676]' },
-    { name: 'Professionals', icon: UserCheck, color: 'text-purple-400' },
-    { name: 'Businesses', icon: Building, color: 'text-teal-400' },
-    { name: 'Govt. Aspirants', icon: Landmark, color: 'text-[#00b0ff]' },
-    { name: 'Universities', icon: GraduationCap, color: 'text-pink-400' },
-    { name: 'Organizations', icon: Network, color: 'text-violet-400' },
-    { name: 'Aliens', icon: Bot, color: 'text-lime-400' },
-    { name: 'The citizens of Mars', icon: Globe, color: 'text-red-400' },
-    { name: 'The citizens of Jupiter', icon: Sparkles, color: 'text-amber-500' },
-    { name: 'All Govt. Officials', icon: ShieldCheck, color: 'text-orange-500' },
-    { name: 'All Private officials', icon: Briefcase, color: 'text-teal-400' }
+  const handleQuickAction = (actionPrompt: string) => {
+    if (onQuickChat) {
+      onQuickChat(actionPrompt);
+    } else {
+      onEnter();
+    }
+  };
+
+  // 20 Full Category Tags defined with precise icons, prompts and colors matching mockup
+  const allCategoryTags = [
+    {
+      key: 'students',
+      title: 'Students',
+      subtitle: 'Study help, notes, exams & more',
+      icon: GraduationCap,
+      colorLight: 'bg-indigo-600 text-white shadow-sm',
+      colorDark: 'bg-indigo-600 text-white shadow-sm',
+      borderLight: 'border-purple-200/60',
+      borderDark: 'border-purple-500/30',
+      titleLight: 'text-indigo-600 dark:text-indigo-400',
+      titleDark: 'text-indigo-400',
+      arrowBgLight: 'bg-purple-100 text-indigo-600',
+      arrowBgDark: 'bg-purple-950/70 text-purple-300',
+      tabId: 'syllabus',
+      prompt: 'Hello Arohi! I am a Student. Please help me with study planning, exam preparation, note summaries, and step-by-step conceptual explanations.'
+    },
+    {
+      key: 'businesses',
+      title: 'Businesses',
+      subtitle: 'Marketing, content, support & more',
+      icon: Briefcase,
+      colorLight: 'bg-emerald-500 text-white shadow-sm',
+      colorDark: 'bg-emerald-500 text-white shadow-sm',
+      borderLight: 'border-emerald-200/60',
+      borderDark: 'border-emerald-500/30',
+      titleLight: 'text-emerald-600 dark:text-emerald-400',
+      titleDark: 'text-emerald-400',
+      arrowBgLight: 'bg-emerald-100 text-emerald-600',
+      arrowBgDark: 'bg-emerald-950/70 text-emerald-300',
+      tabId: 'business',
+      prompt: 'Hello Arohi! I run a Business/MSME. Please assist me with marketing strategies, content creation, customer support ideas, and business growth plans.'
+    },
+    {
+      key: 'teachers',
+      title: 'Teachers',
+      subtitle: 'Lessons, quizzes, explainer & more',
+      icon: BookOpen,
+      colorLight: 'bg-blue-600 text-white shadow-sm',
+      colorDark: 'bg-blue-600 text-white shadow-sm',
+      borderLight: 'border-blue-200/60',
+      borderDark: 'border-blue-500/30',
+      titleLight: 'text-blue-600 dark:text-blue-400',
+      titleDark: 'text-blue-400',
+      arrowBgLight: 'bg-blue-100 text-blue-600',
+      arrowBgDark: 'bg-blue-950/70 text-blue-300',
+      tabId: 'syllabus',
+      prompt: 'Hello Arohi! I am an Educator/Teacher. Help me create structured lesson plans, interactive student quizzes, explainer notes, and classroom activities.'
+    },
+    {
+      key: 'parents',
+      title: 'Parents',
+      subtitle: 'Track progress, guidance & more',
+      icon: Users,
+      colorLight: 'bg-rose-500 text-white shadow-sm',
+      colorDark: 'bg-rose-500 text-white shadow-sm',
+      borderLight: 'border-rose-200/60',
+      borderDark: 'border-rose-500/30',
+      titleLight: 'text-rose-600 dark:text-rose-400',
+      titleDark: 'text-rose-400',
+      arrowBgLight: 'bg-rose-100 text-rose-600',
+      arrowBgDark: 'bg-rose-950/70 text-rose-300',
+      tabId: 'syllabus',
+      prompt: 'Hello Arohi! I am a Parent. Guide me on tracking my child\'s academic progress, educational advice, and nurturing overall learning development.'
+    },
+    {
+      key: 'govAspirant',
+      title: 'Govt. Aspirants',
+      subtitle: 'Exam prep, current affairs & more',
+      icon: Landmark,
+      colorLight: 'bg-amber-500 text-white shadow-sm',
+      colorDark: 'bg-amber-500 text-white shadow-sm',
+      borderLight: 'border-amber-200/60',
+      borderDark: 'border-amber-500/30',
+      titleLight: 'text-amber-600 dark:text-amber-400',
+      titleDark: 'text-amber-400',
+      arrowBgLight: 'bg-amber-100 text-amber-600',
+      arrowBgDark: 'bg-amber-950/70 text-amber-300',
+      tabId: 'jobs',
+      prompt: 'Hello Arohi! I am preparing for Government Competitive Exams (UPSC, SSC, Railway, Banking, OPSC). Provide current affairs, MCQs, and exam strategy.'
+    },
+    {
+      key: 'moreTools',
+      title: 'More Tools & AI Capabilities',
+      subtitle: 'Music Gen, Image Studio, Code, Business & 17+ Tools',
+      icon: Grid,
+      colorLight: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm',
+      colorDark: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm',
+      borderLight: 'border-violet-300/80',
+      borderDark: 'border-violet-500/40',
+      titleLight: 'text-indigo-600 dark:text-indigo-400',
+      titleDark: 'text-indigo-300',
+      arrowBgLight: 'bg-indigo-100 text-indigo-600',
+      arrowBgDark: 'bg-indigo-950/70 text-indigo-300',
+      tabId: 'tools'
+    },
+    {
+      key: 'jobSeeker',
+      title: 'Job Seekers',
+      subtitle: 'Active job alerts & interview prep',
+      icon: Briefcase,
+      colorLight: 'bg-teal-100 text-teal-600',
+      colorDark: 'bg-teal-500/20 text-teal-400',
+      borderLight: 'border-teal-200/60',
+      borderDark: 'border-teal-500/30',
+      titleLight: 'text-teal-900',
+      titleDark: 'text-teal-300',
+      arrowBgLight: 'bg-teal-50 text-teal-600',
+      arrowBgDark: 'bg-teal-500/20 text-teal-300',
+      tabId: 'jobs',
+      prompt: 'Hello Arohi! I am looking for a Job. Please assist me with resume optimization, AI mock interviews, job alerts, and cover letter writing.'
+    },
+    {
+      key: 'entrepreneurs',
+      title: 'Entrepreneurs',
+      subtitle: 'Startups, MSME schemes & plans',
+      icon: Lightbulb,
+      colorLight: 'bg-yellow-100 text-yellow-600',
+      colorDark: 'bg-yellow-500/20 text-yellow-400',
+      borderLight: 'border-yellow-200/60',
+      borderDark: 'border-yellow-500/30',
+      titleLight: 'text-yellow-900',
+      titleDark: 'text-yellow-300',
+      arrowBgLight: 'bg-yellow-50 text-yellow-600',
+      arrowBgDark: 'bg-yellow-500/20 text-yellow-300',
+      tabId: 'business',
+      prompt: 'Hello Arohi! I am an Entrepreneur. Assist me with startup ideas, business plan drafting, MSME government schemes, and pitch decks.'
+    },
+    {
+      key: 'scientists',
+      title: 'Scientists',
+      subtitle: 'Research papers, data & simulations',
+      icon: FlaskConical,
+      colorLight: 'bg-cyan-100 text-cyan-600',
+      colorDark: 'bg-cyan-500/20 text-cyan-400',
+      borderLight: 'border-cyan-200/60',
+      borderDark: 'border-cyan-500/30',
+      titleLight: 'text-cyan-900',
+      titleDark: 'text-cyan-300',
+      arrowBgLight: 'bg-cyan-50 text-cyan-600',
+      arrowBgDark: 'bg-cyan-500/20 text-cyan-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am a Scientist/Researcher. Help me analyze research papers, review scientific literature, and interpret complex data.'
+    },
+    {
+      key: 'researchers',
+      title: 'Researchers',
+      subtitle: 'Data audits, whitepapers & citations',
+      icon: Activity,
+      colorLight: 'bg-sky-100 text-sky-600',
+      colorDark: 'bg-sky-500/20 text-sky-400',
+      borderLight: 'border-sky-200/60',
+      borderDark: 'border-sky-500/30',
+      titleLight: 'text-sky-900',
+      titleDark: 'text-sky-300',
+      arrowBgLight: 'bg-sky-50 text-sky-600',
+      arrowBgDark: 'bg-sky-500/20 text-sky-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am an Academic Researcher. Assist me with data audits, whitepaper synthesis, literature reviews, and citations.'
+    },
+    {
+      key: 'doctors',
+      title: 'Doctors',
+      subtitle: 'Clinical studies & medical logs',
+      icon: Stethoscope,
+      colorLight: 'bg-red-100 text-red-600',
+      colorDark: 'bg-red-500/20 text-red-400',
+      borderLight: 'border-red-200/60',
+      borderDark: 'border-red-500/30',
+      titleLight: 'text-red-900',
+      titleDark: 'text-red-300',
+      arrowBgLight: 'bg-red-50 text-red-600',
+      arrowBgDark: 'bg-red-500/20 text-red-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! As a Healthcare Professional, assist me with medical literature summaries, clinical trial updates, and health logs.'
+    },
+    {
+      key: 'engineers',
+      title: 'Engineers',
+      subtitle: 'System architecture & code prep',
+      icon: Cpu,
+      colorLight: 'bg-indigo-100 text-indigo-600',
+      colorDark: 'bg-indigo-500/20 text-indigo-400',
+      borderLight: 'border-indigo-200/60',
+      borderDark: 'border-indigo-500/30',
+      titleLight: 'text-indigo-900',
+      titleDark: 'text-indigo-300',
+      arrowBgLight: 'bg-indigo-50 text-indigo-600',
+      arrowBgDark: 'bg-indigo-500/20 text-indigo-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am an Engineer. Help me with code debugging, system architecture design, technical documentation, and software concepts.'
+    },
+    {
+      key: 'professionals',
+      title: 'Professionals',
+      subtitle: 'Career growth & executive tips',
+      icon: UserCheck,
+      colorLight: 'bg-fuchsia-100 text-fuchsia-600',
+      colorDark: 'bg-fuchsia-500/20 text-fuchsia-400',
+      borderLight: 'border-fuchsia-200/60',
+      borderDark: 'border-fuchsia-500/30',
+      titleLight: 'text-fuchsia-900',
+      titleDark: 'text-fuchsia-300',
+      arrowBgLight: 'bg-fuchsia-50 text-fuchsia-600',
+      arrowBgDark: 'bg-fuchsia-500/20 text-fuchsia-300',
+      tabId: 'jobs',
+      prompt: 'Hello Arohi! I am a Working Professional. Provide guidance on career growth, executive email writing, leadership, and workplace productivity.'
+    },
+    {
+      key: 'universities',
+      title: 'Universities',
+      subtitle: 'Curriculum & student placement',
+      icon: GraduationCap,
+      colorLight: 'bg-pink-100 text-pink-600',
+      colorDark: 'bg-pink-500/20 text-pink-400',
+      borderLight: 'border-pink-200/60',
+      borderDark: 'border-pink-500/30',
+      titleLight: 'text-pink-900',
+      titleDark: 'text-pink-300',
+      arrowBgLight: 'bg-pink-50 text-pink-600',
+      arrowBgDark: 'bg-pink-500/20 text-pink-300',
+      tabId: 'syllabus',
+      prompt: 'Hello Arohi! Assist with higher education curriculum planning, student ops, placement strategies, and academic administration.'
+    },
+    {
+      key: 'organizations',
+      title: 'Organizations',
+      subtitle: 'Cross-team workflows & audits',
+      icon: Network,
+      colorLight: 'bg-purple-100 text-purple-600',
+      colorDark: 'bg-purple-500/20 text-purple-400',
+      borderLight: 'border-purple-200/60',
+      borderDark: 'border-purple-500/30',
+      titleLight: 'text-purple-900',
+      titleDark: 'text-purple-300',
+      arrowBgLight: 'bg-purple-50 text-purple-600',
+      arrowBgDark: 'bg-purple-500/20 text-purple-300',
+      tabId: 'business',
+      prompt: 'Hello Arohi! Help my organization optimize cross-team workflows, AI adoption, documentation, and operational efficiency.'
+    },
+    {
+      key: 'govOfficials',
+      title: 'Govt. Officials',
+      subtitle: 'Policy drafts & civic compliance',
+      icon: ShieldCheck,
+      colorLight: 'bg-orange-100 text-orange-600',
+      colorDark: 'bg-orange-500/20 text-orange-400',
+      borderLight: 'border-orange-200/60',
+      borderDark: 'border-orange-500/30',
+      titleLight: 'text-orange-900',
+      titleDark: 'text-orange-300',
+      arrowBgLight: 'bg-orange-50 text-orange-600',
+      arrowBgDark: 'bg-orange-500/20 text-orange-300',
+      tabId: 'business',
+      prompt: 'Hello Arohi! Assist with policy drafting summaries, civic compliance guidelines, public administration notes, and governance research.'
+    },
+    {
+      key: 'privateOfficials',
+      title: 'Private Officials',
+      subtitle: 'Corporate governance & growth',
+      icon: Building,
+      colorLight: 'bg-teal-100 text-teal-600',
+      colorDark: 'bg-teal-500/20 text-teal-400',
+      borderLight: 'border-teal-200/60',
+      borderDark: 'border-teal-500/30',
+      titleLight: 'text-teal-900',
+      titleDark: 'text-teal-300',
+      arrowBgLight: 'bg-teal-50 text-teal-600',
+      arrowBgDark: 'bg-teal-500/20 text-teal-300',
+      tabId: 'business',
+      prompt: 'Hello Arohi! Assist with corporate governance strategies, executive reporting, compliance frameworks, and organizational growth.'
+    },
+    {
+      key: 'humans',
+      title: 'Humans',
+      subtitle: 'General learning & career advice',
+      icon: User,
+      colorLight: 'bg-fuchsia-100 text-fuchsia-600',
+      colorDark: 'bg-fuchsia-500/20 text-fuchsia-400',
+      borderLight: 'border-fuchsia-200/60',
+      borderDark: 'border-fuchsia-500/30',
+      titleLight: 'text-fuchsia-900',
+      titleDark: 'text-fuchsia-300',
+      arrowBgLight: 'bg-fuchsia-50 text-fuchsia-600',
+      arrowBgDark: 'bg-fuchsia-500/20 text-fuchsia-300',
+      tabId: 'arohi',
+      prompt: 'Hello Arohi! I want to expand my knowledge, learn new skills, get daily motivation, and boost my personal development.'
+    },
+    {
+      key: 'aliens',
+      title: 'Aliens',
+      subtitle: 'Quantum logic & interstellar data',
+      icon: Bot,
+      colorLight: 'bg-lime-100 text-lime-600',
+      colorDark: 'bg-lime-500/20 text-lime-400',
+      borderLight: 'border-lime-200/60',
+      borderDark: 'border-lime-500/30',
+      titleLight: 'text-lime-900',
+      titleDark: 'text-lime-300',
+      arrowBgLight: 'bg-lime-50 text-lime-600',
+      arrowBgDark: 'bg-lime-500/20 text-lime-300',
+      tabId: 'arohi',
+      prompt: 'Greetings Arohi! Explain quantum computing, astrophysics, advanced space technologies, and futuristic speculative science.'
+    },
+    {
+      key: 'marsCitizens',
+      title: 'Citizens of Mars & Jupiter',
+      subtitle: 'Terraforming & space station ops',
+      icon: Globe,
+      colorLight: 'bg-rose-100 text-rose-600',
+      colorDark: 'bg-rose-500/20 text-rose-400',
+      borderLight: 'border-rose-200/60',
+      borderDark: 'border-rose-500/30',
+      titleLight: 'text-rose-900',
+      titleDark: 'text-rose-300',
+      arrowBgLight: 'bg-rose-50 text-rose-600',
+      arrowBgDark: 'bg-rose-500/20 text-rose-300',
+      tabId: 'arohi',
+      prompt: 'Hello Arohi! Tell me about Mars colonization plans, space habitat engineering, terraforming tech, and interplanetary exploration.'
+    }
   ];
 
+  const filteredCategories = allCategoryTags.filter(cat => 
+    cat.title.toLowerCase().includes(categorySearchQuery.toLowerCase()) ||
+    cat.subtitle.toLowerCase().includes(categorySearchQuery.toLowerCase())
+  );
+
+  const displayedCategories = showAllCategories 
+    ? filteredCategories 
+    : allCategoryTags.slice(0, 6);
+
   return (
-    <div className="relative w-full bg-[#020208] text-white overflow-x-hidden font-sans select-none pb-2">
+    <div className={`min-h-screen w-full transition-colors duration-300 font-sans select-none pb-28 ${
+      isDarkMode 
+        ? 'bg-[#070814] text-white' 
+        : 'bg-[#f8f9fe] text-slate-900'
+    }`}>
       
-      {/* Dynamic Keyframes Styling for Orbit Nodes & Genius Animations */}
-      <style>{`
-        @keyframes float-orbit {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(2deg); }
-        }
-        @keyframes rotate-concentric {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes rotate-concentric-reverse {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
-        }
-        @keyframes grid-slide {
-          0% { background-position: 0 0; }
-          100% { background-position: 0 80px; }
-        }
-        @keyframes scanline-move {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        @keyframes nebula-drift-slow {
-          0%, 100% { transform: translate(0px, 0px) scale(1) rotate(0deg); opacity: 0.4; }
-          33% { transform: translate(40px, -30px) scale(1.15) rotate(120deg); opacity: 0.55; }
-          66% { transform: translate(-30px, 50px) scale(0.9) rotate(240deg); opacity: 0.35; }
-        }
-        @keyframes nebula-drift-medium {
-          0%, 100% { transform: translate(0px, 0px) scale(1.1) rotate(360deg); opacity: 0.35; }
-          50% { transform: translate(-50px, 40px) scale(0.85) rotate(180deg); opacity: 0.5; }
-        }
-        @keyframes shooting-star-fly {
-          0% { transform: translate(100vw, -10vh) rotate(-45deg) scale(0); opacity: 0; }
-          1% { opacity: 1; }
-          8% { transform: translate(-20vw, 110vh) rotate(-45deg) scale(1.5); opacity: 0; }
-          100% { transform: translate(-20vw, 110vh) rotate(-45deg) scale(0); opacity: 0; }
-        }
-        @keyframes space-dust-drift {
-          0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity: 0; }
-          10% { opacity: 0.8; }
-          90% { opacity: 0.8; }
-          100% { transform: translateY(-10vh) translateX(50px) scale(1.2); opacity: 0; }
-        }
-        @keyframes text-shimmer-sweep {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes orbit-quantum-node-1 {
-          0% { transform: rotate(0deg) translateX(90px) rotate(0deg) scale(0.9); }
-          50% { transform: rotate(180deg) translateX(90px) rotate(-180deg) scale(1.2); }
-          100% { transform: rotate(360deg) translateX(90px) rotate(-360deg) scale(0.9); }
-        }
-        @keyframes orbit-quantum-node-2 {
-          0% { transform: rotate(120deg) translateX(90px) rotate(-120deg) scale(1.1); }
-          50% { transform: rotate(300deg) translateX(90px) rotate(-300deg) scale(0.8); }
-          100% { transform: rotate(480deg) translateX(90px) rotate(-480deg) scale(1.1); }
-        }
-        @keyframes orbit-quantum-node-3 {
-          0% { transform: rotate(240deg) translateX(90px) rotate(-240deg) scale(0.8); }
-          50% { transform: rotate(420deg) translateX(90px) rotate(-420deg) scale(1.2); }
-          100% { transform: rotate(600deg) translateX(90px) rotate(-600deg) scale(0.8); }
-        }
-        @keyframes eq-bar-1 { 0%, 100% { height: 4px; } 50% { height: 16px; } }
-        @keyframes eq-bar-2 { 0%, 100% { height: 14px; } 50% { height: 6px; } }
-        @keyframes eq-bar-3 { 0%, 100% { height: 8px; } 50% { height: 18px; } }
-        @keyframes eq-bar-4 { 0%, 100% { height: 16px; } 50% { height: 4px; } }
-
-        .shimmer-text-glow {
-          background-size: 200% auto;
-          animation: text-shimmer-sweep 6s ease infinite;
-        }
-        .animate-orbit-node-1 { animation: orbit-quantum-node-1 12s linear infinite; }
-        .animate-orbit-node-2 { animation: orbit-quantum-node-2 12s linear infinite; }
-        .animate-orbit-node-3 { animation: orbit-quantum-node-3 12s linear infinite; }
-        .animate-eq-1 { animation: eq-bar-1 1.2s ease-in-out infinite; }
-        .animate-eq-2 { animation: eq-bar-2 0.9s ease-in-out infinite; }
-        .animate-eq-3 { animation: eq-bar-3 1.4s ease-in-out infinite; }
-        .animate-eq-4 { animation: eq-bar-4 1.1s ease-in-out infinite; }
-        
-        .animate-float-orbit {
-          animation: float-orbit 6s ease-in-out infinite;
-        }
-        .animate-rotate-concentric {
-          animation: rotate-concentric 25s linear infinite;
-        }
-        .animate-rotate-concentric-reverse {
-          animation: rotate-concentric-reverse 35s linear infinite;
-        }
-        .animated-grid {
-          background-image: linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
-          background-size: 40px 40px;
-          animation: grid-slide 12s linear infinite;
-        }
-        .animated-scanline {
-          background: linear-gradient(
-            to bottom,
-            transparent 0%,
-            rgba(0, 229, 255, 0.01) 30%,
-            rgba(0, 229, 255, 0.04) 50%,
-            rgba(0, 229, 255, 0.01) 70%,
-            transparent 100%
-          );
-          animation: scanline-move 14s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        .animate-nebula-1 {
-          animation: nebula-drift-slow 22s ease-in-out infinite;
-        }
-        .animate-nebula-2 {
-          animation: nebula-drift-medium 28s ease-in-out infinite;
-        }
-        .animate-nebula-3 {
-          animation: nebula-drift-slow 34s ease-in-out infinite;
-          animation-delay: -5s;
-        }
-        .animate-star-1 { animation: shooting-star-fly 14s linear infinite; animation-delay: 1s; }
-        .animate-star-2 { animation: shooting-star-fly 18s linear infinite; animation-delay: 5s; }
-        .animate-star-3 { animation: shooting-star-fly 22s linear infinite; animation-delay: 10s; }
-        .animate-star-4 { animation: shooting-star-fly 15s linear infinite; animation-delay: 3s; }
-        .animate-star-5 { animation: shooting-star-fly 25s linear infinite; animation-delay: 12s; }
-        
-        .animate-dust-1 { animation: space-dust-drift 18s linear infinite; }
-        .animate-dust-2 { animation: space-dust-drift 24s linear infinite; animation-delay: -6s; }
-        .animate-dust-3 { animation: space-dust-drift 30s linear infinite; animation-delay: -12s; }
-        .animate-dust-4 { animation: space-dust-drift 21s linear infinite; animation-delay: -3s; }
-        .animate-dust-5 { animation: space-dust-drift 27s linear infinite; animation-delay: -18s; }
-      `}</style>
-
-      {/* 1. Backdrop Stars and Plasma Clouds */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Futuristic Sci-fi Grid */}
-        <div className="absolute inset-0 animated-grid opacity-[0.45] mix-blend-color-dodge"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020208]/60 to-[#020208]"></div>
-        
-        {/* Holographic Scanline bar */}
-        <div className="absolute inset-0 animated-scanline mix-blend-screen"></div>
-
-        {/* Dynamic Plasma/Nebula Clouds */}
-        <div className="absolute top-[5%] left-[-15%] w-[65%] h-[600px] bg-gradient-to-tr from-[#7c3aed]/20 via-[#3b82f6]/10 to-transparent blur-[140px] rounded-full animate-nebula-1"></div>
-        <div className="absolute top-[35%] right-[-15%] w-[65%] h-[600px] bg-gradient-to-bl from-[#ec4899]/15 via-[#7c3aed]/8 to-transparent blur-[140px] rounded-full animate-nebula-2"></div>
-        <div className="absolute bottom-[10%] left-[-10%] w-[55%] h-[500px] bg-gradient-to-tr from-[#00e5ff]/12 via-[#3b82f6]/8 to-transparent blur-[120px] rounded-full animate-nebula-3"></div>
-        
-        {/* Cosmic Shooting Stars (Diagonal laser trails) */}
-        <div className="absolute top-0 right-0 w-[2px] h-[100px] bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-star-1 opacity-0 mix-blend-screen shadow-[0_0_12px_#00e5ff]"></div>
-        <div className="absolute top-0 right-0 w-[1.5px] h-[150px] bg-gradient-to-b from-transparent via-purple-400 to-transparent animate-star-2 opacity-0 mix-blend-screen shadow-[0_0_12px_#7c3aed]"></div>
-        <div className="absolute top-0 right-0 w-[2px] h-[80px] bg-gradient-to-b from-transparent via-pink-400 to-transparent animate-star-3 opacity-0 mix-blend-screen shadow-[0_0_12px_#ec4899]"></div>
-        <div className="absolute top-0 right-0 w-[1.5px] h-[120px] bg-gradient-to-b from-transparent via-emerald-400 to-transparent animate-star-4 opacity-0 mix-blend-screen shadow-[0_0_12px_#10b981]"></div>
-        <div className="absolute top-0 right-0 w-[2px] h-[90px] bg-gradient-to-b from-transparent via-cyan-300 to-transparent animate-star-5 opacity-0 mix-blend-screen shadow-[0_0_12px_#06b6d4]"></div>
-
-        {/* Slow drifting Space Dust particles */}
-        <div className="absolute left-[8%] w-1.5 h-1.5 bg-cyan-400 rounded-full animate-dust-1 blur-[0.5px]"></div>
-        <div className="absolute left-[24%] w-1 h-1 bg-purple-400 rounded-full animate-dust-2 blur-[0.5px]"></div>
-        <div className="absolute left-[48%] w-2 h-2 bg-pink-400/70 rounded-full animate-dust-3 blur-[1px]"></div>
-        <div className="absolute left-[68%] w-1 h-1 bg-blue-400 rounded-full animate-dust-4"></div>
-        <div className="absolute left-[88%] w-1.5 h-1.5 bg-emerald-400/80 rounded-full animate-dust-5 blur-[0.5px]"></div>
-        
-        {/* Constant subtle starry sparkle in grid corners */}
-        <div className="absolute top-24 left-[15%] w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute top-48 right-[18%] w-1 h-1 bg-purple-400 rounded-full animate-ping" style={{ animationDuration: '8s' }}></div>
-        <div className="absolute bottom-64 left-[25%] w-1.5 h-1.5 bg-pink-500/30 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
-        <div className="absolute bottom-24 right-[10%] w-2 h-2 bg-emerald-400/30 rounded-full animate-pulse" style={{ animationDuration: '5s' }}></div>
-      </div>
-
-      {/* 2. Top Header Navigation (Nav) */}
-      <nav className="relative z-50 w-full border-b border-white/5 bg-[#020208]/85 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      {/* 1. Header Navigation */}
+      <header className={`sticky top-0 z-40 w-full backdrop-blur-md transition-colors ${
+        isDarkMode 
+          ? 'bg-[#070814]/90 border-b border-slate-800/60' 
+          : 'bg-[#f8f9fe]/90 border-b border-slate-200/80'
+      }`}>
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           
-          {/* Trust Seal Logo for Authentic Feel */}
-          <div className="flex items-center gap-2 bg-[#060e0a]/90 border border-emerald-500/35 px-3.5 py-1.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.12)] select-none">
-            <ShieldCheck className="w-4 h-4 text-[#00e676] shrink-0 animate-pulse" />
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] font-black tracking-widest text-[#00e676] leading-none uppercase">
-                100% SECURE & CERTIFIED
-              </span>
-              <span className="text-[8px] font-bold text-slate-400 tracking-wider leading-none mt-0.5 uppercase">
-                ISO 9001:2015 TRUSTED AI PARTNER
-              </span>
-            </div>
-          </div>
-
-          {/* Language Selector */}
-          <div className="flex items-center">
-            
-            {/* Language dropdown button */}
-            <div className="relative" ref={langDropdownRef}>
-              <button 
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#120d2b]/80 hover:bg-[#1b143f]/90 border border-purple-500/30 rounded-full text-[10px] font-bold text-slate-200 hover:text-white transition-all shadow-md cursor-pointer"
-              >
-                <Globe className="w-3.5 h-3.5 text-purple-400 animate-spin" style={{ animationDuration: '20s' }} />
-                <span>{LANGUAGES_LIST.find(l => l.code === language)?.symbol || 'AA'}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-              
-              {isLangOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#0d091e]/95 border border-[#3e2b85]/60 rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.5)] backdrop-blur-md z-[100] overflow-hidden">
-                  <div className="px-3 py-1.5 border-b border-white/5 text-[9px] text-slate-400 font-bold uppercase tracking-wider sticky bg-[#0d091e]">
-                    {getTranslation('selectLang', language)}
-                  </div>
-                  {LANGUAGES_LIST.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        onLanguageChange(lang.code as Language);
-                        setIsLangOpen(false);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
-                        language === lang.code ? 'bg-[#7c3aed]/25 text-purple-200 font-bold' : 'text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <span>{lang.native}</span>
-                      {language === lang.code && <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-
-        </div>
-
-      </nav>
-
-      {/* 3. Hero Section (Home) - Symmetrical 3D Floating Bubbles & Core Orb */}
-      <section id="home" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4">
-        
-        {/* Top Header info matching user's screenshot layout */}
-        <div className="text-center space-y-1 mb-4">
-          <div className="inline-flex items-center justify-center gap-2 bg-[#091515] border border-cyan-500/30 text-[#00e5ff] px-4 py-1 rounded-full text-xs font-semibold tracking-wide shadow-sm uppercase">
-            <span className="w-2 h-2 rounded-full bg-[#00e676] animate-pulse"></span>
-            <span>World's #1 Search Engine on Call ★</span>
-          </div>
-          
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-pink-500 drop-shadow-[0_0_40px_rgba(236,72,153,0.35)] leading-none pt-1 uppercase font-sans shimmer-text-glow">
-            AROHI AI
-          </h1>
-          
-          <p className="text-[11px] sm:text-xs md:text-sm font-black tracking-[0.3em] uppercase mt-1 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 drop-shadow-[0_0_12px_rgba(6,182,212,0.2)]">
-            {getTranslation('dreamPrepare', language)}
-          </p>
-
-          <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 bg-[#120d2a]/85 border border-[#7c3aed]/40 px-4 py-2 sm:py-1.5 rounded-2xl sm:rounded-full shadow-[0_4px_20px_rgba(124,58,237,0.15)] mt-2 backdrop-blur-sm uppercase select-none text-center">
-            <div className="flex items-center justify-center gap-1.5">
-              <span className="flex h-2.5 w-2.5 relative shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5ff] opacity-80"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00e5ff]"></span>
-              </span>
-              <span className="text-cyan-400 text-xs sm:text-sm font-black tracking-wider">150+ LANGUAGES CHAT & CALL</span>
-            </div>
-            <span className="hidden sm:inline text-slate-500 font-normal">|</span>
-            <span className="text-purple-300/80 text-[9px] sm:text-[11px] font-semibold tracking-normal">NATIVE ODIA / ଓଡ଼ିଆ FULLY ACTIVE & OPTIMIZED</span>
-          </div>
-        </div>
-
-        {/* Desktop 3D Bubble Layout Container (Hidden on Mobile) */}
-        <div className="hidden md:grid grid-cols-12 gap-4 items-center justify-center relative min-h-[460px] sm:min-h-[500px] max-w-5xl mx-auto">
-          
-          {/* Background Concentric Rings (Centered behind or layered) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-            <div className="relative w-80 h-80 sm:w-96 sm:h-96 flex items-center justify-center">
-              {/* Outer dashed ring */}
-              <div className="absolute w-full h-full rounded-full border-2 border-dashed border-[#00e5ff]/15 animate-rotate-concentric"></div>
-              {/* Middle ring */}
-              <div className="absolute w-[80%] h-[80%] rounded-full border border-indigo-500/10 animate-rotate-concentric-reverse"></div>
-              {/* Inner ring */}
-              <div className="absolute w-[60%] h-[60%] rounded-full border-2 border-pink-500/10"></div>
-              {/* Glowing aura */}
-              <div className="absolute w-44 h-44 rounded-full bg-gradient-to-tr from-[#7c3aed]/5 to-[#00e5ff]/5 blur-3xl"></div>
-            </div>
-          </div>
-
-          {/* LEFT COLUMN: 5 categories */}
-          <div className="col-span-4 flex flex-col gap-5 z-10 text-right pr-4">
-            {leftCategories.map((cat, idx) => (
-              <InteractiveBubble
-                id={`category-btn-${cat.key}`}
-                key={cat.key}
-                cat={cat}
-                isSelected={selectedCategory === cat.key}
-                onClick={() => {
-                  setSelectedCategory(cat.key);
-                  setActiveOrbText(cat.desc);
-                }}
-                index={idx}
-              />
-            ))}
-          </div>
-
-          {/* MIDDLE COLUMN: Central Interactive Orb & Pedestal */}
-          <div className="col-span-4 flex flex-col items-center justify-center z-10 h-full relative py-8">
-            
-            {/* Central Hologram Pedestal */}
-            <div className="absolute bottom-[10%] w-full flex flex-col items-center pointer-events-none">
-              <div className="w-36 h-6 bg-blue-900/35 border border-blue-500/40 rounded-full shadow-[0_0_25px_rgba(59,130,246,0.45)]"></div>
-              <div className="w-24 h-4 bg-slate-950/75 border border-purple-500/25 rounded-full shadow-[inset_0_0_10px_rgba(124,58,237,0.45)] -mt-2"></div>
-            </div>
-
-            {/* Central Arohi Avatar Bubble */}
-            <div className="relative flex flex-col items-center gap-3">
-              {/* Floating Symmetrical Heartbeat Tag above the central bubble */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: [0.95, 1, 0.95],
-                  scale: [0.98, 1.02, 0.98],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="bg-gradient-to-r from-[#17103a] to-[#6327d4] text-white px-4 py-2 rounded-2xl border border-[#7c3aed]/55 text-xs font-black tracking-widest uppercase shadow-[0_8px_25px_rgba(124,58,237,0.5)] backdrop-blur-md flex items-center gap-2 select-none z-10"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
-                <span>Ask Arohi! ✨</span>
-              </motion.div>
-
-              {/* Central Arohi Chatbot Bubble showing Arohi's Avatar image, much bigger */}
-              <button
-                id="central-arohi-orb"
-                onClick={() => {
-                  if (onQuickChat) {
-                    onQuickChat(defaultGreetingPrompt);
-                  } else {
-                    if (selectedItem) {
-                      setActiveTab(selectedItem.tabId);
-                    }
-                    onEnter();
-                  }
-                }}
-                className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_12px_45px_rgba(124,58,237,0.655)] cursor-pointer overflow-visible group flex items-center justify-center"
-                title="Talk to AROHI"
-              >
-                {/* Revolving Quantum Orbiting Nodes */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="absolute w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_12px_#00e5ff] animate-orbit-node-1 z-20"></div>
-                  <div className="absolute w-2.5 h-2.5 bg-fuchsia-400 rounded-full shadow-[0_0_12px_#ec4899] animate-orbit-node-2 z-20"></div>
-                  <div className="absolute w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_12px_#00e676] animate-orbit-node-3 z-20"></div>
-                </div>
-
-                {/* The Arohi animating SVG filling the entire button */}
-                <div className="w-full h-full rounded-full relative z-10">
-                  <ArohiAvatar className="w-full h-full scale-[1.08] transition-transform duration-500 group-hover:scale-115" />
-                </div>
-
-                {/* Glowing ring animation */}
-                <span className="absolute inset-0 rounded-full border-2 border-purple-400/40 animate-ping opacity-60 pointer-events-none"></span>
-              </button>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: 5 categories */}
-          <div className="col-span-4 flex flex-col gap-5 z-10 text-left pl-4">
-            {rightCategories.map((cat, idx) => (
-              <InteractiveBubble
-                id={`category-btn-${cat.key}`}
-                key={cat.key}
-                cat={cat}
-                isSelected={selectedCategory === cat.key}
-                onClick={() => {
-                  setSelectedCategory(cat.key);
-                  setActiveOrbText(cat.desc);
-                }}
-                index={idx + leftCategories.length}
-              />
-            ))}
-          </div>
-
-        </div>
-
-        {/* Mobile Symmetrical Layout (Visible on Mobile Only) */}
-        <div className="md:hidden flex flex-col items-center justify-center space-y-3 w-full relative">
-          
-          {/* Centered Mobile Orb */}
-          <div className="relative flex items-center justify-center py-2 w-full">
-            
-            {/* Background dashed ring */}
-            <div className="absolute w-56 h-56 rounded-full border border-dashed border-[#00e5ff]/20 animate-rotate-concentric"></div>
-            
-            <div className="relative flex flex-col items-center gap-2">
-              {/* Floating Symmetrical Heartbeat Tag above the central bubble */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: [0.95, 1, 0.95],
-                  scale: [0.98, 1.02, 0.98],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="bg-gradient-to-r from-[#17103a] to-[#6327d4] text-white px-3 py-1 rounded-2xl border border-[#7c3aed]/55 text-[10px] font-black tracking-wider uppercase shadow-[0_6px_20px_rgba(124,58,237,0.4)] backdrop-blur-md flex items-center gap-1.5 select-none z-10"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
-                <span>Ask Arohi! ✨</span>
-              </motion.div>
-
-              {/* Core circular button fully showing Arohi's animating SVG */}
-              <button
-                id="central-arohi-orb-mobile"
-                onClick={() => {
-                  if (onQuickChat) {
-                    onQuickChat(defaultGreetingPrompt);
-                  } else {
-                    if (selectedItem) {
-                      setActiveTab(selectedItem.tabId);
-                    }
-                    onEnter();
-                  }
-                }}
-                className="relative w-28 h-28 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_8px_32px_rgba(124,58,237,0.5)] cursor-pointer overflow-visible group"
-                title="Talk to AROHI"
-              >
-                {/* The Arohi animating SVG filling the entire button */}
-                <div className="w-full h-full rounded-full">
-                  <ArohiAvatar className="w-full h-full scale-[1.08]" />
-                </div>
-
-                {/* Glowing ring animation */}
-                <span className="absolute inset-0 rounded-full border border-purple-400/40 animate-ping opacity-60 pointer-events-none"></span>
-              </button>
-            </div>
-          </div>
-
-          {/* Symmetrical Left/Right category buttons array for Mobile */}
-          <div className="grid grid-cols-2 gap-3.5 w-full px-1">
-            {/* Left categories column */}
-            <div className="flex flex-col gap-3">
-              {leftCategories.map((cat, idx) => (
-                <InteractiveBubble
-                  id={`mobile-category-btn-${cat.key}`}
-                  key={cat.key}
-                  cat={cat}
-                  isSelected={selectedCategory === cat.key}
-                  onClick={() => {
-                    setSelectedCategory(cat.key);
-                    setActiveOrbText(cat.desc);
-                  }}
-                  index={idx}
-                />
-              ))}
-            </div>
-
-            {/* Right categories column */}
-            <div className="flex flex-col gap-3">
-              {rightCategories.map((cat, idx) => (
-                <InteractiveBubble
-                  id={`mobile-category-btn-${cat.key}`}
-                  key={cat.key}
-                  cat={cat}
-                  isSelected={selectedCategory === cat.key}
-                  onClick={() => {
-                    setSelectedCategory(cat.key);
-                    setActiveOrbText(cat.desc);
-                  }}
-                  index={idx + leftCategories.length}
-                />
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* GEMINI-STYLE INTERACTIVE SEARCH CAPSULE DOCK */}
-        <div className="my-5 max-w-2xl mx-auto w-full px-2 z-20 relative">
-
-          {/* Gemini Style Search Capsule Dock Input Bar */}
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (landingInputText.trim()) {
-                triggerActualChat(landingInputText.trim());
-                setLandingInputText('');
-              }
-            }}
-            className="relative flex items-center bg-[#0d0920]/95 border border-cyan-500/40 focus-within:border-fuchsia-500 rounded-full p-1.5 sm:p-2 shadow-[0_10px_35px_rgba(0,229,255,0.18)] backdrop-blur-2xl transition-all duration-300 hover:shadow-[0_12px_40px_rgba(236,72,153,0.25)]"
-          >
-            <div className="pl-3 pr-2 text-cyan-400 flex items-center shrink-0">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 animate-pulse" />
-            </div>
-
-            <input
-              type="text"
-              value={landingInputText}
-              onChange={(e) => setLandingInputText(e.target.value)}
-              placeholder="Ask Arohi Anything..."
-              className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none px-2 font-medium"
-            />
-
-            <div className="flex items-center gap-1 pr-1 shrink-0">
-              {/* Mic voice shortcut */}
-              <button
-                type="button"
-                onClick={() => triggerActualChat("Start Voice Session")}
-                title="Talk to Arohi on Call"
-                className="p-2 text-slate-300 hover:text-cyan-400 bg-white/5 hover:bg-cyan-500/20 rounded-full transition-all cursor-pointer"
-              >
-                <Mic className="w-4 h-4" />
-              </button>
-
-              {/* Submit prompt button */}
-              <button
-                type="submit"
-                disabled={!landingInputText.trim()}
-                className={`p-2 sm:px-4 sm:py-2 rounded-full font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-                  landingInputText.trim()
-                    ? 'bg-gradient-to-r from-cyan-500 via-indigo-600 to-fuchsia-600 text-white shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:scale-105 active:scale-95'
-                    : 'bg-white/10 text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                <span className="hidden sm:inline">Ask</span>
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </form>
-
-        </div>
-
-        {/* BOTTOM CONTROLS & STATUS TICKER MATCHING USER'S SCREENSHOT */}
-        <div className="mt-3 flex flex-col items-center justify-center space-y-2 max-w-xl mx-auto z-10 relative">
-          
-          {/* Primary Solid Neon Blue Journey Button */}
+          {/* Left: Hamburger Menu Button */}
           <button 
-            id="enter-the-journey-cta"
-            onClick={() => {
-              setActiveTab('home');
-              onEnter();
-            }}
-            className="w-full bg-[#005cff] hover:bg-[#004cd0] text-white font-black text-sm sm:text-base uppercase tracking-widest py-3.5 px-8 rounded-full shadow-[0_10px_35px_rgba(0,92,255,0.5)] border border-blue-400/35 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer flex items-center justify-center gap-2 group"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
+              isDarkMode 
+                ? 'bg-[#131728] border-slate-800 text-slate-200 hover:bg-[#1a2038]' 
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
+            }`}
+            aria-label="Menu"
           >
-            <span>Enter The Journey</span>
-            <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" />
+            <Menu className="w-5 h-5" />
           </button>
 
-          {/* "AROHI AI ACTIVE" box with Live Audio EQ Equalizer Bars */}
-          <div id="arohi-active-status-bar" className="w-full bg-[#031c26]/90 border border-teal-500/30 px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs font-semibold text-slate-200 shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e676] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00e676]"></span>
+          {/* Center: Logo and Tagline */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight flex items-center gap-1 font-sans">
+              <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>AROHI</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-pink-500 to-amber-500">
+                AI
               </span>
-              <span className="text-[10px] font-black uppercase text-[#00e676] tracking-widest">AROHI AI ACTIVE</span>
-              <span className="text-slate-300 font-medium text-[10px] sm:text-xs">"Hi! I'm Arohi 🤖 Your AI Career Assistant."</span>
-            </div>
-            {/* Live Audio Equalizer Visualizer */}
-            <div className="flex items-end gap-1 px-2 py-1 bg-[#002b36]/60 rounded-lg border border-teal-500/20 shrink-0">
-              <span className="w-1 bg-cyan-400 rounded-full animate-eq-1"></span>
-              <span className="w-1 bg-fuchsia-400 rounded-full animate-eq-2"></span>
-              <span className="w-1 bg-emerald-400 rounded-full animate-eq-3"></span>
-              <span className="w-1 bg-purple-400 rounded-full animate-eq-4"></span>
-            </div>
+            </h1>
+            <p className="block text-[9.5px] sm:text-xs font-semibold tracking-tight leading-none mt-0.5">
+              <span className={isDarkMode ? 'text-slate-300' : 'text-slate-600'}>One AI. </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 font-bold">
+                Infinite Opportunities.
+              </span>
+            </p>
+          </div>
+
+          {/* Right: Very Tiny Sign Up / Sign In Button, Theme Toggle, & Bell Buttons */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            
+            {/* Very Tiny Sign Up / Sign In Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenAuth) {
+                  onOpenAuth();
+                } else if (setActiveTab) {
+                  setActiveTab('profile');
+                }
+              }}
+              className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-[9px] sm:text-[10px] leading-none shadow-xs shadow-purple-600/30 flex items-center gap-1 transition-all active:scale-95 cursor-pointer border border-purple-300/40 shrink-0 tracking-tight"
+              title={user ? 'Account / Profile' : 'Sign Up / Sign In'}
+            >
+              <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-100 shrink-0" />
+              <span className="whitespace-nowrap font-bold">
+                {user ? (currentUserName.length > 7 ? `${currentUserName.slice(0, 7)}..` : currentUserName) : 'Sign Up / Sign In'}
+              </span>
+            </button>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`p-1.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                isDarkMode 
+                  ? 'bg-[#131728] border-slate-800 text-amber-400 hover:bg-[#1a2038]' 
+                  : 'bg-white border-slate-200 text-purple-600 hover:bg-slate-50 shadow-sm'
+              }`}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+            </button>
+
+            {/* Notification Bell with Red Dot */}
+            <button 
+              onClick={() => {
+                if (onQuickChat) onQuickChat("What are the latest updates and announcements from Arohi AI?");
+              }}
+              className={`relative p-1.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                isDarkMode 
+                  ? 'bg-[#131728] border-slate-800 text-slate-200 hover:bg-[#1a2038]' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
+              }`}
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#070814]"></span>
+            </button>
           </div>
 
         </div>
+      </header>
 
-        {/* FOOTER SECTION AT THE BOTTOM OF THE WELCOME LANDING PAGE */}
-        <footer id="welcome-footer" className="w-full max-w-6xl mx-auto px-4 mt-3 mb-1 z-10 relative">
-          {/* Copyright, Security & Development/Maintenance Credits Banner */}
-          <div className="bg-[#120d2a]/90 rounded-2xl border border-[#211b3d] p-3.5 sm:p-4 flex flex-col lg:flex-row justify-between items-center gap-3 text-xs font-semibold text-slate-400 backdrop-blur-md">
-            <span className="flex items-center gap-2 font-bold text-slate-300">
-              <ShieldCheck className="w-5 h-5 text-[#00e676] shrink-0" /> Verified Career & Opportunity Platform
-            </span>
-            <div className="text-center lg:text-right space-y-1">
-              <p className="text-slate-300 font-bold">Copyright © 2026 Arohi AI (Arohiai.com). All Rights Reserved.</p>
-              <p className="text-[10px] text-slate-500">
-                Development and Maintenance by <span className="text-slate-400 font-bold">BRAGA TECHNOLOGIES PRIVATE LIMITED</span> in association with <span className="text-slate-400 font-bold">ODITREE SERVICES</span>
+      {/* 2. Main Scrollable Container */}
+      <main className="max-w-4xl mx-auto px-4 pt-4 space-y-6">
+
+        {/* Hero Card ("Hello! I'm Arohi 👋") */}
+        <div className={`relative rounded-2xl sm:rounded-3xl p-4 sm:p-5 transition-all border ${
+          isDarkMode
+            ? 'bg-gradient-to-b from-[#111322] via-[#0d0f1b] to-[#121425] border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
+            : 'bg-gradient-to-b from-white via-purple-50/20 to-fuchsia-50/40 border-purple-100/80 shadow-[0_8px_30px_rgba(124,58,237,0.06)]'
+        }`}>
+          
+          {/* Top Info Header inside Card */}
+          <div className="flex items-center gap-3 mb-3.5">
+            {/* 3D Arohi Avatar Container with Glowing Frame */}
+            <div className="relative shrink-0 w-12 h-12 sm:w-16 sm:h-16">
+              <ArohiAvatar className="w-full h-full" />
+            </div>
+
+            {/* Greeting Text */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-bold tracking-tight flex items-center gap-1">
+                <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>Hello! I'm</span>
+                <span className="text-purple-500 dark:text-purple-400 font-extrabold">Arohi</span>
+                <span>👋</span>
+              </h2>
+              <p className={`text-[11px] sm:text-xs font-normal mt-0.5 leading-snug ${
+                isDarkMode ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                Your AI Assistant for Learning, Work, Business & Life.
               </p>
             </div>
           </div>
-        </footer>
 
-      </section>
+          {/* Floating Search/Prompt Input Field */}
+          <form onSubmit={handlePromptSubmit} className="relative mb-3">
+            <div className={`flex items-center gap-2 rounded-2xl p-1.5 sm:p-2 border transition-all ${
+              isListening
+                ? 'bg-purple-950/30 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)] ring-2 ring-rose-500/50'
+                : isDarkMode 
+                  ? 'bg-[#0a0b18] border-slate-800 focus-within:border-purple-500/60 shadow-inner' 
+                  : 'bg-white border-slate-200/90 focus-within:border-purple-400 shadow-xs'
+            }`}>
+              
+              {/* Left Sparkles Icon / Recording Pulse */}
+              <div className="pl-2.5 text-purple-500 shrink-0 flex items-center justify-center">
+                {isListening ? (
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                  </span>
+                ) : (
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-purple-500" />
+                )}
+              </div>
+
+              {/* Input Text Area */}
+              <input 
+                type="text" 
+                value={landingInputText}
+                onChange={(e) => setLandingInputText(e.target.value)}
+                placeholder={isListening ? "Listening... Speak now 🎙️" : "Ask me anything..."}
+                className={`w-full bg-transparent text-xs sm:text-sm font-medium outline-none px-1 ${
+                  isListening
+                    ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
+                    : isDarkMode ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                }`}
+              />
+
+              {/* If user typed or spoke text, show Send button */}
+              {landingInputText.trim().length > 0 && (
+                <button
+                  type="submit"
+                  className="p-2 sm:p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
+                  title="Send to Arohi AI"
+                >
+                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              )}
+
+              {/* Right Glowing Mic Voice Button */}
+              <button
+                type="button"
+                onClick={toggleVoiceInput}
+                className={`p-2 sm:p-2.5 rounded-xl text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center ${
+                  isListening
+                    ? 'bg-rose-600 ring-4 ring-rose-500/40 animate-pulse shadow-rose-500/50'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_4px_12px_rgba(124,58,237,0.35)]'
+                }`}
+                title={isListening ? "Stop listening" : "Speak to Arohi AI (Voice Input)"}
+              >
+                <Mic className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isListening ? 'animate-bounce' : ''}`} />
+              </button>
+            </div>
+
+            {/* Voice Error Notice */}
+            {speechError && (
+              <div className="mt-1.5 px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 animate-fadeIn">
+                <span>⚠️</span>
+                <span>{speechError}</span>
+              </div>
+            )}
+          </form>
+
+          {/* Quick Action Chips Below Input Bar - Solid icon container + compact 2-line text matching mockup */}
+          <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
+            <button
+              onClick={() => handleQuickAction("Please summarize this article or long document for me.")}
+              className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
+                isDarkMode 
+                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
+                  : 'bg-white border-slate-200 text-slate-900 hover:bg-purple-50/80 shadow-xs'
+              }`}
+            >
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              </div>
+              <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
+                isDarkMode ? 'text-slate-100' : 'text-slate-900'
+              }`}>
+                <div className="truncate">Summarize</div>
+                <div className="truncate">Article</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction("Help me solve this question step by step with explanations.")}
+              className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
+                isDarkMode 
+                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
+                  : 'bg-white border-slate-200 text-slate-900 hover:bg-emerald-50/80 shadow-xs'
+              }`}
+            >
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                <Calculator className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              </div>
+              <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
+                isDarkMode ? 'text-slate-100' : 'text-slate-900'
+              }`}>
+                <div className="truncate">Solve</div>
+                <div className="truncate">Question</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction("Help me write an essay, letter, email, or creative content.")}
+              className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
+                isDarkMode 
+                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
+                  : 'bg-white border-slate-200 text-slate-900 hover:bg-blue-50/80 shadow-xs'
+              }`}
+            >
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
+                <PenTool className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              </div>
+              <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
+                isDarkMode ? 'text-slate-100' : 'text-slate-900'
+              }`}>
+                <div className="truncate">Write</div>
+                <div className="truncate">Anything</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction("Create a customized study, work, or exam preparation schedule.")}
+              className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
+                isDarkMode 
+                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
+                  : 'bg-white border-slate-200 text-slate-900 hover:bg-amber-50/80 shadow-xs'
+              }`}
+            >
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0">
+                <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              </div>
+              <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
+                isDarkMode ? 'text-slate-100' : 'text-slate-900'
+              }`}>
+                <div className="truncate">Help Me</div>
+                <div className="truncate">Plan</div>
+              </div>
+            </button>
+          </div>
+
+        </div>
+
+        {/* 3. "Explore Arohi AI" Section */}
+        <div className="space-y-4">
+          
+          {/* Section Header Row */}
+          <div className="flex items-center justify-between">
+            <h3 className={`text-base sm:text-lg font-black tracking-tight ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              Explore Arohi AI
+            </h3>
+
+            <button
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>{showAllCategories ? 'Show Featured' : 'See All'}</span>
+              <ChevronRight className={`w-4 h-4 transition-transform ${showAllCategories ? 'rotate-90' : ''}`} />
+            </button>
+          </div>
+
+          {/* Search Bar when expanded */}
+          {showAllCategories && (
+            <div className="relative">
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                value={categorySearchQuery}
+                onChange={(e) => setCategorySearchQuery(e.target.value)}
+                placeholder="Search across all 20 audience categories..."
+                className={`w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-2xl border outline-none transition-all ${
+                  isDarkMode 
+                    ? 'bg-[#131728] border-slate-800 text-white placeholder-slate-500 focus:border-purple-500' 
+                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500 shadow-sm'
+                }`}
+              />
+            </div>
+          )}
+
+          {/* Category Cards Grid - 3 Columns matching mockup exactly */}
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+            {displayedCategories.map((cat) => {
+              const IconComp = cat.icon;
+              return (
+                <div
+                  key={cat.key}
+                  onClick={() => {
+                    if (cat.tabId === 'tools' || cat.key === 'moreTools') {
+                      setActiveTab('tools');
+                      onEnter();
+                    } else if (cat.prompt) {
+                      handleQuickAction(cat.prompt);
+                    } else if (cat.tabId) {
+                      setActiveTab(cat.tabId);
+                      onEnter();
+                    }
+                  }}
+                  className={`group relative rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 border transition-all duration-300 cursor-pointer flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98] ${
+                    isDarkMode 
+                      ? `bg-[#0f1123]/90 ${cat.borderDark} hover:border-purple-500/50 shadow-sm` 
+                      : `bg-white ${cat.borderLight} hover:border-purple-300 shadow-sm hover:shadow-md`
+                  }`}
+                >
+                  <div>
+                    {/* Top Icon Badge */}
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${
+                      isDarkMode ? cat.colorDark : cat.colorLight
+                    }`}>
+                      <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className={`text-xs sm:text-sm font-black tracking-tight leading-snug truncate ${
+                      isDarkMode ? cat.titleDark : cat.titleLight
+                    }`}>
+                      {cat.title}
+                    </h4>
+
+                    {/* Subtitle */}
+                    <p className={`text-[9.5px] sm:text-[11px] font-medium mt-0.5 leading-tight line-clamp-2 ${
+                      isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                    }`}>
+                      {cat.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Arrow Action Pill */}
+                  <div className="flex justify-end mt-2.5">
+                    <div className={`w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center transition-all group-hover:translate-x-1 ${
+                      isDarkMode ? cat.arrowBgDark : cat.arrowBgLight
+                    }`}>
+                      <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* 4. Trust & Stats Bar (4 Badges in 4 Columns) */}
+        <div className={`rounded-2xl p-2.5 sm:p-3.5 border grid grid-cols-4 gap-1.5 sm:gap-3 text-center ${
+          isDarkMode 
+            ? 'bg-[#0f1123]/80 border-slate-800/80 text-slate-300' 
+            : 'bg-white border-slate-200/80 text-slate-700 shadow-sm'
+        }`}>
+          <div className="flex flex-col items-center justify-center p-1">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mb-1" />
+            <span className="text-[10px] sm:text-xs font-black leading-tight">100% Secure</span>
+            <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Your data is always safe</span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-1">
+            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 mb-1" />
+            <span className="text-[10px] sm:text-xs font-black leading-tight">150+ Languages</span>
+            <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Chat & content in your language</span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-1">
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mb-1" />
+            <span className="text-[10px] sm:text-xs font-black leading-tight">1M+ Queries</span>
+            <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Answered everyday</span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-1">
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mb-1" />
+            <span className="text-[10px] sm:text-xs font-black leading-tight">99.9% Uptime</span>
+            <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Reliable & always available</span>
+          </div>
+        </div>
+
+        {/* 5. Arohi AI Premium Upgrade Banner */}
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#210936] via-[#3a0a52] to-[#6b0d59] text-white shadow-xl border border-purple-500/20 flex flex-row items-center justify-between gap-3">
+          {/* Crown Watermark */}
+          <Crown className="absolute right-12 bottom-[-15px] sm:right-24 sm:bottom-[-20px] w-28 sm:w-40 h-28 sm:h-40 text-purple-400/15 pointer-events-none" />
+
+          <div className="relative z-10 space-y-0.5 text-left min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-sm sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">Arohi AI Premium</h4>
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 fill-amber-300 shrink-0" />
+            </div>
+            <p className="text-[10px] sm:text-xs text-purple-200/90 font-normal leading-snug line-clamp-2 sm:line-clamp-none">
+              Unlock unlimited features, priority support &amp; more
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              setActiveTab('pricing');
+              onEnter();
+            }}
+            className="relative z-10 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-[#2a0845] hover:bg-slate-100 text-xs sm:text-sm font-bold tracking-tight shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+          >
+            <span>Upgrade Now</span>
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2a0845]" />
+          </button>
+        </div>
+
+      </main>
+
+      {/* 7. Slide-over Mobile Navigation Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50"
+            />
+
+            {/* Menu Panel */}
+            <motion.div 
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] z-50 p-6 flex flex-col justify-between overflow-y-auto ${
+                isDarkMode ? 'bg-[#0d0f20] text-white' : 'bg-white text-slate-900'
+              }`}
+            >
+              <div className="space-y-6">
+                
+                {/* Header inside Drawer */}
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-purple-500/30">
+                      <ArohiAvatar className="w-full h-full" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm">Arohi AI</h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Opportunity Engine</p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Mobile Drawer Auth Header */}
+                <div className="p-3 bg-gradient-to-r from-purple-900/40 via-fuchsia-900/30 to-indigo-900/40 rounded-2xl border border-purple-500/30 flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                    <div className="w-8 h-8 rounded-full bg-purple-600/50 flex items-center justify-center text-white shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{user ? currentUserName : 'Welcome Guest'}</p>
+                      <p className="text-[10px] text-purple-300 truncate">{user ? (user.email || 'Signed in') : 'Sign in to save your sessions'}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      if (onOpenAuth) onOpenAuth();
+                      else if (setActiveTab) setActiveTab('profile');
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-extrabold shadow-md shrink-0 cursor-pointer"
+                  >
+                    {user ? 'Account' : 'Sign Up / Sign In'}
+                  </button>
+                </div>
+
+                {/* Quick Navigation Links */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Navigation</p>
+                  
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('arohi');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>Voice Call & Chat</span>
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('syllabus');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>Odia & CBSE Syllabus Hub</span>
+                    <BookOpen className="w-4 h-4 text-blue-500" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('jobs');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>Govt & Private Jobs Portal</span>
+                    <Landmark className="w-4 h-4 text-amber-500" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('business');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>Business & Startup Hub</span>
+                    <Briefcase className="w-4 h-4 text-emerald-500" />
+                  </button>
+                </div>
+
+                {/* Language Switcher inside Drawer */}
+                <div className="space-y-2 pt-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Language ({language.toUpperCase()})</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {LANGUAGES_LIST.slice(0, 6).map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => {
+                          onLanguageChange(l.code as Language);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all cursor-pointer ${
+                          language === l.code 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {l.native}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Share & Theme Controls inside Drawer */}
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                {onShare && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onShare();
+                    }}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share Arohi AI App</span>
+                  </button>
+                )}
+
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-400 font-medium">Arohi AI v3.0 • Certified & Secure</p>
+                </div>
+              </div>
+
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div>
   );

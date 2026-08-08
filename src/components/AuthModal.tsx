@@ -20,6 +20,7 @@ import { auth } from '../firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { isBiometricSupported } from '../lib/webauthn';
 import { PRICING_TIERS } from '../data/pricingData';
+import { LottieSuccessAnimation } from './LottieSuccess';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -444,74 +445,39 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04020b]/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#04020b]/85 backdrop-blur-md animate-fade-in overflow-y-auto max-w-[100vw] overflow-x-hidden box-border">
       
       {/* Central Card Modal */}
-      <div className="relative w-full max-w-md bg-gradient-to-b from-[#140e34] to-[#0a061b] border-2 border-[#3b218f] rounded-[2rem] p-6 sm:p-8 shadow-[0_20px_50px_rgba(124,58,237,0.45)] my-8">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-[#140e34] to-[#0a061b] border-2 border-[#3b218f] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 shadow-[0_20px_50px_rgba(124,58,237,0.45)] my-auto mx-auto overflow-hidden box-border max-w-[calc(100vw-1.5rem)]">
         
         {/* Invisible Recaptcha Anchor */}
         <div id="recaptcha-container"></div>
 
         {/* Decorative background laser glow */}
         <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white bg-slate-900/60 hover:bg-[#1a1140] border border-slate-800 hover:border-purple-500/50 cursor-pointer transition-all active:scale-95"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-300 hover:text-white bg-slate-900/80 hover:bg-[#1a1140] border border-slate-700 hover:border-purple-500/50 cursor-pointer transition-all active:scale-95 z-10"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Logo and Headings */}
-        <div className="text-center space-y-2 mb-6">
+        <div className="text-center space-y-2 mb-5 pt-1">
           <div className="inline-flex p-3 bg-gradient-to-tr from-[#7c3aed] to-[#a855f7] rounded-2xl border border-purple-400/40 shadow-[0_0_15px_rgba(124,58,237,0.4)]">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+          <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight uppercase">
             Arohi AI Auth Portal
           </h2>
-          <p className="text-xs text-slate-400 max-w-[320px] mx-auto leading-normal">
+          <p className="text-xs text-slate-300 max-w-[320px] mx-auto leading-normal">
             Sign in securely to save your progress, bookmark courses, track job application statuses, and unlock all interactive dashboards.
           </p>
         </div>
-
-        {/* Account Type Selector */}
-        {activeMode !== 'forgot' && activeMode !== 'onboarding' && (
-          <div className="space-y-1.5 mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
-            <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block text-center">
-              Select Your Profile Type
-            </label>
-            <div className="grid grid-cols-2 gap-2 bg-[#070414] p-1 rounded-xl border border-[#231a4c]">
-              <button
-                type="button"
-                onClick={() => setRole('candidate')}
-                className={`py-2 px-3 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                  role === 'candidate'
-                    ? 'bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-[#7c3aed] text-white shadow-lg shadow-purple-500/10'
-                    : 'text-slate-400 hover:text-white border border-transparent'
-                }`}
-              >
-                <span className="text-base">🧑‍🎓</span>
-                <span className="text-[10px] font-black uppercase tracking-wider">Student &amp; Seeker</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('recruiter')}
-                className={`py-2 px-3 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                  role === 'recruiter'
-                    ? 'bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-[#7c3aed] text-white shadow-lg shadow-purple-500/10'
-                    : 'text-slate-400 hover:text-white border border-transparent'
-                }`}
-              >
-                <span className="text-base">🚀</span>
-                <span className="text-[10px] font-black uppercase tracking-wider">Startup Aspirant</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Mode-specific content */}
         {activeMode === 'onboarding' ? (
@@ -535,9 +501,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
 
             {success && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 animate-bounce" />
-                <span className="font-semibold leading-relaxed">{success}</span>
+              <div className="p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-emerald-200 text-xs flex flex-col items-center text-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/10">
+                <LottieSuccessAnimation size={70} loop={false} />
+                <span className="font-bold text-emerald-300 text-xs sm:text-sm leading-relaxed">{success}</span>
               </div>
             )}
 
@@ -796,9 +762,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
 
             {success && (
-              <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 animate-bounce" />
-                <span className="font-semibold leading-relaxed">{success}</span>
+              <div className="mb-4 p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-emerald-200 text-xs flex flex-col items-center text-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/10">
+                <LottieSuccessAnimation size={70} loop={false} />
+                <span className="font-bold text-emerald-300 text-xs sm:text-sm leading-relaxed">{success}</span>
               </div>
             )}
 

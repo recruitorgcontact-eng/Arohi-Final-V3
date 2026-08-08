@@ -84,18 +84,29 @@ export default function TierSelectorGrid({
                 <div className="space-y-2 border-t border-[#231a4d] pt-3.5">
                   <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">Usage Limits:</span>
                   
-                  {/* Shared standard Voice Call and Token Usage limits across all paths */}
-                  <div className="space-y-1 bg-violet-500/10 p-2 rounded-xl border border-violet-500/20 mb-2">
-                    <div className="flex items-center gap-1.5 text-[9px] text-violet-300 font-extrabold uppercase">
-                      <span>⚡ Universal Allocations:</span>
+                  {/* Universal AI Allocations (AI Credits, AI Calls, Unlimited Chat) */}
+                  <div className="space-y-1.5 bg-gradient-to-br from-violet-950/60 to-purple-950/40 p-2.5 rounded-2xl border border-violet-500/30 mb-2">
+                    <div className="flex items-center justify-between gap-1 text-[9px] text-purple-300 font-extrabold uppercase">
+                      <span>⚡ AI Allocations:</span>
+                      <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-black">All Plans</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-200 font-extrabold">
-                      <Phone className="w-3 h-3 text-violet-400 shrink-0" />
-                      <span>{tier.callHoursText}</span>
+
+                    {/* AI Credits */}
+                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/40 px-2 py-1 rounded-xl border border-purple-500/25">
+                      <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>{tier.aiCreditsText}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-200 font-extrabold">
-                      <Cpu className="w-3 h-3 text-violet-400 shrink-0" />
-                      <span>{tier.tokenUsageText} Limit</span>
+
+                    {/* AI Calls */}
+                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/40 px-2 py-1 rounded-xl border border-purple-500/25">
+                      <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>{tier.aiCallsText}</span>
+                    </div>
+
+                    {/* Unlimited Chat */}
+                    <div className="flex items-center gap-1.5 text-[9px] text-emerald-300 font-black bg-emerald-950/60 px-2 py-1 rounded-xl border border-emerald-500/40 shadow-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-pulse" />
+                      <span className="tracking-tight">{tier.unlimitedChatText}</span>
                     </div>
                   </div>
 
@@ -160,19 +171,28 @@ export default function TierSelectorGrid({
           <div className="pt-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Premium Perks included in {selectedTier.name}:</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold text-slate-200">
-              {/* Highlight Call Hours & Token Limit directly */}
+              {/* Highlight AI Credits, Call Hours & Unlimited Chat directly */}
               <div className="flex items-start gap-1.5 bg-violet-950/40 p-2 rounded-lg border border-violet-800/30">
-                <Phone className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <Cpu className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="block text-white font-extrabold">{selectedTier.callHoursText}</span>
+                  <span className="block text-white font-extrabold">{selectedTier.aiCreditsText}</span>
+                  <span className="text-[9px] text-slate-400">Monthly AI language model compute allowance</span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-1.5 bg-violet-950/40 p-2 rounded-lg border border-violet-800/30">
+                <Phone className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="block text-white font-extrabold">{selectedTier.aiCallsText}</span>
                   <span className="text-[9px] text-slate-400">Included high-fidelity voice call duration</span>
                 </div>
               </div>
-              <div className="flex items-start gap-1.5 bg-violet-950/40 p-2 rounded-lg border border-violet-800/30">
-                <Cpu className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+
+              <div className="flex items-start gap-1.5 bg-emerald-950/50 p-2 rounded-lg border border-emerald-500/40 col-span-1 sm:col-span-2">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <span className="block text-white font-extrabold">{selectedTier.tokenUsageText} Limit</span>
-                  <span className="text-[9px] text-slate-400">Monthly AI language model allowance</span>
+                  <span className="block text-emerald-300 font-extrabold">{selectedTier.unlimitedChatText}</span>
+                  <span className="text-[9px] text-slate-300">Enjoy 24/7 unlimited AI text assistant conversations on all plans</span>
                 </div>
               </div>
 
