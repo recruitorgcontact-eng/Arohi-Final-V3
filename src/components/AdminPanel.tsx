@@ -56,15 +56,15 @@ export default function AdminPanel({
   // Core administrative database tables state
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => {
     const saved = localStorage.getItem('recruit_admin_users');
-    return saved ? JSON.parse(saved) : INITIAL_ADMIN_USERS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [payments, setPayments] = useState<PaymentTransaction[]>(() => {
     const saved = localStorage.getItem('recruit_admin_payments');
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [chatLogs, setChatLogs] = useState<ArohiChatLog[]>(() => {
     const saved = localStorage.getItem('recruit_admin_chats');
-    return saved ? JSON.parse(saved) : INITIAL_CHAT_LOGS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [voiceCalls, setVoiceCalls] = useState<any[]>([]);
 
@@ -97,15 +97,15 @@ export default function AdminPanel({
     enroll: number;
     admin: number;
   }>({
-    visit: 154820,
-    chat: 64291,
-    resume: 18349,
-    roadmap: 12482,
-    apply: 8304,
-    enroll: 1248,
-    admin: 120
+    visit: 0,
+    chat: 0,
+    resume: 0,
+    roadmap: 0,
+    apply: 0,
+    enroll: 0,
+    admin: 0
   });
-  const [liveUsersCount, setLiveUsersCount] = useState(18);
+  const [liveUsersCount, setLiveUsersCount] = useState(1);
   const [isSimulatingEvent, setIsSimulatingEvent] = useState<string | null>(null);
   const [searchUserQuery, setSearchUserQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -211,6 +211,9 @@ export default function AdminPanel({
         const data = await responseStats.json();
         if (data.cumulativeCounts) {
           setCumulativeCounts(data.cumulativeCounts);
+        }
+        if (data.liveUsers !== undefined) {
+          setLiveUsersCount(data.liveUsers);
         }
         if (data.activities && data.activities.length > 0) {
           setTelemetryLogs(data.activities.map((act: any, idx: number) => ({

@@ -355,10 +355,26 @@ export function getEntrySource(): string {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('recruit_user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  });
+  const [userData, setUserData] = useState<UserData | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('recruit_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        const cached = localStorage.getItem(`recruit_user_data_${u.uid}`);
+        if (cached) return JSON.parse(cached);
+      }
+    } catch (e) {}
+    return null;
+  });
   const [userMemory, setUserMemory] = useState<UserPersonalizationMemory | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Sync memory state automatically whenever userData changes
   useEffect(() => {
@@ -548,9 +564,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const data = await loadAndSyncUserData(firebaseUser, storedRole || undefined);
               setUserData(data);
             } else {
-              setUser(null);
-              setUserData(null);
-              localStorage.removeItem('recruit_user');
+              // Check if we already have a logged-in user in localStorage
+              const stored = localStorage.getItem('recruit_user');
+              if (stored) {
+                try {
+                  const cachedUser = JSON.parse(stored);
+                  setUser(cachedUser);
+                  const cachedDataStr = localStorage.getItem(`recruit_user_data_${cachedUser.uid}`);
+                  if (cachedDataStr) {
+                    setUserData(JSON.parse(cachedDataStr));
+                  }
+                } catch (e) {
+                  setUser(null);
+                  setUserData(null);
+                  localStorage.removeItem('recruit_user');
+                }
+              } else {
+                setUser(null);
+                setUserData(null);
+              }
             }
           } catch (err) {
             console.error("Error inside onAuthStateChanged:", err);

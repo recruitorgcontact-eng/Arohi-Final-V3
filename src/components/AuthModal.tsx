@@ -196,19 +196,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setSuccess(null);
     setIsLoading(true);
     try {
-      const uData = await signInWithGoogle(role);
-      if (checkProfileCompleteness(uData)) {
-        setSuccess('Successfully authenticated! Please complete your mandatory profile details next...');
-        setTimeout(() => {
-          setSuccess(null);
-          setActiveMode('onboarding');
-        }, 1500);
-      } else {
-        setSuccess(`Successfully authenticated as ${role === 'recruiter' ? 'Startup Aspirant' : 'Student & Seeker'}! Syncing...`);
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      }
+      await signInWithGoogle(role);
+      setSuccess(`Successfully authenticated! Welcome back.`);
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: any) {
       const errCode = err?.code || '';
       const errMsg = err?.message || '';
@@ -239,19 +231,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setSuccess(null);
     setIsLoading(true);
     try {
-      const uData = await signInWithApple(role);
-      if (checkProfileCompleteness(uData)) {
-        setSuccess('Successfully authenticated! Please complete your mandatory profile details next...');
-        setTimeout(() => {
-          setSuccess(null);
-          setActiveMode('onboarding');
-        }, 1500);
-      } else {
-        setSuccess(`Successfully authenticated as ${role === 'recruiter' ? 'Startup Aspirant' : 'Student & Seeker'}! Syncing...`);
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      }
+      await signInWithApple(role);
+      setSuccess(`Successfully authenticated! Welcome back.`);
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: any) {
       const errCode = err?.code || '';
       const errMsg = err?.message || '';
@@ -348,11 +332,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
 
       await confirmationResult.confirm(otp);
-      setSuccess('Successfully signed in with Phone! Let\'s complete your mandatory profile details...');
+      setSuccess('Successfully signed in with Phone! Welcome back.');
       setTimeout(() => {
-        setSuccess(null);
-        setActiveMode('onboarding');
-      }, 1500);
+        onClose();
+      }, 1000);
     } catch (err: any) {
       console.error(err);
       let errMsg = err.message || 'Invalid OTP code. Please try again.';
@@ -376,19 +359,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         if (!email || !password) {
           throw new Error('Please fill in all fields.');
         }
-        const uData = await signIn(email, password);
-        if (checkProfileCompleteness(uData)) {
-          setSuccess('Successfully signed in! Please complete your mandatory profile details...');
-          setTimeout(() => {
-            setSuccess(null);
-            setActiveMode('onboarding');
-          }, 1500);
-        } else {
-          setSuccess('Successfully signed in! Syncing data...');
-          setTimeout(() => {
-            onClose();
-          }, 1500);
-        }
+        await signIn(email, password);
+        setSuccess('Successfully signed in! Welcome back.');
+        setTimeout(() => {
+          onClose();
+        }, 1000);
       } else if (activeMode === 'signup') {
         if (!email || !password || !name) {
           throw new Error('Please fill in all fields.');
