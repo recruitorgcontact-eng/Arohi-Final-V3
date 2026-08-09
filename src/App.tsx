@@ -49,7 +49,7 @@ import { openRazorpayCheckout } from './lib/razorpay';
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
 import { Posting, Application, CategoryType } from './types';
-import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe } from 'lucide-react';
+import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 // Storage migration helper to seamlessly transition legacy 'recruit_*' keys to 'arohi_*'
 function getStorageItem(key: string): string | null {
@@ -634,6 +634,139 @@ export default function App() {
     buttonText?: string;
     badgeText?: string;
   } | null>(null);
+
+  // --- AROHI COINS WALLET & REFERRAL CODE SYSTEM ---
+  const [arohiCoinBalance, setArohiCoinBalance] = useState<number>(() => {
+    const saved = getStorageItem('arohi_coin_balance');
+    if (saved) {
+      const val = parseInt(saved, 10);
+      if (!isNaN(val)) return val;
+    }
+    return 0;
+  });
+
+  const [userReferralCode, setUserReferralCode] = useState<string>(() => {
+    const saved = getStorageItem('arohi_referral_code');
+    if (saved) return saved;
+    const savedPhone = getStorageItem('recruit_user_phone') || '';
+    const suffix = savedPhone ? savedPhone.slice(-4) : Math.floor(1000 + Math.random() * 9000).toString();
+    const newCode = `AROHI-${suffix}`;
+    setStorageItem('arohi_referral_code', newCode);
+    return newCode;
+  });
+
+  const [coinTransactions, setCoinTransactions] = useState<Array<{
+    id: string;
+    type: 'earned_cashback' | 'referrer_bonus' | 'redeemed_discount';
+    amount: number;
+    description: string;
+    date: string;
+  }>>(() => {
+    const saved = getStorageItem('arohi_coin_transactions');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
+  const [useCoinRedemption, setUseCoinRedemption] = useState<boolean>(false);
+
+  // Helper to add coin transaction and update balance
+  const addCoinTransaction = (
+    type: 'earned_cashback' | 'referrer_bonus' | 'redeemed_discount',
+    amount: number,
+    description: string
+  ) => {
+    setArohiCoinBalance((prev) => {
+      const nextBal = Math.max(0, prev + amount);
+      setStorageItem('arohi_coin_balance', nextBal.toString());
+      return nextBal;
+    });
+
+    const newTx = {
+      id: `tx-${Date.now()}`,
+      type,
+      amount,
+      description,
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+
+    setCoinTransactions((prev) => {
+      const updated = [newTx, ...prev];
+      setStorageItem('arohi_coin_transactions', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Auto-detect referral code from URL query parameter ?ref=AROHI-xxx
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlRef = params.get('ref') || params.get('coupon') || params.get('promo');
+    if (urlRef) {
+      const code = urlRef.trim().toUpperCase();
+      setCouponInput(code);
+      setStorageItem('arohi_pending_referral', code);
+    }
+  }, []);
+
+  // Coupon / Promo Code State for Subscriptions
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const handleApplyCoupon = () => {
+    const cleanCode = couponInput.trim().toUpperCase();
+    if (!cleanCode) {
+      setCouponError('Please enter a valid coupon code.');
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    setCouponSuccess('');
+
+    setTimeout(() => {
+      setIsApplyingCoupon(false);
+      // Valid Coupon Codes: JUNOON, JUNOON399, AROHI399, PRO399, or any AROHI- referral code
+      if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399' || cleanCode.startsWith('AROHI-')) {
+        const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
+        
+        // Instantly subscribe and activate plan
+        handleSubscribe('path1', chosenTier.name, `Coupon Code ${cleanCode}`);
+        setStorageItem('arohi_applied_coupon', cleanCode);
+
+        // Award 100% Cashback in Arohi Coins! (399 Coins for ₹399 plan)
+        const cashbackAmount = chosenTier.price; // 100% cashback
+        addCoinTransaction(
+          'earned_cashback',
+          cashbackAmount,
+          `100% First Month Cashback Bonus via promo code "${cleanCode}" (${chosenTier.name})`
+        );
+
+        setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! ${chosenTier.name} unlocked + 🪙 ${cashbackAmount} Arohi Coins (100% Cashback) credited!`);
+        setCouponInput('');
+
+        // Display celebration confirmation modal
+        setLottieSuccessData({
+          isOpen: true,
+          title: "Coupon & 100% Cashback Activated!",
+          message: `Congratulations! Your promo code "${cleanCode}" has been validated and applied. You unlocked ${chosenTier.name} at ₹0, and 🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} 100% Cashback Value) have been added to your wallet!`,
+          details: [
+            { label: "Coupon Code", value: `${cleanCode} (Verified)` },
+            { label: "Plan Activated", value: chosenTier.name },
+            { label: "Original Price", value: `₹${chosenTier.price}/mo` },
+            { label: "Final Payment", value: "₹0 / Month (Unlocked)" },
+            { label: "100% Cashback Reward", value: `🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} Value)` }
+          ],
+          buttonText: "Start Exploring Arohi AI",
+          badgeText: "100% CASHBACK UNLOCKED"
+        });
+      } else {
+        setCouponError('Invalid coupon code. Please check and try again.');
+      }
+    }, 400);
+  };
 
   useEffect(() => {
     if (checkoutPath) {
@@ -1545,6 +1678,9 @@ export default function App() {
             onTriggerTestLimitWarning={handleTriggerTestLimitWarning}
             warningHistoryLog={warningHistoryLog}
             onClearWarningHistory={handleClearWarningHistory}
+            arohiCoinBalance={arohiCoinBalance}
+            userReferralCode={userReferralCode}
+            coinTransactions={coinTransactions}
           />
         );
       case 'employer':
@@ -2717,42 +2853,138 @@ export default function App() {
               </div>
             </div>
 
+            {/* Coupon / Promo Code Entry Box */}
+            <div className="bg-[#181335] border border-[#2d235e] rounded-xl p-3 text-left space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Have a Coupon Code?</span>
+                </label>
+                <span className="text-[9px] text-purple-300 font-bold bg-purple-900/40 border border-purple-500/30 px-1.5 py-0.5 rounded">
+                  PROMO DISCOUNT
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => {
+                    setCouponInput(e.target.value);
+                    setCouponError('');
+                    setCouponSuccess('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyCoupon();
+                    }
+                  }}
+                  placeholder="Enter Coupon Code"
+                  className="w-full bg-[#0d0921] border border-[#3c2f73] rounded-lg px-3 py-2 text-xs font-mono font-bold text-white uppercase placeholder:text-slate-500 placeholder:font-sans focus:outline-none focus:border-amber-400 tracking-wider"
+                />
+                <button
+                  type="button"
+                  disabled={!couponInput.trim() || isApplyingCoupon}
+                  onClick={handleApplyCoupon}
+                  className="bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 disabled:opacity-50 text-white font-black text-xs px-3.5 py-2 rounded-lg cursor-pointer transition-all shrink-0 border border-amber-400/40 shadow-sm flex items-center gap-1"
+                >
+                  {isApplyingCoupon ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isApplyingCoupon ? 'Verifying...' : 'Apply Code'}</span>
+                </button>
+              </div>
+
+              {couponError && (
+                <p className="text-[10px] font-bold text-rose-400 flex items-center gap-1 mt-1">
+                  <AlertCircle className="w-3 h-3 shrink-0" /> {couponError}
+                </p>
+              )}
+              {couponSuccess && (
+                <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                  <CheckCircle2 className="w-3 h-3 shrink-0" /> {couponSuccess}
+                </p>
+              )}
+            </div>
+
+            {/* Arohi Coins Redemption Toggle */}
+            {arohiCoinBalance > 0 && (
+              <div className="bg-[#181335] border border-amber-500/40 rounded-xl p-2.5 text-left flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
+                  <div>
+                    <p className="text-xs font-black text-amber-300">Redeem Arohi Coins (Balance: 🪙 {arohiCoinBalance})</p>
+                    <p className="text-[10px] text-slate-300 font-medium">Apply up to 100 Coins for ₹100 instant discount!</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={useCoinRedemption}
+                  onChange={(e) => setUseCoinRedemption(e.target.checked)}
+                  className="w-4 h-4 accent-amber-500 cursor-pointer shrink-0"
+                />
+              </div>
+            )}
+
             <div className="space-y-2 pt-1">
               <button
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
                   const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
                   const title = `${chosenTier.name} Subscription`;
-                  const price = `₹${chosenTier.price}`;
+                  const coinsToRedeem = (useCoinRedemption && arohiCoinBalance > 0) ? Math.min(arohiCoinBalance, 100) : 0;
+                  const finalPayable = Math.max(0, chosenTier.price - coinsToRedeem);
+                  const priceText = coinsToRedeem > 0 ? `₹${finalPayable} (₹${coinsToRedeem} Off via Coins)` : `₹${chosenTier.price}`;
+                  
                   setCheckoutPath({
                     id: 'path1',
                     title: title,
-                    price: price
+                    price: priceText
                   });
                   setIsProcessingRazorpay(true);
                   try {
                     await openRazorpayCheckout({
-                      amountInRupees: chosenTier.price,
+                      amountInRupees: finalPayable,
                       planName: title,
                       userEmail: user?.email || 'elitetraderjunoon@gmail.com',
                       userName: user?.displayName || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
                         setIsProcessingRazorpay(false);
                         handleSubscribe('path1', title, 'Razorpay Standard Checkout');
+                        
+                        // Deduct redeemed coins if any
+                        if (coinsToRedeem > 0) {
+                          addCoinTransaction(
+                            'redeemed_discount',
+                            -coinsToRedeem,
+                            `Redeemed ${coinsToRedeem} Arohi Coins (₹${coinsToRedeem} discount on ${chosenTier.name})`
+                          );
+                        }
+
+                        // Award 100% First Month Cashback in Arohi Coins!
+                        addCoinTransaction(
+                          'earned_cashback',
+                          chosenTier.price,
+                          `100% First Month Cashback Reward on ${chosenTier.name}`
+                        );
+
                         setCheckoutPath(null);
                         setActiveTab('dashboard');
                         setLottieSuccessData({
                           isOpen: true,
-                          title: "Purchase & Subscription Confirmed!",
-                          message: `Your ${title} membership has been successfully verified and activated.`,
+                          title: "Purchase Confirmed + 100% Cashback Credited!",
+                          message: `Your ${title} membership is active! 🪙 ${chosenTier.price} Arohi Coins (100% Cashback) have been added to your wallet.`,
                           details: [
                             { label: "Payment ID", value: res.razorpay_payment_id || `pay_${Date.now()}` },
-                            { label: "Order ID", value: res.razorpay_order_id || `ord_${Date.now()}` },
-                            { label: "Plan Name", value: title },
-                            { label: "Status", value: "HMAC-SHA256 Verified" }
+                            { label: "Amount Paid", value: `₹${finalPayable}` },
+                            { label: "Coins Redeemed", value: coinsToRedeem > 0 ? `🪙 ${coinsToRedeem} (₹${coinsToRedeem} Off)` : "None" },
+                            { label: "100% Cashback Reward", value: `🪙 ${chosenTier.price} Arohi Coins` }
                           ],
                           buttonText: "Go to Pro Dashboard",
-                          badgeText: "RAZORPAY VERIFIED"
+                          badgeText: "100% CASHBACK CREDITED"
                         });
                       },
                       onError: (err) => {

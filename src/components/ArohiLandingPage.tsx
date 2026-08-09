@@ -145,10 +145,15 @@ export default function ArohiLandingPage({
               
               <a
                 href="#pricing-section"
-                className="inline-flex items-center gap-2 bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 font-extrabold text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="inline-flex flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-[#1f0f42] via-[#2c135c] to-[#1a0a38] hover:bg-slate-900 border-2 border-amber-400/80 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-6 rounded-2xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_8px_25px_rgba(245,158,11,0.25)] relative"
               >
-                <span>Get Arohi Premium – ₹399/month</span>
-                <span className="text-base">👑</span>
+                <div className="flex items-center gap-2">
+                  <span>Get Arohi Premium – ₹399/month</span>
+                  <span className="text-base">👑</span>
+                </div>
+                <span className="text-[9px] font-black text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-400/40 tracking-normal flex items-center gap-1">
+                  <span>🎁 100% Cashback in Arohi Coins + 5% Referral Bonus</span>
+                </span>
               </a>
             </div>
 
@@ -715,6 +720,24 @@ export default function ArohiLandingPage({
           </p>
         </div>
 
+        {/* 🎁 100% CASHBACK & REFERRAL SYSTEM BANNER */}
+        <div className="bg-gradient-to-r from-[#1e0f47] via-[#2c135d] to-[#1e0f47] border-2 border-amber-400/80 p-4 sm:p-5 rounded-2xl shadow-2xl text-left space-y-2 max-w-3xl mx-auto">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🪙</span>
+              <h4 className="text-sm font-black text-amber-300 uppercase tracking-wider">
+                100% Cashback + Referral Rewards System Active
+              </h4>
+            </div>
+            <span className="bg-amber-500 text-slate-950 font-black text-[9px] uppercase px-2.5 py-0.5 rounded-full tracking-widest shadow-md">
+              100% CASHBACK
+            </span>
+          </div>
+          <p className="text-xs text-slate-200 font-medium leading-relaxed">
+            Get <strong>100% Cashback in Arohi Coins</strong> on your first month's payment! (e.g. ₹399 = 🪙 399 Coins). Share your auto-generated referral code to give friends 100% cashback while earning <strong>5% cashback</strong> as Arohi Coins. Use up to <strong>100 Coins (₹100 discount)</strong> on future plan renewals!
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {PRICING_TIERS.map((tier, idx) => {
             const isPopular = tier.price === 699;
@@ -746,6 +769,9 @@ export default function ArohiLandingPage({
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-black text-white">₹{tier.price}</span>
                       <span className="text-[10px] text-slate-400 font-bold">/mo</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md text-[8.5px] font-black uppercase tracking-wide">
+                      <span>🪙 100% Cashback: Get {tier.price} Coins</span>
                     </div>
                   </div>
 

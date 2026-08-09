@@ -1066,17 +1066,20 @@ export default function WelcomeLanding({
         </div>
 
         {/* 5. Arohi AI Premium Upgrade Banner */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#210936] via-[#3a0a52] to-[#6b0d59] text-white shadow-xl border border-purple-500/20 flex flex-row items-center justify-between gap-3">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#210936] via-[#3a0a52] to-[#6b0d59] text-white shadow-xl border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Crown Watermark */}
           <Crown className="absolute right-12 bottom-[-15px] sm:right-24 sm:bottom-[-20px] w-28 sm:w-40 h-28 sm:h-40 text-purple-400/15 pointer-events-none" />
 
-          <div className="relative z-10 space-y-0.5 text-left min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+          <div className="relative z-10 space-y-1 text-left min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h4 className="text-sm sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">Arohi AI Premium</h4>
               <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 fill-amber-300 shrink-0" />
+              <span className="bg-amber-500/30 text-amber-300 border border-amber-400/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">
+                🎁 100% Cashback Offer
+              </span>
             </div>
-            <p className="text-[10px] sm:text-xs text-purple-200/90 font-normal leading-snug line-clamp-2 sm:line-clamp-none">
-              Unlock unlimited features, priority support &amp; more
+            <p className="text-[10px] sm:text-xs text-purple-200/90 font-medium leading-snug">
+              Get <strong>100% Cashback in Arohi Coins</strong> on 1st month payment + earn <strong>5% referral rewards</strong>!
             </p>
           </div>
 
@@ -1085,10 +1088,10 @@ export default function WelcomeLanding({
               setActiveTab('pricing');
               onEnter();
             }}
-            className="relative z-10 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-[#2a0845] hover:bg-slate-100 text-xs sm:text-sm font-bold tracking-tight shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            className="relative z-10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:from-amber-300 hover:to-yellow-200 text-xs sm:text-sm font-black tracking-tight shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
           >
-            <span>Upgrade Now</span>
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2a0845]" />
+            <span>Upgrade with 100% Cashback</span>
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950" />
           </button>
         </div>
 

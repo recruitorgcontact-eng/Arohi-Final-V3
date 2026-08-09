@@ -4,7 +4,8 @@ import {
   Bot, Briefcase, Landmark, ExternalLink, Sparkles, AlertCircle, 
   ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, Crown,
   Download, RefreshCw, Trophy, Calendar, Check, Play, GraduationCap, Map, Clock, Share2,
-  Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu
+  Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu,
+  Coins, Copy, Gift, Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { initialCourses } from '../data/coursesData';
@@ -32,6 +33,9 @@ interface UserDashboardProps {
   onTriggerTestLimitWarning?: () => void;
   warningHistoryLog?: Array<{ id: string; pathId: string; pathTitle: string; message: string; timestamp: string }>;
   onClearWarningHistory?: () => void;
+  arohiCoinBalance?: number;
+  userReferralCode?: string;
+  coinTransactions?: Array<{ id: string; type: 'earned_cashback' | 'referrer_bonus' | 'redeemed_discount'; amount: number; description: string; date: string }>;
 }
 
 export default function UserDashboard({ 
@@ -53,7 +57,10 @@ export default function UserDashboard({
   nextReminderIn = 15,
   onTriggerTestLimitWarning,
   warningHistoryLog = [],
-  onClearWarningHistory
+  onClearWarningHistory,
+  arohiCoinBalance = 0,
+  userReferralCode = 'AROHI-JUNOON',
+  coinTransactions = []
 }: UserDashboardProps) {
   
   const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
@@ -102,6 +109,7 @@ export default function UserDashboard({
   });
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [copiedRefText, setCopiedRefText] = useState<'code' | 'link' | null>(null);
   const [editedName, setEditedName] = useState('');
   const [editedPhone, setEditedPhone] = useState('');
   const [editedLocation, setEditedLocation] = useState('');
@@ -1144,6 +1152,141 @@ export default function UserDashboard({
           </div>
         </div>
       )}
+
+      {/* AROHI COINS & REFERRAL REWARDS WALLET CARD */}
+      <div className="bg-gradient-to-br from-[#120a2e] via-[#1a0f40] to-[#120a2e] border border-amber-500/50 p-5 sm:p-6 rounded-[2rem] text-left text-white shadow-2xl space-y-5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-amber-500/20 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 rounded-2xl flex items-center justify-center font-black shadow-lg shadow-amber-500/20 shrink-0">
+              <Coins className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>1 Arohi Coin = ₹1 INR Value</span>
+              </div>
+              <h3 className="text-lg font-black text-white flex items-center gap-2 mt-0.5">
+                <span>Arohi Coins & Referral Wallet</span>
+              </h3>
+            </div>
+          </div>
+
+          {/* Balance Pill */}
+          <div className="bg-[#1e1346] border-2 border-amber-400/60 rounded-2xl px-4 py-2 text-right shadow-inner flex items-center gap-3">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Available Balance</p>
+              <p className="text-xl font-black text-amber-300 flex items-center gap-1">
+                <span>🪙 {arohiCoinBalance}</span>
+                <span className="text-xs font-bold text-slate-300">Coins</span>
+              </p>
+            </div>
+            <div className="text-right border-l border-amber-500/30 pl-3">
+              <p className="text-[10px] font-bold text-slate-400">Discount Value</p>
+              <p className="text-sm font-black text-emerald-400">₹{arohiCoinBalance}.00</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Referral Code & Share Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-[#0f0928] border border-[#2e1d68] p-4 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <span>Your Unique Referral Code</span>
+              </label>
+              <span className="text-[9px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                AUTO-GENERATED
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-full bg-[#18103d] border border-[#442c94] rounded-xl px-3.5 py-2 text-sm font-mono font-black text-amber-300 tracking-wider flex items-center justify-between">
+                <span>{userReferralCode}</span>
+                <span className="text-[10px] font-sans text-slate-400 font-bold">100% Cashback Code</span>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(userReferralCode);
+                  setCopiedRefText('code');
+                  setTimeout(() => setCopiedRefText(null), 2000);
+                }}
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-3.5 py-2.5 rounded-xl cursor-pointer transition-all shrink-0 flex items-center gap-1 shadow-md"
+              >
+                {copiedRefText === 'code' ? <Check className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4 text-slate-950" />}
+                <span>{copiedRefText === 'code' ? 'Copied!' : 'Copy Code'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[10px] text-slate-400 font-medium">Share code with friends to earn 5% cashback</span>
+              <button
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}/?ref=${encodeURIComponent(userReferralCode)}`;
+                  navigator.clipboard.writeText(shareUrl);
+                  setCopiedRefText('link');
+                  setTimeout(() => setCopiedRefText(null), 2000);
+                }}
+                className="text-[11px] font-bold text-purple-300 hover:text-white flex items-center gap-1 underline cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                <span>{copiedRefText === 'link' ? 'Link Copied!' : 'Copy Referral Link'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Program Benefit Rules */}
+          <div className="bg-[#0f0928] border border-[#2e1d68] p-4 rounded-2xl space-y-2 text-xs">
+            <h4 className="font-extrabold text-amber-300 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <Gift className="w-4 h-4 text-amber-400" />
+              <span>How Referral & Cashback Works</span>
+            </h4>
+            <ul className="space-y-1.5 text-[11px] text-slate-300">
+              <li className="flex items-start gap-1.5">
+                <span className="text-amber-400 font-bold shrink-0">1.</span>
+                <span><strong>New User 100% Cashback:</strong> Friends using your code get <strong>100% Cashback</strong> in Arohi Coins on 1st month payment (e.g. ₹399 = 🪙 399 Coins!).</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-amber-400 font-bold shrink-0">2.</span>
+                <span><strong>5% Referrer Reward:</strong> You earn <strong>5% Cashback</strong> in Arohi Coins every time a friend activates a plan using your code.</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-amber-400 font-bold shrink-0">3.</span>
+                <span><strong>Monthly Plan Discount:</strong> Redeem up to <strong>100 Arohi Coins (₹100 Off)</strong> directly on every monthly plan payment.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Transaction History Ledger */}
+        {coinTransactions.length > 0 && (
+          <div className="bg-[#0f0928] border border-[#2e1d68] p-4 rounded-2xl space-y-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <span>Recent Arohi Coin Activity</span>
+            </h4>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar text-xs">
+              {coinTransactions.map((tx) => (
+                <div key={tx.id} className="bg-[#160d3b] border border-[#301f70] p-2 rounded-xl flex items-center justify-between text-slate-200">
+                  <div>
+                    <p className="font-bold text-white text-[11px]">{tx.description}</p>
+                    <p className="text-[9px] text-slate-400">{tx.date}</p>
+                  </div>
+                  <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
+                    tx.amount > 0 
+                      ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40' 
+                      : 'bg-rose-950/80 text-rose-400 border-rose-500/40'
+                  }`}>
+                    {tx.amount > 0 ? `+🪙 ${tx.amount}` : `-🪙 ${Math.abs(tx.amount)}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* MONTHLY SUBSCRIPTIONS CONTROL AREA */}
       <div id="monthly-subscriptions-anchor" className="bg-[#120e2b] border border-[#2d2163] p-4 sm:p-6 rounded-[2rem] text-left text-white shadow-2xl space-y-5">

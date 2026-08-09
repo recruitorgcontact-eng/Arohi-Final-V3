@@ -14,7 +14,9 @@ import {
   Smartphone,
   ChevronLeft,
   Fingerprint,
-  Check
+  Check,
+  Tag,
+  RefreshCw
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
@@ -49,6 +51,40 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [selectedPlanName, setSelectedPlanName] = useState<string>('Starter Plan');
   const [onboardName, setOnboardName] = useState('');
   const [onboardPhone, setOnboardPhone] = useState('');
+
+  // Coupon / Promo Code State
+  const [authCouponInput, setAuthCouponInput] = useState('');
+  const [authCouponError, setAuthCouponError] = useState('');
+  const [authCouponSuccess, setAuthCouponSuccess] = useState('');
+  const [isApplyingAuthCoupon, setIsApplyingAuthCoupon] = useState(false);
+
+  const handleApplyAuthCoupon = () => {
+    const cleanCode = authCouponInput.trim().toUpperCase();
+    if (!cleanCode) {
+      setAuthCouponError('Please enter a valid coupon code.');
+      return;
+    }
+
+    setIsApplyingAuthCoupon(true);
+    setAuthCouponError('');
+    setAuthCouponSuccess('');
+
+    setTimeout(() => {
+      setIsApplyingAuthCoupon(false);
+      if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399') {
+        setSelectedPlanName('Starter Plan');
+        try {
+          localStorage.setItem('arohi_applied_coupon', cleanCode);
+          localStorage.setItem('arohi_subscriptions', JSON.stringify({ path1: true }));
+        } catch (e) {}
+
+        setAuthCouponSuccess(`🎉 Coupon "${cleanCode}" applied! Starter Plan (₹399/mo) activated free.`);
+        setAuthCouponInput('');
+      } else {
+        setAuthCouponError('Invalid coupon code. Please check and try again.');
+      }
+    }, 400);
+  };
 
   const checkProfileCompleteness = (uData: any) => {
     if (!uData) return true; // Default to incomplete if no user data
@@ -858,6 +894,63 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* Coupon / Promo Code Input Space */}
+                    <div className="bg-[#070414] border border-[#231a4c] rounded-xl p-2.5 text-left space-y-1.5 mt-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[9px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                          <Tag className="w-3 h-3 text-amber-400" />
+                          <span>Have a Coupon Code?</span>
+                        </label>
+                        <span className="text-[8px] text-purple-300 font-bold bg-purple-900/40 border border-purple-500/30 px-1 py-0.2 rounded">
+                          PROMO
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={authCouponInput}
+                          onChange={(e) => {
+                            setAuthCouponInput(e.target.value);
+                            setAuthCouponError('');
+                            setAuthCouponSuccess('');
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleApplyAuthCoupon();
+                            }
+                          }}
+                          placeholder="Enter Coupon Code"
+                          className="w-full bg-[#0d0921] border border-[#3c2f73] rounded-lg px-2.5 py-1.5 text-[11px] font-mono font-bold text-white uppercase placeholder:text-slate-600 focus:outline-none focus:border-amber-400 tracking-wider"
+                        />
+                        <button
+                          type="button"
+                          disabled={!authCouponInput.trim() || isApplyingAuthCoupon}
+                          onClick={handleApplyAuthCoupon}
+                          className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 disabled:opacity-50 text-white font-black text-[10px] px-2.5 py-1.5 rounded-lg cursor-pointer transition-all shrink-0 border border-amber-400/40 flex items-center gap-1"
+                        >
+                          {isApplyingAuthCoupon ? (
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3" />
+                          )}
+                          <span>{isApplyingAuthCoupon ? '...' : 'Apply'}</span>
+                        </button>
+                      </div>
+
+                      {authCouponError && (
+                        <p className="text-[9px] font-bold text-rose-400 flex items-center gap-1 mt-0.5">
+                          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> {authCouponError}
+                        </p>
+                      )}
+                      {authCouponSuccess && (
+                        <p className="text-[9px] font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5 shrink-0" /> {authCouponSuccess}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { 
   Sparkles, Check, CheckCircle2, ShieldCheck, Phone, Cpu, Crown, 
-  ArrowRight, Lock, Zap, HelpCircle, Star, Award, Building, BookOpen, UserCheck 
+  ArrowRight, Lock, Zap, HelpCircle, Star, Award, Building, BookOpen, UserCheck,
+  Tag, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { PRICING_TIERS, PricingTier } from '../data/pricingData';
 
@@ -26,6 +27,42 @@ export default function PricingPage({
 }: PricingPageProps) {
   const [selectedTierIndex, setSelectedTierIndex] = useState<number>(1); // Professional Plan default (index 1, ₹699)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+
+  // Coupon / Promo Code State
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const handleApplyPageCoupon = () => {
+    const cleanCode = couponInput.trim().toUpperCase();
+    if (!cleanCode) {
+      setCouponError('Please enter a valid coupon code.');
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    setCouponSuccess('');
+
+    setTimeout(() => {
+      setIsApplyingCoupon(false);
+      if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399') {
+        const starterTier = PRICING_TIERS[0]; // Starter Plan ₹399
+        if (onSubscribe) {
+          onSubscribe('path1', starterTier.name, `Coupon Code ${cleanCode}`);
+        }
+        try {
+          localStorage.setItem('arohi_applied_coupon', cleanCode);
+        } catch (e) {}
+
+        setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! Starter Plan (₹399/mo) activated for free!`);
+        setCouponInput('');
+      } else {
+        setCouponError('Invalid coupon code. Please check and try again.');
+      }
+    }, 400);
+  };
 
   const selectedTier = PRICING_TIERS[selectedTierIndex];
 
@@ -75,6 +112,109 @@ export default function PricingPage({
           <span className="hidden sm:inline text-emerald-600">|</span>
           <span className="text-emerald-100 font-bold">No Hidden Charges • Instant UPI Activation</span>
         </div>
+
+        {/* 🎁 100% CASHBACK & REFERRAL SYSTEM BANNER */}
+        <div className="bg-gradient-to-r from-[#1b0e3e] via-[#281352] to-[#1b0e3e] border-2 border-amber-400/80 p-5 rounded-2xl shadow-2xl text-left space-y-3 max-w-2xl mx-auto relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-amber-500/30 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🪙</span>
+              <h3 className="text-sm sm:text-base font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>100% Cashback & Referral System</span>
+              </h3>
+            </div>
+            <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[9px] uppercase px-3 py-1 rounded-full tracking-wider shadow-md">
+              OFFICIAL OFFER ACTIVE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="bg-[#11092e] border border-[#37237a] p-3 rounded-xl space-y-1">
+              <p className="font-extrabold text-amber-300 flex items-center gap-1 text-[11px]">
+                <span>🎁 100% Cashback</span>
+              </p>
+              <p className="text-[10.5px] text-slate-300 font-medium leading-snug">
+                Get 100% cashback in <strong>Arohi Coins</strong> on 1st month plan purchase! (e.g. ₹399 = 🪙 399 Coins).
+              </p>
+            </div>
+
+            <div className="bg-[#11092e] border border-[#37237a] p-3 rounded-xl space-y-1">
+              <p className="font-extrabold text-purple-300 flex items-center gap-1 text-[11px]">
+                <span>🏷️ Referral Rewards</span>
+              </p>
+              <p className="text-[10.5px] text-slate-300 font-medium leading-snug">
+                Share your coupon code! New users get 100% cashback &amp; you get <strong>5% cashback</strong> as Arohi Coins.
+              </p>
+            </div>
+
+            <div className="bg-[#11092e] border border-[#37237a] p-3 rounded-xl space-y-1">
+              <p className="font-extrabold text-emerald-300 flex items-center gap-1 text-[11px]">
+                <span>🪙 Deduct Up To ₹100</span>
+              </p>
+              <p className="text-[10.5px] text-slate-300 font-medium leading-snug">
+                Deduct up to <strong>100 Arohi Coins (₹100 discount)</strong> directly on next month's payment!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Coupon Code Entry Space */}
+        <div className="max-w-md mx-auto w-full bg-gradient-to-r from-[#170e36] to-[#1e1346] border border-amber-500/40 rounded-2xl p-4 shadow-xl text-left space-y-2 mt-4">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+              <Tag className="w-4 h-4 text-amber-400" />
+              <span>Have a Coupon Code?</span>
+            </label>
+            <span className="text-[10px] font-bold text-purple-300 bg-purple-900/50 border border-purple-500/30 px-2 py-0.5 rounded-full">
+              PROMO ACTIVATION
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(e) => {
+                setCouponInput(e.target.value);
+                setCouponError('');
+                setCouponSuccess('');
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleApplyPageCoupon();
+                }
+              }}
+              placeholder="Enter Coupon Code"
+              className="w-full bg-[#0d0722] border border-[#3c2a85] rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-white uppercase placeholder:text-slate-500 placeholder:font-sans focus:outline-none focus:border-amber-400 tracking-wider"
+            />
+            <button
+              type="button"
+              disabled={!couponInput.trim() || isApplyingCoupon}
+              onClick={handleApplyPageCoupon}
+              className="bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 disabled:opacity-50 text-white font-black text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-all shrink-0 border border-amber-400/40 shadow-md flex items-center gap-1.5"
+            >
+              {isApplyingCoupon ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 text-amber-200" />
+              )}
+              <span>{isApplyingCoupon ? 'Verifying...' : 'Apply Code'}</span>
+            </button>
+          </div>
+
+          {couponError && (
+            <p className="text-xs font-bold text-rose-400 flex items-center gap-1.5 pt-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {couponError}
+            </p>
+          )}
+          {couponSuccess && (
+            <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 pt-1">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> {couponSuccess}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* 5 TIERS CARDS GRID */}
@@ -115,6 +255,9 @@ export default function PricingPage({
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-white">₹{tier.price}</span>
                     <span className="text-xs text-slate-300 font-bold">/month</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md text-[8.5px] font-black uppercase tracking-wide">
+                    <span>🪙 100% Cashback: Get {tier.price} Coins</span>
                   </div>
                   <span className="text-[9px] text-emerald-300 font-extrabold block">
                     GST Included • Instant Activation
