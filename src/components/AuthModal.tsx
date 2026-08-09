@@ -445,7 +445,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#04020b]/85 backdrop-blur-md animate-fade-in overflow-y-auto max-w-[100vw] overflow-x-hidden box-border">
+    <div className="fixed inset-0 z-[250] flex items-center justify-center p-3 sm:p-4 bg-[#04020b]/85 backdrop-blur-md animate-fade-in overflow-y-auto max-w-[100vw] overflow-x-hidden box-border">
       
       {/* Central Card Modal */}
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#140e34] to-[#0a061b] border-2 border-[#3b218f] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 shadow-[0_20px_50px_rgba(124,58,237,0.45)] my-auto mx-auto overflow-hidden box-border max-w-[calc(100vw-1.5rem)]">

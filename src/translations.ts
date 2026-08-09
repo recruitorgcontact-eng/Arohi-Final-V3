@@ -1729,7 +1729,7 @@ export function getWelcomeContent(lang: Language): string {
   }
   return `Welcome! I am **AROHI**, your universal AI Opportunity Advisor. 🌟
 
-I am here to assist you across the entire Arohi AI platform. We are proudly optimized to serve a wide range of **specialized audience categories**—from terrestrial **Students, Teachers, Scientists, Researchers, Doctors, Engineers, Entrepreneurs, and Public/Private Officials** to cosmic explorers like **Aliens and the Citizens of Mars & Jupiter**!
+I am here to assist you across the entire Arohi AI platform. We are proudly optimized to serve a wide range of **specialized audience categories**—from terrestrial **Students, Teachers, Scientists, Researchers, Doctors, Engineers, Advocates, Thespians, Artists, Entrepreneurs, and Public/Private Officials** to cosmic explorers like **Aliens and the Citizens of Mars & Jupiter**!
 
 Ask me anything about:
 * 💼 **Government & Corporate Job Openings** (for Job Seekers & Professionals)

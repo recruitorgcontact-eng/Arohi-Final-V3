@@ -32,7 +32,30 @@ interface UserProfile {
   activeGoal: string;
 }
 
-interface UserData {
+export interface InteractionLogItem {
+  id: string;
+  type: 'chat' | 'call' | 'activity' | 'application';
+  title: string;
+  summary: string;
+  date: string;
+}
+
+export interface UserPersonalizationMemory {
+  displayName: string;
+  email: string;
+  role: string;
+  profile: UserProfile;
+  summaryContext: string;
+  pastInteractionLogs: InteractionLogItem[];
+  activeGoal: string;
+  education: string;
+  location: string;
+  totalChatsCount: number;
+  totalCallsCount: number;
+  lastInteractionDate: string;
+}
+
+export interface UserData {
   uid: string;
   email: string;
   displayName: string;
@@ -79,9 +102,143 @@ interface UserData {
   updatedAt?: string;
 }
 
+export function buildPersonalizationMemory(data: UserData): UserPersonalizationMemory {
+  const displayName = data.displayName || data.profile?.name || data.email?.split('@')[0] || 'Honored Guest';
+  const email = data.email || '';
+  const role = data.role || 'candidate';
+  const profile: UserProfile = data.profile || {
+    name: displayName,
+    email: email,
+    phone: '',
+    location: '',
+    education: role === 'recruiter' ? 'Business Owner' : 'Graduate',
+    activeGoal: role === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+  };
+
+  const chats = data.arohiChats || [];
+  const calls = data.arohiCalls || [];
+  const activities = data.activities || [];
+  const apps = data.applications || [];
+
+  const interactionLogs: InteractionLogItem[] = [];
+
+  // Parse chat logs
+  chats.forEach((chat) => {
+    let summaryStr = '';
+    if (chat.messages && chat.messages.length > 0) {
+      const userMsgs = chat.messages.filter(m => m && m.role === 'user').map(m => m.content);
+      const assistantMsgs = chat.messages.filter(m => m && m.role === 'assistant').map(m => m.content);
+      const lastAssistant = assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1] : '';
+      
+      if (userMsgs.length > 0) {
+        summaryStr = `Topics discussed: "${userMsgs.slice(-3).join(' | ')}". ${lastAssistant ? `Arohi advised: "${lastAssistant.substring(0, 150)}..."` : ''}`;
+      } else {
+        summaryStr = `Chat session with ${chat.messages.length} messages.`;
+      }
+    } else {
+      summaryStr = `Chat session titled "${chat.title || 'Discussion'}".`;
+    }
+
+    interactionLogs.push({
+      id: chat.id || `chat_${Math.random()}`,
+      type: 'chat',
+      title: chat.title || 'Arohi AI Consultation',
+      summary: summaryStr,
+      date: chat.date || 'Recent'
+    });
+  });
+
+  // Parse voice call logs
+  calls.forEach((call) => {
+    const durationMin = Math.round((call.duration || 0) / 60);
+    interactionLogs.push({
+      id: call.id || `call_${Math.random()}`,
+      type: 'call',
+      title: `Voice Discussion (${durationMin > 0 ? durationMin + 'm' : 'Live'})`,
+      summary: call.summaryText || 'Dynamic Arohi AI audio consultation completed.',
+      date: call.date || 'Recent'
+    });
+  });
+
+  // Parse activity logs
+  activities.slice(0, 8).forEach((act) => {
+    interactionLogs.push({
+      id: act.id || `act_${Math.random()}`,
+      type: 'activity',
+      title: act.title || 'User Action',
+      summary: act.description || 'System interaction recorded.',
+      date: act.timestamp || 'Recent'
+    });
+  });
+
+  // Parse applications
+  apps.forEach((app: any) => {
+    const jobTitle = app.jobTitle || app.postingTitle || 'Job Position';
+    const company = app.companyName || 'Recruit India Portal';
+    interactionLogs.push({
+      id: app.id || `app_${Math.random()}`,
+      type: 'application',
+      title: `Applied to ${jobTitle}`,
+      summary: `Applied at ${company} (${app.status || 'Submitted'})`,
+      date: app.appliedDate || 'Recent'
+    });
+  });
+
+  // Build high-density system-level context string for Arohi AI Engine
+  let summaryContext = `=== AROHI PERSONALIZATION MEMORY ENGINE ===\n`;
+  summaryContext += `* User Name: ${displayName}\n`;
+  summaryContext += `* Primary Email: ${email}\n`;
+  summaryContext += `* Target Role: ${role === 'recruiter' ? 'Business Owner / Recruiter / Entrepreneur' : 'Jobseeker / Candidate / Student'}\n`;
+  if (profile.education) summaryContext += `* Education Background: ${profile.education}\n`;
+  if (profile.activeGoal) summaryContext += `* Active Career Goal: ${profile.activeGoal}\n`;
+  if (profile.location) summaryContext += `* Location: ${profile.location}\n`;
+  if (profile.phone) summaryContext += `* Contact Phone: ${profile.phone}\n`;
+
+  if (chats.length > 0) {
+    summaryContext += `\n* Past Text Discussions (${chats.length} total sessions):\n`;
+    chats.slice(0, 5).forEach((c, idx) => {
+      const topMsg = c.messages && c.messages.length > 0 ? c.messages[0].content : '';
+      summaryContext += `  ${idx + 1}. [${c.date || 'Recent'}] Title: "${c.title}" ${topMsg ? `| Initial query: "${topMsg.substring(0, 80)}..."` : ''}\n`;
+    });
+  }
+
+  if (calls.length > 0) {
+    summaryContext += `\n* Past Voice Call Sessions (${calls.length} total calls):\n`;
+    calls.slice(0, 4).forEach((call, idx) => {
+      summaryContext += `  ${idx + 1}. [${call.date || 'Recent'}] ${call.summaryText ? call.summaryText.substring(0, 120) : 'Interactive voice call'}\n`;
+    });
+  }
+
+  if (apps.length > 0) {
+    summaryContext += `\n* Job Applications Tracked: ${apps.slice(0, 4).map((a: any) => `${a.jobTitle || a.postingTitle || 'Position'} (${a.status || 'Submitted'})`).join(', ')}\n`;
+  }
+
+  if (data.enrolledCourses && data.enrolledCourses.length > 0) {
+    summaryContext += `\n* Enrolled Courses: ${data.enrolledCourses.join(', ')}\n`;
+  }
+
+  summaryContext += `\nPERSONALIZATION GUIDELINES: You are Arohi AI, a warm, highly empathetic mentor. Use the memory context above to personalize every answer. Greet ${displayName} naturally, remember their past queries and active goals (${profile.activeGoal}), and guide them step-by-step.`;
+
+  return {
+    displayName,
+    email,
+    role,
+    profile,
+    summaryContext,
+    pastInteractionLogs: interactionLogs,
+    activeGoal: profile.activeGoal,
+    education: profile.education,
+    location: profile.location,
+    totalChatsCount: chats.length,
+    totalCallsCount: calls.length,
+    lastInteractionDate: interactionLogs[0]?.date || new Date().toLocaleDateString('en-IN')
+  };
+}
+
 interface AuthContextType {
   user: User | null;
   userData: UserData | null;
+  userMemory: UserPersonalizationMemory | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, name: string, role?: 'candidate' | 'recruiter', phone?: string) => Promise<void>;
@@ -90,6 +247,7 @@ interface AuthContextType {
   signInWithPhone: (phoneNumber: string, recaptchaVerifier: any, role?: 'candidate' | 'recruiter') => Promise<any>;
   signOutUser: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  refreshPersonalizationMemory: () => Promise<UserPersonalizationMemory | null>;
   updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
   updateCareerProgress: (progress: {
     enrolledCourses?: string[];
@@ -199,7 +357,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [userMemory, setUserMemory] = useState<UserPersonalizationMemory | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Sync memory state automatically whenever userData changes
+  useEffect(() => {
+    if (userData) {
+      try {
+        const memory = buildPersonalizationMemory(userData);
+        setUserMemory(memory);
+      } catch (err) {
+        console.error("Error building user personalization memory:", err);
+      }
+    } else {
+      setUserMemory(null);
+    }
+  }, [userData]);
 
   // Helper to fetch or create user data with multiple fallback layers
   const loadAndSyncUserData = async (firebaseUser: any, role?: 'candidate' | 'recruiter'): Promise<UserData> => {
@@ -1074,10 +1247,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshPersonalizationMemory = async (): Promise<UserPersonalizationMemory | null> => {
+    if (!user) return null;
+    try {
+      const freshData = await loadAndSyncUserData({ uid: user.uid, email: user.email } as any);
+      if (freshData) {
+        setUserData(freshData);
+        const memory = buildPersonalizationMemory(freshData);
+        setUserMemory(memory);
+        return memory;
+      }
+    } catch (err) {
+      console.error("Failed to refresh user personalization memory:", err);
+    }
+    return userMemory;
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       userData,
+      userMemory,
       loading,
       signIn,
       signUp,
@@ -1086,6 +1276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithPhone,
       signOutUser,
       resetPassword,
+      refreshPersonalizationMemory,
       signInWithBiometrics,
       updateUserProfile,
       updateCareerProgress,

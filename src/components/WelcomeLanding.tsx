@@ -39,7 +39,10 @@ import {
   Building, 
   Network, 
   Bot, 
-  Share2
+  Share2,
+  Scale,
+  Theater,
+  Palette
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
@@ -403,6 +406,54 @@ export default function WelcomeLanding({
       arrowBgDark: 'bg-red-500/20 text-red-300',
       tabId: 'courses',
       prompt: 'Hello Arohi! As a Healthcare Professional, assist me with medical literature summaries, clinical trial updates, and health logs.'
+    },
+    {
+      key: 'advocates',
+      title: 'Advocates',
+      subtitle: 'Legal research & case studies',
+      icon: Scale,
+      colorLight: 'bg-amber-100 text-amber-700',
+      colorDark: 'bg-amber-500/20 text-amber-400',
+      borderLight: 'border-amber-200/60',
+      borderDark: 'border-amber-500/30',
+      titleLight: 'text-amber-900',
+      titleDark: 'text-amber-300',
+      arrowBgLight: 'bg-amber-50 text-amber-600',
+      arrowBgDark: 'bg-amber-500/20 text-amber-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am an Advocate / Legal Professional. Assist me with legal research summaries, statutory analysis, case precedents, and draft outlines.'
+    },
+    {
+      key: 'thespians',
+      title: 'Thespians',
+      subtitle: 'Scripts, monologues & drama arts',
+      icon: Theater,
+      colorLight: 'bg-purple-100 text-purple-700',
+      colorDark: 'bg-purple-500/20 text-purple-400',
+      borderLight: 'border-purple-200/60',
+      borderDark: 'border-purple-500/30',
+      titleLight: 'text-purple-900',
+      titleDark: 'text-purple-300',
+      arrowBgLight: 'bg-purple-50 text-purple-600',
+      arrowBgDark: 'bg-purple-500/20 text-purple-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am a Thespian / Performing Artist. Assist me with script analysis, monologue writing, character breakdown, and stage performance concepts.'
+    },
+    {
+      key: 'artists',
+      title: 'Artists',
+      subtitle: 'Visual arts & creative concepts',
+      icon: Palette,
+      colorLight: 'bg-pink-100 text-pink-700',
+      colorDark: 'bg-pink-500/20 text-pink-400',
+      borderLight: 'border-pink-200/60',
+      borderDark: 'border-pink-500/30',
+      titleLight: 'text-pink-900',
+      titleDark: 'text-pink-300',
+      arrowBgLight: 'bg-pink-50 text-pink-600',
+      arrowBgDark: 'bg-pink-500/20 text-pink-300',
+      tabId: 'courses',
+      prompt: 'Hello Arohi! I am an Artist / Creative Professional. Help me brainstorm visual concepts, artistic themes, portfolio strategies, and digital art tools.'
     },
     {
       key: 'engineers',

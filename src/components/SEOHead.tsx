@@ -55,7 +55,7 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
 export default function SEOHead({ activeTab, selectedState, selectedAudience, currentLanguage = 'en' }: SEOHeadProps) {
   useEffect(() => {
     let title = "Arohi AI - World & India's #1 Multilingual Opportunity Engine (arohiai.com)";
-    let desc = "Arohi AI empowers Students, Job Seekers, MSMEs, Teachers, Scientists, Engineers, and Doctors with live voice calling in 150+ languages globally and regionally.";
+    let desc = "Arohi AI empowers Students, Job Seekers, MSMEs, Teachers, Scientists, Engineers, Doctors, Advocates, Thespians, and Artists with live voice calling in 150+ languages globally and regionally.";
 
     if (selectedState) {
       title = `Arohi AI ${selectedState} Career & Opportunity Portal | Arohi AI (arohiai.com)`;

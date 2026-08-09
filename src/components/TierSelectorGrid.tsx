@@ -57,10 +57,10 @@ export default function TierSelectorGrid({
             <div
               key={idx}
               onClick={() => setSelectedTierIndex(idx)}
-              className={`p-5 rounded-[2rem] border-2 text-left cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+              className={`dark-card p-5 rounded-[2rem] border-2 text-left cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                 isSelected
                   ? 'bg-gradient-to-b from-[#1b103c] to-[#0b061c] border-[#a78bfa] shadow-[0_0_25px_rgba(167,139,250,0.3)] scale-[1.02]'
-                  : 'bg-[#100b28]/60 border-[#22174f] hover:border-[#3c2a85] hover:bg-[#130d32]/80'
+                  : 'bg-[#100b28] border-[#251b54] hover:border-[#3c2a85] hover:bg-[#130d32]'
               }`}
             >
               {isSelected && (
@@ -71,72 +71,72 @@ export default function TierSelectorGrid({
 
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">
+                  <span className="text-[10px] text-purple-300 font-extrabold uppercase tracking-wider block">
                     {tier.name}
                   </span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-black text-white">₹{tier.price}</span>
-                    <span className="text-[10px] text-slate-400 font-bold">/mo</span>
+                    <span className="text-[10px] text-slate-300 font-bold">/mo</span>
                   </div>
                 </div>
 
                 {/* Plan limits preview */}
-                <div className="space-y-2 border-t border-[#231a4d] pt-3.5">
-                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">Usage Limits:</span>
+                <div className="space-y-2 border-t border-[#2d2163] pt-3.5">
+                  <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest block">Usage Limits:</span>
                   
                   {/* Universal AI Allocations (AI Credits, AI Calls, Unlimited Chat) */}
-                  <div className="space-y-1.5 bg-gradient-to-br from-violet-950/60 to-purple-950/40 p-2.5 rounded-2xl border border-violet-500/30 mb-2">
+                  <div className="space-y-1.5 bg-gradient-to-br from-violet-950/80 to-purple-950/60 p-2.5 rounded-2xl border border-violet-500/40 mb-2">
                     <div className="flex items-center justify-between gap-1 text-[9px] text-purple-300 font-extrabold uppercase">
                       <span>⚡ AI Allocations:</span>
                       <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-black">All Plans</span>
                     </div>
 
                     {/* AI Credits */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/40 px-2 py-1 rounded-xl border border-purple-500/25">
+                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/60 px-2 py-1 rounded-xl border border-purple-500/30">
                       <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>{tier.aiCreditsText}</span>
+                      <span className="text-cyan-200">{tier.aiCreditsText}</span>
                     </div>
 
                     {/* AI Calls */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/40 px-2 py-1 rounded-xl border border-purple-500/25">
+                    <div className="flex items-center gap-1.5 text-[10px] text-white font-black bg-purple-900/60 px-2 py-1 rounded-xl border border-purple-500/30">
                       <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{tier.aiCallsText}</span>
+                      <span className="text-amber-200">{tier.aiCallsText}</span>
                     </div>
 
                     {/* Unlimited Chat */}
-                    <div className="flex items-center gap-1.5 text-[9px] text-emerald-300 font-black bg-emerald-950/60 px-2 py-1 rounded-xl border border-emerald-500/40 shadow-xs">
+                    <div className="flex items-center gap-1.5 text-[9px] text-emerald-200 font-black bg-emerald-950 px-2 py-1 rounded-xl border border-emerald-500/50 shadow-xs">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-pulse" />
-                      <span className="tracking-tight">{tier.unlimitedChatText}</span>
+                      <span className="tracking-tight text-emerald-100">{tier.unlimitedChatText}</span>
                     </div>
                   </div>
 
-                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Path Specific Perks:</span>
-                  <div className="space-y-1.5 text-[10px] text-slate-200 font-bold">
+                  <span className="text-[8px] text-slate-300 font-bold uppercase tracking-wider block">Path Specific Perks:</span>
+                  <div className="space-y-1.5 text-[10px] text-slate-100 font-bold">
                     {pathId === 'path1' && (
                       <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.atsScans}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.mockInterviews}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.jobMatches}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.atsScans}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mockInterviews}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.jobMatches}</span></div>
                       </>
                     )}
                     {pathId === 'path2' && (
                       <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.activeCourses}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.mentorHours}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.certificates}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.activeCourses}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mentorHours}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.certificates}</span></div>
                       </>
                     )}
                     {pathId === 'path3' && (
                       <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.msmeFilings}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.mudraChecks}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.startupReports}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.msmeFilings}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mudraChecks}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.startupReports}</span></div>
                       </>
                     )}
                     {pathId === 'path4' && (
                       <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.chapterDownloads}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-violet-400 shrink-0" /> <span className="truncate">{tierLimits.aiQueries}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.chapterDownloads}</span></div>
+                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.aiQueries}</span></div>
                       </>
                     )}
                   </div>

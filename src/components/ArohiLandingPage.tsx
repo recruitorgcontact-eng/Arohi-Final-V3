@@ -6,6 +6,7 @@ import {
   ChevronRight, Mic, Users, Heart, Zap, Compass, 
   MessageSquare, ChevronDown, ChevronUp, Share2, Star, 
   Shield, Clock, Globe, ArrowRight, Phone, Cpu,
+  Scale, Theater, Palette,
   Menu, X
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
@@ -303,6 +304,9 @@ export default function ArohiLandingPage({
             { label: "Scientists", icon: Sparkles, color: "text-yellow-400", border: "border-yellow-500/15 hover:border-yellow-500/30" },
             { label: "Researchers", icon: Clock, color: "text-cyan-400", border: "border-cyan-500/15 hover:border-cyan-500/30" },
             { label: "Doctors", icon: Heart, color: "text-rose-400", border: "border-rose-500/15 hover:border-rose-500/30" },
+            { label: "Advocates", icon: Scale, color: "text-amber-400", border: "border-amber-500/15 hover:border-amber-500/30" },
+            { label: "Thespians", icon: Theater, color: "text-purple-400", border: "border-purple-500/15 hover:border-purple-500/30" },
+            { label: "Artists", icon: Palette, color: "text-pink-400", border: "border-pink-500/15 hover:border-pink-500/30" },
             { label: "Engineers", icon: Zap, color: "text-emerald-400", border: "border-emerald-500/15 hover:border-emerald-500/30" },
             { label: "Entrepreneurs", icon: Compass, color: "text-amber-400", border: "border-amber-500/15 hover:border-amber-500/30" },
             { label: "Job Seekers", icon: Briefcase, color: "text-teal-400", border: "border-teal-500/15 hover:border-teal-500/30" },

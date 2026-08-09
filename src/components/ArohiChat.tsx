@@ -275,9 +275,11 @@ function parseMessageCallSummary(content: string) {
 }
 
 export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en' }: ArohiChatProps) {
-  const { user, userData } = useAuth();
+  const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
+  const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
+  const [isRefreshingMemory, setIsRefreshingMemory] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -2133,7 +2135,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           history: messages.map(m => ({ role: m.role, content: m.content })),
           file: fileToSend,
           language: language,
-          uid: user?.uid
+          uid: user?.uid,
+          systemContext: userMemory?.summaryContext
         })
       });
 
@@ -2688,7 +2691,16 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               </button>
 
               {activeMessageMenuId === 'header' && (
-                <div className="absolute right-0 top-11 w-48 bg-[#120c2b] border border-[#302166] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-11 w-52 bg-[#120c2b] border border-[#302166] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <button
+                    onClick={() => {
+                      setIsMemoryModalOpen(true);
+                      setActiveMessageMenuId(null);
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-[#211745] rounded-xl flex items-center gap-2"
+                  >
+                    <Brain className="w-3.5 h-3.5 text-amber-400" /> Personalization Memory
+                  </button>
                   <button
                     onClick={() => {
                       handleSummarizeChat();
@@ -5073,6 +5085,156 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* USER PERSONALIZATION MEMORY MANAGER MODAL */}
+      {isMemoryModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0f0a24] border border-[#3b2a80] rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#18103c] to-[#261559] px-6 py-4 border-b border-[#3b2a80] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/20 rounded-2xl border border-amber-500/40 text-amber-300">
+                  <Brain className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    User Personalization Manager
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      System Context Sync Active
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Arohi AI Memory State loaded from Firestore & AuthContext
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMemoryModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-[#3b2a80]/50 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-200">
+              {/* Profile Context Banner */}
+              <div className="bg-gradient-to-br from-[#1c1346] to-[#120a2e] p-4 rounded-2xl border border-[#3b2a80] space-y-3">
+                <div className="flex items-center justify-between border-b border-[#3b2a80]/60 pb-2">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Active Memory Profile</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setIsRefreshingMemory(true);
+                      await refreshPersonalizationMemory();
+                      setIsRefreshingMemory(false);
+                    }}
+                    disabled={isRefreshingMemory}
+                    className="flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-xl border border-amber-500/30 transition-all cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingMemory ? 'animate-spin' : ''}`} />
+                    <span>Sync Firestore</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400">User: </span>
+                    <span className="text-white font-semibold">{userMemory?.displayName || user?.displayName || 'Honored Guest'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Email: </span>
+                    <span className="text-white font-semibold">{userMemory?.email || user?.email || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Active Goal: </span>
+                    <span className="text-amber-300 font-semibold">{userMemory?.activeGoal || 'Career Upskilling'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Education: </span>
+                    <span className="text-white font-semibold">{userMemory?.education || 'Graduate'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Memory Metrics */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-3 bg-[#181138] rounded-2xl border border-[#3b2a80]/60">
+                  <div className="text-xl font-extrabold text-amber-300">{userMemory?.totalChatsCount || 0}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Text Conversations</div>
+                </div>
+                <div className="p-3 bg-[#181138] rounded-2xl border border-[#3b2a80]/60">
+                  <div className="text-xl font-extrabold text-emerald-400">{userMemory?.totalCallsCount || 0}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Voice Calls</div>
+                </div>
+                <div className="p-3 bg-[#181138] rounded-2xl border border-[#3b2a80]/60">
+                  <div className="text-xl font-extrabold text-purple-300">{userMemory?.pastInteractionLogs?.length || 0}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Recorded Logs</div>
+                </div>
+              </div>
+
+              {/* Past Interaction Logs */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <History className="w-4 h-4 text-amber-400" />
+                  Past Interaction Memory Logs ({userMemory?.pastInteractionLogs?.length || 0})
+                </h4>
+
+                {(!userMemory?.pastInteractionLogs || userMemory.pastInteractionLogs.length === 0) ? (
+                  <div className="p-4 rounded-2xl bg-[#140d30] border border-[#2b1f59] text-center text-xs text-slate-400">
+                    No past interaction logs recorded yet. Start chatting or call Arohi AI to create memory logs!
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    {userMemory.pastInteractionLogs.map((log) => (
+                      <div key={log.id} className="p-3 rounded-2xl bg-[#150e33] border border-[#2d1e5e] hover:border-amber-500/40 transition-all text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-white flex items-center gap-1.5">
+                            {log.type === 'chat' && <Sparkles className="w-3.5 h-3.5 text-purple-400" />}
+                            {log.type === 'call' && <Phone className="w-3.5 h-3.5 text-emerald-400" />}
+                            {log.type === 'activity' && <Zap className="w-3.5 h-3.5 text-amber-400" />}
+                            {log.type === 'application' && <Briefcase className="w-3.5 h-3.5 text-indigo-400" />}
+                            {log.title}
+                          </span>
+                          <span className="text-[10px] text-slate-400 bg-[#21174a] px-2 py-0.5 rounded-full">{log.date}</span>
+                        </div>
+                        <p className="text-slate-300 text-[11px] leading-relaxed line-clamp-2">{log.summary}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* System Level Prompt Preview */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-emerald-400" />
+                  Live System Context Memory Prompt
+                </h4>
+                <div className="p-3 bg-[#0a061a] border border-[#23174a] rounded-2xl text-[11px] font-mono text-slate-300 overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
+                  {userMemory?.summaryContext || 'Initializing user memory context...'}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-[#120a2e] px-6 py-3 border-t border-[#3b2a80] flex items-center justify-between">
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Encrypted & Persisted in Firestore Collection</span>
+              </span>
+              <button
+                onClick={() => setIsMemoryModalOpen(false)}
+                className="px-4 py-2 bg-gradient-to-r from-[#7c3aed] to-[#9333ea] hover:from-[#6d28d9] hover:to-[#7e22ce] text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                Close Memory Inspector
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -249,7 +249,7 @@ export const LottieSuccessModal: React.FC<LottieSuccessModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#03010a]/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[350] flex items-center justify-center p-4 bg-[#03010a]/85 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#130b2e] via-[#0d0721] to-[#060312] border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.3)] my-auto text-center overflow-hidden">
         
         {/* Top Decorative Laser */}

@@ -26,30 +26,47 @@ html.light, html.light body, body.light {
   color-scheme: light;
 }
 
-/* Ensure crisp, high contrast font visibility in light mode */
-html.light .text-slate-200,
-html.light .text-slate-300,
-html.light .text-slate-400,
-body.light .text-slate-200,
-body.light .text-slate-300,
-body.light .text-slate-400 {
-  color: #334155 !important;
+/* Ensure crisp, high contrast font visibility in light mode for light components */
+html.light :not(.dark-card) > .text-slate-200,
+html.light :not(.dark-card) > .text-slate-300,
+html.light :not(.dark-card) > .text-slate-400 {
+  color: #334155;
 }
 
-html.light .text-slate-500,
-body.light .text-slate-500 {
-  color: #475569 !important;
+/* Force dark-card containers to always maintain high contrast light text */
+.dark-card,
+.dark-card * {
+  color-scheme: dark !important;
 }
 
-html.light .text-white\/40,
-html.light .text-white\/50,
-html.light .text-white\/60,
-html.light .text-white\/70,
-body.light .text-white\/40,
-body.light .text-white\/50,
-body.light .text-white\/60,
-body.light .text-white\/70 {
-  color: #1e293b !important;
+html.light .dark-card .text-slate-100,
+body.light .dark-card .text-slate-100,
+.light .dark-card .text-slate-100 {
+  color: #f8fafc !important;
+}
+
+html.light .dark-card .text-slate-200,
+body.light .dark-card .text-slate-200,
+.light .dark-card .text-slate-200 {
+  color: #e2e8f0 !important;
+}
+
+html.light .dark-card .text-slate-300,
+body.light .dark-card .text-slate-300,
+.light .dark-card .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+html.light .dark-card .text-slate-400,
+body.light .dark-card .text-slate-400,
+.light .dark-card .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html.light .dark-card .text-white,
+body.light .dark-card .text-white,
+.light .dark-card .text-white {
+  color: #ffffff !important;
 }
 
 /* Force high contrast dark text inside light background cards/buttons */

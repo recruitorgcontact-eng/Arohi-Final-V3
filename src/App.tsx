@@ -2655,54 +2655,56 @@ export default function App() {
 
       {/* Force Signup & Minimum ₹399 Subscription Modal when 2-Day Free Trial Expires */}
       {isTrialExpired && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md animate-in fade-in duration-300 select-none">
-          <div className="bg-[#120e2a] border-2 border-amber-500/60 text-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-[0_0_60px_rgba(245,158,11,0.3)] relative overflow-hidden text-center animate-in zoom-in-95 duration-200">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500 via-purple-500 to-fuchsia-500"></div>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto select-none">
+          <div className="bg-[#120e2a] border-2 border-amber-500/60 text-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 space-y-4 shadow-[0_0_50px_rgba(245,158,11,0.25)] relative overflow-hidden text-center max-h-[92vh] flex flex-col my-auto box-border">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-purple-500 to-fuchsia-500"></div>
 
-            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 text-amber-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <span className="text-3xl">⏰</span>
-            </div>
-
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                Trial Period Ended
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-10 h-10 bg-amber-500/20 border border-amber-500/40 text-amber-400 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                <span className="text-xl">⏰</span>
               </div>
-              <h2 className="text-2xl font-black text-white">Your 2-Day Free Trial Has Expired</h2>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                To continue using Arohi AI services, voice calls, interactive roadmaps, career diagnostics, and MSME mentorship, please subscribe to our minimum <strong className="text-amber-300">₹399/month Starter Plan</strong>.
-              </p>
+              <div className="text-left">
+                <div className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  Trial Ended
+                </div>
+                <h2 className="text-lg font-black text-white leading-tight">Free Trial Has Expired</h2>
+              </div>
             </div>
 
-            <div className="bg-[#181335] border border-[#2d235e] rounded-2xl p-3 text-left space-y-2.5">
+            <p className="text-xs text-slate-300 font-medium leading-normal px-1">
+              Subscribe to <strong className="text-amber-300 font-bold">₹399/mo Starter Plan</strong> or higher to unlock full AI feature access.
+            </p>
+
+            <div className="bg-[#181335] border border-[#2d235e] rounded-xl p-2.5 text-left space-y-2">
               <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
-                Choose Subscription Plan
+                Select Your Plan
               </label>
 
-              <div className="space-y-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                 {PRICING_TIERS.map((tier, idx) => {
                   const isSelected = selectedModalPlan === idx;
                   return (
                     <div
                       key={tier.name}
                       onClick={() => setSelectedModalPlan(idx)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                      className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${
                         isSelected
-                          ? 'bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-purple-400 shadow-md text-white'
+                          ? 'bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-purple-400 shadow-md text-white'
                           : 'bg-[#100b26] border-[#291e54] hover:border-purple-500/50 text-slate-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                           isSelected ? 'border-purple-400 bg-purple-500 text-white' : 'border-slate-600'
                         }`}>
-                          {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                          {isSelected && <span className="text-[8px] font-bold">✓</span>}
                         </div>
                         <div>
-                          <p className="text-xs font-black leading-tight">{tier.name}</p>
-                          <p className="text-[9px] text-slate-400 font-medium mt-0.5">{tier.callHoursText} • {tier.tokenUsageText}</p>
+                          <p className="text-xs font-black leading-none">{tier.name}</p>
+                          <p className="text-[9px] text-slate-400 font-medium mt-0.5">{tier.callHoursText}</p>
                         </div>
                       </div>
-                      <span className={`text-xs font-black shrink-0 px-2.5 py-1 rounded-lg border ${
+                      <span className={`text-xs font-black shrink-0 px-2 py-0.5 rounded-md border ${
                         tier.price === 399
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           : isSelected
@@ -2717,7 +2719,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 pt-1">
               <button
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
@@ -2768,22 +2770,22 @@ export default function App() {
                     console.warn('Razorpay error fallback:', err);
                   }
                 }}
-                className="w-full bg-gradient-to-r from-amber-500 via-purple-600 to-fuchsia-600 hover:from-amber-400 hover:to-fuchsia-500 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-amber-500 via-purple-600 to-fuchsia-600 hover:from-amber-400 hover:to-fuchsia-500 text-white font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-[0_4px_20px_rgba(245,158,11,0.3)] cursor-pointer transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
               >
                 {isProcessingRazorpay ? (
                   <>
-                    <RefreshCw className="w-5 h-5 animate-spin text-white" />
-                    <span>Processing Payment Gateway...</span>
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                    <span>Launching Razorpay...</span>
                   </>
                 ) : (
-                  <span>💳 Subscribe to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
+                  <span>💳 Upgrade to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
                 )}
               </button>
 
               {!user && (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer"
+                  className="w-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] font-bold py-2 rounded-lg transition-all cursor-pointer"
                 >
                   Already a member? Sign In
                 </button>
