@@ -61,6 +61,12 @@ interface WelcomeLandingProps {
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
   onOpenAuth?: () => void;
+  hasActiveSubscription?: boolean;
+  isTrialActive?: boolean;
+  remainingHours?: number;
+  remainingMinutes?: number;
+  remainingSeconds?: number;
+  onUpgradeClick?: () => void;
 }
 
 export default function WelcomeLanding({ 
@@ -74,7 +80,13 @@ export default function WelcomeLanding({
   onShare,
   isDarkMode: propIsDarkMode,
   onToggleTheme: propToggleTheme,
-  onOpenAuth
+  onOpenAuth,
+  hasActiveSubscription = false,
+  isTrialActive = false,
+  remainingHours = 0,
+  remainingMinutes = 0,
+  remainingSeconds = 0,
+  onUpgradeClick
 }: WelcomeLandingProps) {
   const { user, userData } = useAuth();
   
@@ -711,6 +723,36 @@ export default function WelcomeLanding({
 
       {/* 2. Main Scrollable Container */}
       <main className="max-w-4xl mx-auto px-4 pt-4 space-y-6">
+
+        {/* Integrated 2-Day Free Trial Banner inside Front Screen UI */}
+        {!hasActiveSubscription && isTrialActive && (
+          <div className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
+            isDarkMode 
+              ? 'bg-gradient-to-r from-[#1d123d] via-[#140e30] to-[#241148] border-purple-500/40 text-white shadow-[0_8px_25px_rgba(124,58,237,0.25)]' 
+              : 'bg-gradient-to-r from-purple-900 via-indigo-900 to-fuchsia-900 border-purple-400/50 text-white shadow-purple-200'
+          }`}>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-center sm:text-left">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="font-black text-amber-300 uppercase tracking-wider text-[11px] sm:text-xs">🎁 2-Day Free Trial Active</span>
+              </div>
+              <span className="text-slate-400 hidden sm:inline">|</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-300 text-[11px] sm:text-xs">Time Remaining:</span>
+                <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded-lg border border-purple-400/40 text-amber-200 font-bold text-[11px] sm:text-xs shadow-inner">
+                  {Math.floor(remainingHours / 24) > 0 ? `${Math.floor(remainingHours / 24)}d ` : ''}{remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onUpgradeClick}
+              className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
+            >
+              Upgrade for Minimum ₹399/mo
+            </button>
+          </div>
+        )}
 
         {/* Hero Card ("Hello! I'm Arohi 👋") */}
         <div className={`relative rounded-2xl sm:rounded-3xl p-4 sm:p-5 transition-all border ${

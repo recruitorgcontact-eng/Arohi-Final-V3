@@ -2549,6 +2549,74 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   };
 }
 
+// Resilient API streaming helper with automatic fallback models for real-time response delivery
+async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, options: any) {
+  const modelsWithTools = [
+    'gemini-3.6-flash',
+    'gemini-flash-latest',
+    'gemini-3.1-flash-lite'
+  ];
+
+  const modelsGeneral = [
+    'gemini-3.6-flash',
+    'gemini-flash-latest',
+    'gemini-3.1-flash-lite'
+  ];
+
+  const hasTools = !!(options?.config?.tools || options?.tools);
+
+  if (hasTools) {
+    for (const model of modelsWithTools) {
+      try {
+        console.log(`Attempting generateContentStream WITH search tools on model: ${model}`);
+        const streamResponse = await aiClientInstance.models.generateContentStream({
+          ...options,
+          model: model,
+        });
+        return streamResponse;
+      } catch (err: any) {
+        const errStr = err?.message || String(err);
+        const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+        if (isQuotaError) {
+          console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Switching directly to smart AROHI fallback stream.`);
+          return null;
+        }
+        console.warn(`Stream model ${model} with tools failed. Trying next model...`);
+      }
+    }
+  }
+
+  let optionsWithoutTools = { ...options };
+  if (optionsWithoutTools.config?.tools) {
+    const { tools, ...restConfig } = optionsWithoutTools.config;
+    optionsWithoutTools.config = restConfig;
+  }
+  if (optionsWithoutTools.tools) {
+    delete optionsWithoutTools.tools;
+  }
+
+  for (const model of modelsGeneral) {
+    try {
+      console.log(`Attempting generateContentStream without tools on model: ${model}`);
+      const streamResponse = await aiClientInstance.models.generateContentStream({
+        ...optionsWithoutTools,
+        model: model,
+      });
+      return streamResponse;
+    } catch (err: any) {
+      const errStr = err?.message || String(err);
+      const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+      if (isQuotaError) {
+        console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Switching directly to smart AROHI fallback stream.`);
+        return null;
+      }
+      console.warn(`Stream model ${model} without tools failed. Trying next model...`);
+    }
+  }
+
+  return null;
+}
+
 const AROHI_SYSTEM_INSTRUCTION = `You are AROHI (India's AI Opportunity Advisor), the flagship intelligent assistant of Arohi AI (arohiai.com).
 Arohi AI is an AI-powered universal opportunity ecosystem designed to serve a highly diverse and inclusive spectrum of 20+ specialized audience categories:
 1. Students (1-10 CBSE & state syllabus, higher education, skill paths)
@@ -3372,6 +3440,206 @@ Construct this JSON strictly based on details discussed, or use standard profess
       response: getArohiFallbackResponse(messageText, file ? file.name : undefined),
       fallback: true
     });
+  }
+});
+
+// 1b. Real-Time High-Speed SSE Streaming Chat Endpoint
+app.post('/api/chat-stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  if (typeof (res as any).flushHeaders === 'function') {
+    (res as any).flushHeaders();
+  }
+
+  const sendChunk = (textChunk: string) => {
+    res.write(`data: ${JSON.stringify({ chunk: textChunk })}\n\n`);
+  };
+
+  const sendDone = (fullText?: string) => {
+    res.write(`data: ${JSON.stringify({ done: true, response: fullText })}\n\n`);
+    res.end();
+  };
+
+  const { message, history, file, language, uid, systemContext } = req.body || {};
+  const messageText = typeof message === 'string' ? message : (message ? String(message) : '');
+
+  if (!messageText.trim() && !file) {
+    const welcome = "Hello! I am **AROHI**, your AI opportunity advisor. How can I assist you today with education, careers, government schemes, or startups?";
+    sendChunk(welcome);
+    sendDone(welcome);
+    return;
+  }
+
+  logActivity('chat-stream', `User streaming conversation with AROHI AI [Lang: ${language || 'en'}]: "${messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText}"`);
+
+  let accumulatedResponse = '';
+
+  try {
+    if (aiClient) {
+      const formattedHistory = (history || [])
+        .filter((h: any) => h && h.content && typeof h.content === 'string' && h.content.trim().length > 0)
+        .map((h: any) => ({
+          role: h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content.trim() }]
+        }));
+
+      const userParts: any[] = [{ text: messageText || "Please analyze this file." }];
+      if (file && file.base64 && file.mimeType) {
+        userParts.push({
+          inlineData: {
+            data: file.base64,
+            mimeType: file.mimeType
+          }
+        });
+      }
+
+      let dynamicInstruction = AROHI_SYSTEM_INSTRUCTION;
+
+      if (uid) {
+        try {
+          const userSnap = await safeUserDb.get(uid);
+          if (userSnap.exists) {
+            const userData = userSnap.data();
+            const displayName = userData.displayName || '';
+            const profile = userData.profile || {};
+            const activeGoal = profile.activeGoal || '';
+            const education = profile.education || '';
+            
+            let memoryContext = `\n\n=== USER IDENTITY & PERSONALIZED PROFILE MEMORY ===`;
+            memoryContext += `\n* Name: ${displayName || 'Honored Guest'}`;
+            if (userData.email) memoryContext += `\n* Email: ${userData.email}`;
+            if (activeGoal) memoryContext += `\n* Active Career/MSME Goal: ${activeGoal}`;
+            if (education) memoryContext += `\n* Education Background: ${education}`;
+            if (profile.location) memoryContext += `\n* Location: ${profile.location}`;
+            if (profile.phone) memoryContext += `\n* Contact Phone: ${profile.phone}`;
+            
+            if (userData.arohiChats && userData.arohiChats.length > 0) {
+              memoryContext += `\n\n=== PAST TEXT CHAT CONVERSATIONS RECORDED ===`;
+              userData.arohiChats.forEach((chat: any) => {
+                memoryContext += `\n* Conversation [ID: ${chat.id}, Title: "${chat.title}", Date: ${chat.date || 'Recent'}]:`;
+                if (chat.messages && chat.messages.length > 0) {
+                  const userMsgs = chat.messages.filter((m: any) => m.role === 'user').map((m: any) => m.content);
+                  const lastAssistantMsg = chat.messages.filter((m: any) => m.role === 'assistant').slice(-1)[0]?.content || '';
+                  if (userMsgs.length > 0) {
+                    memoryContext += `\n  - User asked/discussed: "${userMsgs.join(' | ').slice(0, 400).replace(/\n/g, ' ')}"`;
+                  }
+                  if (lastAssistantMsg) {
+                    memoryContext += `\n  - Latest response summary: "${lastAssistantMsg.slice(0, 250).replace(/\n/g, ' ')}..."`;
+                  }
+                }
+              });
+            }
+
+            if (userData.arohiCalls && userData.arohiCalls.length > 0) {
+              memoryContext += `\n\n=== PAST VOICE CALLS RECORDED ===`;
+              userData.arohiCalls.forEach((call: any) => {
+                memoryContext += `\n* Voice Call [Date: ${call.date || 'Recent'}, Duration: ${call.duration || 0}s]:`;
+                if (call.summaryText) {
+                  memoryContext += `\n  - Summary: "${call.summaryText.replace(/\n/g, ' ')}"`;
+                }
+              });
+            }
+
+            memoryContext += `\n\nAROHI's MEMORY INSTRUCTIONS:
+1. PERSISTENT MEMORY RECALL: You are Arohi AI, endowed with long-term memory. You possess exact recall of the user's profile details (Name: ${displayName || 'User'}, Goal: ${activeGoal || 'Exploring opportunities'}, Education: ${education || 'N/A'}, Location: ${profile.location || 'N/A'}) and past text chats/voice calls listed above.
+2. PERSONALIZED CONTINUITY: Whenever the user asks what you remember, mentions a previous topic, or continues a conversation, warmly reference your memory, confirm your recall of their details, and offer proactive continuity.
+3. ADAPTIVE CONVERSATION: Naturally weave their name and career/educational goals into your responses without sounding artificial.`;
+            
+            dynamicInstruction += memoryContext;
+          }
+        } catch (memErr) {
+          console.error("Error loading user memory context in /api/chat-stream:", memErr);
+        }
+      }
+
+      if (systemContext && typeof systemContext === 'string') {
+        dynamicInstruction += `\n\n${systemContext}`;
+      }
+
+      const languageNames: Record<string, string> = {
+        hi: 'HINDI (हिंदी)',
+        or: 'ODIA (ଓଡ଼ିଆ)',
+        bn: 'BENGALI (বাংলা)',
+        te: 'TELUGU (తెలుగు)',
+        mr: 'MARATHI (मराठी)',
+        ta: 'TAMIL (தமிழ்)',
+        gu: 'GUJARATI (ગુજરાતી)',
+        ur: 'URDU (اردو)',
+        kn: 'KANNADA (ಕನ್ನಡ)',
+        ml: 'MALAYALAM (മലയാളം)',
+        pa: 'PUNJABI (ਪੰਜਾਬੀ)',
+        as: 'ASSAMESE (অসমীয়া)'
+      };
+
+      if (language && languageNames[language]) {
+        const langName = languageNames[language];
+        dynamicInstruction += `\n\n[USER INTERFACE LANGUAGE: ${langName}. Reply in ${langName} script or natural transliteration.]`;
+      } else {
+        dynamicInstruction += `\n\n[USER INTERFACE LANGUAGE: ENGLISH. Maintain default English unless regional script is used.]`;
+      }
+
+      if (messageText.toLowerCase().includes('resume') || messageText.toLowerCase().includes('cv') || messageText.toLowerCase().includes('biodata') || messageText.toLowerCase().includes('career')) {
+        dynamicInstruction += `\n\n[RESUME DIRECTIVE: If drafting a resume, append valid JSON wrapped in [RESUME_DOCX_DATA_START] and [RESUME_DOCX_DATA_END] at end.]`;
+      }
+
+      dynamicInstruction += `\n\n[UNLIMITED LONG-FORM RESPONSE DIRECTIVE: Output full unabridged answers.]`;
+
+      try {
+        const searchQuery = messageText || 'India latest news & opportunities';
+        const liveSearchData = await fetchGoogleNewsLive(searchQuery);
+        if (liveSearchData && liveSearchData.length > 0) {
+          const formattedData = liveSearchData.map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
+          const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH & NEWS GROUNDING DATA ===\n${formattedData}`;
+          dynamicInstruction += newsGroundingText;
+          if (userParts[0] && typeof userParts[0].text === 'string') {
+            userParts[0].text += `\n\n[SYSTEM GROUNDING DATA ATTACHED FROM REAL-TIME LIVE NEWS ENGINE]:${newsGroundingText}`;
+          }
+        }
+      } catch (newsErr) {
+        console.warn('Live search fetch error in /api/chat-stream:', newsErr);
+      }
+
+      const streamResponse = await generateContentStreamWithFallback(aiClient, {
+        contents: [
+          ...formattedHistory,
+          { role: 'user', parts: userParts }
+        ],
+        config: {
+          systemInstruction: dynamicInstruction,
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+          tools: [{ googleSearch: {} }]
+        }
+      });
+
+      if (streamResponse) {
+        for await (const chunk of streamResponse) {
+          if (chunk.text) {
+            accumulatedResponse += chunk.text;
+            sendChunk(chunk.text);
+          }
+        }
+        sendDone(accumulatedResponse);
+        return;
+      }
+    }
+
+    // High-speed simulated typewriter fallback if aiClient stream unavailable or quota limit hit
+    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined);
+    const chunkSize = 8;
+    for (let i = 0; i < fallbackText.length; i += chunkSize) {
+      const piece = fallbackText.slice(i, i + chunkSize);
+      accumulatedResponse += piece;
+      sendChunk(piece);
+      await new Promise((r) => setTimeout(r, 12));
+    }
+    sendDone(accumulatedResponse);
+  } catch (err: any) {
+    console.error('Error in /api/chat-stream:', err);
+    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined);
+    sendChunk(fallbackText);
+    sendDone(fallbackText);
   }
 });
 

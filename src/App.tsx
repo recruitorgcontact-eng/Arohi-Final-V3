@@ -1677,6 +1677,18 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         onOpenAuth={() => setIsAuthModalOpen(true)}
+        hasActiveSubscription={hasActiveSubscription}
+        isTrialActive={isTrialActive}
+        remainingHours={remainingHours}
+        remainingMinutes={remainingMinutes}
+        remainingSeconds={remainingSeconds}
+        onUpgradeClick={() => {
+          setCheckoutPath({
+            id: 'path1',
+            title: 'Starter Plan - Minimum ₹399 Subscription',
+            price: '₹399/mo'
+          });
+        }}
       />
     );
   };
@@ -2570,6 +2582,18 @@ export default function App() {
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
           onOpenAuth={() => setIsAuthModalOpen(true)}
+          hasActiveSubscription={hasActiveSubscription}
+          isTrialActive={isTrialActive}
+          remainingHours={remainingHours}
+          remainingMinutes={remainingMinutes}
+          remainingSeconds={remainingSeconds}
+          onUpgradeClick={() => {
+            setCheckoutPath({
+              id: 'path1',
+              title: 'Starter Plan - Minimum ₹399 Subscription',
+              price: '₹399/mo'
+            });
+          }}
         />
 
         {/* Floating Chat Overlay Container */}
@@ -2626,32 +2650,6 @@ export default function App() {
       <SEOHead activeTab={activeTab} selectedState={selectedState} currentLanguage={language} />
 
       {/* 1. Brand Header (Removed as per user request) */}
-
-      {/* 2-Day Free Trial Active Banner */}
-      {!hasActiveSubscription && isTrialActive && (
-        <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-fuchsia-950 border-b border-purple-500/30 px-4 py-2 text-center text-xs font-semibold text-white flex flex-wrap items-center justify-center gap-3 shadow-lg relative z-30">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-            <span className="font-black text-amber-300 uppercase tracking-wider">🎁 2-Day Free Trial Active</span>
-            <span className="text-slate-300">| Time Remaining:</span>
-            <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded border border-purple-400/40 text-amber-200 font-bold shadow-inner">
-              {Math.floor(remainingHours / 24)}d {remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              setCheckoutPath({
-                id: 'path1',
-                title: 'Starter Plan - Minimum ₹399 Subscription',
-                price: '₹399/mo'
-              });
-            }}
-            className="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
-          >
-            Upgrade for Minimum ₹399/mo
-          </button>
-        </div>
-      )}
 
       {/* Force Signup & Minimum ₹399 Subscription Modal when 2-Day Free Trial Expires */}
       {isTrialExpired && (
@@ -2973,6 +2971,41 @@ export default function App() {
 
       {/* Main Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+        {/* Integrated 2-Day Free Trial Banner inside Main Screen UI for non-home tabs */}
+        {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && (
+          <div className={`mb-6 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
+            isDarkMode 
+              ? 'bg-gradient-to-r from-[#1d123d] via-[#140e30] to-[#241148] border-purple-500/40 text-white shadow-[0_8px_25px_rgba(124,58,237,0.25)]' 
+              : 'bg-gradient-to-r from-purple-900 via-indigo-900 to-fuchsia-900 border-purple-400/50 text-white shadow-purple-200'
+          }`}>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-center sm:text-left">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="font-black text-amber-300 uppercase tracking-wider text-[11px] sm:text-xs">🎁 2-Day Free Trial Active</span>
+              </div>
+              <span className="text-slate-400 hidden sm:inline">|</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-300 text-[11px] sm:text-xs">Time Remaining:</span>
+                <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded-lg border border-purple-400/40 text-amber-200 font-bold text-[11px] sm:text-xs shadow-inner">
+                  {Math.floor(remainingHours / 24) > 0 ? `${Math.floor(remainingHours / 24)}d ` : ''}{remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCheckoutPath({
+                  id: 'path1',
+                  title: 'Starter Plan - Minimum ₹399 Subscription',
+                  price: '₹399/mo'
+                });
+              }}
+              className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
+            >
+              Upgrade for Minimum ₹399/mo
+            </button>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

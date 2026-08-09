@@ -24,6 +24,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  isStreaming?: boolean;
 }
 
 interface ChatHistory {
@@ -2124,8 +2125,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       return;
     }
 
+    const streamingMsgId = (Date.now() + 1).toString();
+    const initialAssistantMessage: Message = {
+      id: streamingMsgId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages((prev) => [...prev, initialAssistantMessage]);
+    setIsLoading(true);
+
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2140,22 +2153,46 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         })
       });
 
-      const data = await response.json().catch(() => ({}));
-      
-      const responseText = data.response || data.reply || (data.error ? `I encountered an issue: ${data.error}. How else can I assist you with career and educational opportunities?` : null);
-
-      if (!responseText) {
-        throw new Error(data.error || 'API server error');
+      if (!response.body) {
+        throw new Error('No streaming response body available');
       }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseText,
-        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulatedText = '';
+      let buffer = '';
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6).trim();
+            if (!dataStr) continue;
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.chunk) {
+                accumulatedText += data.chunk;
+                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, content: accumulatedText } : m));
+              } else if (data.done && data.response && !accumulatedText) {
+                accumulatedText = data.response;
+                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, content: accumulatedText } : m));
+              }
+            } catch (e) {
+              console.error('Error parsing SSE json:', e);
+            }
+          }
+        }
+      }
+
+      // Mark streaming complete
+      setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, isStreaming: false } : m));
 
       // Sync assistant response to admin portal
       try {
@@ -2166,7 +2203,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             userEmail: uEmail,
             userName: uName,
             sender: 'arohi',
-            text: data.response,
+            text: accumulatedText,
             topic: activeTopic
           })
         });
@@ -2174,19 +2211,18 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         console.error('Error syncing assistant response to admin:', e);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message stream:', error);
       // Fallback
       setTimeout(() => {
         const fallbackText = `I apologize, but I had trouble connecting to the server. Please check your network connection or try again in a moment.
 
 As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs board** or **Government Schemes** section to explore the latest live options for your educational background!`;
 
-        setMessages((prev) => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
+        setMessages((prev) => prev.map(m => m.id === streamingMsgId ? {
+          ...m,
           content: fallbackText,
-          timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-        }]);
+          isStreaming: false
+        } : m));
 
         // Sync fallback response to admin portal
         try {
@@ -2204,7 +2240,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
         } catch (e) {
           // ignore
         }
-      }, 1000);
+      }, 500);
     } finally {
       setIsLoading(false);
     }
@@ -2793,7 +2829,21 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                   <div className={`prose prose-invert prose-p:text-slate-100 prose-p:leading-relaxed prose-li:text-slate-100 prose-strong:text-[#c084fc] prose-strong:font-bold prose-headings:text-white max-w-none text-sm sm:text-base leading-relaxed ${
                     msg.role === 'assistant' ? 'text-slate-100 font-sans tracking-wide space-y-3' : 'text-white'
                   }`}>
-                    {renderMarkdown(parsed.cleanedContent)}
+                    {msg.role === 'assistant' && msg.isStreaming && !parsed.cleanedContent ? (
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-violet-300 py-1">
+                        <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin shrink-0">
+                          <Sparkles className="w-2.5 h-2.5" />
+                        </div>
+                        <span className="animate-pulse">AROHI is analyzing and formulating response...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {renderMarkdown(parsed.cleanedContent)}
+                        {msg.role === 'assistant' && msg.isStreaming && (
+                          <span className="inline-block w-2 h-4 ml-1 bg-amber-400 animate-pulse rounded-xs align-middle" />
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {parsed.resumeData && (
@@ -2917,7 +2967,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
             );
           })}
 
-          {isLoading && (
+          {isLoading && !messages.some(m => m.isStreaming) && (
             <div className="flex items-center gap-3 max-w-4xl mx-auto w-full py-4 text-slate-400">
               <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin">
                 <Sparkles className="w-4 h-4" />
