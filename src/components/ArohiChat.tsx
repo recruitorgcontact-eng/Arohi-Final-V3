@@ -545,7 +545,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           keyTakeaways: data.keyTakeaways || [],
           documentName: data.documentName || docResearchFile?.name || 'Research Report',
           mode: data.mode || docResearchMode,
-          provider: data.provider || 'gemini-3.6-flash',
+          provider: data.provider || 'gemini-2.5-flash',
         };
         setDocResearchReport(reportObj);
         setDocResearchHistory(prev => [
@@ -607,7 +607,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           routeInfo: data.routeInfo || null,
           centerCoord: data.centerCoord || { lat: 28.6139, lng: 77.2090, zoom: 12 },
           mode: data.mode || mapsMode,
-          provider: data.provider || 'gemini-3.6-flash-google-maps'
+          provider: data.provider || 'gemini-2.5-flash-google-maps'
         };
         setMapsReport(reportObj);
         setMapsHistory(prev => [
@@ -661,7 +661,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           editedContent: data.editedContent || '',
           multiStepPipeline: data.multiStepPipeline || [],
           mode: data.mode || intelligenceMode,
-          provider: data.provider || 'gemini-3.6-flash'
+          provider: data.provider || 'gemini-2.5-flash'
         });
       }
     } catch (e) {

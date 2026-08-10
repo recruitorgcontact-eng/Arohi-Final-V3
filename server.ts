@@ -2215,14 +2215,20 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   const modelsWithTools = [
     'gemini-3.6-flash',
     'gemini-flash-latest',
-    'gemini-3.1-flash-lite'
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ];
 
   // General models to try
   const modelsGeneral = [
     'gemini-3.6-flash',
     'gemini-flash-latest',
-    'gemini-3.1-flash-lite'
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ];
 
   let lastError = null;
@@ -2313,13 +2319,19 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
   const modelsWithTools = [
     'gemini-3.6-flash',
     'gemini-flash-latest',
-    'gemini-3.1-flash-lite'
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ];
 
   const modelsGeneral = [
     'gemini-3.6-flash',
     'gemini-flash-latest',
-    'gemini-3.1-flash-lite'
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ];
 
   const hasTools = !!(options?.config?.tools || options?.tools);
@@ -3359,32 +3371,101 @@ app.post('/api/chat-stream', async (req, res) => {
         console.warn('Live search fetch error in /api/chat-stream:', newsErr);
       }
 
-      const streamResponse = await generateContentStreamWithFallback(aiClient, {
-        contents: [
-          ...formattedHistory,
-          { role: 'user', parts: userParts }
-        ],
-        config: {
-          systemInstruction: dynamicInstruction,
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-          tools: [{ googleSearch: {} }]
-        }
-      });
+      let streamedSuccess = false;
 
-      if (streamResponse) {
-        for await (const chunk of streamResponse) {
-          if (chunk.text) {
-            accumulatedResponse += chunk.text;
-            sendChunk(chunk.text);
+      // 1. First attempt: Stream with Google Search tools
+      try {
+        const streamResponse = await generateContentStreamWithFallback(aiClient, {
+          contents: [
+            ...formattedHistory,
+            { role: 'user', parts: userParts }
+          ],
+          config: {
+            systemInstruction: dynamicInstruction,
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+            tools: [{ googleSearch: {} }]
+          }
+        });
+
+        if (streamResponse) {
+          for await (const chunk of streamResponse) {
+            if (chunk.text) {
+              accumulatedResponse += chunk.text;
+              sendChunk(chunk.text);
+              streamedSuccess = true;
+            }
+          }
+          if (streamedSuccess) {
+            sendDone(accumulatedResponse);
+            return;
           }
         }
-        sendDone(accumulatedResponse);
-        return;
+      } catch (streamErr: any) {
+        console.warn('Stream with search tools failed, attempting non-tool stream:', streamErr?.message || streamErr);
+      }
+
+      // 2. Second attempt: Stream WITHOUT tools
+      if (!streamedSuccess) {
+        try {
+          const streamResponseNoTools = await generateContentStreamWithFallback(aiClient, {
+            contents: [
+              ...formattedHistory,
+              { role: 'user', parts: userParts }
+            ],
+            config: {
+              systemInstruction: dynamicInstruction,
+              temperature: 0.7,
+              maxOutputTokens: 8192,
+            }
+          });
+
+          if (streamResponseNoTools) {
+            for await (const chunk of streamResponseNoTools) {
+              if (chunk.text) {
+                accumulatedResponse += chunk.text;
+                sendChunk(chunk.text);
+                streamedSuccess = true;
+              }
+            }
+            if (streamedSuccess) {
+              sendDone(accumulatedResponse);
+              return;
+            }
+          }
+        } catch (streamNoToolsErr: any) {
+          console.warn('Stream without tools failed, attempting non-streaming generateContent fallback:', streamNoToolsErr?.message || streamNoToolsErr);
+        }
+      }
+
+      // 3. Third attempt: Non-streaming generateContentWithFallback
+      if (!streamedSuccess) {
+        try {
+          const response = await generateContentWithFallback(aiClient, {
+            contents: [
+              ...formattedHistory,
+              { role: 'user', parts: userParts }
+            ],
+            config: {
+              systemInstruction: dynamicInstruction,
+              temperature: 0.7,
+              maxOutputTokens: 8192,
+            }
+          });
+
+          if (response && response.text) {
+            accumulatedResponse = response.text;
+            sendChunk(accumulatedResponse);
+            sendDone(accumulatedResponse);
+            return;
+          }
+        } catch (nonStreamErr: any) {
+          console.error('Non-streaming generateContent fallback also failed:', nonStreamErr);
+        }
       }
     }
 
-    // High-speed simulated typewriter fallback if aiClient stream unavailable or quota limit hit
+    // High-speed simulated typewriter fallback if aiClient stream/api unavailable or quota limit hit
     const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined);
     const chunkSize = 8;
     for (let i = 0; i < fallbackText.length; i += chunkSize) {
@@ -3867,7 +3948,7 @@ app.post('/api/doc-research-studio', async (req, res) => {
 
     let reportMarkdown = '';
     let keyTakeaways: string[] = [];
-    let provider = 'gemini-3.6-flash-google-search';
+    let provider = 'gemini-2.5-flash-google-search';
     let googleSearchSources: Array<{ title: string; link: string; source: string }> = [];
 
     // Fetch live Google Search & News data for real-time web fact checking
@@ -4066,7 +4147,7 @@ app.post('/api/maps-location-studio', async (req, res) => {
       polylinePath?: Array<{ lat: number; lng: number }>;
     } | null = null;
     let centerCoord = { lat: 28.6139, lng: 77.2090, zoom: 12 }; // Default to New Delhi
-    let provider = 'gemini-3.6-flash-google-maps';
+    let provider = 'gemini-2.5-flash-google-maps';
 
     // Build specialized system prompt for Maps Grounding
     const systemInstruction = `You are AROHI AI Feature #7: Real-Time Google Maps & Routes Engine. Language: ${language}.
@@ -4223,7 +4304,7 @@ app.post('/api/gemini-intelligence-studio', async (req, res) => {
     let reportMarkdown = '';
     let editedContent = '';
     let multiStepPipeline: Array<{ stepNumber: number; title: string; status: 'completed' | 'in_progress' | 'planned'; details: string }> = [];
-    let provider = 'gemini-3.6-flash';
+    let provider = 'gemini-2.5-flash';
 
     const systemInstruction = `You are AROHI AI: Intelligence Engine. Language: ${language}.
 Your capability is to embed Arohi AI intelligence to analyze content, make smart edits, and execute multi-step complex tasks.
@@ -5372,6 +5453,44 @@ function getArohiFallbackResponse(userPrompt: string, fileName?: string): string
     fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! As **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
   }
 
+  if (p.includes('japanese') || p.includes('japan')) {
+    return fileIntro + `ようこそ！ (Yokoso!) I am **AROHI**, your AI Opportunity Advisor! 🌟
+
+こんにちは！(Konnichiwa!) How can I assist you today? Whether you are exploring career opportunities, global study programs, business ideas, or general questions, I am here to help you in Japanese or English!`;
+  }
+
+  if (p.includes('hindi') || p.includes('namaste')) {
+    return fileIntro + `नमस्ते! 🙏 मैं **AROHI** हूँ, आपकी AI अपॉर्चुनिटी एडवाइजर।
+
+मैं आपकी करियर, सरकारी योजनाओं, जॉब्स, बिज़नेस और शिक्षा से जुड़ी हर जानकारी पाने में मदद कर सकती हूँ। आज मैं आपकी क्या सहायता करूँ?`;
+  }
+
+  if (p.includes('spanish')) {
+    return fileIntro + `¡Hola! ¡Bienvenido! Soy **AROHI**, tu Asesor de Oportunidades con IA 🌟
+
+¿En qué puedo ayudarte hoy? Puedo guiarte en empleo, carreras, becas y planes de negocio. ¡Dime cómo puedo ayudarte!`;
+  }
+
+  if (p.includes('french')) {
+    return fileIntro + `Bonjour et bienvenue ! Je suis **AROHI**, votre conseiller d'opportunités AI 🌟
+
+Comment puis-je vous aider aujourd'hui ? Emploi, orientation, bourses ou projets d'entreprise, je suis à votre écoute !`;
+  }
+
+  if (p.includes('hi') || p.includes('hello') || p.includes('hey') || p.includes('greetings') || p.includes('good morning') || p.includes('good afternoon') || p.includes('good evening')) {
+    return fileIntro + `Hello & Namaste! 🙏 I am **AROHI**, your AI Opportunity Advisor! 🌟
+
+I am here to assist you with anything you need—from answering questions and providing career guidance to exploring jobs, government schemes, and business ideas.
+
+How can I help you today? Feel free to ask me anything!`;
+  }
+
+  if (p.includes('who are you') || p.includes('what is your name') || p.includes('about you')) {
+    return fileIntro + `I am **AROHI** (India's AI Opportunity Advisor), the flagship intelligent assistant on **Arohi AI** (arohiai.com).
+
+I am designed to guide students, job seekers, entrepreneurs, and professionals across India and globally with personalized career insights, ATS resume checks, mock interviews, government schemes, and business launch strategies. How can I help you today?`;
+  }
+
   if (p.includes('resume') || p.includes('cv') || p.includes('biodata')) {
     const fallbackResumeData = {
       name: "Rajesh Kumar",
@@ -5529,19 +5648,20 @@ ${fallbackResumeData.skills.join(', ')}
  *What skills are you most interested in mastering first?*`;
  }
  
-  return fileIntro + `### Hello! I am AROHI, your AI Opportunity Advisor 🌟
- 
- Welcome to **Arohi AI** – India's One & Only AI-Powered Opportunity Ecosystem!
- 
- I am your unified assistant across this entire platform. I can help you with:
- * 💼 **Discovering Jobs & Internships** that perfectly match your background.
- * 📝 **Reviewing your Resume** for ATS compatibility and missing keywords.
- * 🗣️ **Conducting Mock Interviews** with constructive feedback.
- * 🏛️ **Finding Government Schemes & Loans** (Mudra, PMEGP, Scholarships) to finance your education or business.
- * 🚀 **Validating Business Ideas** and guiding your startup/MSME registration.
- * 📖 **Designing custom Career Roadmaps** and course suggestions.
- 
- *How can I help you take the next big step in your career journey today? Just type your query below!*`;
+  const promptSummary = userPrompt.length > 80 ? userPrompt.slice(0, 80) + '...' : userPrompt;
+  return fileIntro + `### 🌟 AROHI AI Response
+
+Thank you for your message: **"${promptSummary}"**
+
+I am **AROHI**, your AI Opportunity Advisor on **Arohi AI**. I am fully equipped to assist you with:
+* 💬 **Answering Questions & Explanations** across technology, education, career, and general topics.
+* 💼 **Jobs & Internships** tailored to your profile.
+* 📝 **Resume Review & ATS Formatting** (with instant Word .docx download).
+* 🗣️ **Mock Interview Practice** & Feedback.
+* 🏛️ **Government Schemes & MSME Loans** (Mudra, PMEGP, Scholarships).
+* 🚀 **Business Idea Validation** & Startup Roadmaps.
+
+*Please tell me more or ask any specific follow-up question, and I will gladly guide you step-by-step!*`;
 }
 
 // Dynamic Sitemap generator for SEO crawler exposure all over India
@@ -6466,7 +6586,7 @@ async function startServer() {
               // Resilient fallback generation
               try {
                 console.log(`Arohi Voice Fallback Engine processing prompt: "${parsed.text.slice(0, 50)}..."`);
-                const fallbackModels = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+                const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
                 let replyText = "";
                 for (const fm of fallbackModels) {
                   try {
