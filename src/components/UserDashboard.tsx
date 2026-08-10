@@ -183,9 +183,9 @@ export default function UserDashboard({
 
   // Diagnostics scores
   const [diagnostics, setDiagnostics] = useState({
-    atsScore: 74,
+    atsScore: 0,
     interviewScore: 0,
-    businessScore: 84
+    businessScore: 0
   });
 
   // Recent Activity Feed State
@@ -221,18 +221,18 @@ export default function UserDashboard({
       // LOGGED-IN FIREBASE STATE
       if (userData.diagnostics) {
         setDiagnostics({
-          atsScore: userData.diagnostics.atsScore ?? 74,
+          atsScore: userData.diagnostics.atsScore ?? 0,
           interviewScore: userData.diagnostics.interviewScore ?? 0,
-          businessScore: userData.diagnostics.businessScore ?? 84
+          businessScore: userData.diagnostics.businessScore ?? 0
         });
       } else {
         const savedAtsScore = localStorage.getItem('recruit_ats_score');
         const savedInterviewScore = localStorage.getItem('recruit_interview_score');
         const savedBusinessScore = localStorage.getItem('recruit_business_score');
         const defaultDiagnostics = {
-          atsScore: savedAtsScore ? parseInt(savedAtsScore, 10) : 74,
+          atsScore: savedAtsScore ? parseInt(savedAtsScore, 10) : 0,
           interviewScore: savedInterviewScore ? parseInt(savedInterviewScore, 10) : 0,
-          businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 84
+          businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 0
         };
         setDiagnostics(defaultDiagnostics);
         updateDiagnostics(defaultDiagnostics).catch(err => console.error("Error setting default diagnostics:", err));
@@ -340,9 +340,9 @@ export default function UserDashboard({
       const savedBusinessScore = localStorage.getItem('recruit_business_score');
       
       setDiagnostics({
-        atsScore: savedAtsScore ? parseInt(savedAtsScore, 10) : 74,
+        atsScore: savedAtsScore ? parseInt(savedAtsScore, 10) : 0,
         interviewScore: savedInterviewScore ? parseInt(savedInterviewScore, 10) : 0,
-        businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 84
+        businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 0
       });
 
       const guestName = localStorage.getItem('recruit_user_name') || 'Guest Candidate';
@@ -413,10 +413,7 @@ export default function UserDashboard({
           setSavedItems([]);
         }
       } else {
-        setSavedItems([
-          { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-          { id: '2', title: 'Full-Stack JavaScript & TypeScript Program', type: 'Course', desc: '12 Weeks upskilling path' }
-        ]);
+        setSavedItems([]);
       }
 
       // Guest Course progress
