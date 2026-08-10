@@ -892,10 +892,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         };
 
       } catch (err: any) {
-        console.error('Error starting live voice session:', err);
+        console.warn('Microphone or sound channel warning:', err);
         if (active) {
-          setErrorMessage(err.message || 'Could not access microphone or configure sound channels.');
-          setStatus('error');
+          // Keep session active even if microphone permission is pending or restricted on HTTP
+          showToast('Mic offline or pending permission. You can type or tap below to speak with Arohi!');
+          if (statusRef.current === 'connecting') {
+            setStatus('listening');
+          }
         }
       }
     };
