@@ -42,7 +42,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Suppress Firestore verbose connection warning logs in sandboxed iframe environments
-setLogLevel('error');
+setLogLevel('silent');
 
 // Determine the database ID, omitting it if it is undefined, empty, or "(default)"
 const databaseId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
@@ -59,14 +59,3 @@ export const db = databaseId
       experimentalForceLongPolling: true,
       ignoreUndefinedProperties: true
     });
-
-// Validate Connection to Firestore safely with offline fallback support
-async function testConnection() {
-  try {
-    const docRef = doc(db, 'test', 'connection');
-    await getDoc(docRef).catch(() => null);
-  } catch (error) {
-    console.warn("Firebase client operates in offline/cached fallback mode.");
-  }
-}
-testConnection();

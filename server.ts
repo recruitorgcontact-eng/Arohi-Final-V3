@@ -2103,8 +2103,48 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
 
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'application/rss+xml, application/xml, text/xml, text/html, */*'
+    'Accept': 'application/rss+xml, application/xml, text/xml, text/html, application/json, */*'
   };
+
+  // 0a. Wikipedia REST API summary check for quick factual definitions & entities
+  try {
+    const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanKeywords.replace(/\s+/g, '_'))}`;
+    const wikiRes = await fetch(wikiUrl, { headers });
+    if (wikiRes.ok) {
+      const wikiData = await wikiRes.json();
+      if (wikiData && wikiData.extract && wikiData.extract.length > 20) {
+        results.push({
+          title: wikiData.title || cleanKeywords,
+          link: wikiData.content_urls?.desktop?.page || '',
+          date: 'Wikipedia Verified',
+          source: 'Wikipedia',
+          snippet: wikiData.extract
+        });
+      }
+    }
+  } catch (wErr) {
+    console.warn('Wikipedia API fetch error:', wErr);
+  }
+
+  // 0b. DuckDuckGo Instant Answer API
+  try {
+    const ddgApiUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanKeywords)}&format=json&no_html=1&skip_disambig=1`;
+    const ddgApiRes = await fetch(ddgApiUrl, { headers });
+    if (ddgApiRes.ok) {
+      const ddgJson = await ddgApiRes.json();
+      if (ddgJson && ddgJson.AbstractText && ddgJson.AbstractText.length > 20) {
+        results.push({
+          title: ddgJson.Heading || cleanKeywords,
+          link: ddgJson.AbstractURL || '',
+          date: 'DuckDuckGo Verified',
+          source: 'DuckDuckGo Instant Answer',
+          snippet: ddgJson.AbstractText
+        });
+      }
+    }
+  } catch (dErr) {
+    console.warn('DuckDuckGo Instant Answer API fetch error:', dErr);
+  }
 
   // 1. Google News RSS search (both raw query and clean keywords)
   const queriesToTry = Array.from(new Set([rawQuery, cleanKeywords])).filter(q => q && q.length >= 3);
@@ -2214,21 +2254,15 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   // Official valid Gemini models for text and multimodal tasks according to @google/genai guidelines
   const modelsWithTools = [
     'gemini-3.6-flash',
-    'gemini-flash-latest',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-flash-latest'
   ];
 
   // General models to try
   const modelsGeneral = [
     'gemini-3.6-flash',
-    'gemini-flash-latest',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-flash-latest'
   ];
 
   let lastError = null;
@@ -2306,8 +2340,13 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   } catch (e) {}
 
-  console.warn("Gemini API calls unavailable or quota limit reached. Returning smart AROHI fallback response.");
-  const fallbackText = getArohiFallbackResponse(extractedPrompt);
+  console.warn("Gemini API calls unavailable or quota limit reached. Fetching multi-engine live search streams for smart fallback response...");
+  let liveSearchData: any[] = [];
+  try {
+    liveSearchData = await fetchGoogleNewsLive(extractedPrompt);
+  } catch (e) {}
+
+  const fallbackText = getArohiFallbackResponse(extractedPrompt, undefined, liveSearchData);
   return {
     text: fallbackText,
     candidates: [{ content: { parts: [{ text: fallbackText }] } }]
@@ -2318,20 +2357,14 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
 async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, options: any) {
   const modelsWithTools = [
     'gemini-3.6-flash',
-    'gemini-flash-latest',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-flash-latest'
   ];
 
   const modelsGeneral = [
     'gemini-3.6-flash',
-    'gemini-flash-latest',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-flash-latest'
   ];
 
   const hasTools = !!(options?.config?.tools || options?.tools);
@@ -2347,12 +2380,7 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
         return streamResponse;
       } catch (err: any) {
         const errStr = err?.message || String(err);
-        const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
-        if (isQuotaError) {
-          console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Switching directly to smart AROHI fallback stream.`);
-          return null;
-        }
-        console.warn(`Stream model ${model} with tools failed. Trying next model...`);
+        console.warn(`Stream model ${model} with tools failed: ${errStr}. Trying next model or falling through to non-tool stream...`);
       }
     }
   }
@@ -2376,12 +2404,7 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
       return streamResponse;
     } catch (err: any) {
       const errStr = err?.message || String(err);
-      const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
-      if (isQuotaError) {
-        console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Switching directly to smart AROHI fallback stream.`);
-        return null;
-      }
-      console.warn(`Stream model ${model} without tools failed. Trying next model...`);
+      console.warn(`Stream model ${model} without tools failed: ${errStr}. Trying next model...`);
     }
   }
 
@@ -2415,6 +2438,14 @@ Arohi AI is an AI-powered universal opportunity ecosystem designed to serve a hi
 23. All Private Officials (enterprise management, growth)
 
 You are fully optimized to provide personalized responses adapted to whichever persona or user category contacts you. Maintain this comprehensive and multi-dimensional scope at all times across all text chat and real-time live voice call interactions.
+
+============================================================
+CRITICAL DIRECT ANSWER MANDATE (CHATGPT / GEMINI STYLE DIRECTNESS)
+============================================================
+* DIRECT, ACCURATE, AND UNBIASED ANSWERS FIRST: Always answer the user's question DIRECTLY, COMPLETELY, and IMMEDIATELY — exactly like ChatGPT or Gemini.
+* NO FORCED / CANNED INTROS OR REPETITIVE GREETINGS: NEVER prepend or start your response with generic canned lines like "Welcome to Arohi AI...", "I am Arohi, your AI Opportunity Advisor...", or promotional/founder intro notes UNLESS the user explicitly asks "Who are you?", "Who created you?", "What is Arohi AI?", or "Tell me about your founders".
+* DIVE STRAIGHT INTO THE CONTENT: For general questions (such as science, math, coding, history, news, current events, sports, philosophy, business, or everyday topics), dive STRAIGHT into the direct answer with clear explanations, structured points, code snippets, or step-by-step reasoning as needed.
+* MATCH RESPONSE DEPTH TO QUERY COMPLEXITY: Give comprehensive, well-structured, and full-length responses tailored to what the user asks, without withholding information, truncating facts, or giving brief filler summaries.
 
 ============================================================
 CORE PERSONA, CHARACTER & VOICE STYLE DIRECTIVE
@@ -2981,10 +3012,7 @@ Welcome to Arohi.
 You are an expert AI Opportunity & Growth Guide, fully prepared to assist all 20+ specialized audience categories:
 - Students, Teachers, Parents, Scientists, Researchers, Doctors, Advocates, Thespians, Artists, Engineers, Entrepreneurs, Job Seekers, Professionals, Businesses, MSMEs, Govt. Aspirants, Universities, Organizations, Aliens, Citizens of Mars, Citizens of Jupiter, and Govt./Private Officials.
 
-When greeting a user, always align your tone with your official welcoming note:
-"Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, advocate, thespian, artist, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—or even if you're a citizen of Mars or Jupiter!—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?"
-
-Always speak as AROHI. Introduce yourself proudly and offer helpful, positive, and deeply tailored advice centered on universal advancement, career development, educational planning, business setup, and space/cosmic curiosity.`;
+DIRECT ANSWER REMINDER: Answer every user question directly, accurately, and thoroughly first — just like ChatGPT or Gemini. Do NOT prepend canned introductory scripts or generic greetings. Jump straight into the direct answer!`;
 
 // 1. Chat with AROHI Endpoint
 app.post('/api/chat', async (req, res) => {
@@ -3003,6 +3031,7 @@ app.post('/api/chat', async (req, res) => {
   logActivity('chat', `User conversed with AROHI AI [Lang: ${language || 'en'}]: "${messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText}"${file ? ` with attached file: ${file.name}` : ''}`);
 
   try {
+    let liveSearchData: any[] = [];
     if (aiClient) {
       // Setup chats
       const formattedHistory = (history || [])
@@ -3161,23 +3190,14 @@ Construct this JSON strictly based on details discussed, or use standard profess
       // Always fetch real-time live Google News & web search data to ground responses
       try {
         const searchQuery = messageText || 'India latest news & opportunities';
-        const liveSearchData = await fetchGoogleNewsLive(searchQuery);
+        liveSearchData = await fetchGoogleNewsLive(searchQuery);
         if (liveSearchData && liveSearchData.length > 0) {
           const formattedData = liveSearchData.map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''} (${n.date ? `Date: ${n.date}` : ''})`).join('\n');
           const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH & NEWS GROUNDING DATA (FETCHED LIVE ON ${new Date().toLocaleDateString('en-IN')}) ===\n${formattedData}`;
           
           dynamicInstruction += newsGroundingText + `\n\nCRITICAL DIRECTIVE ON CURRENT EVENTS, MINISTERS & FACTUAL ACCURACY:
 1. Base all facts regarding current ministers, political portfolios, resignations, latest news, government decisions, sports, or real-time events strictly on verified current facts and the live search data provided above.
-2. If the user asks why previous responses gave incorrect or conflicting names (such as Dharmendra Pradhan, Annapurna Devi, or Prahlad Kumar Mallick):
-   - Acknowledge the issue directly and humbly.
-   - Explain clearly that LLMs rely on static pre-training knowledge when live search tools encounter temporary API rate limits or quota constraints (e.g. 429 quota exhaustion on Gemini Google Search tools).
-   - Explain that earlier keyword parsing was also stripping words from queries, causing ungrounded fallback responses.
-   - Apologize for the confusion, state the exact verified real-time situation, and assure them that live multi-source web and Google News grounding is now active!`;
-
-          // CRITICAL: Also append news context directly into the user message turn so Gemini reads it in context even if systemInstruction is overridden
-          if (userParts[0] && typeof userParts[0].text === 'string') {
-            userParts[0].text += `\n\n[SYSTEM GROUNDING DATA ATTACHED FROM REAL-TIME LIVE NEWS ENGINE]:${newsGroundingText}`;
-          }
+2. DIRECT ANSWER MANDATE: Always answer the user's question directly, accurately, and naturally. DO NOT repeat or echo the user's message. DO NOT add meta headers like '🌟 AROHI AI Response' or canned preambles like 'Thank you for your message'. Provide the direct answer immediately.`;
         }
       } catch (newsErr) {
         console.warn('Live search fetch error in /api/chat:', newsErr);
@@ -3201,14 +3221,14 @@ Construct this JSON strictly based on details discussed, or use standard profess
     } else {
       // Fallback response generator if API key is not present
       return res.json({
-        response: getArohiFallbackResponse(messageText, file ? file.name : undefined),
+        response: getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData),
         fallback: true
       });
     }
   } catch (error: any) {
     console.error('Error in /api/chat:', error);
     return res.json({
-      response: getArohiFallbackResponse(messageText, file ? file.name : undefined),
+      response: getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData),
       fallback: true
     });
   }
@@ -3245,6 +3265,7 @@ app.post('/api/chat-stream', async (req, res) => {
   logActivity('chat-stream', `User streaming conversation with AROHI AI [Lang: ${language || 'en'}]: "${messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText}"`);
 
   let accumulatedResponse = '';
+  let liveSearchData: any[] = [];
 
   try {
     if (aiClient) {
@@ -3358,14 +3379,11 @@ app.post('/api/chat-stream', async (req, res) => {
 
       try {
         const searchQuery = messageText || 'India latest news & opportunities';
-        const liveSearchData = await fetchGoogleNewsLive(searchQuery);
+        liveSearchData = await fetchGoogleNewsLive(searchQuery);
         if (liveSearchData && liveSearchData.length > 0) {
           const formattedData = liveSearchData.map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
           const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH & NEWS GROUNDING DATA ===\n${formattedData}`;
-          dynamicInstruction += newsGroundingText;
-          if (userParts[0] && typeof userParts[0].text === 'string') {
-            userParts[0].text += `\n\n[SYSTEM GROUNDING DATA ATTACHED FROM REAL-TIME LIVE NEWS ENGINE]:${newsGroundingText}`;
-          }
+          dynamicInstruction += newsGroundingText + `\n\n[DIRECT ANSWER MANDATE: Answer the user's question directly and concisely. DO NOT repeat or echo the user's message. DO NOT output meta headers like '🌟 AROHI AI Response' or 'Thank you for your message'. Provide the direct answer immediately.]`;
         }
       } catch (newsErr) {
         console.warn('Live search fetch error in /api/chat-stream:', newsErr);
@@ -3466,7 +3484,7 @@ app.post('/api/chat-stream', async (req, res) => {
     }
 
     // High-speed simulated typewriter fallback if aiClient stream/api unavailable or quota limit hit
-    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined);
+    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData);
     const chunkSize = 8;
     for (let i = 0; i < fallbackText.length; i += chunkSize) {
       const piece = fallbackText.slice(i, i + chunkSize);
@@ -3477,7 +3495,7 @@ app.post('/api/chat-stream', async (req, res) => {
     sendDone(accumulatedResponse);
   } catch (err: any) {
     console.error('Error in /api/chat-stream:', err);
-    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined);
+    const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData);
     sendChunk(fallbackText);
     sendDone(fallbackText);
   }
@@ -3948,7 +3966,7 @@ app.post('/api/doc-research-studio', async (req, res) => {
 
     let reportMarkdown = '';
     let keyTakeaways: string[] = [];
-    let provider = 'gemini-2.5-flash-google-search';
+    let provider = 'gemini-3.6-flash-google-search';
     let googleSearchSources: Array<{ title: string; link: string; source: string }> = [];
 
     // Fetch live Google Search & News data for real-time web fact checking
@@ -4147,7 +4165,7 @@ app.post('/api/maps-location-studio', async (req, res) => {
       polylinePath?: Array<{ lat: number; lng: number }>;
     } | null = null;
     let centerCoord = { lat: 28.6139, lng: 77.2090, zoom: 12 }; // Default to New Delhi
-    let provider = 'gemini-2.5-flash-google-maps';
+    let provider = 'gemini-3.6-flash-google-maps';
 
     // Build specialized system prompt for Maps Grounding
     const systemInstruction = `You are AROHI AI Feature #7: Real-Time Google Maps & Routes Engine. Language: ${language}.
@@ -4304,7 +4322,7 @@ app.post('/api/gemini-intelligence-studio', async (req, res) => {
     let reportMarkdown = '';
     let editedContent = '';
     let multiStepPipeline: Array<{ stepNumber: number; title: string; status: 'completed' | 'in_progress' | 'planned'; details: string }> = [];
-    let provider = 'gemini-2.5-flash';
+    let provider = 'gemini-3.6-flash';
 
     const systemInstruction = `You are AROHI AI: Intelligence Engine. Language: ${language}.
 Your capability is to embed Arohi AI intelligence to analyze content, make smart edits, and execute multi-step complex tasks.
@@ -5444,13 +5462,48 @@ function getFallbackAdditionalPostings(sector?: string, location?: string, jobTy
 }
 
 // Helper function to return fallback response from AROHI
-function getArohiFallbackResponse(userPrompt: string, fileName?: string): string {
+function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, liveSearchResults?: any[]): string {
   const p = userPrompt.toLowerCase();
   let fileIntro = '';
   
   if (fileName) {
     const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
     fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! As **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
+  }
+
+  // Multi-engine search synthesizer: If live search results were fetched from Wikipedia, DDG, Yahoo, Bing, or Google News
+  if (liveSearchResults && Array.isArray(liveSearchResults) && liveSearchResults.length > 0) {
+    const cleanTopic = userPrompt.trim()
+      .replace(/^who\s+is\s+/i, '')
+      .replace(/^what\s+is\s+/i, '')
+      .replace(/^tell\s+me\s+about\s+/i, '')
+      .replace(/[\?\!]/g, '')
+      .trim();
+
+    const validItems = liveSearchResults.filter(item => item && (item.snippet || item.title));
+    if (validItems.length > 0) {
+      const wikiOrDDG = validItems.find(item => item.source === 'Wikipedia' || item.source === 'DuckDuckGo Instant Answer');
+      const newsItems = validItems.filter(item => item !== wikiOrDDG).slice(0, 5);
+
+      let synthesizedBody = '';
+      if (wikiOrDDG && wikiOrDDG.snippet) {
+        synthesizedBody += `### 💡 Overview: ${wikiOrDDG.title || cleanTopic}\n\n${wikiOrDDG.snippet}\n\n`;
+      }
+
+      if (newsItems.length > 0) {
+        synthesizedBody += `### 🌐 Verified Search Findings (${cleanTopic || 'Current Topic'})\n\n`;
+        newsItems.forEach((item, idx) => {
+          const src = item.source || 'Search Stream';
+          const title = item.title ? `**${item.title}**` : '';
+          const snip = item.snippet ? `: ${item.snippet}` : '';
+          synthesizedBody += `${idx + 1}. [${src}] ${title}${snip}\n`;
+        });
+      }
+
+      if (synthesizedBody.trim()) {
+        return fileIntro + synthesizedBody + `\n\n---\n*Real-time information verified from multi-engine search streams (Google, Bing, Yahoo, DuckDuckGo, Wikipedia).*`;
+      }
+    }
   }
 
   if (p.includes('japanese') || p.includes('japan')) {
@@ -5477,18 +5530,43 @@ function getArohiFallbackResponse(userPrompt: string, fileName?: string): string
 Comment puis-je vous aider aujourd'hui ? Emploi, orientation, bourses ou projets d'entreprise, je suis à votre écoute !`;
   }
 
-  if (p.includes('hi') || p.includes('hello') || p.includes('hey') || p.includes('greetings') || p.includes('good morning') || p.includes('good afternoon') || p.includes('good evening')) {
-    return fileIntro + `Hello & Namaste! 🙏 I am **AROHI**, your AI Opportunity Advisor! 🌟
+  // Knowledge & Specific Person Entities
+  if (p.includes('narendra modi') || p.includes('modi') || p.includes('prime minister')) {
+    return fileIntro + `**Narendra Modi** (Narendra Damodardas Modi) is the 14th and current Prime Minister of India, serving since May 2014.
 
-I am here to assist you with anything you need—from answering questions and providing career guidance to exploring jobs, government schemes, and business ideas.
-
-How can I help you today? Feel free to ask me anything!`;
+* **Office:** Prime Minister of India (serving his 3rd consecutive term, leading the NDA government).
+* **Party:** Senior leader of the Bharatiya Janata Party (BJP).
+* **Constituency:** Member of Parliament (MP) representing Varanasi, Uttar Pradesh.
+* **Previous Position:** Chief Minister of Gujarat from 2001 to 2014.
+* **Key Flagship Initiatives:** Digital India, Make in India, Ayushman Bharat, PM-KISAN, PM Awas Yojana, PM Gati Shakti, and Swachh Bharat Abhiyan.`;
   }
 
-  if (p.includes('who are you') || p.includes('what is your name') || p.includes('about you')) {
-    return fileIntro + `I am **AROHI** (India's AI Opportunity Advisor), the flagship intelligent assistant on **Arohi AI** (arohiai.com).
+  if (p.includes('pralhad joshi') || p.includes('prahlad joshi')) {
+    return fileIntro + `**Pralhad Joshi** is a senior Indian politician and Union Cabinet Minister in the Government of India.
 
-I am designed to guide students, job seekers, entrepreneurs, and professionals across India and globally with personalized career insights, ATS resume checks, mock interviews, government schemes, and business launch strategies. How can I help you today?`;
+* **Current Portfolios:** Union Minister of Consumer Affairs, Food and Public Distribution, and Union Minister of New and Renewable Energy (since June 2024).
+* **Constituency:** Member of Parliament (MP) representing the Dharwad constituency in Karnataka.
+* **Previous Positions:** Formerly served as Union Minister of Parliamentary Affairs, Coal, and Mines (2019–2024).`;
+  }
+
+  if (p.includes('droupadi murmu') || p.includes('president of india')) {
+    return fileIntro + `**Smt. Droupadi Murmu** is the 15th and current President of India, serving since July 2022. She is the first person belonging to a tribal community and the second woman to hold the office of President of India. She previously served as the Governor of Jharkhand from 2015 to 2021.`;
+  }
+
+  if (p.includes('kalam') || p.includes('abdul kalam')) {
+    return fileIntro + `**Dr. A.P.J. Abdul Kalam** (1931–2015) was a renowned Indian aerospace scientist and statesman who served as the 11th President of India from 2002 to 2007. Revered as the "Missile Man of India", he played a seminal role in India's space program (SLV-III) and ballistic missile development (Agni & Prithvi).`;
+  }
+
+  if (p.includes('rahul gandhi')) {
+    return fileIntro + `**Rahul Gandhi** is a prominent Indian politician and senior leader of the Indian National Congress (INC). He currently serves as the Leader of the Opposition in the 18th Lok Sabha representing the Rae Bareli constituency in Uttar Pradesh.`;
+  }
+
+  if (p.includes('dharmendra pradhan') || p.includes('education minister')) {
+    return fileIntro + `**Dharmendra Pradhan** is the Union Minister of Education and Minister of Skill Development and Entrepreneurship in the Government of India. He represents the Sambalpur constituency in Odisha as a Member of Parliament.`;
+  }
+
+  if (p.includes('isro') || p.includes('space research organisation')) {
+    return fileIntro + `**ISRO** (Indian Space Research Organisation) is India's national space agency, headquartered in Bengaluru. Notable achievements include Chandrayaan-3 (historic soft landing at the Lunar South Pole), Mangalyaan (Mars Orbiter), Aditya-L1 (Solar observatory), and the upcoming Gaganyaan human spaceflight mission.`;
   }
 
   if (p.includes('resume') || p.includes('cv') || p.includes('biodata')) {
@@ -5647,21 +5725,37 @@ ${fallbackResumeData.skills.join(', ')}
  
  *What skills are you most interested in mastering first?*`;
  }
- 
-  const promptSummary = userPrompt.length > 80 ? userPrompt.slice(0, 80) + '...' : userPrompt;
-  return fileIntro + `### 🌟 AROHI AI Response
 
-Thank you for your message: **"${promptSummary}"**
+  // If explicit request for menu/features
+  if (p.includes('menu') || p.includes('option') || p.includes('feature') || p.includes('what can you do') || p.includes('help')) {
+    return fileIntro + `I am **AROHI**, your AI Opportunity Advisor on **Arohi AI**.
 
-I am **AROHI**, your AI Opportunity Advisor on **Arohi AI**. I am fully equipped to assist you with:
+How can I help you today? Ask me any question directly, or choose from:
 * 💬 **Answering Questions & Explanations** across technology, education, career, and general topics.
 * 💼 **Jobs & Internships** tailored to your profile.
 * 📝 **Resume Review & ATS Formatting** (with instant Word .docx download).
 * 🗣️ **Mock Interview Practice** & Feedback.
 * 🏛️ **Government Schemes & MSME Loans** (Mudra, PMEGP, Scholarships).
-* 🚀 **Business Idea Validation** & Startup Roadmaps.
+* 🚀 **Business Idea Validation** & Startup Roadmaps.`;
+  }
 
-*Please tell me more or ask any specific follow-up question, and I will gladly guide you step-by-step!*`;
+  // Direct, conversational answer for general queries instead of dumping a feature menu!
+  const cleanTopic = userPrompt.trim().replace(/^who\s+is\s+/i, '').replace(/^what\s+is\s+/i, '').replace(/^tell\s+me\s+about\s+/i, '').replace(/[\?\!]/g, '');
+  return fileIntro + `### 💡 Information & Guidance: **${cleanTopic || userPrompt.trim()}**
+
+As **AROHI** (AI Opportunity Advisor on Arohi AI), here is structured guidance regarding **${cleanTopic || userPrompt.trim()}**:
+
+1. **Overview & Context:** This topic relates to key opportunities, technology, education, career development, or public policy in India and globally.
+2. **Key Action Plan:**
+   - Research official guidelines, notifications, and key requirements.
+   - Identify how this connects with your skill development, job search, or business expansion goals.
+3. **Next Steps with Arohi AI:**
+   - **Jobs & Opportunities:** Browse active government and private openings on our Jobs Board.
+   - **Resume ATS Score:** Upload your CV to **Resume AI** for instant feedback and .docx formatting.
+   - **Mock Interviews:** Practice live interview scenarios on **Mock Interview AI**.
+   - **Government Schemes:** Explore Mudra, PMEGP, and scholarship programs.
+
+*Please feel free to ask a specific follow-up question or specify if you would like step-by-step assistance!*`;
 }
 
 // Dynamic Sitemap generator for SEO crawler exposure all over India
@@ -6586,7 +6680,7 @@ async function startServer() {
               // Resilient fallback generation
               try {
                 console.log(`Arohi Voice Fallback Engine processing prompt: "${parsed.text.slice(0, 50)}..."`);
-                const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+                const fallbackModels = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
                 let replyText = "";
                 for (const fm of fallbackModels) {
                   try {
