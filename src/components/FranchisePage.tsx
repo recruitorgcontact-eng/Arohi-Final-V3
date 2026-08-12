@@ -53,7 +53,7 @@ export default function FranchisePage() {
   const [isArohiChatOpen, setIsArohiChatOpen] = useState(false);
   const [arohiVoiceEnabled, setArohiVoiceEnabled] = useState(false);
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'arohi', text: string}>>([
-    { sender: 'arohi', text: "Hello! I am AROHI, the AI Career & Opportunity Ecosystem Advisor. Interested in partnering with us to launch an Arohi Experience Center Network (AECN) franchise in your city? Ask me any questions about investment models, spaces, revenue, or setup!" }
+    { sender: 'arohi', text: "Hello! I am AROHI, the AI Career & Opportunity Ecosystem Advisor. Interested in partnering with us to launch an Arohi Experience Center Network (AECN) franchise in your city? Tell me what you want to achieve regarding investment models, spaces, revenue, or setup!" }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isArohiTyping, setIsArohiTyping] = useState(false);

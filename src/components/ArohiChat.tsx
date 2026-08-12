@@ -3056,7 +3056,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
             {/* Text Input Box */}
             <input
               type="text"
-              placeholder="Ask Arohi AI anything..."
+              placeholder="Tell me what you want to achieve..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}

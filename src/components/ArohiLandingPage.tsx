@@ -427,7 +427,7 @@ export default function ArohiLandingPage({
           <div className="mt-4 flex items-center gap-2 bg-slate-950 border border-[#21183c] p-2 rounded-2xl">
             <input 
               type="text" 
-              placeholder="Ask me anything..." 
+              placeholder="Tell me what you want to achieve..." 
               disabled
               className="flex-1 bg-transparent text-xs text-slate-300 font-semibold px-2 outline-none cursor-not-allowed opacity-80"
             />

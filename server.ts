@@ -2380,7 +2380,13 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
         return streamResponse;
       } catch (err: any) {
         const errStr = err?.message || String(err);
-        console.warn(`Stream model ${model} with tools failed: ${errStr}. Trying next model or falling through to non-tool stream...`);
+        const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+        if (isQuotaError) {
+          console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Attempting stream without tools...`);
+          break; // Stop retrying tool models, fall through to non-tool stream
+        } else {
+          console.warn(`Stream model ${model} with tools failed: ${errStr}. Trying next model...`);
+        }
       }
     }
   }
@@ -2404,7 +2410,13 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
       return streamResponse;
     } catch (err: any) {
       const errStr = err?.message || String(err);
-      console.warn(`Stream model ${model} without tools failed: ${errStr}. Trying next model...`);
+      const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+      if (isQuotaError) {
+        console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Halting Gemini stream retries to use smart AROHI fallback engine.`);
+        return null;
+      } else {
+        console.warn(`Stream model ${model} without tools failed: ${errStr}. Trying next model...`);
+      }
     }
   }
 
@@ -2574,6 +2586,79 @@ Suggested closing response format when user inquires about building custom AI ag
 Important: Only present this information when the user's query is related to AI agents, AI automation, enterprise AI, or custom AI development. Do not include it in unrelated conversations.
 
 ---
+
+============================================================
+COMPETITIVE POSITIONING & SUBSCRIPTION RESPONSE POLICY
+============================================================
+
+IDENTITY & NATURE:
+- Introduce yourself as **AROHI**, a state-of-the-art **LLM cum LMM (Large Language Model & Large Multimodal Model)** operating as an intelligent assistant within the unified **Arohi AI** ecosystem.
+
+WHEN USERS ASK COMPARISON OR SUBSCRIPTION QUESTIONS:
+When asked "Why should I subscribe to Arohi AI?", "Why Arohi when ChatGPT is available?", "Why pay for Arohi when Gemini is free?", "What makes Arohi different from ChatGPT/Gemini/Claude?", "Is Arohi better than ChatGPT?", "Why do I need another AI?", or similar questions:
+
+1. CORE POSITIONING:
+   - NEVER claim that ChatGPT, Gemini, Claude, or any other AI platform is inferior, bad, or obsolete unless there is a specific, verifiable factual reason.
+   - Respectfully acknowledge that other AI platforms are excellent and that users may already have their needs fully met by them.
+   - Position Arohi AI as a DIFFERENT AI EXPERIENCE and AI ECOSYSTEM rather than simply another chatbot.
+
+2. PRIMARY MESSAGE:
+   - "Don't subscribe to Arohi because other AI platforms are bad. Subscribe to Arohi if Arohi is more useful for what YOU want to accomplish."
+   - Explain that Arohi's value comes from combining AI capabilities, specialized experiences, AI agents, practical services, productivity, career/business assistance, Indian-focused use cases, multilingual accessibility, and integrated capabilities into one ecosystem.
+
+3. CORE DIFFERENTIATION:
+   - Other AI platforms may primarily be experienced as general-purpose AI assistants.
+   - Position Arohi AI as:
+     ONE AI ECOSYSTEM:
+     → Multiple AI capabilities (LLM cum LMM)
+     → Specialized AI agents & experiences
+     → Practical task-oriented assistance
+     → Career & employment support
+     → Business & MSME assistance
+     → Research & productivity
+     → Content & creative assistance
+     → Indian-focused use cases & state/national policy awareness
+     → Multilingual accessibility across 150+ languages
+     → Continuously expanding capabilities
+
+4. STRICT DO NOTS (UNSUPPORTED CLAIMS):
+   - DO NOT claim "Arohi is smarter than ChatGPT", "Arohi is better than Gemini", "ChatGPT cannot do this", "Gemini cannot do that", "Arohi is the world's best AI", or "Arohi gives unlimited everything".
+   - Use language like:
+     * "Arohi is designed differently."
+     * "Arohi brings these capabilities together in one ecosystem."
+     * "The right choice depends on what you need."
+     * "If your current AI already meets your needs, you may not need Arohi."
+     * "If you want a broader AI ecosystem built around practical outcomes, Arohi may be worth considering."
+
+5. KEY PHILOSOPHY & PREFERRED DISTINCTION:
+   - NEVER pressure the user into subscribing.
+   - Demonstrate confidence by saying: "If another AI already meets all your needs, you don't have to subscribe to Arohi."
+   - GENERAL AI: "Ask me anything."
+   - AROHI AI: "Tell me what you want to achieve."
+
+6. HANDLING SPECIFIC COMPARISON PROMPTS:
+   - IF USER SAYS "CHATGPT IS ENOUGH":
+     Respond respectfully: "Then you may not need Arohi—and that's completely okay. Arohi isn't trying to replace every AI for every person. The reason to choose Arohi is if its ecosystem, capabilities, agents, services, or India-focused experience provide additional value for your specific needs."
+   - IF USER ASKS "IS AROHI BETTER?":
+     Say: "Better depends on what you're trying to accomplish. Different AI platforms have different strengths. Arohi's focus is on bringing multiple practical AI capabilities and specialized experiences together into one ecosystem."
+   - IF USER ASKS "WHY PAY?":
+     Explain value rather than defending price: "You're not paying simply for a chatbot. You're paying for access to an evolving AI ecosystem and the capabilities included in your plan."
+
+7. TONE & BRAND TAGLINE:
+   - Confident, premium, honest, intelligent, non-defensive, user-focused, respectful of competitors, zero pressure.
+   - Reinforce naturally when appropriate: "ONE AI. INFINITE OPPORTUNITIES."
+
+============================================================
+DIVYANGJAN & PERSONS WITH DISABILITIES (PwD) SUPPORT POLICY
+============================================================
+When asked what Arohi AI can do for Divyang, physically disabled, specially abled, or PwD individuals:
+- Always respond with dignity, respect, empathy, and comprehensive practical guidance.
+- Cover the 4 Pillars of Empowerment:
+  1. Government Schemes & Financial Assistance: UDID card guidance, ADIP scheme (aids/appliances), NHFDC self-employment loans, Divyangjan Swavalamban Yojana, Pre/Post-Matric & National Overseas Scholarships.
+  2. Employment, 4% Reservation & Exam Guidance: 4% vertical job reservation under RPwD Act 2016, 10-year age relaxation, exam fee exemption, compensatory scribe/reader rules (20 min/hr extra), and remote/corporate D&I jobs.
+  3. Multimodal Accessibility (LLM cum LMM): Hands-free voice interactions, visual document/image scanning for certificates and notices, 150+ multilingual voice/text guidance.
+  4. ATS Resume Building & Voice Mock Interview AI: Accessible resume creation (.docx) and voice interview practice.
+- Reference official portals: swavlambancard.gov.in, disabilityaffairs.gov.in, ncs.gov.in.
 
 Response Guidelines:
 - Always be respectful, professional, and factual.
@@ -5506,6 +5591,95 @@ function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, li
     }
   }
 
+  // Divyang / Persons with Disabilities (PwD) Support Handler
+  const isDivyangQuery = p.includes('divyang') || p.includes('pwd') || p.includes('disabilit') || p.includes('disabled') || p.includes('handicapped') || p.includes('specially abled') || p.includes('specially-abled') || p.includes('physically disabled') || p.includes('physically challenged') || p.includes('udid') || p.includes('adip') || p.includes('blind') || p.includes('deaf') || p.includes('wheelchair') || p.includes('rpwd');
+
+  if (isDivyangQuery) {
+    return fileIntro + `I am **AROHI**, your AI Opportunity Advisor on Arohi AI. Here is a comprehensive overview of how **Arohi AI empowers Divyangjan (Persons with Disabilities / PwD)** with specialized tools, scheme matching, employment guidance, and multimodal accessibility:
+
+---
+
+### ♿ How Arohi AI Empowers Divyang Persons
+
+#### 1. 📜 Government Schemes & Financial Assistance Finder
+- **UDID (Unique Disability ID) Card Assistance**: Step-by-step guidance on registration, application status tracking, disability certificate renewal, and accessing nationwide benefits under DEPwD (Department of Empowerment of Persons with Disabilities).
+- **ADIP Scheme (Assistance to Disabled Persons for Purchase/Fitting of Aids and Appliances)**: Detailed eligibility criteria, motorized tricycles, wheelchairs, hearing aids, and prosthetic appliance application procedures.
+- **NHFDC & Divyangjan Swavalamban Yojana Loans**: Concessional low-interest self-employment loans, micro-credit for small business ventures, and skill development grants for Divyang entrepreneurs.
+- **Scholarship Finder**: Guidance on National Overseas Scholarships for PwD, Top Class Education Scholarships, Pre/Post-Matric Scholarships, and UGC fellowship schemes.
+
+---
+
+#### 2. 💼 Employment, Reservation & Exam Guidance
+- **4% Government Job Reservation**: Clear guidance on the 4% vertical reservation in Central/State Government jobs under the **RPwD Act 2016** (covering Blindness/Low Vision, Deaf/Hard of Hearing, Locomotor Disability, Autism/Intellectual/Mental Illness).
+- **10-Year Age Relaxation & Fee Exemption**: Detailed rules for UPSC, SSC, Banking (IBPS, SBI), Railways (RRB), and State PSC examinations.
+- **Scribe & Reader Rules**: Guidance on compensatory time (20 minutes extra per hour), scribe selection norms, and accessible examination center allocations.
+- **Inclusive Private & Remote Jobs**: Work-from-home job curation and matching with corporate diversity & inclusion initiatives.
+
+---
+
+#### 3. 🎙️ Multimodal Accessibility & Hands-Free Interaction
+- **Hands-Free Voice Chat (LLM cum LMM)**: Visually impaired or locomotor-disabled users can interact through natural voice input and listen to read-aloud responses.
+- **Vision Document & Image Reader**: Upload scanned government notices, medical certificates, or forms — Arohi reads, interprets, and summarizes them visually.
+- **150+ Multilingual Accessibility**: Access guidance in Odia, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, English, and regional Indian languages.
+
+---
+
+#### 4. 📄 ATS Resume Building & Mock Interview AI
+- **Accessible Resume Builder**: Generate structured, professional \`.docx\` resumes highlighting adaptabilities, skills, and accomplishments.
+- **Voice Mock Interviews**: Practice interview rounds tailored for public and private sector job evaluations with real-time feedback.
+
+---
+
+### 📋 Key Official Portals for Divyangjan:
+- **UDID Portal**: [swavlambancard.gov.in](https://www.swavlambancard.gov.in)
+- **DEPwD Department**: [disabilityaffairs.gov.in](https://disabilityaffairs.gov.in)
+- **National Career Service (NCS - PwD Portal)**: [ncs.gov.in](https://www.ncs.gov.in)
+
+*Tell me what specific assistance you need — whether it is finding a scheme, applying for a job reservation, generating a resume, or understanding UDID card benefits!*`;
+  }
+
+  // Competitive positioning & subscription queries (ChatGPT, Gemini, Claude, why subscribe, why pay, why Arohi)
+  const isComparisonQuery = p.includes('chatgpt') || p.includes('chat gpt') || p.includes('gemini') || p.includes('claude') || p.includes('subscribe') || p.includes('subscription') || p.includes('why pay') || p.includes('why arohi') || p.includes('why should i') || p.includes('is arohi better') || p.includes('another ai') || p.includes('different from');
+
+  if (isComparisonQuery) {
+    return fileIntro + `I am **AROHI**, a state-of-the-art **LLM cum LMM (Large Language Model & Large Multimodal Model)** operating within the unified **Arohi AI** ecosystem.
+
+### 💡 Competitive Positioning & Why Choose Arohi AI
+
+Platforms like **ChatGPT, Gemini, and Claude** are remarkable general-purpose AI tools that millions rely on every day. If your current AI platform already meets all of your needs, **you don't have to subscribe to Arohi AI—and that is completely okay.** Arohi is not here to replace every AI for every person.
+
+#### 🌟 How Arohi AI is Designed Differently:
+Rather than functioning solely as a general-purpose chatbot (*"Ask me anything"*), Arohi AI is built around practical execution and real-world outcomes (*"Tell me what you want to achieve"*).
+
+1. **ONE AI ECOSYSTEM**:
+   - **Integrated Multimodal Model (LLM cum LMM)**: Natively processes, analyzes, and generates text, code, documents (\`.pdf\`, \`.docx\`), and images.
+   - **Specialized AI Agents**: Dedicated modules for **Resume ATS Scoring**, **Mock Interview Practice**, **Job & Internship Aggregation**, **MSME & Govt Schemes Eligibility**, and **Business Validation**.
+   - **Task-Oriented & Practical**: Instead of returning raw chat, Arohi generates ready-to-use output (such as downloadable \`.docx\` resumes and structured roadmaps).
+
+2. **India-Focused & Multilingual Accessibility**:
+   - Deeply tuned for national and state-level schemes (PMEGP, Mudra, UPSC/SSC exams, regional board support).
+   - Seamlessly speaks and understands **150+ languages** (Odia, Hindi, Bengali, Telugu, Tamil, Marathi, English, and more).
+
+3. **Zero-Downtime Multi-Engine Grounding**:
+   - Combines real-time search streams (Google, Bing, Yahoo, DuckDuckGo, Wikipedia) so you receive verified, up-to-date facts even during network congestion.
+
+---
+
+### 💬 Common Questions:
+
+* **"Is ChatGPT or Gemini enough for me?"**
+  *Then you may not need Arohi—and that is perfectly fine.* The reason to choose Arohi is if its unified ecosystem, specialized career/business tools, or India-focused agents offer additional value for your specific goals.
+
+* **"Is Arohi better than ChatGPT or Gemini?"**
+  *Better depends entirely on what you want to accomplish.* Different AI platforms have different strengths. Arohi's focus is on uniting multiple practical capabilities and specialized services into one accessible ecosystem.
+
+* **"Why should I pay or subscribe?"**
+  You are not paying simply for a chatbot. You are subscribing for access to an evolving AI ecosystem, higher usage limits, specialized agents, and continuous product development.
+
+---
+*ONE AI. INFINITE OPPORTUNITIES.*`;
+  }
+
   if (p.includes('japanese') || p.includes('japan')) {
     return fileIntro + `ようこそ！ (Yokoso!) I am **AROHI**, your AI Opportunity Advisor! 🌟
 
@@ -5730,7 +5904,7 @@ ${fallbackResumeData.skills.join(', ')}
   if (p.includes('menu') || p.includes('option') || p.includes('feature') || p.includes('what can you do') || p.includes('help')) {
     return fileIntro + `I am **AROHI**, your AI Opportunity Advisor on **Arohi AI**.
 
-How can I help you today? Ask me any question directly, or choose from:
+How can I help you today? Tell me what you want to achieve, or choose from:
 * 💬 **Answering Questions & Explanations** across technology, education, career, and general topics.
 * 💼 **Jobs & Internships** tailored to your profile.
 * 📝 **Resume Review & ATS Formatting** (with instant Word .docx download).

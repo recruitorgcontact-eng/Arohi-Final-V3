@@ -1731,7 +1731,7 @@ export function getWelcomeContent(lang: Language): string {
 
 I am here to assist you across the entire Arohi AI platform. We are proudly optimized to serve a wide range of **specialized audience categories**—from terrestrial **Students, Teachers, Scientists, Researchers, Doctors, Engineers, Advocates, Thespians, Artists, Entrepreneurs, and Public/Private Officials** to cosmic explorers like **Aliens and the Citizens of Mars & Jupiter**!
 
-Ask me anything about:
+Tell me what you want to achieve:
 * 💼 **Government & Corporate Job Openings** (for Job Seekers & Professionals)
 * 📝 **ATS Resume Analysis & Live Interview Training**
 * 🏛️ **Government Subsidies, MSME Setup & Schemes** (for Businesses & Startups)

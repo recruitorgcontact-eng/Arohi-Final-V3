@@ -810,7 +810,7 @@ export default function WelcomeLanding({
                 type="text" 
                 value={landingInputText}
                 onChange={(e) => setLandingInputText(e.target.value)}
-                placeholder={isListening ? "Listening... Speak now 🎙️" : "Ask me anything..."}
+                placeholder={isListening ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
                 className={`w-full bg-transparent text-xs sm:text-sm font-medium outline-none px-1 ${
                   isListening
                     ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
