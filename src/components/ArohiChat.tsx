@@ -1311,204 +1311,133 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   );
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
 
-  // Initial Hydration effect - runs once per user login / guest session
+  // Helper to load cached chats synchronously from localStorage
+  const getInitialChats = (userId?: string): SavedChat[] => {
+    try {
+      const primaryKey = userId ? `arohi_saved_chats_${userId}` : 'guest_arohi_chats';
+      const stored = localStorage.getItem(primaryKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+      // Also check fallback guest keys if userId is provided
+      if (userId) {
+        const guestStored = localStorage.getItem('guest_arohi_chats');
+        if (guestStored) {
+          const parsed = JSON.parse(guestStored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading saved chats from cache:', e);
+    }
+    return [];
+  };
+
+  // Initial Hydration effect - loads cached conversations immediately and restores last chat
   useEffect(() => {
     const currentUserIdKey = user ? user.uid : 'guest';
     if (hydratedUserRef.current === currentUserIdKey) return;
 
     if (user) {
-      if (userData?.arohiChats && userData.arohiChats.length > 0) {
+      // 1. Check if AuthContext already has remote user chats
+      if (userData?.arohiChats && Array.isArray(userData.arohiChats) && userData.arohiChats.length > 0) {
         setSavedChats(userData.arohiChats);
+        try {
+          localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(userData.arohiChats));
+        } catch (e) {}
         if (!activeChatId) {
           setActiveChatId(userData.arohiChats[0].id);
-          setMessages(userData.arohiChats[0].messages);
+          setMessages(userData.arohiChats[0].messages || []);
         }
         hydratedUserRef.current = currentUserIdKey;
       } else {
-        const initialMock: SavedChat[] = [
-          {
-            id: '1',
-            title: 'Full Stack Career Roadmap',
+        // 2. Check local persistent storage for this user or guest
+        const cached = getInitialChats(user.uid);
+        if (cached.length > 0) {
+          setSavedChats(cached);
+          if (!activeChatId) {
+            setActiveChatId(cached[0].id);
+            setMessages(cached[0].messages || []);
+          }
+          hydratedUserRef.current = currentUserIdKey;
+        } else {
+          // 3. First time user with 0 chats: create clean initial welcome chat
+          const defaultChatId = 'chat-' + Date.now();
+          const defaultChat: SavedChat = {
+            id: defaultChatId,
+            title: `Hi ${currentUserName}, let's get started!`,
             date: 'Today',
             messages: [
               {
-                id: '1-1',
-                role: 'user',
-                content: 'Give me a roadmap for transitioning to full stack development in India.',
-                timestamp: '10:00 AM'
-              },
-              {
-                id: '1-2',
+                id: 'welcome',
                 role: 'assistant',
-                content: `### 🚀 Full Stack Web Development Transition Blueprint
-Here is your customized learning journey:
-1. **Frontend Fundamentals:** HTML5, CSS3, and JavaScript (ES6+). Focus on modern responsive grids and utility frameworks like **Tailwind CSS**.
-2. **Component Frameworks:** React 18+ with Vite. Build structured modular user interfaces and state models.
-3. **Backend Stack:** Node.js, Express, and Firestore/SQL databases. Design lightweight REST proxy layers to secure private secrets.
-4. **Cloud Execution:** Deploy static assets on host buckets, and full-stack servers on Cloud Run using container configurations.`,
-                timestamp: '10:01 AM'
+                content: getWelcomeContent(language),
+                timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
               }
             ]
-          },
-          {
-            id: '2',
-            title: 'MSME Mudra Loan Eligibility',
-            date: 'Yesterday',
-            messages: [
-              {
-                id: '2-1',
-                role: 'user',
-                content: 'Am I eligible for a Mudra Loan of 3 Lakhs for a bakery shop?',
-                timestamp: 'Yesterday'
-              },
-              {
-                id: '2-2',
-                role: 'assistant',
-                content: `### 🏛️ Mudra Loan (Kishor Category) Eligibility Guide
-Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** (loans from ₹50,000 to ₹5 Lakhs).
-* **Collateral Requirement:** Zero collateral needed!
-* **Key Checklist:**
-  1. Valid **Udyam MSME Certificate**.
-  2. Last 6 months bank statement.
-  3. Simple project business brief.
-  4. Proof of address & identity.`,
-                timestamp: 'Yesterday'
-              }
-            ]
+          };
+          setSavedChats([defaultChat]);
+          if (!activeChatId) {
+            setActiveChatId(defaultChatId);
+            setMessages(defaultChat.messages);
           }
-        ];
-        setSavedChats(initialMock);
-        if (!activeChatId) {
-          setActiveChatId(initialMock[0].id);
-          setMessages(initialMock[0].messages);
+          try {
+            localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify([defaultChat]));
+          } catch (e) {}
+          hydratedUserRef.current = currentUserIdKey;
         }
-        updateArohiChats(initialMock).catch(e => console.log('Init arohi chats:', e));
-        hydratedUserRef.current = currentUserIdKey;
       }
 
-      if (userData?.arohiCalls) {
+      if (userData?.arohiCalls && Array.isArray(userData.arohiCalls)) {
         setSavedCalls(userData.arohiCalls);
       } else {
-        setSavedCalls([]);
+        const localCalls = localStorage.getItem('guest_arohi_calls');
+        if (localCalls) {
+          try {
+            setSavedCalls(JSON.parse(localCalls));
+          } catch (e) {}
+        }
       }
     } else {
-      const localChats = localStorage.getItem('guest_arohi_chats');
-      const localCalls = localStorage.getItem('guest_arohi_calls');
-      if (localChats) {
-        try {
-          const parsed = JSON.parse(localChats);
-          setSavedChats(parsed);
-          if (parsed.length > 0 && !activeChatId) {
-            setActiveChatId(parsed[0].id);
-            setMessages(parsed[0].messages);
-          }
-        } catch (e) {}
-      } else {
-        const initialMock: SavedChat[] = [
-          {
-            id: '1',
-            title: 'Front Screen Rating',
-            date: 'Today',
-            messages: [
-              {
-                id: '1-1',
-                role: 'user',
-                content: 'How would you rate the overall user experience and visual layout of our front screen design?',
-                timestamp: '10:00 AM'
-              },
-              {
-                id: '1-2',
-                role: 'assistant',
-                content: 'Your front screen layout scores **9.2/10** for contrast, responsive typography, and clear action buttons!',
-                timestamp: '10:01 AM'
-              }
-            ]
-          },
-          {
-            id: '2',
-            title: 'ArohiAI App Architecture',
-            date: 'Yesterday',
-            messages: [
-              {
-                id: '2-1',
-                role: 'user',
-                content: 'Explain the core system architecture and data flow for ArohiAI.',
-                timestamp: '03:15 PM'
-              },
-              {
-                id: '2-2',
-                role: 'assistant',
-                content: 'ArohiAI utilizes a full-stack Node/Express server on Cloud Run with WebSocket bidirectional streaming for Gemini Live audio and Firestore for multi-device data synchronization.',
-                timestamp: '03:16 PM'
-              }
-            ]
-          },
-          {
-            id: '3',
-            title: 'Architecture Report Summary',
-            date: '2 days ago',
-            messages: [
-              {
-                id: '3-1',
-                role: 'user',
-                content: 'Summarize the architectural review findings.',
-                timestamp: '11:20 AM'
-              },
-              {
-                id: '3-2',
-                role: 'assistant',
-                content: 'Key recommendations include server-side API proxying for key security, sub-millisecond audio streaming buffers, and dark mode contrast optimizations.',
-                timestamp: '11:21 AM'
-              }
-            ]
-          },
-          {
-            id: '4',
-            title: 'AarohiAI.com Overview',
-            date: '3 days ago',
-            messages: [
-              {
-                id: '4-1',
-                role: 'user',
-                content: 'Give an overview of AarohiAI platform capabilities.',
-                timestamp: '02:00 PM'
-              },
-              {
-                id: '4-2',
-                role: 'assistant',
-                content: 'AarohiAI provides real-time AI voice calling, course study modules, ATS resume analysis, job matching, and live multi-modal media studios.',
-                timestamp: '02:01 PM'
-              }
-            ]
-          },
-          {
-            id: '5',
-            title: 'Unique AI Name Ideas',
-            date: '4 days ago',
-            messages: [
-              {
-                id: '5-1',
-                role: 'user',
-                content: 'Give me 5 unique name ideas for an AI assistant.',
-                timestamp: '05:40 PM'
-              },
-              {
-                id: '5-2',
-                role: 'assistant',
-                content: '1. Arohi\n2. Synapse\n3. Zenon\n4. Lumin\n5. Aura',
-                timestamp: '05:41 PM'
-              }
-            ]
-          }
-        ];
-        setSavedChats(initialMock);
+      // Guest session hydration
+      const cached = getInitialChats();
+      if (cached.length > 0) {
+        setSavedChats(cached);
         if (!activeChatId) {
-          setActiveChatId(initialMock[0].id);
-          setMessages(initialMock[0].messages);
+          setActiveChatId(cached[0].id);
+          setMessages(cached[0].messages || []);
         }
-        localStorage.setItem('guest_arohi_chats', JSON.stringify(initialMock));
+      } else {
+        const defaultChatId = 'chat-' + Date.now();
+        const defaultChat: SavedChat = {
+          id: defaultChatId,
+          title: "Hi User, let's get started!",
+          date: 'Today',
+          messages: [
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: getWelcomeContent(language),
+              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            }
+          ]
+        };
+        setSavedChats([defaultChat]);
+        if (!activeChatId) {
+          setActiveChatId(defaultChatId);
+          setMessages(defaultChat.messages);
+        }
+        try {
+          localStorage.setItem('guest_arohi_chats', JSON.stringify([defaultChat]));
+        } catch (e) {}
       }
 
+      const localCalls = localStorage.getItem('guest_arohi_calls');
       if (localCalls) {
         try {
           setSavedCalls(JSON.parse(localCalls));
@@ -1520,7 +1449,7 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
     }
   }, [user, userData?.arohiChats]);
 
-  // Fetch and restore the last conversation history from Firestore when starting a session
+  // Fetch and restore the freshest conversation history from Firestore database when starting a session
   useEffect(() => {
     if (!user || hasFetchedLatest) return;
 
@@ -1537,13 +1466,16 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
           const resData = await response.json();
           if (resData?.success && resData?.userData) {
             const freshData = resData.userData;
-            if (freshData.arohiChats && freshData.arohiChats.length > 0) {
+            if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
               setSavedChats(freshData.arohiChats);
+              try {
+                localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(freshData.arohiChats));
+              } catch (e) {}
               const latestChat = freshData.arohiChats[0];
               setActiveChatId(latestChat.id);
-              setMessages(latestChat.messages);
+              setMessages(latestChat.messages || []);
             }
-            if (freshData.arohiCalls) {
+            if (freshData.arohiCalls && Array.isArray(freshData.arohiCalls)) {
               setSavedCalls(freshData.arohiCalls);
             }
             setHasFetchedLatest(true);
@@ -1561,13 +1493,16 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const freshData = docSnap.data();
-          if (freshData.arohiChats && freshData.arohiChats.length > 0) {
+          if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
             setSavedChats(freshData.arohiChats);
+            try {
+              localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(freshData.arohiChats));
+            } catch (e) {}
             const latestChat = freshData.arohiChats[0];
             setActiveChatId(latestChat.id);
-            setMessages(latestChat.messages);
+            setMessages(latestChat.messages || []);
           }
-          if (freshData.arohiCalls) {
+          if (freshData.arohiCalls && Array.isArray(freshData.arohiCalls)) {
             setSavedCalls(freshData.arohiCalls);
           }
         }
@@ -1605,7 +1540,7 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
       } else {
         const existing = prevChats[chatIndex];
         let title = existing.title;
-        if (!title || title === 'New Conversation' || title === 'New Discussion' || title === 'New Chat' || title.toLowerCase().includes('hi arohi')) {
+        if (!title || title === 'New Conversation' || title === 'New Discussion' || title === 'New Chat' || title.toLowerCase().includes('hi arohi') || title.toLowerCase().includes('hi user') || title.toLowerCase().includes('lets get started')) {
           const firstUserMsg = messages.find(m => m.role === 'user');
           if (firstUserMsg) {
             const cleaned = firstUserMsg.content.replace(/\[File Uploaded:.*?\]/g, '').trim();
@@ -1622,8 +1557,13 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
 
       if (user) {
         updateArohiChats(updatedChats).catch(e => console.log('Chat update:', e));
+        try {
+          localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updatedChats));
+        } catch (e) {}
       } else {
-        localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
+        try {
+          localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
+        } catch (e) {}
       }
 
       return updatedChats;
@@ -2731,8 +2671,53 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
         )}
 
+        {/* New Chat Button */}
+        <button
+          onClick={() => {
+            const newChatId = 'chat-' + Date.now();
+            const newChat: SavedChat = {
+              id: newChatId,
+              title: user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!",
+              date: 'Today',
+              messages: [
+                {
+                  id: 'welcome',
+                  role: 'assistant',
+                  content: getWelcomeContent(language),
+                  timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                }
+              ]
+            };
+            setSavedChats(prev => {
+              const updated = [newChat, ...prev];
+              if (user) {
+                updateArohiChats(updated).catch(() => {});
+                try {
+                  localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updated));
+                } catch (e) {}
+              } else {
+                try {
+                  localStorage.setItem('guest_arohi_chats', JSON.stringify(updated));
+                } catch (e) {}
+              }
+              return updated;
+            });
+            setActiveChatId(newChatId);
+            setMessages(newChat.messages);
+            if (window.innerWidth < 768) setIsSidebarOpen(false);
+          }}
+          className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 mb-2 rounded-xl text-sm font-bold ${
+            isDarkMode 
+              ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-md' 
+              : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm'
+          } transition-all cursor-pointer`}
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Chat</span>
+        </button>
+
         {/* Recents Section Heading */}
-        <div className={`flex items-center justify-between text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-wider mb-2 px-3 pt-2`}>
+        <div className={`flex items-center justify-between text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-wider mb-2 px-3 pt-1`}>
           <span>Recents</span>
           {activeTab === 'calls' && (
             <button
@@ -2875,6 +2860,13 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 {activeChatTitle || 'Arohi AI'}
               </h1>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Core AI Online"></span>
+              <span className={`hidden sm:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
+                isDarkMode 
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
+                  : 'bg-amber-100 text-amber-900 border-amber-300'
+              }`}>
+                Under Beta Testing Mode
+              </span>
             </div>
           </div>
 
