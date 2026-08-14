@@ -298,7 +298,7 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
               placeholder="Search AI tools..."
               className="w-full bg-[#120e2b] border border-[#2d2163] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-white placeholder-slate-400 outline-none focus:border-purple-500 transition-colors"
             />

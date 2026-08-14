@@ -789,7 +789,7 @@ export default function FranchisePage() {
                 <input
                   type="text"
                   value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
+                  onChange={(e) => setChatInput(e?.target?.value ?? "")}
                   placeholder="Ask Arohi about AECN Franchise metrics..."
                   className="flex-1 bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all"
                 />
@@ -1307,7 +1307,7 @@ export default function FranchisePage() {
                       max="300" 
                       step="10"
                       value={dailyVisitors} 
-                      onChange={(e) => setDailyVisitors(parseInt(e.target.value))}
+                      onChange={(e) => setDailyVisitors(parseInt(e?.target?.value ?? ""))}
                       className="w-full accent-purple-500"
                     />
                   </div>
@@ -1323,7 +1323,7 @@ export default function FranchisePage() {
                       max="500" 
                       step="10"
                       value={avgServiceValue} 
-                      onChange={(e) => setAvgServiceValue(parseInt(e.target.value))}
+                      onChange={(e) => setAvgServiceValue(parseInt(e?.target?.value ?? ""))}
                       className="w-full accent-purple-500"
                     />
                   </div>
@@ -1339,7 +1339,7 @@ export default function FranchisePage() {
                       max="150" 
                       step="5"
                       value={monthlyMemberships} 
-                      onChange={(e) => setMonthlyMemberships(parseInt(e.target.value))}
+                      onChange={(e) => setMonthlyMemberships(parseInt(e?.target?.value ?? ""))}
                       className="w-full accent-purple-500"
                     />
                   </div>
@@ -1355,7 +1355,7 @@ export default function FranchisePage() {
                       max="50" 
                       step="1"
                       value={employerClients} 
-                      onChange={(e) => setEmployerClients(parseInt(e.target.value))}
+                      onChange={(e) => setEmployerClients(parseInt(e?.target?.value ?? ""))}
                       className="w-full accent-purple-500"
                     />
                   </div>
@@ -1814,7 +1814,7 @@ export default function FranchisePage() {
                     type="text" 
                     required
                     value={formData.fullName}
-                    onChange={(e) => updateField('fullName', e.target.value)}
+                    onChange={(e) => updateField('fullName', e?.target?.value ?? "")}
                     placeholder="Enter your full name"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1826,7 +1826,7 @@ export default function FranchisePage() {
                     type="email" 
                     required
                     value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
+                    onChange={(e) => updateField('email', e?.target?.value ?? "")}
                     placeholder="name@example.com"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1838,7 +1838,7 @@ export default function FranchisePage() {
                     type="tel" 
                     required
                     value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
+                    onChange={(e) => updateField('phone', e?.target?.value ?? "")}
                     placeholder="+91 XXXXX XXXXX"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1854,7 +1854,7 @@ export default function FranchisePage() {
                   <input 
                     type="text" 
                     value={formData.companyName}
-                    onChange={(e) => updateField('companyName', e.target.value)}
+                    onChange={(e) => updateField('companyName', e?.target?.value ?? "")}
                     placeholder="Optional company name"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1866,7 +1866,7 @@ export default function FranchisePage() {
                     type="text" 
                     required
                     value={formData.experience}
-                    onChange={(e) => updateField('experience', e.target.value)}
+                    onChange={(e) => updateField('experience', e?.target?.value ?? "")}
                     placeholder="e.g., 5 years in educational retail"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1878,7 +1878,7 @@ export default function FranchisePage() {
                     type="text" 
                     required
                     value={formData.currentBusiness}
-                    onChange={(e) => updateField('currentBusiness', e.target.value)}
+                    onChange={(e) => updateField('currentBusiness', e?.target?.value ?? "")}
                     placeholder="e.g., Cyber Café Owner / Educational Consultant"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1923,7 +1923,7 @@ export default function FranchisePage() {
                     type="text" 
                     required
                     value={formData.preferredCity}
-                    onChange={(e) => updateField('preferredCity', e.target.value)}
+                    onChange={(e) => updateField('preferredCity', e?.target?.value ?? "")}
                     placeholder="e.g., Bhubaneswar or Patna"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1935,7 +1935,7 @@ export default function FranchisePage() {
                     type="text" 
                     required
                     value={formData.preferredState}
-                    onChange={(e) => updateField('preferredState', e.target.value)}
+                    onChange={(e) => updateField('preferredState', e?.target?.value ?? "")}
                     placeholder="e.g., Odisha or Bihar"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1946,7 +1946,7 @@ export default function FranchisePage() {
                   <input 
                     type="text" 
                     value={formData.proposedLocationSize}
-                    onChange={(e) => updateField('proposedLocationSize', e.target.value)}
+                    onChange={(e) => updateField('proposedLocationSize', e?.target?.value ?? "")}
                     placeholder="e.g., 1200 sq ft"
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                   />
@@ -1987,7 +1987,7 @@ export default function FranchisePage() {
                   <label className="text-[10px] font-black uppercase tracking-wider text-slate-300 block">Additional Notes / Territorial Demands</label>
                   <textarea 
                     value={formData.additionalNotes}
-                    onChange={(e) => updateField('additionalNotes', e.target.value)}
+                    onChange={(e) => updateField('additionalNotes', e?.target?.value ?? "")}
                     rows={3}
                     placeholder="Enter any specific questions or geographic requests..."
                     className="w-full bg-[#05030f] border border-[#2d2163] rounded-xl px-4 py-3 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
@@ -2146,7 +2146,7 @@ export default function FranchisePage() {
                 <input
                   type="text"
                   value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
+                  onChange={(e) => setChatInput(e?.target?.value ?? "")}
                   placeholder="Ask about AECN setup cost..."
                   className="flex-1 bg-[#05030f] border border-[#2d2163] rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-white placeholder-slate-600 focus:outline-none"
                 />

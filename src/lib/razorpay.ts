@@ -1,5 +1,7 @@
 export interface RazorpayCheckoutOptions {
-  amountInRupees: number;
+  amountInRupees?: number;
+  price?: number;
+  currency?: 'INR' | 'USD';
   planName: string;
   userEmail?: string;
   userName?: string;
@@ -33,8 +35,9 @@ export const loadRazorpayScript = (): Promise<boolean> => {
  * 3. On success, calls POST /api/verify-payment to verify HMAC-SHA256 signature
  */
 export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Promise<void> => {
-  // 1. Create Order via Backend API
-  const amountInPaise = Math.max(100, Math.round(options.amountInRupees * 100));
+  const currency = options.currency || 'INR';
+  const rawPrice = options.price !== undefined ? options.price : (options.amountInRupees || 399);
+  const amountInSubunits = Math.max(100, Math.round(rawPrice * 100));
 
   let orderData: any;
   try {
@@ -42,12 +45,13 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: amountInPaise,
-        currency: 'INR',
+        amount: amountInSubunits,
+        currency: currency,
         receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         notes: {
           planName: options.planName,
           userEmail: options.userEmail || '',
+          currency: currency,
           ...options.notes
         }
       })
@@ -60,8 +64,8 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
       console.warn("Create order API status non-ok, using fallback order:", errorData);
       orderData = {
         order_id: `order_demo_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        amount: amountInPaise,
-        currency: 'INR',
+        amount: amountInSubunits,
+        currency: currency,
         key_id: 'rzp_test_arohi_demo',
         isDemo: true
       };
@@ -70,8 +74,8 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
     console.warn("Create order fetch error, using fallback order:", err);
     orderData = {
       order_id: `order_demo_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      amount: amountInPaise,
-      currency: 'INR',
+      amount: amountInSubunits,
+      currency: currency,
       key_id: 'rzp_test_arohi_demo',
       isDemo: true
     };
@@ -95,7 +99,8 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
           razorpay_signature: demoSig,
           userEmail: options.userEmail || 'elitetraderjunoon@gmail.com',
           planName: options.planName,
-          amount: options.amountInRupees
+          amount: rawPrice,
+          currency: currency
         })
       });
 
@@ -159,7 +164,8 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
               razorpay_signature: paymentResponse.razorpay_signature,
               userEmail: options.userEmail || 'elitetraderjunoon@gmail.com',
               planName: options.planName,
-              amount: options.amountInRupees
+              amount: rawPrice,
+              currency: currency
             })
           });
 

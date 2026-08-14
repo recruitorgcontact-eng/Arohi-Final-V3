@@ -42,7 +42,8 @@ import {
   Share2,
   Scale,
   Theater,
-  Palette
+  Palette,
+  Box
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
@@ -67,6 +68,7 @@ interface WelcomeLandingProps {
   remainingMinutes?: number;
   remainingSeconds?: number;
   onUpgradeClick?: () => void;
+  onOpen3DLearning?: (topicId?: string) => void;
 }
 
 export default function WelcomeLanding({ 
@@ -86,7 +88,8 @@ export default function WelcomeLanding({
   remainingHours = 0,
   remainingMinutes = 0,
   remainingSeconds = 0,
-  onUpgradeClick
+  onUpgradeClick,
+  onOpen3DLearning
 }: WelcomeLandingProps) {
   const { user, userData } = useAuth();
   
@@ -809,7 +812,7 @@ export default function WelcomeLanding({
               <input 
                 type="text" 
                 value={landingInputText}
-                onChange={(e) => setLandingInputText(e.target.value)}
+                onChange={(e) => setLandingInputText(e?.target?.value ?? "")}
                 placeholder={isListening ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
                 className={`w-full bg-transparent text-xs sm:text-sm font-medium outline-none px-1 ${
                   isListening
@@ -932,6 +935,8 @@ export default function WelcomeLanding({
             </button>
           </div>
 
+
+
         </div>
 
         {/* 3. "Explore Arohi AI" Section */}
@@ -961,7 +966,7 @@ export default function WelcomeLanding({
               <input 
                 type="text" 
                 value={categorySearchQuery}
-                onChange={(e) => setCategorySearchQuery(e.target.value)}
+                onChange={(e) => setCategorySearchQuery(e?.target?.value ?? "")}
                 placeholder="Search across all 20 audience categories..."
                 className={`w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-2xl border outline-none transition-all ${
                   isDarkMode 

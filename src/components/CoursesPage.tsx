@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 import { 
   Sparkles, 
   BookOpen, 
@@ -341,20 +342,29 @@ function getModuleContent(courseId: string, topicName: string, index: number) {
 }
 
 function renderMarkdown(content: string) {
-  // Helper to parse inline styles: **bold**, *italic*, `code`
+  // Helper to parse inline styles: [text](url), **bold**, *italic*, `code` and raw URLs
   const parseInline = (text: string): React.ReactNode[] => {
-    const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+    const regex = /(\[[^\]]+\]\([^)]+\)\s*|\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
     const pieces = text.split(regex);
     
-    return pieces.map((piece, idx) => {
-      if (piece.startsWith('**') && piece.endsWith('**')) {
-        return <strong key={idx} className="font-extrabold text-[#c084fc]">{piece.slice(2, -2)}</strong>;
+    return pieces.flatMap((piece, idx): React.ReactNode[] => {
+      if (piece.startsWith('[') && piece.includes('](') && piece.endsWith(')')) {
+        const linkMatch = piece.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (linkMatch) {
+          const label = linkMatch[1].replace(/\*\*/g, '').trim();
+          let href = linkMatch[2].trim();
+          return [<ArohiChatLink key={idx} href={href} label={label} />];
+        }
+      } else if (piece.startsWith('**') && piece.endsWith('**')) {
+        const inner = piece.slice(2, -2);
+        return [<strong key={idx} className="font-extrabold text-[#c084fc]">{parsePlainSegmentsWithLinks(inner, `bold-${idx}`)}</strong>];
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
-        return <em key={idx} className="italic text-slate-100">{piece.slice(1, -1)}</em>;
+        const inner = piece.slice(1, -1);
+        return [<em key={idx} className="italic text-slate-100">{parsePlainSegmentsWithLinks(inner, `italic-${idx}`)}</em>];
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return <code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>;
+        return [<code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>];
       }
-      return piece;
+      return parsePlainSegmentsWithLinks(piece, `plain-${idx}`);
     });
   };
 
@@ -1267,7 +1277,7 @@ Keep in mind:
                         <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1">Interactive Script Editor</label>
                         <textarea
                           value={editorCode}
-                          onChange={(e) => setEditorCode(e.target.value)}
+                          onChange={(e) => setEditorCode(e?.target?.value ?? "")}
                           className="w-full h-48 bg-[#0c0822] border border-[#2b215e] focus:border-[#7c3aed] focus:outline-none p-3 rounded-2xl font-mono text-[11px] text-emerald-300 leading-relaxed resize-none shadow-inner"
                         ></textarea>
                       </div>
@@ -1324,7 +1334,7 @@ Keep in mind:
                         <input
                           type="text"
                           value={bizName}
-                          onChange={(e) => setBizName(e.target.value)}
+                          onChange={(e) => setBizName(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-3 py-2 rounded-xl text-white font-semibold"
                         />
                       </div>
@@ -1332,7 +1342,7 @@ Keep in mind:
                         <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">GST filing scheme</label>
                         <select
                           value={bizTaxScheme}
-                          onChange={(e) => setBizTaxScheme(e.target.value)}
+                          onChange={(e) => setBizTaxScheme(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-3 py-2 rounded-xl text-white font-semibold focus:outline-none"
                         >
                           <option value="GST-Composition">GST Composition (1%)</option>
@@ -1345,7 +1355,7 @@ Keep in mind:
                         <input
                           type="number"
                           value={bizInflow}
-                          onChange={(e) => setBizInflow(e.target.value)}
+                          onChange={(e) => setBizInflow(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-3 py-2 rounded-xl text-white font-semibold"
                         />
                       </div>
@@ -1354,7 +1364,7 @@ Keep in mind:
                         <input
                           type="number"
                           value={bizOutflow}
-                          onChange={(e) => setBizOutflow(e.target.value)}
+                          onChange={(e) => setBizOutflow(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-3 py-2 rounded-xl text-white font-semibold"
                         />
                       </div>
@@ -1446,7 +1456,7 @@ Keep in mind:
                         <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Select Tool</label>
                         <select
                           value={vocationalTool}
-                          onChange={(e) => setVocationalTool(e.target.value)}
+                          onChange={(e) => setVocationalTool(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-2.5 py-2 rounded-xl text-white font-semibold text-[11px]"
                         >
                           <option value="multimeter">Digital Multimeter (V/Ω)</option>
@@ -1458,7 +1468,7 @@ Keep in mind:
                         <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Target Node</label>
                         <select
                           value={vocationalNode}
-                          onChange={(e) => setVocationalNode(e.target.value)}
+                          onChange={(e) => setVocationalNode(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-2.5 py-2 rounded-xl text-white font-semibold text-[11px]"
                         >
                           <option value="positive-terminal">Cell Node (+V IN)</option>
@@ -1471,7 +1481,7 @@ Keep in mind:
                         <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Dial Setting</label>
                         <select
                           value={vocationalDials}
-                          onChange={(e) => setVocationalDials(e.target.value)}
+                          onChange={(e) => setVocationalDials(e?.target?.value ?? "")}
                           className="w-full bg-[#18133a] border border-[#2d2163] px-2.5 py-2 rounded-xl text-white font-semibold text-[11px]"
                         >
                           <option value="voltage">Voltage (V / AC-DC)</option>
@@ -1713,7 +1723,7 @@ Keep in mind:
                   type="text"
                   placeholder="Ask Arohi about this unit..."
                   value={tutorInput}
-                  onChange={(e) => setTutorInput(e.target.value)}
+                  onChange={(e) => setTutorInput(e?.target?.value ?? "")}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendTutorMessage()}
                   className="flex-1 bg-[#18133a] border border-[#2d2163] rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#7c3aed] text-white placeholder-slate-500"
                 />
@@ -1808,7 +1818,7 @@ Keep in mind:
       {/* NEW COURSE PROGRESS & INTERACTIVE ANALYTICS DASHBOARD */}
       {showDashboard && (() => {
         const totalEnrolled = enrolledCourses.length;
-        const totalCompletedModules = (Object.values(completedModules) as string[][]).reduce((acc, curr) => acc + curr.length, 0);
+        const totalCompletedModules = (Object.values(completedModules || {}) as string[][]).reduce((acc, curr) => acc + (Array.isArray(curr) ? curr.length : 0), 0);
         const earnedCertCount = earnedCertificates.length;
 
         const enrolledCoursesList = enrolledCourses.map(id => {
@@ -2019,7 +2029,7 @@ Keep in mind:
                   type="text"
                   placeholder="Search tools, skills, or titles..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       addToSearchHistory(searchQuery);
@@ -2512,7 +2522,7 @@ Keep in mind:
                     <input 
                       type="text" 
                       value={candidateName}
-                      onChange={(e) => setCandidateName(e.target.value)}
+                      onChange={(e) => setCandidateName(e?.target?.value ?? "")}
                       className="w-full bg-[#19143d] border border-[#3b2b73] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed]"
                     />
                   </div>

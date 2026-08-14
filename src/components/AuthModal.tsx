@@ -527,7 +527,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     type="text"
                     placeholder="Enter your name"
                     value={onboardName}
-                    onChange={(e) => setOnboardName(e.target.value)}
+                    onChange={(e) => setOnboardName(e?.target?.value ?? "")}
                     className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                     required
                   />
@@ -546,7 +546,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       type="tel"
                       placeholder="9876543210"
                       value={onboardPhone}
-                      onChange={(e) => setOnboardPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      onChange={(e) => setOnboardPhone(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 10))}
                       className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                       required
                       pattern="[0-9]{10}"
@@ -618,7 +618,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         type="tel"
                         placeholder="9876543210"
                         value={phoneNumber.replace(/^\+91/, '')}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={(e) => setPhoneNumber(e?.target?.value ?? "")}
                         className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                         required
                         pattern="[0-9]{10}"
@@ -653,7 +653,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       type="text"
                       placeholder="123456"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      onChange={(e) => setOtp(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 6))}
                       className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 tracking-[0.5em] text-center focus:outline-none focus:border-purple-500 transition-all"
                       required
                     />
@@ -793,7 +793,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         type="text"
                         placeholder="Enter your name"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => setName(e?.target?.value ?? "")}
                         className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                         required
                       />
@@ -812,7 +812,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           type="tel"
                           placeholder="9876543210"
                           value={signupPhone}
-                          onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          onChange={(e) => setSignupPhone(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 10))}
                           className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                           required
                           pattern="[0-9]{10}"
@@ -888,7 +888,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           type="text"
                           value={authCouponInput}
                           onChange={(e) => {
-                            setAuthCouponInput(e.target.value);
+                            setAuthCouponInput(e?.target?.value ?? "");
                             setAuthCouponError('');
                             setAuthCouponSuccess('');
                           }}
@@ -940,7 +940,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     type="email"
                     placeholder="name@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e?.target?.value ?? "")}
                     className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                     required
                   />
@@ -972,7 +972,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       type="password"
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e?.target?.value ?? "")}
                       className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
                       required
                       minLength={6}

@@ -11,6 +11,7 @@ import { Language, getTranslation } from './translations';
 
 // Core Tab Components
 import ArohiChat from './components/ArohiChat';
+import Arohi3DLearningWorkspace from './components/learning3d/Arohi3DLearningWorkspace';
 import ResumePage from './components/ResumePage';
 import CareerPage from './components/CareerPage';
 import InterviewPage from './components/InterviewPage';
@@ -42,7 +43,7 @@ import SeoHubModal from './components/SeoHubModal';
 import GlobalSEODirectory from './components/GlobalSEODirectory';
 import GeoLocationBanner from './components/GeoLocationBanner';
 import BackgroundScrollEffects from './components/BackgroundScrollEffects';
-import { PRICING_TIERS, PATH_DETAILS, getTokenLimitForPrice } from './data/pricingData';
+import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PATH_DETAILS, getTokenLimitForPrice, detectUserCurrency, getPricingTiers } from './data/pricingData';
 import TokenWarningToastContainer from './components/TokenWarningToastContainer';
 import { openRazorpayCheckout } from './lib/razorpay';
 
@@ -78,6 +79,8 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
+  const [isGlobal3DLearningOpen, setIsGlobal3DLearningOpen] = useState(false);
+  const [global3DTopic, setGlobal3DTopic] = useState('human_heart');
   const IS_TOUR_ENABLED = false; // Set to true to activate walkthrough / site tour
 
   // Auto-trigger walkthrough for newly logged-in users or guest users upon entry
@@ -179,6 +182,9 @@ export default function App() {
       bodyEl.style.color = '#0f172a';
     }
   }, [isDarkMode]);
+
+  // Global Multi-Currency State (INR vs USD)
+  const [currency, setCurrency] = useState<'INR' | 'USD'>(() => detectUserCurrency());
 
   const [userName, setUserName] = useState(() => {
     return getStorageItem('arohi_user_name') || 'Honored Guest';
@@ -534,7 +540,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const hasActiveSubscription = Object.values(subscriptions).some(Boolean);
+  const hasActiveSubscription = Object.values(subscriptions || {}).some(Boolean);
   const timeElapsed = currentTime - trialStartTime;
   const isTrialActive = timeElapsed < TWO_DAYS_MS;
   const isTrialExpired = !isTrialActive && !hasActiveSubscription;
@@ -1237,12 +1243,10 @@ export default function App() {
 
   // Sync applications and states with Firestore in real time if user is logged in
   useEffect(() => {
-    if (user && userData) {
-      if (userData.applications) {
-        setApplications(userData.applications);
-      }
+    if (user && userData?.applications) {
+      setApplications(userData.applications);
     }
-  }, [user, userData]);
+  }, [user, userData?.applications]);
 
   const handleAddPosting = (newPost: Posting) => {
     const updated = [newPost, ...postings];
@@ -1643,6 +1647,8 @@ export default function App() {
       case 'subscriptions':
         return (
           <PricingPage 
+            currency={currency}
+            onCurrencyChange={setCurrency}
             subscriptions={subscriptions}
             subscriptionDetails={subscriptionDetails}
             onSubscribe={handleSubscribe}
@@ -1825,6 +1831,10 @@ export default function App() {
             price: '₹399/mo'
           });
         }}
+        onOpen3DLearning={(topicId) => {
+          if (topicId) setGlobal3DTopic(topicId);
+          setIsGlobal3DLearningOpen(true);
+        }}
       />
     );
   };
@@ -1982,7 +1992,7 @@ export default function App() {
                 type="text"
                 placeholder={isListening ? "Listening... Speak now 🎙️" : "Search government exam boards, admit cards, or results..."}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
                 className={`w-full bg-[#0a0715] text-white border rounded-xl pl-4 pr-16 py-3 text-xs font-bold focus:outline-none transition-all duration-300 ${
                   isListening 
                     ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.25)] placeholder-red-400 font-extrabold' 
@@ -2033,7 +2043,7 @@ export default function App() {
               <select
                 id="jobs-sort-by-select"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest')}
+                onChange={(e) => setSortBy((e?.target?.value || 'newest') as 'newest' | 'oldest')}
                 className="bg-transparent text-xs font-black text-[#c084fc] hover:text-white focus:outline-none cursor-pointer pr-1"
               >
                 <option value="newest" className="bg-[#0f0b24] text-white font-bold">Newest First</option>
@@ -2730,6 +2740,10 @@ export default function App() {
               price: '₹399/mo'
             });
           }}
+          onOpen3DLearning={(topicId) => {
+            if (topicId) setGlobal3DTopic(topicId);
+            setIsGlobal3DLearningOpen(true);
+          }}
         />
 
         {/* Floating Chat Overlay Container */}
@@ -2810,13 +2824,46 @@ export default function App() {
             </p>
 
             <div className="bg-[#181335] border border-[#2d235e] rounded-xl p-2.5 text-left space-y-2">
-              <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
-                Select Your Plan
-              </label>
+              <div className="flex items-center justify-between pb-1 border-b border-[#2d235e]">
+                <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
+                  Select Your Plan
+                </label>
+                <div className="flex items-center gap-1 bg-[#0b081e] p-1 rounded-lg border border-[#3b2d73]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrency('INR');
+                      try { localStorage.setItem('arohi_currency', 'INR'); } catch(e){}
+                    }}
+                    className={`px-2 py-0.5 rounded text-[9px] font-black transition-all cursor-pointer ${
+                      currency === 'INR'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🇮🇳 ₹ INR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrency('USD');
+                      try { localStorage.setItem('arohi_currency', 'USD'); } catch(e){}
+                    }}
+                    className={`px-2 py-0.5 rounded text-[9px] font-black transition-all cursor-pointer ${
+                      currency === 'USD'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🌐 $ USD (Global)
+                  </button>
+                </div>
+              </div>
 
               <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
-                {PRICING_TIERS.map((tier, idx) => {
+                {getPricingTiers(currency).map((tier, idx) => {
                   const isSelected = selectedModalPlan === idx;
+                  const sym = currency === 'USD' ? '$' : '₹';
                   return (
                     <div
                       key={tier.name}
@@ -2839,13 +2886,13 @@ export default function App() {
                         </div>
                       </div>
                       <span className={`text-xs font-black shrink-0 px-2 py-0.5 rounded-md border ${
-                        tier.price === 399
+                        tier.price === 399 || tier.price === 9
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           : isSelected
                           ? 'bg-purple-500/30 text-purple-200 border-purple-400/40'
                           : 'bg-slate-800 text-slate-300 border-slate-700'
                       }`}>
-                        ₹{tier.price}/mo
+                        {sym}{tier.price}/mo
                       </span>
                     </div>
                   );
@@ -2870,7 +2917,7 @@ export default function App() {
                   type="text"
                   value={couponInput}
                   onChange={(e) => {
-                    setCouponInput(e.target.value);
+                    setCouponInput(e?.target?.value ?? "");
                     setCouponError('');
                     setCouponSuccess('');
                   }}
@@ -2933,11 +2980,13 @@ export default function App() {
               <button
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
-                  const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
+                  const activeTiers = getPricingTiers(currency);
+                  const chosenTier = activeTiers[selectedModalPlan] || activeTiers[0];
+                  const sym = currency === 'USD' ? '$' : '₹';
                   const title = `${chosenTier.name} Subscription`;
-                  const coinsToRedeem = (useCoinRedemption && arohiCoinBalance > 0) ? Math.min(arohiCoinBalance, 100) : 0;
+                  const coinsToRedeem = (useCoinRedemption && arohiCoinBalance > 0 && currency === 'INR') ? Math.min(arohiCoinBalance, 100) : 0;
                   const finalPayable = Math.max(0, chosenTier.price - coinsToRedeem);
-                  const priceText = coinsToRedeem > 0 ? `₹${finalPayable} (₹${coinsToRedeem} Off via Coins)` : `₹${chosenTier.price}`;
+                  const priceText = coinsToRedeem > 0 ? `${sym}${finalPayable} (${sym}${coinsToRedeem} Off via Coins)` : `${sym}${chosenTier.price}`;
                   
                   setCheckoutPath({
                     id: 'path1',
@@ -2948,6 +2997,7 @@ export default function App() {
                   try {
                     await openRazorpayCheckout({
                       amountInRupees: finalPayable,
+                      currency: currency,
                       planName: title,
                       userEmail: user?.email || 'elitetraderjunoon@gmail.com',
                       userName: user?.displayName || 'Arohi AI Premium Member',
@@ -3580,6 +3630,7 @@ export default function App() {
                   try {
                     await openRazorpayCheckout({
                       amountInRupees: numericPrice,
+                      currency: currency,
                       planName: checkoutPath.title,
                       userEmail: user?.email || 'elitetraderjunoon@gmail.com',
                       userName: user?.displayName || 'Arohi AI Premium Member',
@@ -3706,7 +3757,7 @@ export default function App() {
                       type="text"
                       placeholder="Search reviews (e.g., Drone, ATS, BPSC)..."
                       value={reviewsSearchQuery}
-                      onChange={(e) => setReviewsSearchQuery(e.target.value)}
+                      onChange={(e) => setReviewsSearchQuery(e?.target?.value ?? "")}
                       className="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500/50 text-white text-xs pl-9 pr-4 py-2.5 rounded-xl outline-none transition-colors"
                     />
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-500 absolute left-3 top-3">
@@ -3727,7 +3778,7 @@ export default function App() {
                     <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold pr-2 whitespace-nowrap">State:</span>
                     <select
                       value={reviewsStateFilter}
-                      onChange={(e) => setReviewsStateFilter(e.target.value)}
+                      onChange={(e) => setReviewsStateFilter(e?.target?.value ?? "")}
                       className="w-full bg-transparent text-slate-200 text-xs py-2.5 outline-none cursor-pointer font-semibold"
                     >
                       <option value="All">All States (Pan-India)</option>
@@ -3749,7 +3800,7 @@ export default function App() {
                     <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold pr-2 whitespace-nowrap">Rating:</span>
                     <select
                       value={reviewsRatingFilter}
-                      onChange={(e) => setReviewsRatingFilter(e.target.value)}
+                      onChange={(e) => setReviewsRatingFilter(e?.target?.value ?? "")}
                       className="w-full bg-transparent text-slate-200 text-xs py-2.5 outline-none cursor-pointer font-semibold text-amber-400"
                     >
                       <option value="All">All Ratings</option>
@@ -3981,6 +4032,15 @@ export default function App() {
           details={lottieSuccessData.details}
           buttonText={lottieSuccessData.buttonText}
           badgeText={lottieSuccessData.badgeText}
+        />
+      )}
+
+      {/* Global 3D Learning Workspace Modal */}
+      {isGlobal3DLearningOpen && (
+        <Arohi3DLearningWorkspace
+          onExit={() => setIsGlobal3DLearningOpen(false)}
+          initialTopicId={global3DTopic}
+          isDarkMode={isDarkMode}
         />
       )}
 

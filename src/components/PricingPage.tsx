@@ -1,23 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Sparkles, Check, CheckCircle2, ShieldCheck, Phone, Cpu, Crown, 
   ArrowRight, Lock, Zap, HelpCircle, Star, Award, Building, BookOpen, UserCheck,
-  Tag, AlertCircle, RefreshCw
+  Tag, AlertCircle, RefreshCw, Globe
 } from 'lucide-react';
-import { PRICING_TIERS, PricingTier } from '../data/pricingData';
+import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PricingTier, detectUserCurrency, getPricingTiers } from '../data/pricingData';
 
 interface PricingPageProps {
   embedMode?: boolean;
+  currency?: 'INR' | 'USD';
+  onCurrencyChange?: (c: 'INR' | 'USD') => void;
   subscriptions?: Record<string, boolean>;
   subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
   onSubscribe?: (pathId: string, tierName?: string, priceOrPaymentMethod?: any) => void;
   onNavigateTab?: (tab: string) => void;
-  onOpenCheckout?: (path: { id: string; title: string; price: string }, detail: { tierName: string; price: number; margin: number }) => void;
+  onOpenCheckout?: (path: { id: string; title: string; price: string }, detail: { tierName: string; price: number; margin: number; currency?: string }) => void;
   onOpenAuth?: () => void;
 }
 
 export default function PricingPage({
   embedMode = false,
+  currency: externalCurrency,
+  onCurrencyChange,
   subscriptions = {},
   subscriptionDetails = {},
   onSubscribe,
@@ -25,7 +29,24 @@ export default function PricingPage({
   onOpenCheckout,
   onOpenAuth
 }: PricingPageProps) {
-  const [selectedTierIndex, setSelectedTierIndex] = useState<number>(1); // Professional Plan default (index 1, ₹699)
+  const [internalCurrency, setInternalCurrency] = useState<'INR' | 'USD'>(() => externalCurrency || detectUserCurrency());
+  
+  const activeCurrency = externalCurrency || internalCurrency;
+
+  const handleCurrencyToggle = (newCurrency: 'INR' | 'USD') => {
+    setInternalCurrency(newCurrency);
+    try {
+      localStorage.setItem('arohi_currency', newCurrency);
+    } catch (e) {}
+    if (onCurrencyChange) {
+      onCurrencyChange(newCurrency);
+    }
+  };
+
+  const currentTiers = getPricingTiers(activeCurrency);
+  const symbol = activeCurrency === 'USD' ? '$' : '₹';
+
+  const [selectedTierIndex, setSelectedTierIndex] = useState<number>(1); // Index 1 default
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   // Coupon / Promo Code State
@@ -48,7 +69,7 @@ export default function PricingPage({
     setTimeout(() => {
       setIsApplyingCoupon(false);
       if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399') {
-        const starterTier = PRICING_TIERS[0]; // Starter Plan ₹399
+        const starterTier = currentTiers[0];
         if (onSubscribe) {
           onSubscribe('path1', starterTier.name, `Coupon Code ${cleanCode}`);
         }
@@ -56,7 +77,7 @@ export default function PricingPage({
           localStorage.setItem('arohi_applied_coupon', cleanCode);
         } catch (e) {}
 
-        setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! Starter Plan (₹399/mo) activated for free!`);
+        setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! ${starterTier.name} (${symbol}${starterTier.price}/mo) activated!`);
         setCouponInput('');
       } else {
         setCouponError('Invalid coupon code. Please check and try again.');
@@ -64,20 +85,22 @@ export default function PricingPage({
     }, 400);
   };
 
-  const selectedTier = PRICING_TIERS[selectedTierIndex];
+  const selectedTier = currentTiers[selectedTierIndex] || currentTiers[0];
 
   const handlePlanSelect = (tier: PricingTier) => {
+    const priceFormatted = `${activeCurrency === 'USD' ? '$' : '₹'}${tier.price}/Month`;
     if (onOpenCheckout) {
       onOpenCheckout(
         {
           id: 'path1',
           title: `Arohi AI ${tier.name}`,
-          price: `₹${tier.price}/Month`
+          price: priceFormatted
         },
         {
           tierName: tier.name,
           price: tier.price,
-          margin: tier.margin
+          margin: tier.margin,
+          currency: activeCurrency
         }
       );
     } else if (onSubscribe) {
@@ -96,12 +119,44 @@ export default function PricingPage({
         </div>
 
         <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-          Flexible Pricing from <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-300 dark:via-yellow-200 dark:to-amber-400 font-black">₹399 to ₹4,999</span> <span className="text-slate-800 dark:text-white">/ Month</span>
+          Flexible Pricing from <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-300 dark:via-yellow-200 dark:to-amber-400 font-black">{symbol}{currentTiers[0]?.price} to {symbol}{currentTiers[currentTiers.length - 1]?.price}</span> <span className="text-slate-800 dark:text-white">/ Month</span>
         </h1>
 
         <p className="text-sm md:text-base text-slate-700 dark:text-slate-300 font-bold leading-relaxed">
-          Unlock Unlimited AI Chat, High-Speed AI Token Credits, Live Voice Calls, ATS Resume Scoring, and Career Intelligence across India.
+          {activeCurrency === 'USD' 
+            ? 'Global AI Access: Unlimited AI Chat, High-Speed Token Credits, Live Voice Calls, ATS Scans & Business Intelligence across 150+ Countries.' 
+            : 'Unlock Unlimited AI Chat, High-Speed AI Token Credits, Live Voice Calls, ATS Resume Scoring, and Career Intelligence across India.'}
         </p>
+
+        {/* 🌐 CURRENCY SELECTOR SWITCHER PILL */}
+        <div className="pt-2 flex justify-center">
+          <div className="bg-[#12082b] border-2 border-purple-500/60 p-1 rounded-2xl shadow-2xl inline-flex items-center gap-1.5 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => handleCurrencyToggle('INR')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+                activeCurrency === 'INR'
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-lg scale-105'
+                  : 'text-slate-300 hover:text-white hover:bg-purple-900/40'
+              }`}
+            >
+              <span className="text-sm">🇮🇳</span>
+              <span>₹ INR (India Domestic)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCurrencyToggle('USD')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+                activeCurrency === 'USD'
+                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white shadow-lg scale-105'
+                  : 'text-slate-300 hover:text-white hover:bg-purple-900/40'
+              }`}
+            >
+              <Globe className="w-4 h-4 text-cyan-300 animate-pulse" />
+              <span>🌐 $ USD (International Global)</span>
+            </button>
+          </div>
+        </div>
 
         {/* Highlighted Banner */}
         <div className="dark-card inline-flex flex-wrap items-center justify-center gap-3 bg-emerald-950 border border-emerald-500/60 px-5 py-2.5 rounded-2xl shadow-xl text-xs font-extrabold text-emerald-300">
@@ -176,7 +231,7 @@ export default function PricingPage({
               type="text"
               value={couponInput}
               onChange={(e) => {
-                setCouponInput(e.target.value);
+                setCouponInput(e?.target?.value ?? "");
                 setCouponError('');
                 setCouponSuccess('');
               }}
@@ -217,12 +272,12 @@ export default function PricingPage({
         </div>
       </div>
 
-      {/* 5 TIERS CARDS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-stretch">
-        {PRICING_TIERS.map((tier, idx) => {
+      {/* TIERS CARDS GRID */}
+      <div className={`grid grid-cols-1 md:grid-cols-3 ${currentTiers.length === 6 ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-5'} gap-4 items-stretch`}>
+        {currentTiers.map((tier, idx) => {
           const isSelected = selectedTierIndex === idx;
-          const isPopular = idx === 1; // Professional Plan
-          const isUltimate = idx === 4; // Ultimate Plan
+          const isPopular = idx === (currentTiers.length === 6 ? 2 : 1);
+          const isUltimate = idx === (currentTiers.length - 1);
 
           return (
             <div
@@ -236,12 +291,12 @@ export default function PricingPage({
             >
               {/* Top Badges */}
               {isPopular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-amber-300">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-amber-300 shrink-0 whitespace-nowrap">
                   🔥 Most Popular
                 </div>
               )}
               {isUltimate && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-emerald-300">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-emerald-300 shrink-0 whitespace-nowrap">
                   👑 Unlimited Power
                 </div>
               )}
@@ -253,14 +308,14 @@ export default function PricingPage({
                     {tier.name}
                   </span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-white">₹{tier.price}</span>
+                    <span className="text-3xl font-black text-white">{symbol}{tier.price}</span>
                     <span className="text-xs text-slate-300 font-bold">/month</span>
                   </div>
                   <div className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md text-[8.5px] font-black uppercase tracking-wide">
-                    <span>🪙 100% Cashback: Get {tier.price} Coins</span>
+                    <span>🪙 100% Cashback: Get {symbol}{tier.price} Coins</span>
                   </div>
                   <span className="text-[9px] text-emerald-300 font-extrabold block">
-                    GST Included • Instant Activation
+                    {activeCurrency === 'USD' ? 'Global Cards • Apple Pay • Instant Access' : 'GST Included • Instant Activation'}
                   </span>
                 </div>
 
@@ -310,7 +365,7 @@ export default function PricingPage({
                     </div>
                     <div className="flex items-start gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-100"><strong className="text-white">MSME Filings:</strong> {tier.limits.path3.msmeFilings}</span>
+                      <span className="text-slate-100"><strong className="text-white">Business Filings:</strong> {tier.limits.path3.msmeFilings}</span>
                     </div>
                   </div>
                 </div>
@@ -330,10 +385,10 @@ export default function PricingPage({
                   }`}
                 >
                   <Zap className="w-3.5 h-3.5 fill-current" />
-                  <span>Subscribe ₹{tier.price}</span>
+                  <span>Subscribe {symbol}{tier.price}</span>
                 </button>
                 <span className="text-[8px] text-slate-300 font-bold block text-center uppercase tracking-wider">
-                  Instant UPI / QR Code Payment
+                  {activeCurrency === 'USD' ? 'Global Cards / Apple Pay / Google Pay' : 'Instant UPI / QR Code Payment'}
                 </span>
               </div>
             </div>

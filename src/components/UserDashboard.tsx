@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Award, CheckCircle2, Bookmark, FileText, 
   Bot, Briefcase, Landmark, ExternalLink, Sparkles, AlertCircle, 
@@ -214,6 +214,7 @@ export default function UserDashboard({
   // Modal details
   const [activeReceipt, setActiveReceipt] = useState<any | null>(null);
   const [activeCertificate, setActiveCertificate] = useState<any | null>(null);
+  const hasInitializedDiagnosticsRef = useRef(false);
 
   // Sync profile & other lists in real time from context or localStorage fallbacks
   useEffect(() => {
@@ -225,7 +226,8 @@ export default function UserDashboard({
           interviewScore: userData.diagnostics.interviewScore ?? 0,
           businessScore: userData.diagnostics.businessScore ?? 0
         });
-      } else {
+      } else if (!hasInitializedDiagnosticsRef.current) {
+        hasInitializedDiagnosticsRef.current = true;
         const savedAtsScore = localStorage.getItem('recruit_ats_score');
         const savedInterviewScore = localStorage.getItem('recruit_interview_score');
         const savedBusinessScore = localStorage.getItem('recruit_business_score');
@@ -326,8 +328,8 @@ export default function UserDashboard({
       setCompletedCount(totalCompletedUnits);
 
       // Sync checklist items completed
-      if (userData.checkedChecklist) {
-        const completedList = Object.values(userData.checkedChecklist).filter(Boolean).length;
+      if (userData?.checkedChecklist) {
+        const completedList = Object.values(userData.checkedChecklist || {}).filter(Boolean).length;
         setCompletedChecklistItems(completedList);
       } else {
         setCompletedChecklistItems(0);
@@ -449,7 +451,7 @@ export default function UserDashboard({
       if (guestChecklistStr) {
         try {
           const parsedChecklist = JSON.parse(guestChecklistStr);
-          const completedList = Object.values(parsedChecklist).filter(Boolean).length;
+          const completedList = Object.values(parsedChecklist || {}).filter(Boolean).length;
           setCompletedChecklistItems(completedList);
         } catch {
           setCompletedChecklistItems(0);
@@ -559,7 +561,7 @@ export default function UserDashboard({
     }
 
     setActivities(list);
-  }, [appliedJobs, enrolledCourseList, diagnostics.atsScore, diagnostics.interviewScore, profile.resumeUrl, profile.activeGoal]);
+  }, [appliedJobs.length, enrolledCourseList.length, diagnostics.atsScore, diagnostics.interviewScore, profile.resumeUrl, profile.activeGoal]);
 
   const handleSaveProfile = async () => {
     try {
@@ -675,7 +677,7 @@ export default function UserDashboard({
     }
   ];
 
-  const hasAnyActive = Object.values(subscriptions).some(Boolean);
+  const hasAnyActive = Object.values(subscriptions || {}).some(Boolean);
 
   return (
     <div className="space-y-6">
@@ -744,7 +746,7 @@ export default function UserDashboard({
                       <input 
                         type="text" 
                         value={editedName} 
-                        onChange={e => setEditedName(e.target.value)}
+                        onChange={e => setEditedName(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -753,7 +755,7 @@ export default function UserDashboard({
                       <input 
                         type="text" 
                         value={editedPhone} 
-                        onChange={e => setEditedPhone(e.target.value)}
+                        onChange={e => setEditedPhone(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -765,7 +767,7 @@ export default function UserDashboard({
                       <input 
                         type="text" 
                         value={editedLocation} 
-                        onChange={e => setEditedLocation(e.target.value)}
+                        onChange={e => setEditedLocation(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -774,7 +776,7 @@ export default function UserDashboard({
                       <input 
                         type="text" 
                         value={editedEducation} 
-                        onChange={e => setEditedEducation(e.target.value)}
+                        onChange={e => setEditedEducation(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -786,7 +788,7 @@ export default function UserDashboard({
                       <input 
                         type="text" 
                         value={editedGoal} 
-                        onChange={e => setEditedGoal(e.target.value)}
+                        onChange={e => setEditedGoal(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -796,7 +798,7 @@ export default function UserDashboard({
                         type="text" 
                         value={editedResume} 
                         placeholder="https://drive.google.com/..."
-                        onChange={e => setEditedResume(e.target.value)}
+                        onChange={e => setEditedResume(e?.target?.value ?? "")}
                         className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
@@ -954,7 +956,7 @@ export default function UserDashboard({
         <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
           <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Active Paths Subscriptions</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-white">{Object.values(subscriptions).filter(Boolean).length}</span>
+            <span className="text-2xl font-black text-white">{Object.values(subscriptions || {}).filter(Boolean).length}</span>
             <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Unlocked</span>
           </div>
           <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Continuous assistance plan</p>

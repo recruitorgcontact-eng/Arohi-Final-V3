@@ -222,7 +222,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             </label>
             <select
               value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
+              onChange={(e) => setSelectedLang(e?.target?.value ?? "")}
               className="w-full bg-[#0a0718] text-white border border-[#3b2b80] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-[#7c3aed] cursor-pointer"
             >
               {INDIAN_LANGUAGES_BLOG.map(lang => (
@@ -244,7 +244,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
               placeholder="Search 100+ trending topics (e.g. SSC CGL 2026, PM Mudra Loan, Subhadra Yojana, ATS Resume)..."
               className="w-full bg-[#0a0718]/90 text-white border border-[#2d2163] focus:border-[#7c3aed] rounded-2xl pl-11 pr-4 py-3 text-xs font-bold focus:outline-none transition-all placeholder-slate-500 shadow-inner"
             />

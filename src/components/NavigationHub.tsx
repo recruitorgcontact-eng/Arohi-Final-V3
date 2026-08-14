@@ -218,7 +218,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                     ref={searchInputRef}
                     type="text"
                     value={filterQuery}
-                    onChange={(e) => setFilterQuery(e.target.value)}
+                    onChange={(e) => setFilterQuery(e?.target?.value ?? "")}
                     placeholder="Quick search sections..."
                     className="w-full bg-slate-100 dark:bg-[#140e33] border border-slate-200 dark:border-[#2b1f5e] focus:border-purple-500 text-slate-900 dark:text-white text-xs rounded-xl pl-9 pr-8 py-2.5 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
                   />

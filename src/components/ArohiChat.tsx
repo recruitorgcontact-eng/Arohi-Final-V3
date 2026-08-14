@@ -5,10 +5,14 @@ import {
   ArrowRight, Lightbulb, MapPin, Briefcase, Landmark, Award, Minus, X, Globe, Phone, 
   History, Download, FileText, FileSpreadsheet, ThumbsUp, ThumbsDown, Copy, MoreHorizontal, 
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
-  Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap,
+  Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid
+  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid, Box
 } from 'lucide-react';
+import Arohi3DLearningWorkspace from './learning3d/Arohi3DLearningWorkspace';
+import McpGatewayModal from './McpGatewayModal';
+import McpApprovalCard from './McpApprovalCard';
+import McpWorkflowOrchestratorModal from './McpWorkflowOrchestratorModal';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import ArohiAvatar from './ArohiAvatar';
 import { Language, getTranslation, getWelcomeContent, getSuggestedPrompts } from '../translations';
@@ -18,6 +22,7 @@ import { exportToPDF, exportToWord, exportToExcel } from '../lib/documentExporte
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 
 interface Message {
   id: string;
@@ -48,25 +53,127 @@ interface ArohiChatProps {
   language?: Language;
 }
 
+function getGmailWebUrl(mailtoUrl: string): string {
+  try {
+    const clean = mailtoUrl.replace(/^mailto:/i, '');
+    const [emailPart, queryPart] = clean.split('?');
+    const params = new URLSearchParams(queryPart || '');
+    const subject = params.get('subject') || '';
+    const body = params.get('body') || '';
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailPart)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  } catch (e) {
+    return `https://mail.google.com/mail/u/0/#inbox?compose=new`;
+  }
+}
+
+function preprocessMarkdownLinks(text: string): string {
+  if (!text) return '';
+  // 0. Decode raw HTML entities (&nbsp;, &amp;, &quot;, &#39;, &apos;) into standard characters
+  let cleaned = text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&ndash;/gi, '–')
+    .replace(/&mdash;/gi, '—');
+
+  // 1. Join any markdown link that spans multiple lines due to newlines inside mailto: or url
+  cleaned = cleaned.replace(/((?:\*\*)?\[[^\]]+\]\()([\s\S]*?)(\)(?:\*\*)?)/g, (fullMatch, prefix, urlContent, suffix) => {
+    const cleanedUrl = urlContent.replace(/\r?\n/g, '%0A');
+    return prefix + cleanedUrl + suffix;
+  });
+  
+  // 2. Unwrap bold around markdown links if formatted as **[Label](url)** or **[Label](mailto:...)**
+  cleaned = cleaned.replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1');
+
+  // 3. Convert raw mailto links like (mailto:foo@bar.com?...) or plain mailto:foo@bar.com into [Click Here to Open & Send in Gmail](mailto:...) if not already in markdown format
+  cleaned = cleaned.replace(/(^|[^\]\(])(mailto:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\S*)/g, (match, prefix, mailUrl) => {
+    const cleanMailUrl = mailUrl.replace(/[\)\.\,\;]+$/, '');
+    return `${prefix}[Click Here to Open & Send in Gmail](${cleanMailUrl})`;
+  });
+
+  return cleaned;
+}
+
 function renderMarkdown(content: string) {
-  // Helper to parse inline styles: **bold**, *italic*, `code`
+  const preprocessed = preprocessMarkdownLinks(content);
+
+  // Helper to parse inline styles: [text](url), **bold**, *italic*, `code` and raw URLs
   const parseInline = (text: string): React.ReactNode[] => {
-    const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+    const regex = /(\[[^\]]+\]\([^)]+\)\s*|\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
     const pieces = text.split(regex);
     
-    return pieces.map((piece, idx) => {
-      if (piece.startsWith('**') && piece.endsWith('**')) {
-        return <strong key={idx} className="font-extrabold text-[#c084fc]">{piece.slice(2, -2)}</strong>;
+    return pieces.flatMap((piece, idx): React.ReactNode[] => {
+      if (piece.startsWith('[') && piece.includes('](') && piece.endsWith(')')) {
+        const linkMatch = piece.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (linkMatch) {
+          const label = linkMatch[1].replace(/\*\*/g, '').trim();
+          let href = linkMatch[2].trim();
+          const isMail = href.startsWith('mailto:');
+          const isButtonLink = isMail || label.toLowerCase().includes('confirm') || label.toLowerCase().includes('pay') || label.toLowerCase().includes('authorize') || label.toLowerCase().includes('send') || label.toLowerCase().includes('gmail') || label.toLowerCase().includes('open');
+          
+          if (isButtonLink) {
+            const gmailWebUrl = isMail ? getGmailWebUrl(href) : null;
+            return [
+              <span key={idx} className="inline-flex flex-wrap items-center gap-2 my-2 align-middle">
+                <a
+                  href={href}
+                  target={isMail ? '_self' : '_blank'}
+                  rel="noreferrer"
+                  onClick={(e) => {
+                    if (isMail) {
+                      try {
+                        window.location.href = href;
+                      } catch (err) {
+                        if (gmailWebUrl) window.open(gmailWebUrl, '_blank');
+                      }
+                    }
+                  }}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 no-underline cursor-pointer border ${
+                    isMail
+                      ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-white border-rose-300/40 shadow-rose-900/40'
+                      : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 border-emerald-300/40'
+                  }`}
+                >
+                  {isMail ? <Mail className="w-4 h-4 shrink-0" /> : <Zap className="w-4 h-4 fill-slate-950 shrink-0" />}
+                  <span>{label}</span>
+                </a>
+
+                {isMail && gmailWebUrl && (
+                  <a
+                    href={gmailWebUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-extrabold text-[11px] bg-[#22134d] hover:bg-[#311c6b] text-amber-300 border border-amber-500/40 transition-all active:scale-95 no-underline cursor-pointer shadow-md"
+                    title="Open directly in Gmail Web Compose"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Open in Gmail Web</span>
+                  </a>
+                )}
+              </span>
+            ];
+          }
+          return [<ArohiChatLink key={idx} href={href} label={label} />];
+        }
+      } else if (piece.startsWith('**') && piece.endsWith('**')) {
+        const inner = piece.slice(2, -2);
+        if (inner.includes('[') && inner.includes('](') && inner.includes(')')) {
+          return [<strong key={idx} className="font-extrabold text-[#c084fc]">{parseInline(inner)}</strong>];
+        }
+        return [<strong key={idx} className="font-extrabold text-[#c084fc]">{parsePlainSegmentsWithLinks(inner, `bold-${idx}`)}</strong>];
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
-        return <em key={idx} className="italic text-slate-100">{piece.slice(1, -1)}</em>;
+        const inner = piece.slice(1, -1);
+        return [<em key={idx} className="italic text-slate-100">{parsePlainSegmentsWithLinks(inner, `italic-${idx}`)}</em>];
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return <code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>;
+        return [<code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>];
       }
-      return piece;
+      return parsePlainSegmentsWithLinks(piece, `plain-${idx}`);
     });
   };
 
-  const lines = content.split('\n');
+  const lines = preprocessed.split('\n');
   const elements: React.ReactNode[] = [];
 
   interface ListItem {
@@ -275,11 +382,38 @@ function parseMessageCallSummary(content: string) {
   };
 }
 
+function parseMessageMcpPayload(content: string) {
+  const startIndex = content.indexOf('[AROHI_MCP_PAYLOAD_START]');
+  const endIndex = content.indexOf('[AROHI_MCP_PAYLOAD_END]');
+  
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const rawJson = content.substring(startIndex + '[AROHI_MCP_PAYLOAD_START]'.length, endIndex);
+    const textWithoutJson = content.substring(0, startIndex) + content.substring(endIndex + '[AROHI_MCP_PAYLOAD_END]'.length);
+    try {
+      const parsedData = JSON.parse(rawJson);
+      return {
+        cleanedContent: textWithoutJson.trim(),
+        mcpData: parsedData
+      };
+    } catch (e) {
+      console.error("Failed to parse MCP payload JSON in message", e);
+    }
+  }
+  return {
+    cleanedContent: content,
+    mcpData: null
+  };
+}
+
 export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en' }: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
+  const [is3DLearningOpen, setIs3DLearningOpen] = useState(false);
+  const [active3DTopic, setActive3DTopic] = useState('human_heart');
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
+  const [isMcpGatewayOpen, setIsMcpGatewayOpen] = useState(false);
+  const [isWorkflowOrchestratorOpen, setIsWorkflowOrchestratorOpen] = useState(false);
   const [isRefreshingMemory, setIsRefreshingMemory] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -984,21 +1118,17 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
       const uEmail = user?.email || localStorage.getItem('recruit_user_email') || 'guest@recruitindia.org';
       const uName = userData?.profile?.name || user?.displayName || localStorage.getItem('recruit_user_name') || 'Honored Guest';
-      try {
-        fetch('/api/admin/sync-chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userEmail: uEmail,
-            userName: uName,
-            sender: 'arohi',
-            text: `[AI Action Plan Summary]\n\n${summaryContent}`,
-            topic: 'Session Summary'
-          })
-        });
-      } catch (e) {
-        // ignore
-      }
+      fetch('/api/admin/sync-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: uEmail,
+          userName: uName,
+          sender: 'arohi',
+          text: `[AI Action Plan Summary]\n\n${summaryContent}`,
+          topic: 'Session Summary'
+        })
+      }).catch(() => {});
     } catch (error) {
       console.error('Error generating AI summary:', error);
       alert('Failed to generate session summary. Please check your network connection.');
@@ -1158,6 +1288,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [selectedCallDetail, setSelectedCallDetail] = useState<any | null>(null);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [hasFetchedLatest, setHasFetchedLatest] = useState(false);
+  const hydratedUserRef = useRef<string | null>(null);
+  const prevSyncedMessagesJsonRef = useRef<string>('');
 
   const currentUserName = user 
     ? (userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || 'User') 
@@ -1174,11 +1306,19 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   );
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
 
-  // Hydration effect
+  // Initial Hydration effect - runs once per user login / guest session
   useEffect(() => {
+    const currentUserIdKey = user ? user.uid : 'guest';
+    if (hydratedUserRef.current === currentUserIdKey) return;
+
     if (user) {
       if (userData?.arohiChats && userData.arohiChats.length > 0) {
         setSavedChats(userData.arohiChats);
+        if (!activeChatId) {
+          setActiveChatId(userData.arohiChats[0].id);
+          setMessages(userData.arohiChats[0].messages);
+        }
+        hydratedUserRef.current = currentUserIdKey;
       } else {
         const initialMock: SavedChat[] = [
           {
@@ -1233,7 +1373,12 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
           }
         ];
         setSavedChats(initialMock);
-        updateArohiChats(initialMock);
+        if (!activeChatId) {
+          setActiveChatId(initialMock[0].id);
+          setMessages(initialMock[0].messages);
+        }
+        updateArohiChats(initialMock).catch(e => console.log('Init arohi chats:', e));
+        hydratedUserRef.current = currentUserIdKey;
       }
 
       if (userData?.arohiCalls) {
@@ -1245,7 +1390,14 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
       const localChats = localStorage.getItem('guest_arohi_chats');
       const localCalls = localStorage.getItem('guest_arohi_calls');
       if (localChats) {
-        setSavedChats(JSON.parse(localChats));
+        try {
+          const parsed = JSON.parse(localChats);
+          setSavedChats(parsed);
+          if (parsed.length > 0 && !activeChatId) {
+            setActiveChatId(parsed[0].id);
+            setMessages(parsed[0].messages);
+          }
+        } catch (e) {}
       } else {
         const initialMock: SavedChat[] = [
           {
@@ -1345,16 +1497,23 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
           }
         ];
         setSavedChats(initialMock);
+        if (!activeChatId) {
+          setActiveChatId(initialMock[0].id);
+          setMessages(initialMock[0].messages);
+        }
         localStorage.setItem('guest_arohi_chats', JSON.stringify(initialMock));
       }
 
       if (localCalls) {
-        setSavedCalls(JSON.parse(localCalls));
+        try {
+          setSavedCalls(JSON.parse(localCalls));
+        } catch (e) {}
       } else {
         setSavedCalls([]);
       }
+      hydratedUserRef.current = currentUserIdKey;
     }
-  }, [user, userData]);
+  }, [user, userData?.arohiChats]);
 
   // Fetch and restore the last conversation history from Firestore when starting a session
   useEffect(() => {
@@ -1375,7 +1534,6 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
             const freshData = resData.userData;
             if (freshData.arohiChats && freshData.arohiChats.length > 0) {
               setSavedChats(freshData.arohiChats);
-              // Select the absolute latest chat session (first in array)
               const latestChat = freshData.arohiChats[0];
               setActiveChatId(latestChat.id);
               setMessages(latestChat.messages);
@@ -1419,64 +1577,30 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
     fetchLatestHistory();
   }, [user, hasFetchedLatest]);
 
-  // Synchronize messages with the active chat
+  // Persist messages changes safely without cyclic dependency loops
   useEffect(() => {
-    if (savedChats.length > 0) {
-      const currentChat = savedChats.find(c => c.id === activeChatId) || savedChats[0];
-      if (currentChat) {
-        // Always dynamically update the content of the welcome message to match the latest universal version
-        const processedMessages = currentChat.messages.map(m => {
-          if (m.id === 'welcome') {
-            return { ...m, content: getWelcomeContent(language) };
-          }
-          return m;
-        });
-        setMessages(processedMessages);
-        if (activeChatId !== currentChat.id) {
-          setActiveChatId(currentChat.id);
-        }
-      }
-    } else {
-      const starterId = 'starter-' + Date.now();
-      const starterChat: SavedChat = {
-        id: starterId,
-        title: 'New Conversation',
-        date: 'Today',
-        messages: [
-          {
-            id: 'welcome',
-            role: 'assistant',
-            content: getWelcomeContent(language),
-            timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-          }
-        ]
-      };
-      setSavedChats([starterChat]);
-      setActiveChatId(starterId);
-      setMessages(starterChat.messages);
-      if (user) {
-        updateArohiChats([starterChat]);
+    if (!activeChatId || messages.length === 0) return;
+
+    const messagesJson = JSON.stringify(messages);
+    if (prevSyncedMessagesJsonRef.current === messagesJson) return;
+    prevSyncedMessagesJsonRef.current = messagesJson;
+
+    setSavedChats(prevChats => {
+      const chatIndex = prevChats.findIndex(c => c.id === activeChatId);
+      let updatedChats: SavedChat[];
+
+      if (chatIndex === -1) {
+        const newChat: SavedChat = {
+          id: activeChatId,
+          title: 'New Conversation',
+          date: 'Today',
+          messages
+        };
+        updatedChats = [newChat, ...prevChats];
       } else {
-        localStorage.setItem('guest_arohi_chats', JSON.stringify([starterChat]));
-      }
-    }
-  }, [activeChatId, savedChats.length]);
-
-  // Save changes effect whenever active chat messages state updates
-  const isSyncingRef = useRef(false);
-  useEffect(() => {
-    if (!activeChatId || isSyncingRef.current || savedChats.length === 0) return;
-    
-    const currentChat = savedChats.find(c => c.id === activeChatId);
-    if (!currentChat) return;
-
-    if (JSON.stringify(currentChat.messages) === JSON.stringify(messages)) return;
-
-    isSyncingRef.current = true;
-    const updatedChats = savedChats.map(chat => {
-      if (chat.id === activeChatId) {
-        let title = chat.title;
-        if (title === 'New Conversation' || title === 'New Discussion' || title === 'New Chat' || title.toLowerCase().includes('hi arohi')) {
+        const existing = prevChats[chatIndex];
+        let title = existing.title;
+        if (!title || title === 'New Conversation' || title === 'New Discussion' || title === 'New Chat' || title.toLowerCase().includes('hi arohi')) {
           const firstUserMsg = messages.find(m => m.role === 'user');
           if (firstUserMsg) {
             const cleaned = firstUserMsg.content.replace(/\[File Uploaded:.*?\]/g, '').trim();
@@ -1485,27 +1609,21 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
             } else {
               title = cleaned.length > 32 ? cleaned.substring(0, 30) + '...' : cleaned;
             }
-          } else {
-            title = user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!";
           }
         }
-        return {
-          ...chat,
-          title,
-          messages
-        };
-      }
-      return chat;
-    });
 
-    setSavedChats(updatedChats);
-    if (user) {
-      updateArohiChats(updatedChats);
-    } else {
-      localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
-    }
-    isSyncingRef.current = false;
-  }, [messages, activeChatId, savedChats, user]);
+        updatedChats = prevChats.map(c => c.id === activeChatId ? { ...c, title, messages } : c);
+      }
+
+      if (user) {
+        updateArohiChats(updatedChats).catch(e => console.log('Chat update:', e));
+      } else {
+        localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
+      }
+
+      return updatedChats;
+    });
+  }, [messages, activeChatId, user]);
 
   const deleteChat = (idToDelete: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1619,24 +1737,59 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
     logActivity('chat', 'Chat message sent', text.substring(0, 100));
 
     // Sync user message to admin portal
-    try {
-      fetch('/api/admin/sync-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail: uEmail,
-          userName: uName,
-          sender: 'user',
-          text: userMsgText,
-          topic: activeTopic
-        })
-      });
-    } catch (e) {
-      console.error('Error syncing user message to admin:', e);
-    }
+    fetch('/api/admin/sync-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userEmail: uEmail,
+        userName: uName,
+        sender: 'user',
+        text: userMsgText,
+        topic: activeTopic
+      })
+    }).catch(() => {});
 
     // Check if user is asking for image generation
     const lowerText = text.toLowerCase().trim();
+    
+    // Check if user is asking for 3D Learning
+    const is3DRequest = lowerText.includes('3d learning') || 
+                        lowerText.includes('interactive 3d') || 
+                        lowerText.includes('3d model') || 
+                        lowerText.includes('show in 3d') || 
+                        lowerText.includes('teach me in 3d') || 
+                        lowerText.includes('heart in 3d') || 
+                        lowerText.includes('3d heart') || 
+                        lowerText.includes('3d cell') || 
+                        lowerText.includes('3d dna') || 
+                        lowerText.includes('3d solar system') || 
+                        lowerText.includes('3d engine') || 
+                        lowerText.includes('3d atom') || 
+                        lowerText.includes('3d earth');
+
+    if (is3DRequest) {
+      let topic = 'human_heart';
+      if (lowerText.includes('cell')) topic = 'animal_cell';
+      else if (lowerText.includes('dna')) topic = 'dna_helix';
+      else if (lowerText.includes('solar') || lowerText.includes('planet')) topic = 'solar_system';
+      else if (lowerText.includes('engine') || lowerText.includes('car')) topic = 'four_stroke_engine';
+      else if (lowerText.includes('atom') || lowerText.includes('bohr')) topic = 'bohr_atom';
+      else if (lowerText.includes('earth') || lowerText.includes('crust')) topic = 'earth_layers';
+
+      setActive3DTopic(topic);
+      setIs3DLearningOpen(true);
+
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `✨ **Opening AROHI 3D Learning Workspace!**\n\nI have launched the interactive 3D model for subject exploration with **Levels 1–5 Integration**:\n- **Level 1**: Visual Learning & High-Definition Geometry\n- **Level 2**: Interactive 3D (360° Rotation, Pinch-Zoom, Part Inspection)\n- **Level 3**: Guided 3D Teaching (Arohi AI Step-by-Step Curriculum)\n- **Level 4**: Interactive Simulation (Cardiac Beat, Piston Motion, Planetary Orbit)\n- **Level 5**: AR/VR WebXR Immersive Experience\n\nYou can interact with the 3D model, click specific parts, ask natural language questions, and take interactive quizzes directly inside the workspace!`,
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsLoading(false);
+      return;
+    }
+
     const isImageRequest = lowerText.startsWith('generate image') || 
                            lowerText.startsWith('create image') || 
                            lowerText.startsWith('draw') || 
@@ -1692,19 +1845,17 @@ Yes! For an investment of ₹3 Lakhs, you qualify under the **Kishor Category** 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
           // Sync assistant response to admin portal
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Image Generated for prompt: ${promptText}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Image Generated for prompt: ${promptText}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -1774,19 +1925,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Music Generated: ${data.title}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Music Generated: ${data.title}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -1857,19 +2006,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Video Generated: ${data.title}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Video Generated: ${data.title}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -1936,19 +2083,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Deep Research Report Generated: ${data.documentName || 'Deep Research'}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Deep Research Report Generated: ${data.documentName || 'Deep Research'}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -2013,19 +2158,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Google Maps Report Generated: ${promptText}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Google Maps Report Generated: ${promptText}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -2095,19 +2238,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
-          try {
-            fetch('/api/admin/sync-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: uEmail,
-                userName: uName,
-                sender: 'arohi',
-                text: `[Arohi AI Intelligence Report Generated: ${promptText}]`,
-                topic: activeTopic
-              })
-            });
-          } catch (e) {}
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Arohi AI Intelligence Report Generated: ${promptText}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
         } else {
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
             ...m, 
@@ -2145,13 +2286,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         },
         body: JSON.stringify({
           message: text,
-          history: messages.map(m => ({ role: m.role, content: m.content })),
+          history: messages.filter(m => m && m.content && m.content.trim().length > 0).map(m => ({ role: m.role || 'user', content: m.content })),
           file: fileToSend,
           language: language,
           uid: user?.uid,
           systemContext: userMemory?.summaryContext
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       if (!response.body) {
         throw new Error('No streaming response body available');
@@ -2185,62 +2330,79 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, content: accumulatedText } : m));
               }
             } catch (e) {
-              console.error('Error parsing SSE json:', e);
+              console.warn('Error parsing SSE json:', e);
             }
           }
         }
       }
 
+      if (!accumulatedText.trim()) {
+        throw new Error('Streaming connection returned empty response');
+      }
+
       // Mark streaming complete
       setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, isStreaming: false } : m));
 
-      // Sync assistant response to admin portal
+      // Sync assistant response to admin portal safely
+      fetch('/api/admin/sync-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: uEmail,
+          userName: uName,
+          sender: 'arohi',
+          text: accumulatedText,
+          topic: activeTopic
+        })
+      }).catch(() => {});
+    } catch (error) {
+      console.warn('Primary stream fetch encountered an issue, attempting standard POST fallback:', error);
+      let fallbackText = '';
+      
       try {
-        fetch('/api/admin/sync-chat', {
+        const fallbackRes = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userEmail: uEmail,
-            userName: uName,
-            sender: 'arohi',
-            text: accumulatedText,
-            topic: activeTopic
+            message: text,
+            history: messages.filter(m => m && m.content && m.content.trim().length > 0).map(m => ({ role: m.role || 'user', content: m.content })),
+            file: fileToSend,
+            language: language,
+            uid: user?.uid,
+            systemContext: userMemory?.summaryContext
           })
         });
-      } catch (e) {
-        console.error('Error syncing assistant response to admin:', e);
-      }
-    } catch (error) {
-      console.error('Error sending message stream:', error);
-      // Fallback
-      setTimeout(() => {
-        const fallbackText = `I apologize, but I had trouble connecting to the server. Please check your network connection or try again in a moment.
-
-As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs board** or **Government Schemes** section to explore the latest live options for your educational background!`;
-
-        setMessages((prev) => prev.map(m => m.id === streamingMsgId ? {
-          ...m,
-          content: fallbackText,
-          isStreaming: false
-        } : m));
-
-        // Sync fallback response to admin portal
-        try {
-          fetch('/api/admin/sync-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userEmail: uEmail,
-              userName: uName,
-              sender: 'arohi',
-              text: fallbackText,
-              topic: activeTopic
-            })
-          });
-        } catch (e) {
-          // ignore
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          if (fallbackData && fallbackData.response) {
+            fallbackText = fallbackData.response;
+          }
         }
-      }, 500);
+      } catch (fbErr) {
+        console.warn('Fallback /api/chat also encountered issue:', fbErr);
+      }
+
+      if (!fallbackText.trim()) {
+        fallbackText = `I apologize for the brief connection hiccup! As **AROHI**, your AI opportunity advisor, I am ready to guide you on careers, government schemes, skills, and business opportunities. Please ask your question again or explore our Jobs board!`;
+      }
+
+      setMessages((prev) => prev.map(m => m.id === streamingMsgId ? {
+        ...m,
+        content: fallbackText,
+        isStreaming: false
+      } : m));
+
+      fetch('/api/admin/sync-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: uEmail,
+          userName: uName,
+          sender: 'arohi',
+          text: fallbackText,
+          topic: activeTopic
+        })
+      }).catch(() => {});
     } finally {
       setIsLoading(false);
     }
@@ -2484,6 +2646,22 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
         <div className="space-y-1 mb-3 py-1">
           <button
             onClick={() => {
+              setIsMcpGatewayOpen(true);
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-purple-500/20 border border-amber-500/40 hover:border-amber-400 hover:from-amber-500/30 hover:to-purple-500/30 transition-all cursor-pointer text-left shadow-sm group mb-2"
+          >
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+              <span className="font-extrabold text-amber-200">Apps & Everyday Tasks</span>
+            </div>
+            <span className="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+              LIVE
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
               setIsImageStudioOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
@@ -2545,7 +2723,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               type="text"
               placeholder="Search conversation titles..."
               value={sidebarSearchQuery}
-              onChange={(e) => setSidebarSearchQuery(e.target.value)}
+              onChange={(e) => setSidebarSearchQuery(e?.target?.value ?? "")}
               className="w-full bg-[#18132d] border border-[#30225d] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#7c3aed]"
               autoFocus
             />
@@ -2717,6 +2895,8 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               <Video className="w-4 h-4" />
             </button>
 
+            {/* 3D Learning Button hidden as requested by user */}
+
             <div className="relative">
               <button
                 onClick={() => setActiveMessageMenuId(activeMessageMenuId === 'header' ? null : 'header')}
@@ -2790,9 +2970,13 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               ? parseMessageCallSummary(msg.content)
               : { cleanedContent: msg.content, summaryData: null };
 
-            const parsed = msg.role === 'assistant' 
+            const resumeParsed = msg.role === 'assistant' 
               ? parseMessageResume(summaryParsed.cleanedContent) 
               : { cleanedContent: msg.content, resumeData: null };
+
+            const parsed = msg.role === 'assistant'
+              ? parseMessageMcpPayload(resumeParsed.cleanedContent)
+              : { cleanedContent: msg.content, mcpData: null };
 
             const isLiked = likedMessageIds.includes(msg.id);
             const isDisliked = dislikedMessageIds.includes(msg.id);
@@ -2846,7 +3030,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     )}
                   </div>
 
-                  {parsed.resumeData && (
+                  {resumeParsed.resumeData && (
                     <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#1b1342] to-[#25155c] border border-[#a78bfa]/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-[#7c3aed]/30 rounded-xl text-[#c084fc] border border-[#7c3aed]/50 shrink-0">
@@ -2858,7 +3042,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                         </div>
                       </div>
                       <button
-                        onClick={() => handleDownloadResumeDocx(parsed.resumeData, msg.id)}
+                        onClick={() => handleDownloadResumeDocx(resumeParsed.resumeData, msg.id)}
                         disabled={isDownloadingResume === msg.id}
                         className="w-full sm:w-auto px-4 py-2.5 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:bg-violet-950 disabled:text-slate-400 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
                       >
@@ -2873,6 +3057,10 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                         )}
                       </button>
                     </div>
+                  )}
+
+                  {parsed.mcpData && (
+                    <McpApprovalCard payload={parsed.mcpData} />
                   )}
                 </div>
 
@@ -3058,7 +3246,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               type="text"
               placeholder="Tell me what you want to achieve..."
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => setInput(e?.target?.value ?? "")}
               onKeyDown={handleKeyPress}
               className="flex-1 min-w-0 bg-transparent px-2 sm:px-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none font-medium"
             />
@@ -3103,7 +3291,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
               type="text"
               placeholder="Notebook Title (e.g. OPSC Exam Notes)"
               value={newNotebookTitle}
-              onChange={(e) => setNewNotebookTitle(e.target.value)}
+              onChange={(e) => setNewNotebookTitle(e?.target?.value ?? "")}
               className="w-full bg-[#181136] border border-[#3b2a80] rounded-2xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#7c3aed] mb-4"
               autoFocus
             />
@@ -3268,7 +3456,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <textarea
                       rows={3}
                       value={studioPrompt}
-                      onChange={(e) => setStudioPrompt(e.target.value)}
+                      onChange={(e) => setStudioPrompt(e?.target?.value ?? "")}
                       placeholder="Describe the image you want to create... e.g. High-resolution cinematic hero banner of a futuristic smart city with golden lighting, 8k render"
                       className="w-full bg-[#160f38] border border-[#2d1e63] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] resize-none"
                     />
@@ -3464,7 +3652,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                       <input
                         type="text"
                         value={studioEditInstruction}
-                        onChange={(e) => setStudioEditInstruction(e.target.value)}
+                        onChange={(e) => setStudioEditInstruction(e?.target?.value ?? "")}
                         placeholder="e.g. 'Add golden sunset in background', 'Change colors to cyan and violet', 'Add snow'"
                         className="flex-1 bg-[#180f3d] border border-[#34226e] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed]"
                       />
@@ -3569,7 +3757,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <textarea
                       rows={3}
                       value={musicPrompt}
-                      onChange={(e) => setMusicPrompt(e.target.value)}
+                      onChange={(e) => setMusicPrompt(e?.target?.value ?? "")}
                       placeholder="Describe your soundtrack... e.g. 'Chill lo-fi study music with soft piano and ambient rain for Odia students', or 'Dramatic cinematic trailer music'"
                       className="w-full bg-[#130d33] border border-[#281a5e] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none"
                     />
@@ -3940,7 +4128,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <textarea
                       rows={3}
                       value={videoPrompt}
-                      onChange={(e) => setVideoPrompt(e.target.value)}
+                      onChange={(e) => setVideoPrompt(e?.target?.value ?? "")}
                       placeholder={
                         videoMode === 'text_to_video'
                           ? "Enter short video clips from text, scripts, or descriptions... e.g. 'Cinematic 4K video of a golden eagle soaring above misty mountains at sunrise, photorealistic 60fps'"
@@ -4333,7 +4521,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <label className="text-xs font-bold text-slate-300 mb-1.5 block">Research Topic or Specific Question</label>
                     <textarea
                       value={docResearchPrompt}
-                      onChange={(e) => setDocResearchPrompt(e.target.value)}
+                      onChange={(e) => setDocResearchPrompt(e?.target?.value ?? "")}
                       placeholder="e.g. Audit my eligibility for PMEGP loan, evaluate my resume for Full Stack roles, or summarize SSC MTS syllabus PDF..."
                       rows={3}
                       className="w-full bg-[#0d1424] border border-[#223354] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-all resize-none"
@@ -4583,7 +4771,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                         <input
                           type="text"
                           value={mapsOrigin}
-                          onChange={(e) => setMapsOrigin(e.target.value)}
+                          onChange={(e) => setMapsOrigin(e?.target?.value ?? "")}
                           placeholder="e.g. Connaught Place, New Delhi"
                           className="w-full bg-[#131d33] border border-[#223354] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                         />
@@ -4593,7 +4781,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                         <input
                           type="text"
                           value={mapsDestination}
-                          onChange={(e) => setMapsDestination(e.target.value)}
+                          onChange={(e) => setMapsDestination(e?.target?.value ?? "")}
                           placeholder="e.g. Cyber City, Gurugram"
                           className="w-full bg-[#131d33] border border-[#223354] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                         />
@@ -4624,7 +4812,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                       <input
                         type="text"
                         value={mapsPrompt}
-                        onChange={(e) => setMapsPrompt(e.target.value)}
+                        onChange={(e) => setMapsPrompt(e?.target?.value ?? "")}
                         placeholder="e.g. Best coaching centers in Mukherjee Nagar Delhi, or Top hospitals in South Mumbai..."
                         className="w-full bg-[#0c1322] border border-[#20304f] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all"
                       />
@@ -4957,7 +5145,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <textarea
                       rows={3}
                       value={intelligenceContent}
-                      onChange={(e) => setIntelligenceContent(e.target.value)}
+                      onChange={(e) => setIntelligenceContent(e?.target?.value ?? "")}
                       placeholder="Paste text, document summary, code, or data to analyze or edit..."
                       className="w-full bg-[#0d1526] border border-[#1c2c4a] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"
                     />
@@ -4971,7 +5159,7 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
                     <input
                       type="text"
                       value={intelligenceInstruction}
-                      onChange={(e) => setIntelligenceInstruction(e.target.value)}
+                      onChange={(e) => setIntelligenceInstruction(e?.target?.value ?? "")}
                       placeholder="e.g. Extract 5 actionable key insights and generate a multi-step execution plan"
                       className="w-full bg-[#0d1526] border border-[#1c2c4a] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     />
@@ -5288,6 +5476,29 @@ As **AROHI**, your opportunity advisor, let me recommend checking out our **Jobs
           </div>
         </div>
       )}
+
+      {/* 3D Learning Workspace Modal */}
+      {is3DLearningOpen && (
+        <Arohi3DLearningWorkspace
+          onExit={() => setIs3DLearningOpen(false)}
+          initialTopicId={active3DTopic}
+          isDarkMode={true}
+        />
+      )}
+
+      {/* MCP Super-App Gateway Modal */}
+      <McpGatewayModal
+        isOpen={isMcpGatewayOpen}
+        onClose={() => setIsMcpGatewayOpen(false)}
+        onSendPromptToChat={(promptText) => handleSendMessage(promptText)}
+      />
+
+      {/* MCP Workflow Orchestrator Modal */}
+      <McpWorkflowOrchestratorModal
+        isOpen={isWorkflowOrchestratorOpen}
+        onClose={() => setIsWorkflowOrchestratorOpen(false)}
+        onSendPromptToChat={(promptText) => handleSendMessage(promptText)}
+      />
 
     </div>
   );

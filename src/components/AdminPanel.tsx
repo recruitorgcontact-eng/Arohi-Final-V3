@@ -916,7 +916,7 @@ export default function AdminPanel({
                       type="text"
                       required
                       value={loginId}
-                      onChange={(e) => setLoginId(e.target.value)}
+                      onChange={(e) => setLoginId(e?.target?.value ?? "")}
                       placeholder="e.g. admin"
                       className="w-full bg-[#110d29]/90 border border-[#301c66] rounded-2xl px-4.5 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                     />
@@ -928,7 +928,7 @@ export default function AdminPanel({
                       type="password"
                       required
                       value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      onChange={(e) => setLoginPassword(e?.target?.value ?? "")}
                       placeholder="••••••••••••••"
                       className="w-full bg-[#110d29]/90 border border-[#301c66] rounded-2xl px-4.5 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold font-mono"
                     />
@@ -1281,7 +1281,7 @@ export default function AdminPanel({
                       step="0.05"
                       value={aiTemperature}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value);
+                        const val = parseFloat(e?.target?.value ?? "");
                         setAiTemperature(val);
                         setTelemetryLogs(prev => [
                           {
@@ -1320,7 +1320,7 @@ export default function AdminPanel({
                       <select 
                         value={gatewayMode}
                         onChange={(e) => {
-                          const val = e.target.value;
+                          const val = e?.target?.value ?? "";
                           setGatewayMode(val);
                           setTelemetryLogs(prev => [
                             {
@@ -1447,7 +1447,7 @@ export default function AdminPanel({
                       type="text" 
                       placeholder="Type custom ticker msg..."
                       value={broadcastInput}
-                      onChange={(e) => setBroadcastInput(e.target.value)}
+                      onChange={(e) => setBroadcastInput(e?.target?.value ?? "")}
                       className="w-full bg-[#0a061b] border border-[#3a2575] focus:border-cyan-500 text-slate-200 text-[10px] rounded-xl px-2.5 py-1.5 font-bold outline-none placeholder-slate-600"
                     />
                     <button
@@ -1642,7 +1642,7 @@ export default function AdminPanel({
                       type="text"
                       placeholder="Search accounts..."
                       value={searchUserQuery}
-                      onChange={(e) => setSearchUserQuery(e.target.value)}
+                      onChange={(e) => setSearchUserQuery(e?.target?.value ?? "")}
                       className="bg-[#19133a]/90 border border-[#3b277a] rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-slate-500 font-semibold"
                     />
                   </div>
@@ -1836,7 +1836,7 @@ export default function AdminPanel({
                       <input
                         type="text"
                         value={selectedUser.customizedSettings.tutoringSlot}
-                        onChange={(e) => updateCustomSettings(selectedUser.id, 'tutoringSlot', e.target.value)}
+                        onChange={(e) => updateCustomSettings(selectedUser.id, 'tutoringSlot', e?.target?.value ?? "")}
                         className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                       />
                     </div>
@@ -1845,7 +1845,7 @@ export default function AdminPanel({
                       <label className="block text-[9px] uppercase font-black text-slate-400 mb-1">Coaching Priority level</label>
                       <select
                         value={selectedUser.customizedSettings.priorityLevel}
-                        onChange={(e) => updateCustomSettings(selectedUser.id, 'priorityLevel', e.target.value)}
+                        onChange={(e) => updateCustomSettings(selectedUser.id, 'priorityLevel', e?.target?.value ?? "")}
                         className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white cursor-pointer"
                       >
                         <option value="Standard">Standard Priority</option>
@@ -1859,7 +1859,7 @@ export default function AdminPanel({
                       <input
                         type="text"
                         value={selectedUser.customizedSettings.assignedMentor}
-                        onChange={(e) => updateCustomSettings(selectedUser.id, 'assignedMentor', e.target.value)}
+                        onChange={(e) => updateCustomSettings(selectedUser.id, 'assignedMentor', e?.target?.value ?? "")}
                         className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                       />
                     </div>
@@ -2069,7 +2069,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
+                      onChange={(e) => setUpiId(e?.target?.value ?? "")}
                       placeholder="e.g. elitetraderjunoon@oksbi"
                       className="w-full bg-[#120a2e]/60 border border-[#3b207e] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
@@ -2079,7 +2079,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={merchantName}
-                      onChange={(e) => setMerchantName(e.target.value)}
+                      onChange={(e) => setMerchantName(e?.target?.value ?? "")}
                       placeholder="e.g. Recruit India Corporation"
                       className="w-full bg-[#120a2e]/60 border border-[#3b207e] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
@@ -2089,7 +2089,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
+                      onChange={(e) => setBankName(e?.target?.value ?? "")}
                       placeholder="e.g. Airtel Payments Bank"
                       className="w-full bg-[#120a2e]/60 border border-[#3b207e] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
@@ -2224,7 +2224,7 @@ export default function AdminPanel({
                         type="text"
                         required
                         value={customAiGuideline}
-                        onChange={(e) => setCustomAiGuideline(e.target.value)}
+                        onChange={(e) => setCustomAiGuideline(e?.target?.value ?? "")}
                         placeholder="e.g., Focus specifically on Odisha state post-matric scholarship eligibility next."
                         className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                       />
@@ -2552,7 +2552,7 @@ export default function AdminPanel({
                     required
                     placeholder="e.g. SSC MTS & Havaldar Online Form 2026"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => setTitle(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                   />
                 </div>
@@ -2564,7 +2564,7 @@ export default function AdminPanel({
                     required
                     placeholder="e.g. Staff Selection Commission (SSC)"
                     value={organization}
-                    onChange={(e) => setOrganization(e.target.value)}
+                    onChange={(e) => setOrganization(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                   />
                 </div>
@@ -2573,7 +2573,7 @@ export default function AdminPanel({
                   <label className="block text-[10px] uppercase font-black text-slate-400 mb-1.5">Board category *</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as CategoryType)}
+                    onChange={(e) => setCategory((e?.target?.value || 'latest-jobs') as CategoryType)}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white cursor-pointer font-semibold"
                   >
                     <option value="latest-jobs">Latest Jobs</option>
@@ -2589,7 +2589,7 @@ export default function AdminPanel({
                   <label className="block text-[10px] uppercase font-black text-slate-400 mb-1.5">Board Department *</label>
                   <select
                     value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
+                    onChange={(e) => setDepartment(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white cursor-pointer font-semibold"
                   >
                     <option value="SSC">SSC</option>
@@ -2613,7 +2613,7 @@ export default function AdminPanel({
                     type="text"
                     placeholder="SSC, Central Govt, Matric Pass, Havaldar"
                     value={tagsInput}
-                    onChange={(e) => setTagsInput(e.target.value)}
+                    onChange={(e) => setTagsInput(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                   />
                 </div>
@@ -2625,7 +2625,7 @@ export default function AdminPanel({
                     rows={2}
                     placeholder="Provide a detailed summary of key eligibility criteria, recruitment methods, and scale of pay parameters."
                     value={shortInfo}
-                    onChange={(e) => setShortInfo(e.target.value)}
+                    onChange={(e) => setShortInfo(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                   />
                 </div>
@@ -2642,7 +2642,7 @@ export default function AdminPanel({
                       type="date"
                       required
                       value={applicationBegin}
-                      onChange={(e) => setApplicationBegin(e.target.value)}
+                      onChange={(e) => setApplicationBegin(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white font-mono"
                     />
                   </div>
@@ -2652,7 +2652,7 @@ export default function AdminPanel({
                       type="date"
                       required
                       value={lastDateApply}
-                      onChange={(e) => setLastDateApply(e.target.value)}
+                      onChange={(e) => setLastDateApply(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white font-mono"
                     />
                   </div>
@@ -2662,7 +2662,7 @@ export default function AdminPanel({
                       type="date"
                       required
                       value={lastDateFee}
-                      onChange={(e) => setLastDateFee(e.target.value)}
+                      onChange={(e) => setLastDateFee(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white font-mono"
                     />
                   </div>
@@ -2672,7 +2672,7 @@ export default function AdminPanel({
                       type="text"
                       placeholder="September 2026"
                       value={examDate}
-                      onChange={(e) => setExamDate(e.target.value)}
+                      onChange={(e) => setExamDate(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2684,7 +2684,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={feeGeneral}
-                      onChange={(e) => setFeeGeneral(e.target.value)}
+                      onChange={(e) => setFeeGeneral(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2693,7 +2693,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={feeSCST}
-                      onChange={(e) => setFeeSCST(e.target.value)}
+                      onChange={(e) => setFeeSCST(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2702,7 +2702,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={feeFemale}
-                      onChange={(e) => setFeeFemale(e.target.value)}
+                      onChange={(e) => setFeeFemale(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2711,7 +2711,7 @@ export default function AdminPanel({
                     <input
                       type="text"
                       value={paymentMode}
-                      onChange={(e) => setPaymentMode(e.target.value)}
+                      onChange={(e) => setPaymentMode(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2729,7 +2729,7 @@ export default function AdminPanel({
                       type="text"
                       required
                       value={ageAsOnDate}
-                      onChange={(e) => setAgeAsOnDate(e.target.value)}
+                      onChange={(e) => setAgeAsOnDate(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2739,7 +2739,7 @@ export default function AdminPanel({
                       type="text"
                       required
                       value={ageMin}
-                      onChange={(e) => setAgeMin(e.target.value)}
+                      onChange={(e) => setAgeMin(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2749,7 +2749,7 @@ export default function AdminPanel({
                       type="text"
                       required
                       value={ageMax}
-                      onChange={(e) => setAgeMax(e.target.value)}
+                      onChange={(e) => setAgeMax(e?.target?.value ?? "")}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2759,7 +2759,7 @@ export default function AdminPanel({
                       type="number"
                       required
                       value={totalVacancies}
-                      onChange={(e) => setTotalVacancies(parseInt(e.target.value) || 0)}
+                      onChange={(e) => setTotalVacancies(parseInt(e?.target?.value ?? "") || 0)}
                       className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
@@ -2770,7 +2770,7 @@ export default function AdminPanel({
                   <input
                     type="text"
                     value={ageRelaxation}
-                    onChange={(e) => setAgeRelaxation(e.target.value)}
+                    onChange={(e) => setAgeRelaxation(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                   />
                 </div>
@@ -2799,7 +2799,7 @@ export default function AdminPanel({
                           required
                           placeholder="e.g. Havaldar inside CBIC and CBN"
                           value={vac.postName}
-                          onChange={(e) => handleVacancyChange(idx, 'postName', e.target.value)}
+                          onChange={(e) => handleVacancyChange(idx, 'postName', e?.target?.value ?? "")}
                           className="w-full bg-[#030109] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                         />
                       </div>
@@ -2809,7 +2809,7 @@ export default function AdminPanel({
                           type="number"
                           placeholder="0"
                           value={vac.totalPosts}
-                          onChange={(e) => handleVacancyChange(idx, 'totalPosts', parseInt(e.target.value) || 0)}
+                          onChange={(e) => handleVacancyChange(idx, 'totalPosts', parseInt(e?.target?.value ?? "") || 0)}
                           className="w-full bg-[#030109] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                         />
                       </div>
@@ -2820,7 +2820,7 @@ export default function AdminPanel({
                           required
                           placeholder="Passed Class 10th or equivalent with physical endurance qualifications."
                           value={vac.eligibility}
-                          onChange={(e) => handleVacancyChange(idx, 'eligibility', e.target.value)}
+                          onChange={(e) => handleVacancyChange(idx, 'eligibility', e?.target?.value ?? "")}
                           className="w-full bg-[#030109] border border-[#2d1b64] rounded-xl px-3 py-2 text-xs text-white"
                         />
                       </div>
@@ -2848,7 +2848,7 @@ export default function AdminPanel({
                     required
                     placeholder="https://ssc.gov.in"
                     value={officialSite}
-                    onChange={(e) => setOfficialSite(e.target.value)}
+                    onChange={(e) => setOfficialSite(e?.target?.value ?? "")}
                     className="w-full bg-[#110d29] border border-[#2d1b64] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
                   />
                 </div>

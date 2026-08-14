@@ -291,8 +291,8 @@ export const LottieSuccessModal: React.FC<LottieSuccessModalProps> = ({
           <div className="bg-[#080418]/80 border border-emerald-500/20 rounded-2xl p-3.5 mb-6 text-left space-y-2 text-xs font-mono">
             {details.map((d, i) => (
               <div key={i} className="flex justify-between items-center gap-2 border-b border-slate-800/80 last:border-0 pb-1.5 last:pb-0">
-                <span className="text-slate-400 font-sans font-medium text-[11px]">{d.label}:</span>
-                <span className="text-emerald-300 font-bold truncate max-w-[190px]">{d.value}</span>
+                <span className="text-slate-400 font-sans font-medium text-[11px]">{d?.label}:</span>
+                <span className="text-emerald-300 font-bold truncate max-w-[190px]">{d?.value}</span>
               </div>
             ))}
           </div>

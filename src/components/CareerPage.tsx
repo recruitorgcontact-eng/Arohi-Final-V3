@@ -308,7 +308,7 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Industry Sector</label>
                 <select
                   value={targetField}
-                  onChange={(e) => setTargetField(e.target.value)}
+                  onChange={(e) => setTargetField(e?.target?.value ?? "")}
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="Technology">Technology & Software</option>
@@ -323,7 +323,7 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
                 <input
                   type="text"
                   value={targetRole}
-                  onChange={(e) => setTargetRole(e.target.value)}
+                  onChange={(e) => setTargetRole(e?.target?.value ?? "")}
                   placeholder="e.g. AWS Cloud Architect"
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
                 />

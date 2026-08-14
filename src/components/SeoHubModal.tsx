@@ -193,7 +193,7 @@ export default function SeoHubModal({ isOpen, onClose, onSelectVoiceContext, onN
                 type="text"
                 placeholder="Search keywords (e.g. Odisha OPSC, Subhadra Yojana, Bengaluru IT jobs, CHSE Board, USA STEM visa)..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e?.target?.value ?? "")}
                 className="w-full pl-10 pr-4 py-2.5 bg-[#020617] border border-cyan-500/30 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition-all"
               />
               {searchTerm && (

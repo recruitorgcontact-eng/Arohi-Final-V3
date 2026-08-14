@@ -585,7 +585,7 @@ export default function LegalPages({ initialTab }: LegalPagesProps) {
                           type="text" 
                           required
                           value={contactName}
-                          onChange={(e) => setContactName(e.target.value)}
+                          onChange={(e) => setContactName(e?.target?.value ?? "")}
                           placeholder="Your Name"
                           className="w-full bg-[#120d2a] border border-[#2b1f5c] rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed]"
                         />
@@ -598,7 +598,7 @@ export default function LegalPages({ initialTab }: LegalPagesProps) {
                             type="email" 
                             required
                             value={contactEmail}
-                            onChange={(e) => setContactEmail(e.target.value)}
+                            onChange={(e) => setContactEmail(e?.target?.value ?? "")}
                             placeholder="you@example.com"
                             className="w-full bg-[#120d2a] border border-[#2b1f5c] rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed]"
                           />
@@ -608,7 +608,7 @@ export default function LegalPages({ initialTab }: LegalPagesProps) {
                           <input 
                             type="tel" 
                             value={contactPhone}
-                            onChange={(e) => setContactPhone(e.target.value)}
+                            onChange={(e) => setContactPhone(e?.target?.value ?? "")}
                             placeholder="+91"
                             className="w-full bg-[#120d2a] border border-[#2b1f5c] rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed]"
                           />
@@ -619,7 +619,7 @@ export default function LegalPages({ initialTab }: LegalPagesProps) {
                         <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Request Category *</label>
                         <select 
                           value={contactSubject}
-                          onChange={(e) => setContactSubject(e.target.value)}
+                          onChange={(e) => setContactSubject(e?.target?.value ?? "")}
                           className="w-full bg-[#120d2a] border border-[#2b1f5c] rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[#7c3aed]"
                         >
                           <option value="general">General Guidance Support</option>
@@ -636,7 +636,7 @@ export default function LegalPages({ initialTab }: LegalPagesProps) {
                           required
                           rows={4}
                           value={contactMessage}
-                          onChange={(e) => setContactMessage(e.target.value)}
+                          onChange={(e) => setContactMessage(e?.target?.value ?? "")}
                           placeholder="Please provide details about your issue, purchase transaction references, or general question..."
                           className="w-full bg-[#120d2a] border border-[#2b1f5c] rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed] resize-none"
                         ></textarea>

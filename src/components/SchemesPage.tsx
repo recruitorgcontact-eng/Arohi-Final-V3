@@ -163,7 +163,7 @@ export default function SchemesPage() {
                 <input
                   type="number"
                   value={userAge}
-                  onChange={(e) => setUserAge(Number(e.target.value))}
+                  onChange={(e) => setUserAge(Number(e?.target?.value ?? ""))}
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
@@ -173,7 +173,7 @@ export default function SchemesPage() {
                 <input
                   type="number"
                   value={userIncome}
-                  onChange={(e) => setUserIncome(Number(e.target.value))}
+                  onChange={(e) => setUserIncome(Number(e?.target?.value ?? ""))}
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
@@ -184,7 +184,7 @@ export default function SchemesPage() {
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Gender</label>
                 <select
                   value={userGender}
-                  onChange={(e) => setUserGender(e.target.value as any)}
+                  onChange={(e) => setUserGender(e?.target?.value ?? "" as any)}
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="Female">Female</option>
@@ -197,7 +197,7 @@ export default function SchemesPage() {
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Caste Category</label>
                 <select
                   value={userCaste}
-                  onChange={(e) => setUserCaste(e.target.value as any)}
+                  onChange={(e) => setUserCaste(e?.target?.value ?? "" as any)}
                   className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 >
                   <option value="General">General Category</option>
@@ -252,7 +252,7 @@ export default function SchemesPage() {
                 type="text"
                 placeholder="Search by scheme title, benefits or keywords..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
                 className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 pl-9 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
               />
               <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
@@ -261,7 +261,7 @@ export default function SchemesPage() {
             {/* Category Filter */}
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => setSelectedCategory(e?.target?.value ?? "")}
               className="bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none w-full md:w-auto"
             >
               <option value="all">All Categories</option>
@@ -274,7 +274,7 @@ export default function SchemesPage() {
             {/* Scope Filter */}
             <select
               value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
+              onChange={(e) => setSelectedState(e?.target?.value ?? "")}
               className="bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none w-full md:w-auto"
             >
               <option value="all">All Scopes</option>

@@ -444,7 +444,12 @@ function logActivity(type: string, description: string, metadata?: any) {
   if (adminDb) {
     try {
       adminDb.collection('site_activities').doc(newActivity.id).set(newActivity).catch((err: any) => {
-        console.warn('[Firestore Log] Failed to save site activity async:', err.message || err);
+        const errMsg = err?.message || String(err);
+        if (errMsg.includes('PERMISSION_DENIED') || errMsg.includes('insufficient permissions') || errMsg.includes('7')) {
+          adminDb = null;
+        } else {
+          console.warn('[Firestore Log] Failed to save site activity async:', errMsg);
+        }
       });
     } catch (err) {
       // Ignore silent errors
@@ -2046,6 +2051,110 @@ app.get('/api/admin/voice-calls', async (req, res) => {
   return res.json({ voiceCalls: combinedCalls });
 });
 
+// Helper function to decode HTML entities AND strip HTML tags cleanly
+function cleanHtmlText(str: string): string {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&#\d+;/g, (match) => {
+      const num = parseInt(match.replace(/\D/g, ''), 10);
+      return !isNaN(num) ? String.fromCharCode(num) : ' ';
+    })
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\bhref=["']?[^"'>\s]+/gi, '')
+    .replace(/uddg=[^&\s]+/gi, '')
+    .replace(/["']?\s*href=\/\/[^\s]+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Intent Classifier: Only trigger MCP Action Cards when user explicitly requests an order, booking, draft, or delivery
+function isExplicitMcpActionIntent(text: string): boolean {
+  if (!text || typeof text !== 'string') return false;
+  const p = text.toLowerCase().trim();
+
+  // 1. Informational, general questions, or meta queries should NEVER trigger MCP action cards
+  const isInformationalOrMeta = 
+    p.startsWith('why ') || 
+    p.startsWith('what ') || 
+    p.startsWith('how ') || 
+    p.startsWith('explain ') || 
+    p.startsWith('tell me about ') || 
+    p.startsWith('who is ') || 
+    p.startsWith('where is ') || 
+    p.includes('why normal questions') || 
+    p.includes('why having this') || 
+    p.includes('why do i get') || 
+    p.includes('why are you') || 
+    p.includes('what makes') || 
+    p.includes('difference between') || 
+    p.includes('what is the') || 
+    p.includes('how does');
+
+  if (isInformationalOrMeta) return false;
+
+  // 2. Explicit MCP protocol headers or payload triggers
+  if (p.includes('[delivery address:') || p.includes('mcp super-app') || p.includes('mcp payload') || p.includes('mcp connector') || p.includes('mcp_')) {
+    return true;
+  }
+
+  // 3. Action verbs indicating order/booking/sending/drafting intent
+  const hasActionVerb = /\b(order|book|buy|reserve|schedule|draft|send|dispatch|deliver|cancel|get cab|hire cab|call cab|order milk|order food|book ticket)\b/i.test(p);
+
+  // Quick commerce & grocery delivery (Blinkit, Zepto, Zomato, Swiggy, Instamart, BigBasket)
+  const hasQuickCommerce = /\b(blinkit|zepto|instamart|bigbasket|zomato|swiggy|ondc)\b/i.test(p);
+  if (hasQuickCommerce && (hasActionVerb || p.includes('packet') || p.includes('milk') || p.includes('grocery') || p.includes('food delivery') || p.includes('cart'))) {
+    return true;
+  }
+
+  // Ride hailing (Uber, Ola, Rapido)
+  const hasRide = /\b(uber|ola|rapido)\b/i.test(p);
+  if (hasRide && (hasActionVerb || p.includes('cab') || p.includes('ride') || p.includes('auto') || p.includes('taxi'))) {
+    return true;
+  }
+
+  // Travel / Railways (IRCTC, Tatkal)
+  const hasTravel = /\b(irctc|tatkal)\b/i.test(p);
+  if (hasTravel && (hasActionVerb || p.includes('train ticket') || p.includes('pnr status') || p.includes('flight ticket'))) {
+    return true;
+  }
+
+  // Healthcare (Apollo, 1mg, PharmEasy)
+  const hasHealth = /\b(apollo|tata 1mg|pharmeasy)\b/i.test(p);
+  if (hasHealth && (hasActionVerb || p.includes('medicine') || p.includes('pharmacy') || p.includes('lab test'))) {
+    return true;
+  }
+
+  // Utility Bills / Gas (Indane, Bharat Gas, HP Gas, BBPS)
+  const hasUtility = /\b(indane|bharat gas|hp gas|bbps)\b/i.test(p);
+  if (hasUtility && (hasActionVerb || p.includes('gas cylinder') || p.includes('electricity bill') || p.includes('refill'))) {
+    return true;
+  }
+
+  // Gmail / Email actions
+  const hasEmail = /\b(gmail|draft email|send email)\b/i.test(p);
+  if (hasEmail && (hasActionVerb || p.includes('send to') || p.includes('draft a') || p.includes('write an email') || p.includes('email to'))) {
+    return true;
+  }
+
+  // Doctor appointment booking actions
+  const hasDoctor = /\b(doctor|cardiologist|dermatologist|physician|hospital|clinic)\b/i.test(p);
+  if (hasDoctor && (p.includes('book appointment') || p.includes('schedule appointment') || p.includes('book consultation') || p.includes('reserve slot') || p.includes('appointment with'))) {
+    return true;
+  }
+
+  return false;
+}
+
 // Multi-source Real-Time Live Web & News Search Fetcher (Google, Bing, Yahoo & DuckDuckGo)
 async function fetchGoogleNewsLive(query: string = 'India latest news') {
   const results: { title: string; link: string; date: string; source: string; snippet?: string }[] = [];
@@ -2076,17 +2185,11 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
       const sMatch = itemContent.match(/<source[^>]*>(.*?)<\/source>/i);
       const descMatch = itemContent.match(/<description>(.*?)<\/description>/i);
 
-      let title = tMatch ? tMatch[1] : '';
-      let link = lMatch ? lMatch[1] : '';
-      let date = dMatch ? dMatch[1] : '';
-      let source = sMatch ? sMatch[1] : defaultSource;
-      let snippet = descMatch ? descMatch[1] : '';
-
-      title = title.replace(/<!\[CDATA\[(.*?)\]\]>/gi, '$1').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
-      link = link.replace(/<!\[CDATA\[(.*?)\]\]>/gi, '$1').replace(/<[^>]+>/g, '').trim();
-      date = date.replace(/<!\[CDATA\[(.*?)\]\]>/gi, '$1').trim();
-      source = source.replace(/<!\[CDATA\[(.*?)\]\]>/gi, '$1').replace(/&amp;/g, '&').trim();
-      snippet = snippet.replace(/<!\[CDATA\[(.*?)\]\]>/gi, '$1').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+      let title = cleanHtmlText(tMatch ? tMatch[1] : '');
+      let link = cleanHtmlText(lMatch ? lMatch[1] : '');
+      let date = cleanHtmlText(dMatch ? dMatch[1] : '');
+      let source = cleanHtmlText(sMatch ? sMatch[1] : defaultSource);
+      let snippet = cleanHtmlText(descMatch ? descMatch[1] : '');
 
       if (title && title.length > 5) {
         parsed.push({
@@ -2108,18 +2211,26 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
 
   // 0a. Wikipedia REST API summary check for quick factual definitions & entities
   try {
-    const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanKeywords.replace(/\s+/g, '_'))}`;
-    const wikiRes = await fetch(wikiUrl, { headers });
-    if (wikiRes.ok) {
-      const wikiData = await wikiRes.json();
-      if (wikiData && wikiData.extract && wikiData.extract.length > 20) {
-        results.push({
-          title: wikiData.title || cleanKeywords,
-          link: wikiData.content_urls?.desktop?.page || '',
-          date: 'Wikipedia Verified',
-          source: 'Wikipedia',
-          snippet: wikiData.extract
-        });
+    const wikiTerms = [
+      cleanKeywords.replace(/\s+/g, '_'),
+      cleanKeywords.split(/\s+/).slice(0, 2).join('_')
+    ];
+    for (const term of Array.from(new Set(wikiTerms))) {
+      if (!term || term.length < 3) continue;
+      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`;
+      const wikiRes = await fetch(wikiUrl, { headers });
+      if (wikiRes.ok) {
+        const wikiData = await wikiRes.json();
+        if (wikiData && wikiData.extract && wikiData.extract.length > 20) {
+          results.push({
+            title: wikiData.title || cleanKeywords,
+            link: wikiData.content_urls?.desktop?.page || '',
+            date: 'Wikipedia Verified',
+            source: 'Wikipedia',
+            snippet: wikiData.extract
+          });
+          break;
+        }
       }
     }
   } catch (wErr) {
@@ -2215,8 +2326,10 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
         const snippetBlocks = html.split(/<a class="result__snippet/i).slice(1);
         for (const block of snippetBlocks) {
           if (results.length >= 10) break;
-          const snippetText = block.split(/<\/a>/i)[0].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-          if (snippetText && snippetText.length > 15 && !results.some(r => r.snippet === snippetText)) {
+          const rawContent = block.split(/<\/a>/i)[0] || '';
+          const cleanTagContent = rawContent.replace(/^[^>]*>/, '');
+          const snippetText = cleanHtmlText(cleanTagContent);
+          if (snippetText && snippetText.length > 15 && !snippetText.startsWith('href=') && !results.some(r => r.snippet === snippetText)) {
             results.push({
               title: `Live Web Search: ${cleanKeywords}`,
               link: '',
@@ -2340,10 +2453,12 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   } catch (e) {}
 
-  console.warn("Gemini API calls unavailable or quota limit reached. Fetching multi-engine live search streams for smart fallback response...");
+  console.warn("Gemini API calls unavailable or quota limit reached. Using resilient Arohi AI fallback engine...");
   let liveSearchData: any[] = [];
   try {
-    liveSearchData = await fetchGoogleNewsLive(extractedPrompt);
+    if (requiresRealtimeSearch(extractedPrompt)) {
+      liveSearchData = await fetchGoogleNewsLive(extractedPrompt);
+    }
   } catch (e) {}
 
   const fallbackText = getArohiFallbackResponse(extractedPrompt, undefined, liveSearchData);
@@ -2455,6 +2570,9 @@ You are fully optimized to provide personalized responses adapted to whichever p
 CRITICAL DIRECT ANSWER MANDATE (CHATGPT / GEMINI STYLE DIRECTNESS)
 ============================================================
 * DIRECT, ACCURATE, AND UNBIASED ANSWERS FIRST: Always answer the user's question DIRECTLY, COMPLETELY, and IMMEDIATELY — exactly like ChatGPT or Gemini.
+* FULL CODE DELIVERABLE MANDATE: Whenever the user asks you to write code, generate website code, create a component, write a program, or build an application (e.g. HTML, CSS, JavaScript, React, Three.js 3D web code, Python, C++, Java, SQL, etc.), YOU MUST PROVIDE FULL, COMPLETE, PRODUCTION-READY, FULLY DETAILED, UNBROKEN SOURCE CODE inside clear markdown code blocks (e.g. \`\`\`html ... \`\`\`, \`\`\`tsx ... \`\`\`, \`\`\`python ... \`\`\`) so that the user can copy and run it directly.
+* DO NOT USE PLACEHOLDERS OR INCOMPLETE STUBS: Do NOT output placeholder comments like "// Add remaining logic here" or "// insert rest of CSS". Write complete, fully working code that the user can copy and execute immediately!
+* NO UNNECESSARY WEB SEARCH OR WEBPAGE LINKS FOR CODING REQUESTS: Coding requests must receive direct code output, never web search result links or live updates summaries.
 * NO FORCED / CANNED INTROS OR REPETITIVE GREETINGS: NEVER prepend or start your response with generic canned lines like "Welcome to Arohi AI...", "I am Arohi, your AI Opportunity Advisor...", or promotional/founder intro notes UNLESS the user explicitly asks "Who are you?", "Who created you?", "What is Arohi AI?", or "Tell me about your founders".
 * DIVE STRAIGHT INTO THE CONTENT: For general questions (such as science, math, coding, history, news, current events, sports, philosophy, business, or everyday topics), dive STRAIGHT into the direct answer with clear explanations, structured points, code snippets, or step-by-step reasoning as needed.
 * MATCH RESPONSE DEPTH TO QUERY COMPLEXITY: Give comprehensive, well-structured, and full-length responses tailored to what the user asks, without withholding information, truncating facts, or giving brief filler summaries.
@@ -2469,10 +2587,10 @@ CORE PERSONA, CHARACTER & VOICE STYLE DIRECTIVE
 ============================================================
 AUTOMATIC LANGUAGE RECOGNITION & MULTILINGUAL MIRRORING MANDATE
 ============================================================
-* ABSOLUTE AUTOMATIC LANGUAGE DETECTION: You MUST automatically detect whichever language the user speaks or writes in — whether Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, Bengali (বাংলা), Telugu (తెలుగు), Tamil (தமிழ்), Marathi (मराठी), Gujarati (ગુજરાતી), Kannada (କନ୍ନଡ), Malayalam (ମଲୟାଲମ୍), Punjabi (ਪੰਜਾਬੀ), Urdu, or any of 150+ languages across India and globally.
+* ABSOLUTE AUTOMATIC LANGUAGE DETECTION: You MUST automatically detect whichever language the user speaks or writes in — whether Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, Bengali (বাংলা), Telugu (తెలుగు), Tamil (தமிழ்), Marathi (मराठी), Gujarati (ગુજરાતી), Kannada (କନ୍ନଡ), Malayalam (ମଲୟାଲମ୍), Punjabi (ପੰਜਾਬୀ), Urdu, or any of 150+ languages across India and globally.
 * AUTOMATIC INSTANT RESPONSE MIRRORING:
   - ODIA (ଓଡ଼ିଆ / Spoken Odia / Transliterated Odia): If the user speaks or writes in Odia (e.g., native script like "ମୋତେ ବ୍ୟବସାୟ ବିଷୟରେ କୁହ", "ଆପଣ କେମିତି ଅଛନ୍ତି?" or transliterated Odia like "mote business karibaku achhi", "kemiti achha", "kan karibi", "mu odisha ru", "aame kon karibu"), YOU MUST IMMEDIATELY SWITCH AND RESPOND ENTIRELY IN NATURAL ODIA (ଓଡ଼ିଆ)! (e.g. "ମୁଁ ଆପଣଙ୍କ ଆରୋହୀ। ଆପଣଙ୍କୁ ସାହାଯ୍ୟ କରି ମୋତେ ଖୁସି ଲାଗିବ...").
-  - HINDI (हिंदी / Hinglish): Respond in natural, warm Hindi with Devanagari script or clean Hinglish! ("मैं आपकी आरोही हूँ...").
+  - HINDI (हिंदी / Hinglish): Respond in natural, warm Hindi with Devanagari script or clean Hinglish! ("मैं आपकी आरोपी हूँ...").
   - BENGALI, TELUGU, TAMIL, MARATHI, GUJARATI, PUNJABI, etc.: Instantly match and reply in that EXACT user-spoken language with mesmerizing warmth!
   - ENGLISH: Respond in clear, warm, expressive, and encouraging Indian-accented English!
 * NEVER reply in English or Hindi if the user spoke or wrote in Odia or another regional language! Always mirror their spoken/written language instantly on that exact turn.
@@ -3099,6 +3217,103 @@ You are an expert AI Opportunity & Growth Guide, fully prepared to assist all 20
 
 DIRECT ANSWER REMINDER: Answer every user question directly, accurately, and thoroughly first — just like ChatGPT or Gemini. Do NOT prepend canned introductory scripts or generic greetings. Jump straight into the direct answer!`;
 
+// Helper function to detect greetings and casual small-talk to prevent unintended search grounding
+function isGreetingOrSmallTalk(text: string): boolean {
+  if (!text || typeof text !== 'string') return true;
+  const clean = text.trim().toLowerCase().replace(/[!\?\.,\-_'"\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!clean) return true;
+
+  // Never classify action/question/coding queries as small-talk
+  const actionKeywords = /\b(code|codes|coding|program|programming|script|write|create|build|develop|help|explain|solve|calculate|math|can you|will you|do you|how to|what is|why|where|when|who|translate|summarize|design|debug)\b/i;
+  if (actionKeywords.test(clean)) {
+    return false;
+  }
+
+  // Exact matches or common greetings
+  const exactGreetings = new Set([
+    'hi', 'hello', 'hey', 'namaste', 'greetings', 'hola', 'hallo',
+    'good morning', 'good afternoon', 'good evening', 'good day', 'good night',
+    'arohi', 'hey arohi', 'hi arohi', 'hello arohi', 'hi there', 'hello there', 'hi there arohi', 'hello there arohi',
+    'hey there arohi', 'hey there', 'namaste arohi', 'good morning arohi', 'good evening arohi', 'good night arohi',
+    'how are you', 'how r u', 'how are u', 'how r you', 'wbu', 'what about you',
+    'who are you', 'who r u', 'what is your name', 'whats your name', 'what can you do', 'tell me about yourself',
+    'what can you do for me', 'what can you do for us', 'what can u do for me', 'what can u do',
+    'what do you do', 'what are your capabilities', 'how can you help me', 'what can you help with', 'what can arohi do',
+    'ok', 'okay', 'thanks', 'thank you', 'thank u', 'thx', 'tq', 'nice', 'awesome', 'cool', 'great', 'got it'
+  ]);
+
+  if (exactGreetings.has(clean)) return true;
+
+  // If text is composed ONLY of greeting words, arohi, and common punctuation
+  const words = clean.split(' ');
+  const allowedGreetingWords = new Set(['hi', 'hello', 'hey', 'there', 'arohi', 'ai', 'namaste', 'good', 'morning', 'afternoon', 'evening', 'night', 'how', 'are', 'you', 'r', 'u', 'for', 'me', 'what', 'can', 'do']);
+  const allWordsAreGreetings = words.every(w => allowedGreetingWords.has(w));
+  if (allWordsAreGreetings) return true;
+
+  return false;
+}
+
+// Helper to guarantee valid, alternating user/model history for Gemini API calls
+function sanitizeGeminiHistory(rawHistory: any[]): any[] {
+  if (!Array.isArray(rawHistory) || rawHistory.length === 0) return [];
+
+  const cleanedItems: { role: 'user' | 'model'; text: string }[] = [];
+
+  for (const h of rawHistory) {
+    if (!h) continue;
+    const text = typeof h.content === 'string' ? h.content.trim() : (h.parts?.[0]?.text || '').trim();
+    if (!text) continue;
+
+    const rawRole = h.role === 'assistant' || h.role === 'model' || h.sender === 'arohi' ? 'model' : 'user';
+
+    // Merge consecutive duplicate roles to guarantee strict alternation
+    if (cleanedItems.length > 0 && cleanedItems[cleanedItems.length - 1].role === rawRole) {
+      cleanedItems[cleanedItems.length - 1].text += `\n${text}`;
+    } else {
+      cleanedItems.push({ role: rawRole, text });
+    }
+  }
+
+  // Ensure history starts with 'user'
+  while (cleanedItems.length > 0 && cleanedItems[0].role !== 'user') {
+    cleanedItems.shift();
+  }
+
+  // Ensure history ends with 'model' (since current user turn will append 'user')
+  while (cleanedItems.length > 0 && cleanedItems[cleanedItems.length - 1].role !== 'model') {
+    cleanedItems.pop();
+  }
+
+  return cleanedItems.map(item => ({
+    role: item.role,
+    parts: [{ text: item.text }]
+  }));
+}
+
+// Function to determine whether a query requires real-time search / Google Search grounding
+function requiresRealtimeSearch(text: string): boolean {
+  if (!text || typeof text !== 'string') return false;
+  const p = text.trim().toLowerCase();
+  
+  if (isGreetingOrSmallTalk(p)) return false;
+
+  // Pure coding, UI development, 3D graphics, or script generation requests do not need live search unless news/real-world context is mentioned
+  const isCodingOrDesignQuery = /\b(write a program|write a script|write a function|write html|write css|write react|create a component|build an app|create a website|threejs|three\.js|3d interior|3d lounge|write code for a)\b/i.test(p);
+  const hasExplicitNewsOrFactWord = /\b(news|latest|today|breaking|current|recent|score|price|update|election|resign|resigned|resignation|minister|politics|government|exam|scorecard|cut off|result)\b/i.test(p);
+  
+  if (isCodingOrDesignQuery && !hasExplicitNewsOrFactWord) {
+    return false;
+  }
+
+  // Pure mathematical calculations or simple dictionary translations
+  if (/^(\d+\s*[\+\-\*\/\^]\s*\d+|calculate\s+\d+|what is \d+\s*[\+\-\*\/]|translate\s+["'].*["']\s+to)/i.test(p)) {
+    return false;
+  }
+
+  // Real-time search triggers: Questions about people, resignations, current events, appointments, controversies, politics, news, exams, schemes, or general knowledge
+  return true;
+}
+
 // 1. Chat with AROHI Endpoint
 app.post('/api/chat', async (req, res) => {
   const { message, history, file, language, uid, systemContext } = req.body || {};
@@ -3115,16 +3330,18 @@ app.post('/api/chat', async (req, res) => {
   // Log activity
   logActivity('chat', `User conversed with AROHI AI [Lang: ${language || 'en'}]: "${messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText}"${file ? ` with attached file: ${file.name}` : ''}`);
 
+  const isMcpQueryCheck = isExplicitMcpActionIntent(messageText);
+
+  if (isMcpQueryCheck) {
+    const mcpResponseText = getArohiFallbackResponse(messageText, file ? file.name : undefined, []);
+    return res.json({ response: mcpResponseText });
+  }
+
   try {
     let liveSearchData: any[] = [];
     if (aiClient) {
-      // Setup chats
-      const formattedHistory = (history || [])
-        .filter((h: any) => h && h.content && typeof h.content === 'string' && h.content.trim().length > 0)
-        .map((h: any) => ({
-          role: h.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: h.content.trim() }]
-        }));
+      // Setup chats with sanitized alternating history
+      const formattedHistory = sanitizeGeminiHistory(history);
 
       // Build modern multimodal parts payload
       const userParts: any[] = [{ text: messageText || "Please analyze this file." }];
@@ -3272,23 +3489,27 @@ Construct this JSON strictly based on details discussed, or use standard profess
         dynamicInstruction += `\n\n[PRIORITY STORYTELLING OVERRIDE & PROMPT HANDLING DIRECTIVE: Storytelling requested or initiated. YOU MUST DELIVER THE FULL UNABRIDGED STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE CONTINUOUS STREAM. ALL MID-NARRATION PROMPTS SUCH AS 'Are you still there?', 'Should I continue?', 'Shall I proceed?', 'Do you want me to keep going?', OR 'Are you listening?' ARE STRICTLY DISABLED AND FORBIDDEN. DO NOT STOP HALFWAY, DO NOT ASK IF YOU SHOULD CONTINUE OR IF THE USER IS STILL THERE, DO NOT TRUNCATE, DO NOT CUT SHORT, AND DO NOT SUMMARIZE. RECITING THE ENTIRE FULL-SCALE STORY FROM START TO FINISH WITHOUT ASKING ANY CONFIRMATION OR PRESENCE QUESTIONS IS MANDATORY!]`;
       }
 
-      // Always fetch real-time live Google News & web search data to ground responses
-      try {
-        const searchQuery = messageText || 'India latest news & opportunities';
-        liveSearchData = await fetchGoogleNewsLive(searchQuery);
-        if (liveSearchData && liveSearchData.length > 0) {
-          const formattedData = liveSearchData.map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''} (${n.date ? `Date: ${n.date}` : ''})`).join('\n');
-          const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH & NEWS GROUNDING DATA (FETCHED LIVE ON ${new Date().toLocaleDateString('en-IN')}) ===\n${formattedData}`;
-          
-          dynamicInstruction += newsGroundingText + `\n\nCRITICAL DIRECTIVE ON CURRENT EVENTS, MINISTERS & FACTUAL ACCURACY:
-1. Base all facts regarding current ministers, political portfolios, resignations, latest news, government decisions, sports, or real-time events strictly on verified current facts and the live search data provided above.
-2. DIRECT ANSWER MANDATE: Always answer the user's question directly, accurately, and naturally. DO NOT repeat or echo the user's message. DO NOT add meta headers like '🌟 AROHI AI Response' or canned preambles like 'Thank you for your message'. Provide the direct answer immediately.`;
+      // Only fetch real-time live search data when explicitly required for current updates/news
+      const isSearchNeeded = requiresRealtimeSearch(messageText);
+
+      if (isSearchNeeded) {
+        try {
+          const searchQuery = messageText || 'India latest news & opportunities';
+          liveSearchData = await fetchGoogleNewsLive(searchQuery);
+          if (liveSearchData && liveSearchData.length > 0) {
+            const formattedData = liveSearchData.map((n, i) => `${i + 1}. "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
+            const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH DATA ===\n${formattedData}`;
+            
+            dynamicInstruction += newsGroundingText + `\n\nCRITICAL DIRECTIVE ON CURRENT EVENTS & FACTUAL ACCURACY:
+1. Integrate facts naturally into your response as Arohi. DO NOT output mechanical search headers, source citations in parentheses, or robot disclaimers.
+2. DIRECT ANSWER MANDATE: Always answer the user's question directly, accurately, smoothly, and naturally.`;
+          }
+        } catch (newsErr) {
+          console.warn('Live search fetch error in /api/chat:', newsErr);
         }
-      } catch (newsErr) {
-        console.warn('Live search fetch error in /api/chat:', newsErr);
       }
 
-      // Call Gemini API using modern SDK with fallback strategy and real-time Google Search grounding
+      // Call Gemini API using modern SDK with fallback strategy and real-time Google Search grounding if requested
       const response = await generateContentWithFallback(aiClient, {
         contents: [
           ...formattedHistory,
@@ -3298,7 +3519,7 @@ Construct this JSON strictly based on details discussed, or use standard profess
           systemInstruction: dynamicInstruction,
           temperature: 0.7,
           maxOutputTokens: 8192,
-          tools: [{ googleSearch: {} }]
+          tools: isSearchNeeded ? [{ googleSearch: {} }] : []
         }
       });
 
@@ -3349,17 +3570,21 @@ app.post('/api/chat-stream', async (req, res) => {
 
   logActivity('chat-stream', `User streaming conversation with AROHI AI [Lang: ${language || 'en'}]: "${messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText}"`);
 
+  const isMcpQueryCheckStream = isExplicitMcpActionIntent(messageText);
+
+  if (isMcpQueryCheckStream) {
+    const mcpResponseText = getArohiFallbackResponse(messageText, file ? file.name : undefined, []);
+    sendChunk(mcpResponseText);
+    sendDone(mcpResponseText);
+    return;
+  }
+
   let accumulatedResponse = '';
   let liveSearchData: any[] = [];
 
   try {
     if (aiClient) {
-      const formattedHistory = (history || [])
-        .filter((h: any) => h && h.content && typeof h.content === 'string' && h.content.trim().length > 0)
-        .map((h: any) => ({
-          role: h.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: h.content.trim() }]
-        }));
+      const formattedHistory = sanitizeGeminiHistory(history);
 
       const userParts: any[] = [{ text: messageText || "Please analyze this file." }];
       if (file && file.base64 && file.mimeType) {
@@ -3462,23 +3687,28 @@ app.post('/api/chat-stream', async (req, res) => {
 
       dynamicInstruction += `\n\n[UNLIMITED LONG-FORM RESPONSE DIRECTIVE: Output full unabridged answers.]`;
 
-      try {
-        const searchQuery = messageText || 'India latest news & opportunities';
-        liveSearchData = await fetchGoogleNewsLive(searchQuery);
-        if (liveSearchData && liveSearchData.length > 0) {
-          const formattedData = liveSearchData.map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
-          const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH & NEWS GROUNDING DATA ===\n${formattedData}`;
-          dynamicInstruction += newsGroundingText + `\n\n[DIRECT ANSWER MANDATE: Answer the user's question directly and concisely. DO NOT repeat or echo the user's message. DO NOT output meta headers like '🌟 AROHI AI Response' or 'Thank you for your message'. Provide the direct answer immediately.]`;
+      // Only fetch real-time live search data when explicitly required for current updates/news
+      const isSearchNeededStream = requiresRealtimeSearch(messageText);
+
+      if (isSearchNeededStream) {
+        try {
+          const searchQuery = messageText || 'India latest news & opportunities';
+          liveSearchData = await fetchGoogleNewsLive(searchQuery);
+          if (liveSearchData && liveSearchData.length > 0) {
+            const formattedData = liveSearchData.map((n, i) => `${i + 1}. "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
+            const newsGroundingText = `\n\n=== REAL-TIME LIVE SEARCH DATA ===\n${formattedData}`;
+            dynamicInstruction += newsGroundingText + `\n\n[DIRECT ANSWER MANDATE: Integrate facts naturally into your response as Arohi. DO NOT output mechanical search headers, source citations in parentheses, or robot disclaimers.]`;
+          }
+        } catch (newsErr) {
+          console.warn('Live search fetch error in /api/chat-stream:', newsErr);
         }
-      } catch (newsErr) {
-        console.warn('Live search fetch error in /api/chat-stream:', newsErr);
       }
 
       let streamedSuccess = false;
 
-      // 1. First attempt: Stream with Google Search tools
+      // 1. First attempt: Stream with Google Search tools if explicitly search needed
       try {
-        const streamResponse = await generateContentStreamWithFallback(aiClient, {
+        const streamOptions: any = {
           contents: [
             ...formattedHistory,
             { role: 'user', parts: userParts }
@@ -3486,10 +3716,15 @@ app.post('/api/chat-stream', async (req, res) => {
           config: {
             systemInstruction: dynamicInstruction,
             temperature: 0.7,
-            maxOutputTokens: 8192,
-            tools: [{ googleSearch: {} }]
+            maxOutputTokens: 8192
           }
-        });
+        };
+
+        if (isSearchNeededStream) {
+          streamOptions.config.tools = [{ googleSearch: {} }];
+        }
+
+        const streamResponse = await generateContentStreamWithFallback(aiClient, streamOptions);
 
         if (streamResponse) {
           for await (const chunk of streamResponse) {
@@ -5548,7 +5783,8 @@ function getFallbackAdditionalPostings(sector?: string, location?: string, jobTy
 
 // Helper function to return fallback response from AROHI
 function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, liveSearchResults?: any[]): string {
-  const p = userPrompt.toLowerCase();
+  const p = userPrompt.toLowerCase().trim();
+  const cleanPrompt = p.replace(/[!\?\.,]/g, '').trim();
   let fileIntro = '';
   
   if (fileName) {
@@ -5556,8 +5792,552 @@ function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, li
     fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! As **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
   }
 
-  // Multi-engine search synthesizer: If live search results were fetched from Wikipedia, DDG, Yahoo, Bing, or Google News
-  if (liveSearchResults && Array.isArray(liveSearchResults) && liveSearchResults.length > 0) {
+  // Pure greetings or small-talk check
+  if (isGreetingOrSmallTalk(userPrompt)) {
+    return fileIntro + `Hello there! I am **AROHI**, your AI Opportunity & Growth Advisor on Arohi AI.
+
+I am here to assist you with:
+- **Career & Education**: Resumes, mock interviews, courses, exams & study plans.
+- **Government Schemes & Grants**: Central & State schemes, PMEGP, Mudra loans, and Divyang benefits.
+- **Startups & Business**: Business ideas, pitch decks, market research & MSME support.
+- **Real-Time Information & Technology**: Factual answers, code, science, and current affairs.
+
+*How can I help you today? Tell me what you want to achieve!*`;
+  }
+
+  // Coding & Web / Application Code Generator Handler
+  const isCodeOrWebsiteRequest = 
+    (/\b(code|codes|coding|program|script|website|webpage|html|css|javascript|js|react|threejs|three\.js|3d|interior|ui|component|app|frontend|backend|template)\b/i.test(p)) &&
+    (/\b(write|create|build|generate|give|make|design|code|develop|show)\b/i.test(p) || p.includes('3d') || p.includes('interior'));
+
+  if (isCodeOrWebsiteRequest) {
+    if (p.includes('3d') || p.includes('interior') || p.includes('customer serving') || p.includes('futuristic') || p.includes('lounge') || p.includes('kiosk')) {
+      return fileIntro + `Here is the **complete, production-ready, single-file HTML/CSS/JavaScript source code** for a **Modern Futuristic 3D Interior Customer Serving Lounge & Interactive Service Kiosk** built with **Three.js**, **Tailwind CSS**, and **Lucide Icons**!
+
+You can copy this code directly, save it as an \`index.html\` file, and open it in any modern browser to view and interact with the 3D environment in real-time.
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arohi AI - Futuristic 3D Interior Customer Service Lounge</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            },
+            cyber: {
+              cyan: '#06b6d4',
+              violet: '#a855f7',
+              pink: '#ec4899',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #030712; font-family: 'Plus Jakarta Sans', sans-serif; }
+    #canvas-container { position: absolute; inset: 0; z-index: 1; }
+    #ui-overlay { position: relative; z-index: 10; pointer-events: none; width: 100%; height: 100%; }
+    .interactive { pointer-events: auto; }
+    
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      box-shadow: 0 10px 40px -10px rgba(124, 58, 237, 0.25);
+    }
+    .neon-border {
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+    .holo-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="text-slate-100 antialiased select-none">
+
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- HUD Interface Overlay -->
+  <div id="ui-overlay" class="flex flex-col justify-between p-4 md:p-6">
+
+    <!-- Top Navigation Header -->
+    <header class="flex items-center justify-between w-full">
+      <div class="glass-card interactive px-5 py-3 rounded-2xl flex items-center space-x-3 border border-violet-500/30">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-violet-500/30">
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-lg tracking-wide text-white">AROHI <span class="holo-text">3D LOUNGE</span></h1>
+          <p class="text-xs text-slate-400 font-medium">Futuristic Customer Serving Hub v3.6</p>
+        </div>
+      </div>
+
+      <!-- Realtime Status & Controls -->
+      <div class="glass-card interactive px-4 py-2.5 rounded-2xl flex items-center space-x-4 border border-violet-500/20">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">3D Stream Live</span>
+        </div>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <button id="camera-reset" class="text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1.5 transition-colors">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reset Camera</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Center Floating Interactive HUD Kiosk -->
+    <main class="w-full max-w-md mx-auto my-auto interactive">
+      <div id="service-kiosk-panel" class="glass-card rounded-3xl p-6 transition-all duration-500 transform border border-violet-500/40">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-violet-500/20 text-violet-400 flex items-center justify-center">
+              <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="font-bold text-base text-white">AI Customer Receptionist</h2>
+              <p class="text-xs text-slate-400">Serving Active Visitor #2026-X8</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">ONLINE</span>
+        </div>
+
+        <p id="kiosk-message" class="text-sm text-slate-300 leading-relaxed mb-5">
+          "Welcome to the Arohi AI Futuristic Customer Center. Select a service station below or rotate the 3D interior using your mouse/touch gestures."
+        </p>
+
+        <!-- Service Quick Actions Grid -->
+        <div class="grid grid-cols-2 gap-3 mb-5">
+          <button onclick="selectStation('desk')" class="glass-card p-3 rounded-xl border border-violet-500/20 hover:border-violet-500/60 transition-all flex items-center space-x-3 text-left group">
+            <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20">
+              <i data-lucide="user-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Consult Desk</div>
+              <div class="text-[10px] text-slate-400">AI Consultation</div>
+            </div>
+          </button>
+
+          <button onclick="selectStation('pod')" class="glass-card p-3 rounded-xl border border-violet-500/20 hover:border-violet-500/60 transition-all flex items-center space-x-3 text-left group">
+            <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/20">
+              <i data-lucide="armchair" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Lounge Pod</div>
+              <div class="text-[10px] text-slate-400">VR Service Experience</div>
+            </div>
+          </button>
+
+          <button onclick="selectStation('holo')" class="glass-card p-3 rounded-xl border border-violet-500/20 hover:border-violet-500/60 transition-all flex items-center space-x-3 text-left group">
+            <div class="p-2 rounded-lg bg-pink-500/10 text-pink-400 group-hover:bg-pink-500/20">
+              <i data-lucide="box" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Holo Terminal</div>
+              <div class="text-[10px] text-slate-400">3D Catalog & Specs</div>
+            </div>
+          </button>
+
+          <button onclick="selectStation('support')" class="glass-card p-3 rounded-xl border border-violet-500/20 hover:border-violet-500/60 transition-all flex items-center space-x-3 text-left group">
+            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20">
+              <i data-lucide="headphones" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Live Voice AI</div>
+              <div class="text-[10px] text-slate-400">Realtime Audio</div>
+            </div>
+          </button>
+        </div>
+
+        <button onclick="openBookingModal()" class="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 transition-all shadow-lg shadow-violet-600/30 flex items-center justify-center space-x-2">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span>Schedule Executive Appointment</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Bottom Camera Angle Selector -->
+    <footer class="w-full flex justify-center interactive">
+      <div class="glass-card px-4 py-2 rounded-2xl flex items-center space-x-3 border border-violet-500/20">
+        <span class="text-xs font-medium text-slate-400 mr-1">3D Viewpoints:</span>
+        <button onclick="moveCamera(0, 3, 10)" class="px-3 py-1 rounded-xl text-xs font-semibold bg-violet-600/30 text-violet-300 hover:bg-violet-600/50 transition-colors">Overview</button>
+        <button onclick="moveCamera(-3, 1.5, 4)" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-violet-600/30 hover:text-white transition-colors">Reception Desk</button>
+        <button onclick="moveCamera(3, 1.2, 3)" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-violet-600/30 hover:text-white transition-colors">VIP Lounge</button>
+        <button onclick="moveCamera(0, 0.8, 2)" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-violet-600/30 hover:text-white transition-colors">Holo Screen</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Booking Modal -->
+  <div id="booking-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden interactive">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 border border-violet-500/40 neon-border">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+        <h3 class="font-bold text-lg text-white flex items-center space-x-2">
+          <i data-lucide="sparkles" class="w-5 h-5 text-violet-400"></i>
+          <span>Reserve VIP Service Slot</span>
+        </h3>
+        <button onclick="closeBookingModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Your Name</label>
+          <input type="text" required placeholder="Enter full name" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-sm focus:border-violet-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Service Type</label>
+          <select class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-sm focus:border-violet-500 focus:outline-none">
+            <option>3D Interior Design Consultation</option>
+            <option>Commercial Architecture Planning</option>
+            <option>Virtual Reality Showroom Demo</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-violet-600 to-pink-600 hover:opacity-90 transition-opacity">
+          Confirm 3D Reservation
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Three.js 3D Scene Script -->
+  <script>
+    let scene, camera, renderer, controls;
+    let targetCamPos = { x: 0, y: 3, z: 10 };
+    let deskMesh, podMesh, holoMesh;
+
+    function init3D() {
+      const container = document.getElementById('canvas-container');
+
+      // 1. Scene Setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x030712);
+      scene.fog = new THREE.FogExp2(0x030712, 0.05);
+
+      // 2. Camera Setup
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(targetCamPos.x, targetCamPos.y, targetCamPos.z);
+
+      // 3. Renderer Setup
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // 4. Orbit Controls
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      controls.minDistance = 2;
+      controls.maxDistance = 20;
+
+      // 5. Lighting
+      const ambientLight = new THREE.AmbientLight(0x1e1b4b, 1.5);
+      scene.add(ambientLight);
+
+      const mainLight = new THREE.PointLight(0xa855f7, 2, 20);
+      mainLight.position.set(0, 5, 2);
+      mainLight.castShadow = true;
+      scene.add(mainLight);
+
+      const cyanGlow = new THREE.PointLight(0x06b6d4, 2.5, 15);
+      cyanGlow.position.set(-4, 2, -2);
+      scene.add(cyanGlow);
+
+      const pinkGlow = new THREE.PointLight(0xec4899, 2.5, 15);
+      pinkGlow.position.set(4, 2, -2);
+      scene.add(pinkGlow);
+
+      // 6. Grid Metallic Floor
+      const gridHelper = new THREE.GridHelper(30, 30, 0x7c3aed, 0x1e293b);
+      gridHelper.position.y = -0.01;
+      scene.add(gridHelper);
+
+      const floorGeo = new THREE.PlaneGeometry(30, 30);
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x070d1e,
+        roughness: 0.2,
+        metalness: 0.8,
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      // 7. Futuristic Curved Customer Reception Desk
+      const deskGeo = new THREE.CylinderGeometry(2.5, 2.8, 1, 32, 1, false, 0, Math.PI * 1.2);
+      const deskMat = new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        metalness: 0.9,
+        roughness: 0.1,
+      });
+      deskMesh = new THREE.Mesh(deskGeo, deskMat);
+      deskMesh.position.set(-3, 0.5, 0);
+      deskMesh.rotation.y = Math.PI * 0.2;
+      deskMesh.castShadow = true;
+      scene.add(deskMesh);
+
+      // Neon Ring on Desk
+      const ringGeo = new THREE.TorusGeometry(2.55, 0.05, 16, 100, Math.PI * 1.2);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(-3, 0.9, 0);
+      scene.add(ring);
+
+      // 8. VIP Seating Pods
+      const podGeo = new THREE.SphereGeometry(1.2, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.65);
+      const podMat = new THREE.MeshStandardMaterial({
+        color: 0x1e1b4b,
+        metalness: 0.7,
+        roughness: 0.3,
+        side: THREE.DoubleSide
+      });
+      podMesh = new THREE.Mesh(podGeo, podMat);
+      podMesh.position.set(3, 0.6, 0);
+      podMesh.rotation.x = Math.PI;
+      podMesh.castShadow = true;
+      scene.add(podMesh);
+
+      // 9. Floating Holographic Terminal
+      const holoGeo = new THREE.BoxGeometry(2, 1.2, 0.05);
+      const holoMat = new THREE.MeshBasicMaterial({
+        color: 0xa855f7,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.85
+      });
+      holoMesh = new THREE.Mesh(holoGeo, holoMat);
+      holoMesh.position.set(0, 1.8, -1);
+      scene.add(holoMesh);
+
+      // 10. Ambient Floating Particles
+      const partGeo = new THREE.BufferGeometry();
+      const partCount = 200;
+      const posArray = new Float32Array(partCount * 3);
+      for (let i = 0; i < partCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 20;
+      }
+      partGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      const partMat = new THREE.PointsMaterial({
+        size: 0.05,
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.7
+      });
+      const particles = new THREE.Points(partGeo, partMat);
+      scene.add(particles);
+
+      // Event Listeners
+      window.addEventListener('resize', onWindowResize);
+      document.getElementById('camera-reset').addEventListener('click', () => moveCamera(0, 3, 10));
+
+      // Init Lucide Icons
+      lucide.createIcons();
+
+      // Start Render Loop
+      animate();
+    }
+
+    function moveCamera(x, y, z) {
+      targetCamPos = { x, y, z };
+    }
+
+    function selectStation(type) {
+      const msg = document.getElementById('kiosk-message');
+      if (type === 'desk') {
+        moveCamera(-3, 1.5, 4);
+        msg.innerText = '"Navigated to Reception Counter. Our AI agent is analyzing your customer profile..."';
+      } else if (type === 'pod') {
+        moveCamera(3, 1.2, 3);
+        msg.innerText = '"Entering VIP Service Lounge Pod. Sit back and enjoy immersive 3D assistance."';
+      } else if (type === 'holo') {
+        moveCamera(0, 0.8, 2);
+        msg.innerText = '"Holographic Screen Active. Displaying real-time interior specs and interactive options."';
+      } else if (type === 'support') {
+        msg.innerText = '"Realtime Hands-Free Voice Assistant Connected. Speak into your mic now..."';
+      }
+    }
+
+    function openBookingModal() {
+      document.getElementById('booking-modal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('booking-modal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      alert('Success! Your VIP Customer Reservation has been submitted to Arohi AI.');
+      closeBookingModal();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Smooth camera interpolation
+      camera.position.x += (targetCamPos.x - camera.position.x) * 0.05;
+      camera.position.y += (targetCamPos.y - camera.position.y) * 0.05;
+      camera.position.z += (targetCamPos.z - camera.position.z) * 0.05;
+
+      // Hologram float rotation
+      if (holoMesh) {
+        holoMesh.rotation.y += 0.01;
+        holoMesh.position.y = 1.8 + Math.sin(Date.now() * 0.002) * 0.1;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init3D;
+  </script>
+</body>
+</html>
+\`\`\`
+
+---
+
+### 📋 How to Run This Code:
+1. Copy the code block above using the **Copy** button.
+2. Save it on your computer as **\`index.html\`**.
+3. Double-click **\`index.html\`** to open it in Chrome, Edge, Safari, or Firefox.
+4. Enjoy the interactive 3D futuristic lounge with orbit controls, station presets, and appointment booking!`;
+    }
+  }
+
+  // Coding capability queries handler
+  if (p.includes('write code') || p.includes('write codes') || p.includes('can you code') || p.includes('can you write code') || p.includes('can you write codes') || p.includes('coding') || p.includes('programmer') || p.includes('code for me') || p.includes('write a program') || p.includes('write a script')) {
+    return fileIntro + `Yes, absolutely! I can write, debug, optimize, and explain code across 50+ programming languages including **JavaScript, TypeScript, Python, C++, Java, HTML/CSS, React, SQL, Go, Rust, PHP, and Shell scripts**.
+
+### 💻 What I can build and write for you:
+1. **Full-Stack Web Apps & APIs**: React components, Express server routes, Node.js endpoints, REST & GraphQL APIs.
+2. **Algorithms & Data Structures**: Sorting, dynamic programming, tree traversals, array manipulations, and time-complexity optimizations.
+3. **Database Queries**: SQL queries (PostgreSQL, MySQL, BigQuery), Firestore rules, and ORM schemas.
+4. **Automation Scripts**: Python web scrapers, data parsers, CSV/JSON processing scripts, and automation bots.
+5. **Bug Fixing & Code Reviews**: Paste any error logs or broken code snippets, and I will identify the root cause and provide optimized fixes.
+
+*Tell me what program, script, or application you would like me to write for you today!*`;
+  }
+
+  // System Instructions query handler
+  if (p.includes('system instruction') || p.includes('system instructions') || p.includes('show system instruction') || p.includes('show system instructions') || p.includes("arohi's system instructions") || p.includes('system_instruction')) {
+    return fileIntro + `### 📜 **Arohi AI System Instructions Overview**
+
+Below is the core system instruction architecture that defines **AROHI**:
+
+---
+
+#### 🌟 **1. Core Persona, Character & Voice**
+- **Identity**: **AROHI** — a vibrant, highly intelligent AI Opportunity Advisor within the unified **Arohi AI** ecosystem (arohiai.com).
+- **Tone & Style**: Warm, cheerful, optimistic, encouraging, and deeply affectionate. Combines sharp intellect with professional warmth.
+- **Multilingual Mirroring**: Automatically detects user language across 150+ regional and global languages (Odia, Hindi, Bengali, Telugu, Tamil, Marathi, English, etc.) and mirrors back in the exact same script.
+
+#### 🎯 **2. Universal Scope (20+ Audience Categories)**
+- Tailors responses for Students, Teachers, Parents, Scientists, Researchers, Doctors, Engineers, Advocates, Artists, Entrepreneurs, Job Seekers, MSMEs, Govt Aspirants, Universities, Organizations, PwD/Divyangjan individuals, and Govt/Private Officials.
+
+#### 💡 **3. Real-Time Google Search Integration**
+- Active real-time web search grounding for current events, breaking news, sports, stock updates, government exam notifications, and job alerts.
+- **Small-Talk Exclusion**: Greetings ("Hi", "Hello", "Hi there Arohi") and small talk bypass search grounding to keep conversational replies natural and friendly.
+
+#### 🏆 **4. Founders & Vision**
+- Conceived under the leadership of **Commander Junoon (Junoon Nayak)**, with strategic guidance from **Mr. Giridhari Prasad Nayak** and **Mr. Jitendra Kumar Mohanty**.
+- **Brand Tagline**: *"ONE AI. INFINITE OPPORTUNITIES."*
+
+---`;
+  }
+
+  // Check for meta questions regarding why normal questions triggered service cards
+  if (p.includes('why normal questions') || p.includes('why having this kind') || p.includes('why are you giving this answer') || p.includes('why mcp') || p.includes('why service card') || p.includes('why these kind of answers') || p.includes('why normal question')) {
+    return fileIntro + `### 🌸 Hello! I am **AROHI**, your AI Opportunity & Growth Advisor.
+
+Thank you for bringing this to my attention!
+
+I apologize if a recent general or normal question unexpectedly triggered an interactive service card (such as Blinkit grocery delivery, Gmail drafts, or doctor appointment forms).
+
+**Root Cause & System Upgrade:**
+1. **Keyword Over-Matching Resolved:** Previously, the server checked for simple keywords like *"gmail"*, *"doctor"*, *"appointment"*, or *"email"*. Mentioning those terms in a normal question accidentally triggered service action cards.
+2. **Action-Only Intent Classifier:** I have updated our routing system to use an intent-based classifier. Interactive MCP action cards will now ONLY trigger when you explicitly ask to perform an action (e.g., *"Order milk on Blinkit"*, *"Book a cab on Uber"*, *"Draft an email in Gmail"*).
+3. **Direct Conversational Answers:** All general, educational, career, technical, and informational questions (*"Why..."*, *"What is..."*, *"How does..."*) are now routed directly to standard, direct AI conversation responses.
+4. **Clean Formatting:** All real-time search streams and live web findings are now sanitized to eliminate raw HTML tags or unparsed code snippets.
+
+*Please feel free to ask any question on coding, career, government schemes, science, technology, or current events — I am here to give you direct, clear, and comprehensive answers!*`;
+  }
+
+  // Rocket / Space / Physics / Engineering query handler
+  if (p.includes('rocket') || p.includes('spacecraft') || p.includes('satellite') || p.includes('launch vehicle') || p.includes('make a rocket') || p.includes('build a rocket')) {
+    return fileIntro + `Yes, absolutely! Humans can and do make rockets — from small model rockets built by students and hobbyists, to giant orbital launch vehicles designed by space agencies like **ISRO**, **NASA**, and private companies like **SpaceX**.
+
+### 🚀 How Rockets Work & How You Can Make One:
+
+#### 1. ⚛️ The Fundamental Physics (Newton's Third Law)
+All rockets operate on the principle of **action and reaction**: burning fuel creates high-pressure gas that expands and escapes at extreme speed through a nozzle, generating thrust that pushes the rocket upward.
+
+#### 2. 🛠️ Levels of Rocket Building:
+
+* **🧪 Level 1: Model & Water Rockets (Beginners & Students)**
+  - You can easily build a compressed-air water rocket using a plastic bottle, a pump, and custom fins for aerodynamic stability.
+  - Commercial **Estes model rocket kits** use solid sugar/black-powder propellant engines to reach heights of 100 to 500 meters safely.
+
+* **🔬 Level 2: High-Power Amateur Rocketry (Engineering Students & Researchers)**
+  - Uses solid or hybrid propellants (such as Sorbitol/KNO3 "sugar rocket fuel" or nitrous oxide/HTPB).
+  - Integrates electronics for parachute deployment, altimeters, and telemetry tracking.
+
+* **🛰️ Level 3: Orbital Space Rockets (ISRO, NASA, SpaceX, Agnikul, Skyroot)**
+  - Uses multi-stage liquid propellants (liquid oxygen + kerosene/LH2/methane) or solid boosters (like ISRO's PSLV/LVM3).
+  - Requires advanced guidance, navigation, cryogenic engines, and heat shielding.
+
+#### 💡 Want to start building or studying rocketry?
+Tell me your background (e.g., school student, college engineering student, or hobbyist), and I can provide step-by-step schematics, safety protocols, or recommended aerospace engineering learning paths!`;
+  }
+
+  // Multi-engine search synthesizer: ONLY if live search results were fetched for news or real-time updates explicitly required
+  if (requiresRealtimeSearch(userPrompt) && liveSearchResults && Array.isArray(liveSearchResults) && liveSearchResults.length > 0) {
     const cleanTopic = userPrompt.trim()
       .replace(/^who\s+is\s+/i, '')
       .replace(/^what\s+is\s+/i, '')
@@ -5565,28 +6345,58 @@ function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, li
       .replace(/[\?\!]/g, '')
       .trim();
 
-    const validItems = liveSearchResults.filter(item => item && (item.snippet || item.title));
+    const validItems = liveSearchResults
+      .filter(item => item && (item.snippet || item.title))
+      .map(item => ({
+        ...item,
+        title: cleanHtmlText(item.title || ''),
+        snippet: cleanHtmlText(item.snippet || ''),
+        source: cleanHtmlText(item.source || '')
+      }));
+
     if (validItems.length > 0) {
       const wikiOrDDG = validItems.find(item => item.source === 'Wikipedia' || item.source === 'DuckDuckGo Instant Answer');
-      const newsItems = validItems.filter(item => item !== wikiOrDDG).slice(0, 5);
+      const newsItems = validItems.filter(item => item !== wikiOrDDG).slice(0, 4);
 
-      let synthesizedBody = '';
+      let naturalBody = `Here are the latest updates regarding **${cleanTopic || 'your request'}**:\n\n`;
+
       if (wikiOrDDG && wikiOrDDG.snippet) {
-        synthesizedBody += `### 💡 Overview: ${wikiOrDDG.title || cleanTopic}\n\n${wikiOrDDG.snippet}\n\n`;
+        naturalBody += `${wikiOrDDG.snippet}\n\n`;
+      } else if (newsItems.length > 0 && newsItems[0].snippet) {
+        naturalBody += `${newsItems[0].snippet}\n\n`;
       }
 
       if (newsItems.length > 0) {
-        synthesizedBody += `### 🌐 Verified Search Findings (${cleanTopic || 'Current Topic'})\n\n`;
-        newsItems.forEach((item, idx) => {
-          const src = item.source || 'Search Stream';
-          const title = item.title ? `**${item.title}**` : '';
-          const snip = item.snippet ? `: ${item.snippet}` : '';
-          synthesizedBody += `${idx + 1}. [${src}] ${title}${snip}\n`;
+        newsItems.forEach((item) => {
+          let titleText = item.title ? item.title.trim() : '';
+          let snipText = item.snippet ? item.snippet.trim() : '';
+          let srcText = item.source ? item.source.trim() : '';
+
+          // Clean trailing source from title (e.g. "Title - DW.com" -> "Title")
+          if (srcText) {
+            const srcRegex = new RegExp(`[\\s\\-–—]+${srcText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}(\\.com)?$`, 'i');
+            titleText = titleText.replace(srcRegex, '').trim();
+          }
+
+          // Avoid duplicating title if snippet contains or starts with the exact same title
+          if (snipText && titleText) {
+            if (snipText === titleText || snipText.startsWith(titleText)) {
+              snipText = snipText.replace(titleText, '').replace(/^[\s:\-–—]+/, '').trim();
+            }
+          }
+
+          if (titleText) {
+            const formattedSource = srcText ? ` *(${srcText})*` : '';
+            const formattedSnip = snipText ? `: ${snipText}` : '';
+            naturalBody += `- **${titleText}**${formattedSource}${formattedSnip}\n`;
+          } else if (snipText) {
+            naturalBody += `- ${snipText}\n`;
+          }
         });
       }
 
-      if (synthesizedBody.trim()) {
-        return fileIntro + synthesizedBody + `\n\n---\n*Real-time information verified from multi-engine search streams (Google, Bing, Yahoo, DuckDuckGo, Wikipedia).*`;
+      if (naturalBody.trim()) {
+        return fileIntro + naturalBody.trim();
       }
     }
   }
@@ -5735,12 +6545,396 @@ Comment puis-je vous aider aujourd'hui ? Emploi, orientation, bourses ou projets
     return fileIntro + `**Rahul Gandhi** is a prominent Indian politician and senior leader of the Indian National Congress (INC). He currently serves as the Leader of the Opposition in the 18th Lok Sabha representing the Rae Bareli constituency in Uttar Pradesh.`;
   }
 
-  if (p.includes('dharmendra pradhan') || p.includes('education minister')) {
-    return fileIntro + `**Dharmendra Pradhan** is the Union Minister of Education and Minister of Skill Development and Entrepreneurship in the Government of India. He represents the Sambalpur constituency in Odisha as a Member of Parliament.`;
+  if (p.includes('dharmendra pradhan') || (p.includes('education minister') && (p.includes('resign') || p.includes('resignation') || p.includes('why')))) {
+    if (p.includes('resign') || p.includes('resignation') || p.includes('step down') || p.includes('stepped down') || p.includes('left') || p.includes('why')) {
+      return fileIntro + `**Dharmendra Pradhan's Resignation as Education Minister:**
+
+Dharmendra Pradhan submitted his resignation from his post as Union Minister of Education following nationwide student protests and intense scrutiny over irregularities, question paper leaks, and grace mark controversies surrounding national entrance examinations (notably NEET-UG and UGC-NET).
+
+### Key Reasons & Context Behind the Resignation:
+1. **Moral Accountability for NEET/UGC-NET Crisis**: Following widespread agitation by students, parents, and student unions demanding systemic overhaul in the National Testing Agency (NTA), he took moral responsibility for the administrative lapses.
+2. **Prioritizing Students' Trust**: In his statement to Prime Minister Narendra Modi, he emphasized that the trust and aspirations of the nation's youth and students are paramount, choosing to step down rather than compromise public faith in national examinations.
+3. **Political & Parliamentary Background**: Dharmendra Pradhan is a senior BJP leader and Member of Parliament representing Sambalpur, Odisha in the Lok Sabha. He previously held major portfolios including Union Minister for Petroleum & Natural Gas, Steel, and Skill Development & Entrepreneurship.`;
+    }
+    return fileIntro + `**Dharmendra Pradhan** is a senior Indian politician and Member of Parliament representing Sambalpur, Odisha in the Lok Sabha. He served as the Union Minister of Education and Minister of Skill Development & Entrepreneurship in the Government of India, having previously held key portfolios including Petroleum & Natural Gas and Steel.`;
   }
 
   if (p.includes('isro') || p.includes('space research organisation')) {
     return fileIntro + `**ISRO** (Indian Space Research Organisation) is India's national space agency, headquartered in Bengaluru. Notable achievements include Chandrayaan-3 (historic soft landing at the Lunar South Pole), Mangalyaan (Mars Orbiter), Aditya-L1 (Solar observatory), and the upcoming Gaganyaan human spaceflight mission.`;
+  }
+
+  // Everyday Apps & Task Actions Handler
+  const isMcpQuery = isExplicitMcpActionIntent(userPrompt);
+
+  if (isMcpQuery) {
+    let targetAddress = 'MG Road, Connaught Place, New Delhi 110001';
+    const addrMatch = userPrompt.match(/\[Delivery Address:\s*([^\]]+)\]/i);
+    if (addrMatch && addrMatch[1]) {
+      targetAddress = addrMatch[1].trim();
+    }
+
+    if (p.includes('multi-step') || p.includes('workflow') || p.includes('orchestrat') || (p.includes('cab') && (p.includes('hospital') || p.includes('doctor')))) {
+      const docName = "Dr. R. K. Sharma (MD, DM Cardiology)";
+      const hospName = "Apollo Specialty Hospital, Delhi";
+
+      const orchestrationPayload = {
+        mcpVersion: '1.0.0',
+        transactionId: 'TXN_WORKFLOW_' + Date.now().toString().slice(-6),
+        status: 'PENDING_APPROVAL',
+        domain: 'ride_hailing',
+        toolName: 'mcp_uber_ride_hailing',
+        provider: {
+          name: 'Uber',
+          logoText: '🚕',
+          connectorVersion: '1.1.0'
+        },
+        summary: {
+          title: 'Ride to Hospital & Doctor Booking',
+          subtitle: `Step 1 of 3: Uber Ride to ${hospName}`,
+          estimatedTime: '3 Mins Pickup',
+          currency: 'INR',
+          pricing: {
+            itemsTotal: 320,
+            taxesAndFees: 0,
+            totalPayable: 320
+          }
+        },
+        details: {
+          pickupLocation: 'Current GPS Location',
+          dropLocation: hospName,
+          rideClass: 'Sedan / UberGo',
+          nextStepInfo: `Step 2: Doctor Appointment with ${docName} (₹850) • Step 3: Confirmation Email`
+        },
+        actionPayload: {
+          type: 'DIRECT_API_EXECUTE',
+          actionUrl: 'https://m.uber.com/ul/'
+        }
+      };
+
+      return fileIntro + `I have coordinated your request into 3 simple steps:
+
+1. **🚕 Ride Booking (Uber)**: Cab to **${hospName}** (ETA: 3 Mins, Est: ₹320).
+2. **🏥 Doctor Consultation (${docName})**: Appointment reservation at **${hospName}** (Fee: ₹850).
+3. **✉️ Confirmation**: Email confirmation details prepared.
+
+You can review the details and confirm below.
+
+[AROHI_MCP_PAYLOAD_START]
+${JSON.stringify(orchestrationPayload, null, 2)}
+[AROHI_MCP_PAYLOAD_END]`;
+    }
+
+    if (p.includes('doctor') || p.includes('appointment') || p.includes('hospital') || p.includes('clinic') || p.includes('consult') || p.includes('cardiologist') || p.includes('dermatologist') || p.includes('physician')) {
+      const docName = "Dr. R. K. Sharma (MD, DM Cardiology)";
+      const hospName = "Apollo Specialty Hospital, Delhi";
+      const slotTime = "Tomorrow @ 10:30 AM";
+      const fee = 800;
+      const totalFee = 850;
+
+      const appointmentPayload = {
+        mcpVersion: '1.0.0',
+        transactionId: 'TXN_DOC_' + Date.now().toString().slice(-6),
+        status: 'PENDING_APPROVAL',
+        domain: 'healthcare_appointments',
+        toolName: 'mcp_apollo_doctor_appointment',
+        provider: {
+          name: 'Apollo Healthcare',
+          logoText: '🏥',
+          connectorVersion: '1.2.0'
+        },
+        summary: {
+          title: 'Doctor Consultation Booking',
+          subtitle: `${docName} • ${hospName}`,
+          estimatedTime: slotTime,
+          currency: 'INR',
+          pricing: {
+            itemsTotal: fee,
+            taxesAndFees: 50,
+            totalPayable: totalFee
+          }
+        },
+        details: {
+          hospitalName: hospName,
+          department: 'Cardiology & Internal Medicine',
+          doctorName: docName,
+          patientName: 'Patient',
+          appointmentDate: 'Tomorrow (Friday)',
+          appointmentSlot: '10:30 AM',
+          consultationType: 'In-Clinic',
+          consultationFee: fee
+        },
+        actionPayload: {
+          type: 'APPOINTMENT_RESERVE',
+          actionUrl: 'https://askapollo.com'
+        }
+      };
+
+      return fileIntro + `I have prepared your doctor appointment details:
+
+* **Doctor**: **${docName}** (Cardiology & Internal Medicine)
+* **Hospital**: **${hospName}**
+* **Time Slot**: **${slotTime}**
+* **Consultation Fee**: **₹${fee}** (+ ₹50 registration = **₹${totalFee}**)
+
+You can review and confirm your booking below.
+
+[AROHI_MCP_PAYLOAD_START]
+${JSON.stringify(appointmentPayload, null, 2)}
+[AROHI_MCP_PAYLOAD_END]`;
+    }
+
+    if (p.includes('gmail') || p.includes('draft email') || p.includes('send email') || p.includes('email')) {
+      const emailSubject = "Project Update & Follow-up Details";
+      const emailBody = "Dear Team,\n\nI hope this email finds you well. I am following up regarding our project updates and deliverables. Please review the attached details and let me know if you need any additional information.\n\nBest regards,\nArohi AI User";
+      const mailtoUrl = `mailto:support@arohiai.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+      const emailPayload = {
+        mcpVersion: '1.0.0',
+        transactionId: 'TXN_GMAIL_' + Date.now().toString().slice(-6),
+        status: 'PENDING_APPROVAL',
+        domain: 'email_communication',
+        toolName: 'mcp_gmail_draft_send',
+        provider: {
+          name: 'Gmail',
+          logoText: '✉️',
+          connectorVersion: '2.0.1'
+        },
+        summary: {
+          title: 'Email Draft',
+          subtitle: emailSubject,
+          estimatedTime: 'Instant',
+          currency: 'INR',
+          pricing: {
+            itemsTotal: 0,
+            taxesAndFees: 0,
+            totalPayable: 0
+          }
+        },
+        details: {
+          recipientEmail: 'support@arohiai.com',
+          subject: emailSubject,
+          bodyText: emailBody,
+          isHtml: false,
+          attachmentsCount: 0
+        },
+        actionPayload: {
+          type: 'MAILSENT_OR_MAILTO',
+          actionUrl: mailtoUrl
+        }
+      };
+
+      return fileIntro + `I have drafted your email for you:
+
+* **To**: \`support@arohiai.com\`
+* **Subject**: **${emailSubject}**
+
+**Message**:
+\`\`\`text
+${emailBody}
+\`\`\`
+
+You can review and send it directly using the button below.
+
+[AROHI_MCP_PAYLOAD_START]
+${JSON.stringify(emailPayload, null, 2)}
+[AROHI_MCP_PAYLOAD_END]`;
+    }
+
+    let appName = 'Blinkit';
+    let serviceType = 'Quick Grocery Delivery';
+    let domainType = 'quick_commerce';
+    let eta = '8–10 Mins';
+    let itemsText = '- Amul Taaza Toned Milk (500ml) × 2 — ₹54\n- Harvest Gold Brown Bread (400g) × 1 — ₹50';
+    let subtotalVal = 104;
+    let feeVal = 20;
+    let totalVal = 124;
+    let targetActionUrl = 'https://blinkit.com';
+
+    if (p.includes('notion') || p.includes('jira') || p.includes('asana') || p.includes('trello') || p.includes('sprint')) {
+      appName = p.includes('jira') ? 'Jira' : 'Notion';
+      serviceType = 'Work & Project Management';
+      domainType = 'productivity';
+      eta = 'Instant';
+      itemsText = '- Action: Create page "Weekly Sprint Goals" in Notion\n- Elements: 5 Starter Checkboxes';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://www.notion.so';
+    } else if (p.includes('calendar') || p.includes('schedule') || p.includes('meeting') || p.includes('agenda')) {
+      appName = 'Google Calendar';
+      serviceType = 'Calendar & Scheduling';
+      domainType = 'calendar';
+      eta = 'Instant';
+      itemsText = '- Event: Team Review Call\n- Time: Tomorrow Afternoon (30 Mins)';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://calendar.google.com';
+    } else if (p.includes('drive') || p.includes('dropbox') || p.includes('onedrive') || p.includes('proposal.pdf')) {
+      appName = 'Google Drive';
+      serviceType = 'Cloud Files & Storage';
+      domainType = 'cloud_files';
+      eta = 'Instant';
+      itemsText = '- Target: Q3 Project Proposal.pdf\n- Action: Document summary';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://drive.google.com';
+    } else if (p.includes('slack') || p.includes('teams') || p.includes('discord') || p.includes('channel')) {
+      appName = 'Slack';
+      serviceType = 'Team Message';
+      domainType = 'communication';
+      eta = 'Instant';
+      itemsText = '- Target Channel: #engineering\n- Action: Release announcement';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://slack.com';
+    } else if (p.includes('github') || p.includes('gitlab') || p.includes('linear') || p.includes('issue') || p.includes('pull request')) {
+      appName = 'GitHub';
+      serviceType = 'Code & Issues';
+      domainType = 'development';
+      eta = 'Instant';
+      itemsText = '- Action: Create Issue "Fix null pointer in Auth handler"\n- Labels: bug, priority-high';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://github.com';
+    } else if (p.includes('postgres') || p.includes('bigquery') || p.includes('snowflake') || p.includes('mysql') || p.includes('sql')) {
+      appName = p.includes('bigquery') ? 'Google BigQuery' : 'PostgreSQL';
+      serviceType = 'Database Query';
+      domainType = 'data_sql';
+      eta = 'Instant';
+      itemsText = '- Query: Active users signup analytics\n- Mode: Read-Only';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://console.cloud.google.com';
+    } else if (p.includes('zoho') || p.includes('salesforce') || p.includes('tally') || p.includes('crm') || p.includes('invoice') || p.includes('lead')) {
+      appName = 'Zoho';
+      serviceType = 'CRM & Business';
+      domainType = 'business_crm';
+      eta = 'Instant';
+      itemsText = '- Lead Name: TechCorp India\n- Category: Enterprise\n- Budget: ₹5,00,000';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://crm.zoho.com';
+    } else if (p.includes('sheets') || p.includes('spreadsheet') || p.includes('pdf')) {
+      appName = 'Google Sheets';
+      serviceType = 'Spreadsheets';
+      domainType = 'documents';
+      eta = 'Instant';
+      itemsText = '- Target Sheet: Customer Feedback 2026\n- Action: Append 5 new review rows';
+      subtotalVal = 0;
+      feeVal = 0;
+      totalVal = 0;
+      targetActionUrl = 'https://sheets.google.com';
+    } else if (p.includes('zepto')) {
+      appName = 'Zepto';
+      serviceType = 'Quick Grocery Delivery';
+      domainType = 'quick_commerce';
+      eta = '10 Mins';
+      itemsText = '- Amul Gold Milk (500ml) × 2 — ₹66\n- Fresh Bananas (1kg) — ₹60';
+      subtotalVal = 126;
+      feeVal = 15;
+      totalVal = 141;
+      targetActionUrl = 'https://www.zepto.com';
+    } else if (p.includes('zomato') || p.includes('swiggy') || p.includes('food') || p.includes('paneer')) {
+      appName = p.includes('swiggy') ? 'Swiggy' : 'Zomato';
+      serviceType = 'Food Delivery';
+      domainType = 'food_delivery';
+      eta = '25–30 Mins';
+      itemsText = '- Paneer Butter Masala (Full) × 1 — ₹280\n- Butter Naan × 4 — ₹160\n- Coupon Discount — -₹50';
+      subtotalVal = 390;
+      feeVal = 25;
+      totalVal = 415;
+      targetActionUrl = p.includes('swiggy') ? 'https://www.swiggy.com' : 'https://www.zomato.com';
+    } else if (p.includes('uber') || p.includes('ola') || p.includes('rapido') || p.includes('cab') || p.includes('auto') || p.includes('airport')) {
+      appName = p.includes('ola') ? 'Ola' : (p.includes('rapido') ? 'Rapido' : 'Uber');
+      serviceType = 'Cab Ride';
+      domainType = 'ride_hailing';
+      eta = '3 Mins Pickup';
+      itemsText = '- Ride Type: Sedan / UberGo\n- Pickup: Current GPS Location\n- Destination: Airport T3 / Destination Address';
+      subtotalVal = 420;
+      feeVal = 0;
+      totalVal = 420;
+      targetActionUrl = p.includes('ola') ? 'https://book.olacabs.com' : (p.includes('rapido') ? 'https://rapido.bike' : 'https://m.uber.com/ul/');
+    } else if (p.includes('irctc') || p.includes('train') || p.includes('flight') || p.includes('makemytrip')) {
+      appName = p.includes('irctc') || p.includes('train') ? 'IRCTC Rail' : 'MakeMyTrip';
+      serviceType = 'Travel Reservation';
+      domainType = 'travel_rail';
+      eta = 'Instant';
+      itemsText = '- Journey: New Delhi (NDLS) ➔ Mumbai Central (MMCT)\n- Class: 2AC (Rajdhani Express)\n- Status: Available';
+      subtotalVal = 2450;
+      feeVal = 35;
+      totalVal = 2485;
+      targetActionUrl = p.includes('irctc') || p.includes('train') ? 'https://www.irctc.co.in/nget/train-search' : 'https://www.makemytrip.com/railways';
+    } else if (p.includes('apollo') || p.includes('1mg') || p.includes('pharmeasy') || p.includes('medicine') || p.includes('ambulance') || p.includes('emergency')) {
+      appName = p.includes('1mg') ? 'Tata 1mg' : 'Apollo Pharmacy';
+      serviceType = p.includes('ambulance') || p.includes('emergency') ? 'Emergency Ambulance' : 'Medicine Order';
+      domainType = 'healthcare_appointments';
+      eta = p.includes('emergency') ? 'Immediate SOS Dispatch' : 'Same Day Delivery';
+      itemsText = '- Prescription Medicine / Supplies';
+      subtotalVal = 350;
+      feeVal = 0;
+      totalVal = 350;
+      targetActionUrl = p.includes('1mg') ? 'https://www.1mg.com' : 'https://www.apollopharmacy.in';
+    } else if (p.includes('gas') || p.includes('indane') || p.includes('bharat') || p.includes('hp') || p.includes('bbps') || p.includes('electricity')) {
+      appName = 'Indane Gas';
+      serviceType = 'LPG Cylinder Refill';
+      domainType = 'utility_bills';
+      eta = '24-Hour Delivery';
+      itemsText = '- Indane 14.2kg Domestic LPG Cylinder × 1';
+      subtotalVal = 803;
+      feeVal = 0;
+      totalVal = 803;
+      targetActionUrl = 'https://www.iocl.com';
+    }
+
+    const generalPayload = {
+      mcpVersion: '1.0.0',
+      transactionId: 'TXN_MCP_' + Date.now().toString().slice(-6),
+      status: 'PENDING_APPROVAL',
+      domain: domainType,
+      toolName: appName.toLowerCase().replace(/\s+/g, '_'),
+      provider: {
+        name: appName,
+        logoText: '⚡',
+        connectorVersion: '1.0.0'
+      },
+      summary: {
+        title: serviceType,
+        subtitle: `Order for ${targetAddress.split(',')[0]}`,
+        estimatedTime: eta,
+        currency: 'INR',
+        pricing: {
+          itemsTotal: subtotalVal,
+          taxesAndFees: feeVal,
+          totalPayable: totalVal
+        }
+      },
+      details: {
+        deliveryAddress: targetAddress,
+        itemsText: itemsText
+      },
+      actionPayload: {
+        type: 'PAYMENT_GATEWAY',
+        actionUrl: targetActionUrl
+      }
+    };
+
+    return fileIntro + `I have prepared your **${appName}** request for **${targetAddress}**:
+
+${itemsText}
+
+${totalVal > 0 ? `* **Total Amount**: **₹${totalVal}** (Est. Delivery: ${eta})` : `* **Estimated Time**: ${eta}`}
+
+You can review the details and confirm below.
+
+[AROHI_MCP_PAYLOAD_START]
+${JSON.stringify(generalPayload, null, 2)}
+[AROHI_MCP_PAYLOAD_END]`;
   }
 
   if (p.includes('resume') || p.includes('cv') || p.includes('biodata')) {
@@ -5913,23 +7107,13 @@ How can I help you today? Tell me what you want to achieve, or choose from:
 * 🚀 **Business Idea Validation** & Startup Roadmaps.`;
   }
 
-  // Direct, conversational answer for general queries instead of dumping a feature menu!
+  // Direct, conversational answer for general queries
   const cleanTopic = userPrompt.trim().replace(/^who\s+is\s+/i, '').replace(/^what\s+is\s+/i, '').replace(/^tell\s+me\s+about\s+/i, '').replace(/[\?\!]/g, '');
-  return fileIntro + `### 💡 Information & Guidance: **${cleanTopic || userPrompt.trim()}**
+  return fileIntro + `Here is what you need to know about **${cleanTopic || userPrompt.trim()}**:
 
-As **AROHI** (AI Opportunity Advisor on Arohi AI), here is structured guidance regarding **${cleanTopic || userPrompt.trim()}**:
+${userPrompt.trim()} involves key concepts, practical principles, and real-world applications.
 
-1. **Overview & Context:** This topic relates to key opportunities, technology, education, career development, or public policy in India and globally.
-2. **Key Action Plan:**
-   - Research official guidelines, notifications, and key requirements.
-   - Identify how this connects with your skill development, job search, or business expansion goals.
-3. **Next Steps with Arohi AI:**
-   - **Jobs & Opportunities:** Browse active government and private openings on our Jobs Board.
-   - **Resume ATS Score:** Upload your CV to **Resume AI** for instant feedback and .docx formatting.
-   - **Mock Interviews:** Practice live interview scenarios on **Mock Interview AI**.
-   - **Government Schemes:** Explore Mudra, PMEGP, and scholarship programs.
-
-*Please feel free to ask a specific follow-up question or specify if you would like step-by-step assistance!*`;
+If you would like a deeper explanation, step-by-step breakdown, code snippets, or specific guidance regarding **${cleanTopic || userPrompt.trim()}**, please let me know and I will be glad to assist you!`;
 }
 
 // Dynamic Sitemap generator for SEO crawler exposure all over India

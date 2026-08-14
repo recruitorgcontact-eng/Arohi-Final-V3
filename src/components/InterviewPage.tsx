@@ -212,7 +212,7 @@ Excellent effort! Your answer displays strong conceptual understanding and addre
 
               <textarea
                 value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
+                onChange={(e) => setUserAnswer(e?.target?.value ?? "")}
                 placeholder="Type your professional response clearly. Expand details to achieve a higher score..."
                 rows={6}
                 className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl p-3.5 text-xs md:text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"

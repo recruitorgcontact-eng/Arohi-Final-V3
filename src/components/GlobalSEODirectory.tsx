@@ -171,7 +171,7 @@ export default function GlobalSEODirectory({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
                 placeholder="Search language, state (e.g. Odisha, Delhi), or country..."
                 className="w-full bg-slate-900/90 border border-slate-700/80 focus:border-indigo-500 text-white rounded-xl pl-10 pr-4 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
               />

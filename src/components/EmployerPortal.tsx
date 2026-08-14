@@ -28,6 +28,7 @@ import {
   Inbox
 } from 'lucide-react';
 import { Posting, Application } from '../types';
+import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 
 interface EmployerPortalProps {
   postings: Posting[];
@@ -39,18 +40,27 @@ interface EmployerPortalProps {
 // Inline Markdown rendering helper for the AI analysis report
 function renderMarkdown(content: string) {
   const parseInline = (text: string): React.ReactNode[] => {
-    const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+    const regex = /(\[[^\]]+\]\([^)]+\)\s*|\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
     const pieces = text.split(regex);
     
-    return pieces.map((piece, idx) => {
-      if (piece.startsWith('**') && piece.endsWith('**')) {
-        return <strong key={idx} className="font-extrabold text-blue-400">{piece.slice(2, -2)}</strong>;
+    return pieces.flatMap((piece, idx): React.ReactNode[] => {
+      if (piece.startsWith('[') && piece.includes('](') && piece.endsWith(')')) {
+        const linkMatch = piece.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (linkMatch) {
+          const label = linkMatch[1].replace(/\*\*/g, '').trim();
+          let href = linkMatch[2].trim();
+          return [<ArohiChatLink key={idx} href={href} label={label} />];
+        }
+      } else if (piece.startsWith('**') && piece.endsWith('**')) {
+        const inner = piece.slice(2, -2);
+        return [<strong key={idx} className="font-extrabold text-blue-400">{parsePlainSegmentsWithLinks(inner, `bold-${idx}`)}</strong>];
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
-        return <em key={idx} className="italic text-slate-300">{piece.slice(1, -1)}</em>;
+        const inner = piece.slice(1, -1);
+        return [<em key={idx} className="italic text-slate-300">{parsePlainSegmentsWithLinks(inner, `italic-${idx}`)}</em>];
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return <code key={idx} className="bg-slate-900 px-1.5 py-0.5 rounded text-[11px] font-mono text-emerald-400 border border-slate-800">{piece.slice(1, -1)}</code>;
+        return [<code key={idx} className="bg-slate-900 px-1.5 py-0.5 rounded text-[11px] font-mono text-emerald-400 border border-slate-800">{piece.slice(1, -1)}</code>];
       }
-      return piece;
+      return parsePlainSegmentsWithLinks(piece, `plain-${idx}`);
     });
   };
 
@@ -631,7 +641,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Evaluating Active Job Target:</label>
               <select
                 value={selectedJobId}
-                onChange={(e) => { setSelectedJobId(e.target.value); setMatchingResult(null); setSelectedCandidate(null); }}
+                onChange={(e) => { setSelectedJobId(e?.target?.value ?? ""); setMatchingResult(null); setSelectedCandidate(null); }}
                 className="bg-slate-50 border border-slate-150 rounded-xl px-3 py-2 text-xs md:text-sm font-extrabold text-slate-800 focus:outline-none focus:border-purple-500"
               >
                 {postings.map(p => (
@@ -905,7 +915,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <input
                   type="text"
                   value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
+                  onChange={(e) => setJobTitle(e?.target?.value ?? "")}
                   placeholder="e.g. Associate Software Engineer"
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                   required
@@ -917,7 +927,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <input
                   type="text"
                   value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
+                  onChange={(e) => setCompanyName(e?.target?.value ?? "")}
                   placeholder="e.g. Oditech Digital Solutions"
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                   required
@@ -930,7 +940,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Work Location</label>
                 <select
                   value={jobLocation}
-                  onChange={(e) => setJobLocation(e.target.value)}
+                  onChange={(e) => setJobLocation(e?.target?.value ?? "")}
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                 >
                   <option value="Bhubaneswar">Bhubaneswar, Odisha</option>
@@ -948,7 +958,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <input
                   type="text"
                   value={jobSalary}
-                  onChange={(e) => setJobSalary(e.target.value)}
+                  onChange={(e) => setJobSalary(e?.target?.value ?? "")}
                   placeholder="e.g. ₹4.5 - ₹6 LPA"
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                 />
@@ -959,7 +969,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <input
                   type="number"
                   value={jobVacancies}
-                  onChange={(e) => setJobVacancies(Number(e.target.value))}
+                  onChange={(e) => setJobVacancies(Number(e?.target?.value ?? ""))}
                   min={1}
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                 />
@@ -971,7 +981,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Job Sector</label>
                 <select
                   value={jobSector}
-                  onChange={(e) => setJobSector(e.target.value)}
+                  onChange={(e) => setJobSector(e?.target?.value ?? "")}
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                 >
                   <option value="IT & Software">IT & Software</option>
@@ -988,7 +998,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
                 <input
                   type="url"
                   value={jobApplyLink}
-                  onChange={(e) => setJobApplyLink(e.target.value)}
+                  onChange={(e) => setJobApplyLink(e?.target?.value ?? "")}
                   placeholder="https://example.com/apply"
                   className="w-full bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-purple-500"
                 />
@@ -999,7 +1009,7 @@ Hello! I am **AROHI**, your AI Recruitment co-pilot. I have scanned **${candidat
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Candidate Eligibility & Skills Required</label>
               <textarea
                 value={jobEligibility}
-                onChange={(e) => setJobEligibility(e.target.value)}
+                onChange={(e) => setJobEligibility(e?.target?.value ?? "")}
                 placeholder="e.g. MCA or B.Tech degree holders with working knowledge of React, Node.js and basic databases. Good verbal English communication is a plus."
                 rows={4}
                 className="w-full bg-slate-50 border border-slate-150 rounded-2xl p-3.5 text-xs md:text-sm font-medium focus:outline-none focus:border-purple-500"

@@ -685,7 +685,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       required
                       placeholder="Enter your name as in Matric Certificate"
                       value={candidateName}
-                      onChange={(e) => setCandidateName(e.target.value)}
+                      onChange={(e) => setCandidateName(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -696,7 +696,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       required
                       placeholder="Enter father's name"
                       value={fatherName}
-                      onChange={(e) => setFatherName(e.target.value)}
+                      onChange={(e) => setFatherName(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -706,7 +706,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       type="date"
                       required
                       value={dob}
-                      onChange={(e) => setDob(e.target.value)}
+                      onChange={(e) => setDob(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -715,7 +715,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Gender *</label>
                       <select
                         value={gender}
-                        onChange={(e) => setGender(e.target.value)}
+                        onChange={(e) => setGender(e?.target?.value ?? "")}
                         className="w-full border border-slate-350 px-3 py-2 rounded-lg font-medium text-slate-900 bg-white"
                       >
                         <option value="Male">Male</option>
@@ -727,7 +727,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Category *</label>
                       <select
                         value={category}
-                        onChange={(e) => setCategory(e.target.value)}
+                        onChange={(e) => setCategory(e?.target?.value ?? "")}
                         className="w-full border border-slate-350 px-3 py-2 rounded-lg font-medium text-slate-900 bg-white"
                       >
                         <option value="General">General</option>
@@ -745,7 +745,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       required
                       placeholder="candidate@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -757,7 +757,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       placeholder="10-digit mobile number"
                       pattern="[0-9]{10}"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -768,7 +768,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       rows={2}
                       placeholder="Enter complete postal address with PIN code"
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
+                      onChange={(e) => setAddress(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     ></textarea>
                   </div>
@@ -793,7 +793,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Highest Academic Level *</label>
                     <select
                       value={qualification}
-                      onChange={(e) => setQualification(e.target.value)}
+                      onChange={(e) => setQualification(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3 py-2 rounded-lg font-medium text-slate-900 bg-white"
                     >
                       <option value="High School (10th)">High School (10th)</option>
@@ -811,7 +811,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       required
                       placeholder="e.g., CBSE, ICSE, UP Board, State University"
                       value={boardName}
-                      onChange={(e) => setBoardName(e.target.value)}
+                      onChange={(e) => setBoardName(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>
@@ -825,7 +825,7 @@ export default function PostingDetail({ posting, onBack, onAddApplication }: Pos
                       step="0.01"
                       placeholder="e.g., 84.50"
                       value={marks}
-                      onChange={(e) => setMarks(e.target.value)}
+                      onChange={(e) => setMarks(e?.target?.value ?? "")}
                       className="w-full border border-slate-350 px-3.5 py-2 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                   </div>

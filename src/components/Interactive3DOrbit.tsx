@@ -176,7 +176,7 @@ export default function Interactive3DOrbit({ setActiveTab, setSelectedPosting, o
               min="-20" 
               max="15" 
               value={tilt} 
-              onChange={(e) => setTilt(Number(e.target.value))}
+              onChange={(e) => setTilt(Number(e?.target?.value ?? ""))}
               className="w-16 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
             />
           </div>
@@ -188,7 +188,7 @@ export default function Interactive3DOrbit({ setActiveTab, setSelectedPosting, o
               min="180" 
               max="350" 
               value={depthOffset} 
-              onChange={(e) => setDepthOffset(Number(e.target.value))}
+              onChange={(e) => setDepthOffset(Number(e?.target?.value ?? ""))}
               className="w-16 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
             />
           </div>

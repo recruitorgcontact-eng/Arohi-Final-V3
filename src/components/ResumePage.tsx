@@ -460,7 +460,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                     <input
                       type="text"
                       value={personal.name}
-                      onChange={(e) => setPersonal({ ...personal, name: e.target.value })}
+                      onChange={(e) => setPersonal({ ...personal, name: e?.target?.value ?? "" })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-600 text-slate-800"
                     />
                   </div>
@@ -469,7 +469,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                     <input
                       type="text"
                       value={personal.role}
-                      onChange={(e) => setPersonal({ ...personal, role: e.target.value })}
+                      onChange={(e) => setPersonal({ ...personal, role: e?.target?.value ?? "" })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-600 text-slate-800"
                     />
                   </div>
@@ -479,7 +479,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                       <input
                         type="email"
                         value={personal.email}
-                        onChange={(e) => setPersonal({ ...personal, email: e.target.value })}
+                        onChange={(e) => setPersonal({ ...personal, email: e?.target?.value ?? "" })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-600 text-slate-800"
                       />
                     </div>
@@ -488,7 +488,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                       <input
                         type="text"
                         value={personal.phone}
-                        onChange={(e) => setPersonal({ ...personal, phone: e.target.value })}
+                        onChange={(e) => setPersonal({ ...personal, phone: e?.target?.value ?? "" })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-600 text-slate-800"
                       />
                     </div>
@@ -499,7 +499,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                       <input
                         type="text"
                         value={personal.location}
-                        onChange={(e) => setPersonal({ ...personal, location: e.target.value })}
+                        onChange={(e) => setPersonal({ ...personal, location: e?.target?.value ?? "" })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-600 text-slate-800"
                       />
                     </div>
@@ -508,7 +508,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                       <input
                         type="text"
                         value={personal.linkedin}
-                        onChange={(e) => setPersonal({ ...personal, linkedin: e.target.value })}
+                        onChange={(e) => setPersonal({ ...personal, linkedin: e?.target?.value ?? "" })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-600 text-slate-800"
                       />
                     </div>
@@ -518,7 +518,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                     <textarea
                       value={personal.objective}
                       rows={4}
-                      onChange={(e) => setPersonal({ ...personal, objective: e.target.value })}
+                      onChange={(e) => setPersonal({ ...personal, objective: e?.target?.value ?? "" })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium focus:outline-none focus:border-blue-600 text-slate-800"
                     />
                   </div>
@@ -558,7 +558,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={exp.company}
-                                onChange={(e) => handleUpdateExperience(idx, 'company', e.target.value)}
+                                onChange={(e) => handleUpdateExperience(idx, 'company', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -567,7 +567,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={exp.role}
-                                onChange={(e) => handleUpdateExperience(idx, 'role', e.target.value)}
+                                onChange={(e) => handleUpdateExperience(idx, 'role', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -579,7 +579,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={exp.duration}
-                                onChange={(e) => handleUpdateExperience(idx, 'duration', e.target.value)}
+                                onChange={(e) => handleUpdateExperience(idx, 'duration', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -590,7 +590,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                             <textarea
                               value={exp.description}
                               rows={2}
-                              onChange={(e) => handleUpdateExperience(idx, 'description', e.target.value)}
+                              onChange={(e) => handleUpdateExperience(idx, 'description', e?.target?.value ?? "")}
                               className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-850"
                               placeholder="Describe your key achievements..."
                             />
@@ -635,7 +635,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={edu.school}
-                                onChange={(e) => handleUpdateEducation(idx, 'school', e.target.value)}
+                                onChange={(e) => handleUpdateEducation(idx, 'school', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -644,7 +644,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={edu.degree}
-                                onChange={(e) => handleUpdateEducation(idx, 'degree', e.target.value)}
+                                onChange={(e) => handleUpdateEducation(idx, 'degree', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -656,7 +656,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={edu.duration}
-                                onChange={(e) => handleUpdateEducation(idx, 'duration', e.target.value)}
+                                onChange={(e) => handleUpdateEducation(idx, 'duration', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -665,7 +665,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                               <input
                                 type="text"
                                 value={edu.grade}
-                                onChange={(e) => handleUpdateEducation(idx, 'grade', e.target.value)}
+                                onChange={(e) => handleUpdateEducation(idx, 'grade', e?.target?.value ?? "")}
                                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-850"
                               />
                             </div>
@@ -684,7 +684,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                     <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Skills (Separated by Commas)</label>
                     <textarea
                       value={skills}
-                      onChange={(e) => setSkills(e.target.value)}
+                      onChange={(e) => setSkills(e?.target?.value ?? "")}
                       placeholder="e.g. React, JavaScript, AWS, MySQL, Project Management"
                       rows={6}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-blue-600 text-slate-800 leading-relaxed"
@@ -1003,7 +1003,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                 <div className="space-y-3">
                   <textarea
                     value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
+                    onChange={(e) => setResumeText(e?.target?.value ?? "")}
                     placeholder="Paste details, experience history, skills list, and qualifications here to parse..."
                     rows={10}
                     className="w-full bg-slate-50 border border-slate-150 rounded-xl p-3 text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -1235,7 +1235,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                       <input
                         type="text"
                         value={upiId}
-                        onChange={(e) => setUpiId(e.target.value)}
+                        onChange={(e) => setUpiId(e?.target?.value ?? "")}
                         className="w-full text-center mt-1.5 bg-[#0a071c] border border-[#281f61] rounded-xl px-3 py-2 text-xs font-bold text-violet-300 focus:outline-none focus:border-[#c084fc]"
                       />
                     </div>
@@ -1248,7 +1248,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                         type="text"
                         placeholder="Rahul Sharma"
                         value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
+                        onChange={(e) => setCardName(e?.target?.value ?? "")}
                         className="w-full bg-[#0a071c] border border-[#281f61] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c084fc]"
                       />
                     </div>
@@ -1258,7 +1258,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                         type="text"
                         placeholder="4321 8765 0987 1122"
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={(e) => setCardNumber(e?.target?.value ?? "")}
                         className="w-full bg-[#0a071c] border border-[#281f61] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c084fc]"
                       />
                     </div>
@@ -1269,7 +1269,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                           type="text"
                           placeholder="MM/YY"
                           value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
+                          onChange={(e) => setCardExpiry(e?.target?.value ?? "")}
                           className="w-full bg-[#0a071c] border border-[#281f61] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c084fc]"
                         />
                       </div>
@@ -1280,7 +1280,7 @@ Your resume lists solid software experience, particularly with **React**, **Node
                           placeholder="***"
                           maxLength={3}
                           value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
+                          onChange={(e) => setCardCvv(e?.target?.value ?? "")}
                           className="w-full bg-[#0a071c] border border-[#281f61] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c084fc]"
                         />
                       </div>

@@ -2307,7 +2307,7 @@ export default function SchoolSyllabusPage() {
                 type="text"
                 placeholder="Search subjects or chapters..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
                 className="w-full bg-[#070510] border border-[#211b3d] hover:border-[#3d326f] focus:border-purple-500 rounded-2xl py-2.5 pl-10 pr-4 text-xs text-white placeholder-slate-400 font-semibold focus:outline-none transition-colors"
               />
             </div>
@@ -2445,7 +2445,7 @@ export default function SchoolSyllabusPage() {
                   type="text"
                   placeholder={`Ask Arohi about Class ${selectedClass} ${activeBoard.toUpperCase()} Syllabus...`}
                   value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onChange={(e) => setAiPrompt(e?.target?.value ?? "")}
                   disabled={isGenerating}
                   className="w-full bg-[#080515] border border-[#221743] hover:border-violet-500 rounded-xl py-2 pl-3 pr-10 text-[10px] text-white focus:outline-none focus:border-violet-600 placeholder-slate-500 font-semibold disabled:opacity-50"
                 />

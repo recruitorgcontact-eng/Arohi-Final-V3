@@ -140,7 +140,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Sector Classification</label>
               <select
                 value={sector}
-                onChange={(e) => setSector(e.target.value)}
+                onChange={(e) => setSector(e?.target?.value ?? "")}
                 className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
               >
                 <option value="Agri-Tech / Farming">Agri-Tech / Allied Farming</option>
@@ -155,7 +155,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Proposed Capital Range</label>
               <select
                 value={investment}
-                onChange={(e) => setInvestment(e.target.value)}
+                onChange={(e) => setInvestment(e?.target?.value ?? "")}
                 className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
               >
                 <option value="Under ₹50,000">Micro-budget (Under ₹50,000)</option>
@@ -188,7 +188,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Detail Business Description</label>
               <textarea
                 value={idea}
-                onChange={(e) => setIdea(e.target.value)}
+                onChange={(e) => setIdea(e?.target?.value ?? "")}
                 placeholder="e.g. Starting an organic honey and beeswax retail store sourcing directly from local rural bee keepers in Karnataka."
                 rows={4}
                 className="w-full bg-[#080614]/90 border border-slate-700/80 rounded-xl p-3.5 text-xs md:text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
@@ -222,7 +222,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
                   max="100000"
                   step="5000"
                   value={monthlyRent}
-                  onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                  onChange={(e) => setMonthlyRent(Number(e?.target?.value ?? ""))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
                 />
               </div>
@@ -238,7 +238,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
                   max="200000"
                   step="5000"
                   value={monthlyInventory}
-                  onChange={(e) => setMonthlyInventory(Number(e.target.value))}
+                  onChange={(e) => setMonthlyInventory(Number(e?.target?.value ?? ""))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
                 />
               </div>
@@ -254,7 +254,7 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
                   max="30000"
                   step="1000"
                   value={marketingCost}
-                  onChange={(e) => setMarketingCost(Number(e.target.value))}
+                  onChange={(e) => setMarketingCost(Number(e?.target?.value ?? ""))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
                 />
               </div>
