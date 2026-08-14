@@ -1285,31 +1285,28 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     }
   };
 
-  const { updateArohiChats, updateArohiCalls } = useAuth();
-  const [activeTab, setActiveTab] = useState<'chats' | 'calls'>('chats');
-  const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
-  const [savedCalls, setSavedCalls] = useState<any[]>([]);
-  const [activeChatId, setActiveChatId] = useState<string>('');
-  const [selectedCallDetail, setSelectedCallDetail] = useState<any | null>(null);
-  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
-  const [hasFetchedLatest, setHasFetchedLatest] = useState(false);
-  const hydratedUserRef = useRef<string | null>(null);
-  const prevSyncedMessagesJsonRef = useRef<string>('');
-
-  const currentUserName = user 
-    ? (userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || 'User') 
-    : 'User';
-  const currentChatObj = savedChats.find(c => c.id === activeChatId) || savedChats[0];
-  const rawChatTitle = currentChatObj ? currentChatObj.title : 'Arohi AI Consultation';
-  const activeChatTitle = (!rawChatTitle || rawChatTitle === 'New Conversation' || rawChatTitle === 'New Discussion' || rawChatTitle === 'Arohi AI Consultation' || rawChatTitle.toLowerCase().includes('hi arohi'))
-    ? (user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!")
-    : rawChatTitle;
-
-  const filteredChats = savedChats.filter(chat => 
-    chat.title.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
-    chat.messages.some(m => m.content.toLowerCase().includes(sidebarSearchQuery.toLowerCase()))
-  );
-  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  // Helper to safely merge lifetime chat histories without losing past conversations
+  const mergeSavedChats = (listA: SavedChat[] = [], listB: SavedChat[] = []): SavedChat[] => {
+    const chatDict: Record<string, SavedChat> = {};
+    for (const c of (listA || [])) {
+      if (c && c.id) chatDict[c.id] = c;
+    }
+    for (const c of (listB || [])) {
+      if (c && c.id) {
+        const prev = chatDict[c.id];
+        if (!prev) {
+          chatDict[c.id] = c;
+        } else {
+          const inMsgs = Array.isArray(c.messages) ? c.messages.length : 0;
+          const prevMsgs = Array.isArray(prev.messages) ? prev.messages.length : 0;
+          if (inMsgs >= prevMsgs) {
+            chatDict[c.id] = { ...prev, ...c };
+          }
+        }
+      }
+    }
+    return Object.values(chatDict);
+  };
 
   // Helper to load cached chats synchronously from localStorage
   const getInitialChats = (userId?: string): SavedChat[] => {
@@ -1338,59 +1335,89 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     return [];
   };
 
-  // Initial Hydration effect - loads cached conversations immediately and restores last chat
+  const { updateArohiChats, updateArohiCalls } = useAuth();
+  const [activeTab, setActiveTab] = useState<'chats' | 'calls'>('chats');
+  const [savedChats, setSavedChats] = useState<SavedChat[]>(() => {
+    const cached = getInitialChats(user?.uid);
+    if (cached.length > 0) return cached;
+    if (userData?.arohiChats && Array.isArray(userData.arohiChats) && userData.arohiChats.length > 0) {
+      return userData.arohiChats;
+    }
+    return [];
+  });
+  const [savedCalls, setSavedCalls] = useState<any[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string>(() => {
+    const cached = getInitialChats(user?.uid);
+    if (cached.length > 0) return cached[0].id;
+    if (userData?.arohiChats && Array.isArray(userData.arohiChats) && userData.arohiChats.length > 0) {
+      return userData.arohiChats[0].id;
+    }
+    return '';
+  });
+  const [selectedCallDetail, setSelectedCallDetail] = useState<any | null>(null);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+  const [hasFetchedLatest, setHasFetchedLatest] = useState(false);
+  const hydratedUserRef = useRef<string | null>(null);
+  const prevSyncedMessagesJsonRef = useRef<string>('');
+
+  const currentUserName = user 
+    ? (userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || 'User') 
+    : 'User';
+  const currentChatObj = savedChats.find(c => c.id === activeChatId) || savedChats[0];
+  const rawChatTitle = currentChatObj ? currentChatObj.title : 'Arohi AI Consultation';
+  const activeChatTitle = (!rawChatTitle || rawChatTitle === 'New Conversation' || rawChatTitle === 'New Discussion' || rawChatTitle === 'Arohi AI Consultation' || rawChatTitle.toLowerCase().includes('hi arohi'))
+    ? (user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!")
+    : rawChatTitle;
+
+  const filteredChats = savedChats.filter(chat => 
+    chat.title.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
+    chat.messages.some(m => m.content.toLowerCase().includes(sidebarSearchQuery.toLowerCase()))
+  );
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+
+  // Hydration effect - merges remote and local conversations seamlessly
   useEffect(() => {
     const currentUserIdKey = user ? user.uid : 'guest';
-    if (hydratedUserRef.current === currentUserIdKey) return;
 
     if (user) {
-      // 1. Check if AuthContext already has remote user chats
-      if (userData?.arohiChats && Array.isArray(userData.arohiChats) && userData.arohiChats.length > 0) {
-        setSavedChats(userData.arohiChats);
+      const localCached = getInitialChats(user.uid);
+      const remoteChats = (userData?.arohiChats && Array.isArray(userData.arohiChats)) ? userData.arohiChats : [];
+      const merged = mergeSavedChats(localCached, remoteChats);
+
+      if (merged.length > 0) {
+        setSavedChats(merged);
         try {
-          localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(userData.arohiChats));
+          localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(merged));
         } catch (e) {}
-        if (!activeChatId) {
-          setActiveChatId(userData.arohiChats[0].id);
-          setMessages(userData.arohiChats[0].messages || []);
+
+        if (!activeChatId || !merged.some(c => c.id === activeChatId)) {
+          setActiveChatId(merged[0].id);
+          setMessages(merged[0].messages || []);
         }
-        hydratedUserRef.current = currentUserIdKey;
       } else {
-        // 2. Check local persistent storage for this user or guest
-        const cached = getInitialChats(user.uid);
-        if (cached.length > 0) {
-          setSavedChats(cached);
-          if (!activeChatId) {
-            setActiveChatId(cached[0].id);
-            setMessages(cached[0].messages || []);
-          }
-          hydratedUserRef.current = currentUserIdKey;
-        } else {
-          // 3. First time user with 0 chats: create clean initial welcome chat
-          const defaultChatId = 'chat-' + Date.now();
-          const defaultChat: SavedChat = {
-            id: defaultChatId,
-            title: `Hi ${currentUserName}, let's get started!`,
-            date: 'Today',
-            messages: [
-              {
-                id: 'welcome',
-                role: 'assistant',
-                content: getWelcomeContent(language),
-                timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-              }
-            ]
-          };
-          setSavedChats([defaultChat]);
-          if (!activeChatId) {
-            setActiveChatId(defaultChatId);
-            setMessages(defaultChat.messages);
-          }
-          try {
-            localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify([defaultChat]));
-          } catch (e) {}
-          hydratedUserRef.current = currentUserIdKey;
+        // Brand new user with 0 historical conversations
+        const defaultChatId = 'chat-' + Date.now();
+        const defaultChat: SavedChat = {
+          id: defaultChatId,
+          title: `Hi ${currentUserName}, let's get started!`,
+          date: 'Today',
+          messages: [
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: getWelcomeContent(language),
+              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            }
+          ]
+        };
+        setSavedChats([defaultChat]);
+        if (!activeChatId) {
+          setActiveChatId(defaultChatId);
+          setMessages(defaultChat.messages);
         }
+        try {
+          localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify([defaultChat]));
+        } catch (e) {}
       }
 
       if (userData?.arohiCalls && Array.isArray(userData.arohiCalls)) {
@@ -1403,12 +1430,13 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           } catch (e) {}
         }
       }
+      hydratedUserRef.current = currentUserIdKey;
     } else {
       // Guest session hydration
       const cached = getInitialChats();
       if (cached.length > 0) {
         setSavedChats(cached);
-        if (!activeChatId) {
+        if (!activeChatId || !cached.some(c => c.id === activeChatId)) {
           setActiveChatId(cached[0].id);
           setMessages(cached[0].messages || []);
         }
@@ -1467,13 +1495,17 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           if (resData?.success && resData?.userData) {
             const freshData = resData.userData;
             if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
-              setSavedChats(freshData.arohiChats);
-              try {
-                localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(freshData.arohiChats));
-              } catch (e) {}
-              const latestChat = freshData.arohiChats[0];
-              setActiveChatId(latestChat.id);
-              setMessages(latestChat.messages || []);
+              setSavedChats(prev => {
+                const merged = mergeSavedChats(prev, freshData.arohiChats);
+                try {
+                  localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(merged));
+                } catch (e) {}
+                if (!activeChatId || !merged.some(c => c.id === activeChatId)) {
+                  setActiveChatId(merged[0].id);
+                  setMessages(merged[0].messages || []);
+                }
+                return merged;
+              });
             }
             if (freshData.arohiCalls && Array.isArray(freshData.arohiCalls)) {
               setSavedCalls(freshData.arohiCalls);
@@ -1494,13 +1526,17 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         if (docSnap.exists()) {
           const freshData = docSnap.data();
           if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
-            setSavedChats(freshData.arohiChats);
-            try {
-              localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(freshData.arohiChats));
-            } catch (e) {}
-            const latestChat = freshData.arohiChats[0];
-            setActiveChatId(latestChat.id);
-            setMessages(latestChat.messages || []);
+            setSavedChats(prev => {
+              const merged = mergeSavedChats(prev, freshData.arohiChats);
+              try {
+                localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(merged));
+              } catch (e) {}
+              if (!activeChatId || !merged.some(c => c.id === activeChatId)) {
+                setActiveChatId(merged[0].id);
+                setMessages(merged[0].messages || []);
+              }
+              return merged;
+            });
           }
           if (freshData.arohiCalls && Array.isArray(freshData.arohiCalls)) {
             setSavedCalls(freshData.arohiCalls);
@@ -1525,6 +1561,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     if (prevSyncedMessagesJsonRef.current === messagesJson) return;
     prevSyncedMessagesJsonRef.current = messagesJson;
 
+    const hasUserMessage = messages.some(m => m.role === 'user');
+
     setSavedChats(prevChats => {
       const chatIndex = prevChats.findIndex(c => c.id === activeChatId);
       let updatedChats: SavedChat[];
@@ -1532,7 +1570,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       if (chatIndex === -1) {
         const newChat: SavedChat = {
           id: activeChatId,
-          title: 'New Conversation',
+          title: hasUserMessage ? 'New Conversation' : (user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!"),
           date: 'Today',
           messages
         };
@@ -1555,8 +1593,19 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         updatedChats = prevChats.map(c => c.id === activeChatId ? { ...c, title, messages } : c);
       }
 
+      // Re-order: Move active conversation to top if user sent messages
+      if (hasUserMessage) {
+        const activeIdx = updatedChats.findIndex(c => c.id === activeChatId);
+        if (activeIdx > 0) {
+          const [activeItem] = updatedChats.splice(activeIdx, 1);
+          updatedChats = [activeItem, ...updatedChats];
+        }
+      }
+
       if (user) {
-        updateArohiChats(updatedChats).catch(e => console.log('Chat update:', e));
+        if (hasUserMessage || updatedChats.some(c => c.messages.some(m => m.role === 'user'))) {
+          updateArohiChats(updatedChats).catch(e => console.log('Chat update:', e));
+        }
         try {
           localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updatedChats));
         } catch (e) {}
@@ -2599,17 +2648,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <span className="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ml-2">
               BETA
             </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsImageStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
-          >
-            <ImageIcon className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
-            <span>Images</span>
           </button>
 
           <button

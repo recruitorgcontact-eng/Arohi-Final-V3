@@ -906,8 +906,45 @@ app.post('/api/auth/update-arohi-chats', async (req, res) => {
   const { uid, arohiChats } = req.body;
   try {
     if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    if (!Array.isArray(arohiChats)) return res.status(400).json({ error: 'arohiChats must be an array.' });
+
+    // Read existing user document to merge history without losing past sessions
+    const existingSnap = await safeUserDb.get(uid);
+    let finalChats = arohiChats;
+    if (existingSnap.exists) {
+      const existingData = existingSnap.data() || {};
+      const existingChats = existingData.arohiChats;
+      if (Array.isArray(existingChats) && existingChats.length > 0) {
+        // Map keyed by chat ID
+        const chatMap = new Map<string, any>();
+        // First register existing chats
+        for (const chat of existingChats) {
+          if (chat && chat.id) {
+            chatMap.set(chat.id, chat);
+          }
+        }
+        // Overlay/add incoming chats
+        for (const chat of arohiChats) {
+          if (chat && chat.id) {
+            const prev = chatMap.get(chat.id);
+            if (!prev) {
+              chatMap.set(chat.id, chat);
+            } else {
+              // Keep the version with more messages or update with latest messages
+              const incomingMsgCount = Array.isArray(chat.messages) ? chat.messages.length : 0;
+              const prevMsgCount = Array.isArray(prev.messages) ? prev.messages.length : 0;
+              if (incomingMsgCount >= prevMsgCount) {
+                chatMap.set(chat.id, { ...prev, ...chat });
+              }
+            }
+          }
+        }
+        finalChats = Array.from(chatMap.values());
+      }
+    }
+
     await safeUserDb.update(uid, {
-      arohiChats,
+      arohiChats: finalChats,
       updatedAt: new Date().toISOString()
     });
     const updatedSnap = await safeUserDb.get(uid);

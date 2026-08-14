@@ -352,6 +352,29 @@ export function getEntrySource(): string {
   return "Website Browser";
 }
 
+// Helper to safely merge lifetime chat histories without losing past conversations
+const mergeArohiChatLists = (listA: any[] = [], listB: any[] = []): any[] => {
+  const map = new Map<string, any>();
+  for (const c of (listA || [])) {
+    if (c && c.id) map.set(c.id, c);
+  }
+  for (const c of (listB || [])) {
+    if (c && c.id) {
+      const prev = map.get(c.id);
+      if (!prev) {
+        map.set(c.id, c);
+      } else {
+        const inMsgs = Array.isArray(c.messages) ? c.messages.length : 0;
+        const prevMsgs = Array.isArray(prev.messages) ? prev.messages.length : 0;
+        if (inMsgs >= prevMsgs) {
+          map.set(c.id, { ...prev, ...c });
+        }
+      }
+    }
+  }
+  return Array.from(map.values());
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -368,7 +391,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedUser) {
         const u = JSON.parse(savedUser);
         const cached = localStorage.getItem(`recruit_user_data_${u.uid}`);
-        if (cached) return JSON.parse(cached);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const cachedChats = localStorage.getItem(`arohi_saved_chats_${u.uid}`);
+          if (cachedChats) {
+            try {
+              const chatsArr = JSON.parse(cachedChats);
+              if (Array.isArray(chatsArr) && chatsArr.length > 0) {
+                parsed.arohiChats = mergeArohiChatLists(parsed.arohiChats || [], chatsArr);
+              }
+            } catch (e) {}
+          }
+          return parsed;
+        }
       }
     } catch (e) {}
     return null;
@@ -397,6 +432,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const displayName = firebaseUser.displayName || 'Honored Guest';
     const entrySource = getEntrySource();
 
+    // Helper to merge local cached chats into fetched user data
+    const enrichUserDataWithChats = (data: UserData): UserData => {
+      try {
+        const cachedChats = localStorage.getItem(`arohi_saved_chats_${uid}`);
+        if (cachedChats) {
+          const chatsArr = JSON.parse(cachedChats);
+          if (Array.isArray(chatsArr) && chatsArr.length > 0) {
+            data.arohiChats = mergeArohiChatLists(data.arohiChats || [], chatsArr);
+          }
+        }
+      } catch (e) {}
+      localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(data));
+      if (data.arohiChats && data.arohiChats.length > 0) {
+        try {
+          localStorage.setItem(`arohi_saved_chats_${uid}`, JSON.stringify(data.arohiChats));
+        } catch (e) {}
+      }
+      return data;
+    };
+
     // Layer 1: Server-side API proxy (fast, server-to-server, 100% immune to iframe/browser WebSocket blocks)
     try {
       const response = await fetch('/api/auth/me', {
@@ -407,8 +462,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const resData = await response.json();
         if (resData?.success && resData?.userData) {
-          const uData = resData.userData as UserData;
-          localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(uData));
+          const uData = enrichUserDataWithChats(resData.userData as UserData);
           return uData;
         }
       }
@@ -426,8 +480,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const resData = await response.json();
         if (resData?.success && resData?.userData) {
-          const uData = resData.userData as UserData;
-          localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(uData));
+          const uData = enrichUserDataWithChats(resData.userData as UserData);
           return uData;
         }
       }
@@ -440,7 +493,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const docRef = doc(db, 'users', uid);
       const docSnap = await getDoc(docRef);
       if (docSnap && docSnap.exists()) {
-        const uData = docSnap.data() as UserData;
+        let uData = docSnap.data() as UserData;
         
         // If entrySource is different, update it client-side too
         if (entrySource && uData.entrySource !== entrySource) {
@@ -452,11 +505,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(uData));
+        uData = enrichUserDataWithChats(uData);
         return uData;
       } else {
         // Create initial user doc client-side if missing
-        const initialData: UserData = {
+        const initialData: UserData = enrichUserDataWithChats({
           uid,
           email,
           displayName,
@@ -485,9 +538,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             businessScore: 84
           },
           activities: []
-        };
+        });
         await setDoc(docRef, initialData);
-        localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(initialData));
         return initialData;
       }
     } catch (err) {
