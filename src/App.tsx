@@ -2748,10 +2748,13 @@ export default function App() {
 
         {/* Floating Chat Overlay Container */}
         {isChatOpen && !isChatMinimized && (
-          <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] bg-[#090714] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.3)] border-t sm:border border-[#a78bfa]/30 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+          <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.25)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
+            isDarkMode ? 'bg-[#090714] border-[#a78bfa]/30' : 'bg-white border-purple-200'
+          }`}>
             <ArohiChat 
               initialPrompt={chatInitialPrompt}
               language={language}
+              isDarkMode={isDarkMode}
               onNavigateTab={(tab) => {
                 setActiveTab(tab);
                 setHasEntered(true);
@@ -3509,10 +3512,13 @@ export default function App() {
 
       {/* Floating Chat Overlay Container */}
       {isChatOpen && !isChatMinimized && (
-        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] bg-[#090714] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.3)] border-t sm:border border-[#a78bfa]/30 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+        <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.3)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
+          isDarkMode ? 'bg-[#090714] border-[#a78bfa]/30' : 'bg-white border-purple-200'
+        }`}>
           <ArohiChat 
             initialPrompt={chatInitialPrompt}
             language={language}
+            isDarkMode={isDarkMode}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               setIsChatOpen(false);

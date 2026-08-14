@@ -122,44 +122,114 @@ export default function WelcomeLanding({
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
+  const [micAudioLevel, setMicAudioLevel] = useState<number>(0);
   const recognitionRef = useRef<any>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const animFrameRef = useRef<number | null>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {}
-      }
+      stopVoiceListening();
     };
   }, []);
 
-  const toggleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      if (onQuickChat) {
-        onQuickChat("Talk to me over voice in my native language.");
-      } else {
-        onEnter();
-      }
+  const stopVoiceListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    setIsListening(false);
+    setMicAudioLevel(0);
+  };
+
+  const toggleVoiceInput = async () => {
+    if (isListening) {
+      stopVoiceListening();
       return;
     }
 
-    if (isListening) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {}
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechError("Speech Recognition is not supported by this browser. Opening Arohi Live Voice...");
+      if (onQuickChat) {
+        onQuickChat("Hello Arohi, I want to talk to you via voice.");
+      } else {
+        onEnter();
       }
-      setIsListening(false);
+      setTimeout(() => setSpeechError(null), 4000);
       return;
+    }
+
+    setSpeechError(null);
+
+    // Warm up microphone permissions and create audio visualizer
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioContextClass) {
+            const ctx = new AudioContextClass();
+            audioContextRef.current = ctx;
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 64;
+            const source = ctx.createMediaStreamSource(stream);
+            source.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const checkVolume = () => {
+              if (!audioContextRef.current) return;
+              analyser.getByteFrequencyData(dataArray);
+              let sum = 0;
+              for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+              }
+              const avg = sum / dataArray.length;
+              setMicAudioLevel(Math.min(100, Math.round((avg / 128) * 100)));
+              animFrameRef.current = requestAnimationFrame(checkVolume);
+            };
+            checkVolume();
+          }
+        } catch (audioErr) {
+          console.warn("Audio meter init skipped:", audioErr);
+        }
+      }
+    } catch (permErr: any) {
+      console.warn("getUserMedia permission error:", permErr);
+      if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
+        setSpeechError("Microphone permission denied. Please allow microphone in your browser settings to use voice input.");
+        setTimeout(() => setSpeechError(null), 5000);
+        return;
+      }
     }
 
     try {
       const rec = new SpeechRecognition();
-      rec.continuous = false;
+      rec.continuous = true;
       rec.interimResults = true;
+      rec.maxAlternatives = 1;
 
       const langMap: Record<string, string> = {
         en: 'en-IN',
@@ -170,7 +240,10 @@ export default function WelcomeLanding({
         ta: 'ta-IN',
         mr: 'mr-IN',
         gu: 'gu-IN',
-        pa: 'pa-IN'
+        pa: 'pa-IN',
+        kn: 'kn-IN',
+        ml: 'ml-IN',
+        ur: 'ur-IN'
       };
       rec.lang = langMap[language] || 'en-IN';
 
@@ -180,40 +253,57 @@ export default function WelcomeLanding({
       };
 
       rec.onresult = (event: any) => {
-        let fullTranscript = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
         for (let i = 0; i < event.results.length; ++i) {
-          fullTranscript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
         }
-        if (fullTranscript) {
-          setLandingInputText(fullTranscript);
+        const cleanTranscript = (finalTranscript + interimTranscript).trim();
+        if (cleanTranscript) {
+          setLandingInputText(cleanTranscript);
         }
       };
 
       rec.onerror = (event: any) => {
         console.warn("Speech recognition error:", event.error);
-        setIsListening(false);
         if (event.error === 'not-allowed') {
-          setSpeechError("Microphone permission denied. Please allow microphone access in your browser.");
+          setSpeechError("Microphone permission was denied. Please allow microphone access to speak.");
+          stopVoiceListening();
+        } else if (event.error === 'audio-capture') {
+          setSpeechError("No microphone hardware found. Please check your mic connection.");
+          stopVoiceListening();
         } else if (event.error === 'no-speech') {
-          setSpeechError("No speech detected. Please speak into your microphone.");
-        } else {
-          setSpeechError(`Voice error: ${event.error}`);
+          // Keep listening for speech without throwing a harsh error
+        } else if (event.error === 'network') {
+          setSpeechError("Network error with speech recognition service. Please try again.");
+          stopVoiceListening();
         }
-        setTimeout(() => setSpeechError(null), 4000);
       };
 
       rec.onend = () => {
-        setIsListening(false);
+        // If still flagged as listening (e.g. temporary pause), don't abruptly clear unless stopped
+        if (isListening && recognitionRef.current) {
+          try {
+            rec.start();
+          } catch (e) {
+            setIsListening(false);
+          }
+        } else {
+          setIsListening(false);
+        }
       };
 
       recognitionRef.current = rec;
       rec.start();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Speech recognition start failed:", err);
-      setIsListening(false);
-      if (onQuickChat) {
-        onQuickChat("Talk to me over voice in my native language.");
-      }
+      stopVoiceListening();
+      setSpeechError("Could not start voice input. You can open Arohi Voice Call for direct interactive speech.");
+      setTimeout(() => setSpeechError(null), 4000);
     }
   };
 
@@ -846,6 +936,52 @@ export default function WelcomeLanding({
                 <Mic className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isListening ? 'animate-bounce' : ''}`} />
               </button>
             </div>
+
+            {/* Active Voice Listening Live Waveform & Control Bar */}
+            {isListening && (
+              <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-rose-950/80 border border-rose-500/50 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2.5 animate-fadeIn">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  {/* Pulsing Audio Waveform Bars */}
+                  <div className="flex items-end gap-1 h-6 px-1.5 py-1 bg-black/40 rounded-lg border border-rose-500/30">
+                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(20, Math.min(100, micAudioLevel * 1.4))}%`, animationDuration: '400ms' }}></span>
+                    <span className="w-1 bg-fuchsia-400 rounded-full animate-bounce" style={{ height: `${Math.max(30, Math.min(100, micAudioLevel * 1.8))}%`, animationDuration: '300ms', animationDelay: '100ms' }}></span>
+                    <span className="w-1 bg-purple-400 rounded-full animate-bounce" style={{ height: `${Math.max(40, Math.min(100, micAudioLevel * 2.0))}%`, animationDuration: '500ms', animationDelay: '150ms' }}></span>
+                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(25, Math.min(100, micAudioLevel * 1.5))}%`, animationDuration: '350ms', animationDelay: '75ms' }}></span>
+                    <span className="w-1 bg-amber-400 rounded-full animate-bounce" style={{ height: `${Math.max(20, Math.min(100, micAudioLevel * 1.2))}%`, animationDuration: '450ms', animationDelay: '200ms' }}></span>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                      <span className="text-[11px] font-black text-rose-300 uppercase tracking-wider">
+                        Listening ({LANGUAGES_LIST.find(l => l.code === language)?.english || 'Native Language'})...
+                      </span>
+                    </div>
+                    <p className="text-xs text-white font-medium truncate mt-0.5 max-w-[280px] sm:max-w-[360px]">
+                      {landingInputText ? `"${landingInputText}"` : "Speak clearly into your microphone..."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                  {landingInputText.trim().length > 0 && (
+                    <button
+                      type="submit"
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-rose-500 hover:from-purple-400 hover:to-rose-400 text-white text-[11px] font-black uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1 hover:scale-105 active:scale-95 shrink-0"
+                    >
+                      <Send className="w-3 h-3" /> Ask Arohi
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={stopVoiceListening}
+                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-bold uppercase tracking-wider border border-white/20 transition-all cursor-pointer shrink-0"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Voice Error Notice */}
             {speechError && (

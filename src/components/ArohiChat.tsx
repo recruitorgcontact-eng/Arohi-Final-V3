@@ -51,6 +51,7 @@ interface ArohiChatProps {
   onMinimize?: () => void;
   onClose?: () => void;
   language?: Language;
+  isDarkMode?: boolean;
 }
 
 function getGmailWebUrl(mailtoUrl: string): string {
@@ -96,7 +97,7 @@ function preprocessMarkdownLinks(text: string): string {
   return cleaned;
 }
 
-function renderMarkdown(content: string) {
+function renderMarkdown(content: string, isDarkMode = true) {
   const preprocessed = preprocessMarkdownLinks(content);
 
   // Helper to parse inline styles: [text](url), **bold**, *italic*, `code` and raw URLs
@@ -145,31 +146,35 @@ function renderMarkdown(content: string) {
                     href={gmailWebUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-extrabold text-[11px] bg-[#22134d] hover:bg-[#311c6b] text-amber-300 border border-amber-500/40 transition-all active:scale-95 no-underline cursor-pointer shadow-md"
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-extrabold text-[11px] ${
+                      isDarkMode 
+                        ? 'bg-[#22134d] hover:bg-[#311c6b] text-amber-300 border-amber-500/40 shadow-md' 
+                        : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300 shadow-xs'
+                    } border transition-all active:scale-95 no-underline cursor-pointer`}
                     title="Open directly in Gmail Web Compose"
                   >
-                    <ExternalLink className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <ExternalLink className={`w-3.5 h-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-700'} shrink-0`} />
                     <span>Open in Gmail Web</span>
                   </a>
                 )}
               </span>
             ];
           }
-          return [<ArohiChatLink key={idx} href={href} label={label} />];
+          return [<ArohiChatLink key={idx} href={href} label={label} isDarkMode={isDarkMode} />];
         }
       } else if (piece.startsWith('**') && piece.endsWith('**')) {
         const inner = piece.slice(2, -2);
         if (inner.includes('[') && inner.includes('](') && inner.includes(')')) {
-          return [<strong key={idx} className="font-extrabold text-[#c084fc]">{parseInline(inner)}</strong>];
+          return [<strong key={idx} className={`font-extrabold ${isDarkMode ? 'text-[#c084fc]' : 'text-purple-950'}`}>{parseInline(inner)}</strong>];
         }
-        return [<strong key={idx} className="font-extrabold text-[#c084fc]">{parsePlainSegmentsWithLinks(inner, `bold-${idx}`)}</strong>];
+        return [<strong key={idx} className={`font-extrabold ${isDarkMode ? 'text-[#c084fc]' : 'text-purple-950'}`}>{parsePlainSegmentsWithLinks(inner, `bold-${idx}`, isDarkMode)}</strong>];
       } else if (piece.startsWith('*') && piece.endsWith('*')) {
         const inner = piece.slice(1, -1);
-        return [<em key={idx} className="italic text-slate-100">{parsePlainSegmentsWithLinks(inner, `italic-${idx}`)}</em>];
+        return [<em key={idx} className={`italic ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>{parsePlainSegmentsWithLinks(inner, `italic-${idx}`, isDarkMode)}</em>];
       } else if (piece.startsWith('`') && piece.endsWith('`')) {
-        return [<code key={idx} className="bg-slate-950/80 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-300 border border-slate-800">{piece.slice(1, -1)}</code>];
+        return [<code key={idx} className={`${isDarkMode ? 'bg-slate-950/80 text-emerald-300 border-slate-800' : 'bg-purple-100/80 text-purple-950 border-purple-200'} px-1.5 py-0.5 rounded text-xs font-mono border`}>{piece.slice(1, -1)}</code>];
       }
-      return parsePlainSegmentsWithLinks(piece, `plain-${idx}`);
+      return parsePlainSegmentsWithLinks(piece, `plain-${idx}`, isDarkMode);
     });
   };
 
@@ -191,14 +196,14 @@ function renderMarkdown(content: string) {
     if (currentList.length > 0) {
       if (listType === 'ul') {
         elements.push(
-          <ul key={`ul-${key}`} className="list-disc pl-5 my-2 space-y-1 text-slate-100 dark:text-slate-100">
+          <ul key={`ul-${key}`} className={`list-disc pl-5 my-2 space-y-1 ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>
             {currentList.map((item) => (
-              <li key={item.key} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100">
+              <li key={item.key} className={`text-xs md:text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                 {parseInline(item.content)}
                 {item.subItems.length > 0 && (
-                  <ul className="list-circle pl-5 my-1 space-y-1 text-slate-200 dark:text-slate-200">
+                  <ul className={`list-circle pl-5 my-1 space-y-1 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
                     {item.subItems.map((sub, sIdx) => (
-                      <li key={sIdx} className="text-slate-200 dark:text-slate-200">{parseInline(sub)}</li>
+                      <li key={sIdx} className={isDarkMode ? 'text-slate-200' : 'text-slate-700'}>{parseInline(sub)}</li>
                     ))}
                   </ul>
                 )}
@@ -208,14 +213,14 @@ function renderMarkdown(content: string) {
         );
       } else if (listType === 'ol') {
         elements.push(
-          <ol key={`ol-${key}`} className="list-decimal pl-5 my-2 space-y-2 text-slate-100 dark:text-slate-100">
+          <ol key={`ol-${key}`} className={`list-decimal pl-5 my-2 space-y-2 ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>
             {currentList.map((item) => (
-              <li key={item.key} value={item.value} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100">
+              <li key={item.key} value={item.value} className={`text-xs md:text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                 {parseInline(item.content)}
                 {item.subItems.length > 0 && (
-                  <ul className="list-disc pl-5 my-1 space-y-1 text-slate-200 dark:text-slate-200">
+                  <ul className={`list-disc pl-5 my-1 space-y-1 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
                     {item.subItems.map((sub, sIdx) => (
-                      <li key={sIdx} className="text-slate-200 dark:text-slate-200">{parseInline(sub)}</li>
+                      <li key={sIdx} className={isDarkMode ? 'text-slate-200' : 'text-slate-700'}>{parseInline(sub)}</li>
                     ))}
                   </ul>
                 )}
@@ -241,16 +246,16 @@ function renderMarkdown(content: string) {
         const alt = match[1];
         const src = match[2];
         elements.push(
-          <div key={index} className="my-3 rounded-xl overflow-hidden border border-[#7c3aed]/50 shadow-2xl bg-[#0b081f] p-2 text-center group">
+          <div key={index} className={`my-3 rounded-xl overflow-hidden border ${isDarkMode ? 'border-[#7c3aed]/50 bg-[#0b081f]' : 'border-purple-200 bg-purple-50/60'} shadow-2xl p-2 text-center group`}>
             <img src={src} alt={alt} className="w-full h-auto max-h-[420px] object-cover rounded-lg shadow-md transition-all group-hover:scale-[1.01]" referrerPolicy="no-referrer" />
-            <p className="text-[11px] text-slate-200 mt-2 font-semibold flex items-center justify-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-violet-400" /> {alt || 'Generated Image'}
+            <p className={`text-[11px] ${isDarkMode ? 'text-slate-200' : 'text-slate-700'} mt-2 font-semibold flex items-center justify-center gap-1.5`}>
+              <Sparkles className={`w-3.5 h-3.5 ${isDarkMode ? 'text-violet-400' : 'text-purple-600'}`} /> {alt || 'Generated Image'}
             </p>
           </div>
         );
       } else {
         elements.push(
-          <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100 mb-1.5">
+          <p key={index} className={`text-xs md:text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-100' : 'text-slate-800'} mb-1.5`}>
             {parseInline(line)}
           </p>
         );
@@ -258,21 +263,21 @@ function renderMarkdown(content: string) {
     } else if (trimmed.startsWith('### ')) {
       pushList(index);
       elements.push(
-        <h4 key={index} className="text-xs md:text-sm font-extrabold text-white mt-4 mb-2 tracking-tight">
+        <h4 key={index} className={`text-xs md:text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'} mt-4 mb-2 tracking-tight`}>
           {parseInline(trimmed.slice(4))}
         </h4>
       );
     } else if (trimmed.startsWith('## ')) {
       pushList(index);
       elements.push(
-        <h3 key={index} className="text-sm md:text-base font-extrabold text-white mt-5 mb-2 tracking-tight border-b border-[#2d2163] pb-1">
+        <h3 key={index} className={`text-sm md:text-base font-extrabold ${isDarkMode ? 'text-white border-[#2d2163]' : 'text-slate-900 border-slate-200'} mt-5 mb-2 tracking-tight border-b pb-1`}>
           {parseInline(trimmed.slice(3))}
         </h3>
       );
     } else if (trimmed.startsWith('# ')) {
       pushList(index);
       elements.push(
-        <h2 key={index} className="text-base md:text-lg font-extrabold text-white mt-6 mb-3 tracking-tight">
+        <h2 key={index} className={`text-base md:text-lg font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-950'} mt-6 mb-3 tracking-tight`}>
           {parseInline(trimmed.slice(2))}
         </h2>
       );
@@ -316,7 +321,7 @@ function renderMarkdown(content: string) {
     // Check for dividers
     else if (trimmed === '---') {
       pushList(index);
-      elements.push(<hr key={index} className="my-3 border-[#2d2163]" />);
+      elements.push(<hr key={index} className={`my-3 ${isDarkMode ? 'border-[#2d2163]' : 'border-slate-300'}`} />);
     } else if (trimmed === '') {
       // Empty line maintains active list context
     }
@@ -324,7 +329,7 @@ function renderMarkdown(content: string) {
     else {
       pushList(index);
       elements.push(
-        <p key={index} className="text-xs md:text-sm font-medium leading-relaxed text-slate-100 dark:text-slate-100 mb-1.5">
+        <p key={index} className={`text-xs md:text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-100' : 'text-slate-800'} mb-1.5`}>
           {parseInline(line)}
         </p>
       );
@@ -333,7 +338,7 @@ function renderMarkdown(content: string) {
 
   pushList(lines.length);
 
-  return <div className="space-y-1 text-slate-100 dark:text-slate-100">{elements}</div>;
+  return <div className={`space-y-1 ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>{elements}</div>;
 }
 
 function parseMessageResume(content: string) {
@@ -405,7 +410,7 @@ function parseMessageMcpPayload(content: string) {
   };
 }
 
-export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en' }: ArohiChatProps) {
+export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en', isDarkMode = true }: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
@@ -2461,116 +2466,99 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     }
   };
 
-  const startSimulation = () => {
-    setRecording(true);
-    setInput('');
-    if (simulationIntervalRef.current) {
-      clearInterval(simulationIntervalRef.current);
-    }
-    const fullText = 'Show me government schemes for women entrepreneurs in India.';
-    let currentIdx = 0;
-    simulationIntervalRef.current = setInterval(() => {
-      currentIdx++;
-      setInput(fullText.slice(0, currentIdx));
-      if (currentIdx >= fullText.length) {
-        clearInterval(simulationIntervalRef.current);
-        simulationIntervalRef.current = null;
-        setRecording(false);
-      }
-    }, 45);
-  };
-
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (recording) {
-      if (simulationIntervalRef.current) {
-        clearInterval(simulationIntervalRef.current);
-        simulationIntervalRef.current = null;
-      }
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
         } catch (e) {
           console.error(e);
         }
+        recognitionRef.current = null;
       }
       setRecording(false);
     } else {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        try {
-          const rec = new SpeechRecognition();
-          rec.continuous = true;
-          rec.interimResults = true;
-          
-          // Set language dynamically to match the user's interface language selection
-          const langMap = {
-            en: 'en-IN',
-            hi: 'hi-IN',
-            or: 'or-IN'
-          };
-          rec.lang = langMap[language] || 'en-IN';
+      if (!SpeechRecognition) {
+        alert("Speech recognition is not supported in this browser. Please type your message or open Arohi Voice Call for interactive speech.");
+        return;
+      }
 
-          // Inject custom career-related grammars to improve recognition of technical and scheme terms
-          const SpeechGrammarList = (window as any).SpeechGrammarList || (window as any).webkitSpeechGrammarList;
-          if (SpeechGrammarList) {
-            try {
-              const speechRecognitionList = new SpeechGrammarList();
-              const terms = [
-                'Mudra', 'PMEGP', 'CGTMSE', 'Sarkari', 'Arohi', 'MSME', 'validation',
-                'entrepreneur', 'resume', 'skills', 'government schemes', 'startup', 'interview',
-                'micro-business', 'career guide', 'Sarkari Jobs', 'Mudra Loans', 'Resume Guide', 'Mock Interview'
-              ];
-              const grammar = `#JSGF V1.0; grammar careerKeywords; public <keyword> = ${terms.join(' | ')} ;`;
-              speechRecognitionList.addFromString(grammar, 1.0);
-              rec.grammars = speechRecognitionList;
-            } catch (grammarError) {
-              console.warn('SpeechGrammarList registration ignored:', grammarError);
+      // Warm up microphone permissions
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+      } catch (permErr: any) {
+        console.warn("getUserMedia permission error in chat:", permErr);
+        if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
+          alert("Microphone permission denied. Please allow microphone access in your browser settings to use voice input.");
+          return;
+        }
+      }
+
+      try {
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+        
+        // Set language dynamically to match the user's interface language selection
+        const langMap: Record<string, string> = {
+          en: 'en-IN',
+          hi: 'hi-IN',
+          or: 'or-IN',
+          bn: 'bn-IN',
+          te: 'te-IN',
+          ta: 'ta-IN',
+          mr: 'mr-IN',
+          gu: 'gu-IN',
+          pa: 'pa-IN',
+          kn: 'kn-IN',
+          ml: 'ml-IN',
+          ur: 'ur-IN'
+        };
+        rec.lang = langMap[language] || 'en-IN';
+
+        rec.onstart = () => {
+          setRecording(true);
+        };
+
+        rec.onresult = (event: any) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+              interimTranscript += event.results[i][0].transcript;
             }
           }
+          const cleanText = (finalTranscript + interimTranscript).trim();
+          if (cleanText) {
+            setInput(cleanText);
+          }
+        };
 
-          rec.onstart = () => {
-            setRecording(true);
-          };
+        rec.onerror = (event: any) => {
+          console.error('Speech recognition error in chat:', event.error);
+          if (event.error === 'not-allowed') {
+            alert("Microphone permission was denied. Please allow microphone in browser settings.");
+            setRecording(false);
+          } else if (event.error !== 'no-speech') {
+            setRecording(false);
+          }
+        };
 
-          rec.onresult = (event: any) => {
-            let fullTranscript = '';
-            for (let i = 0; i < event.results.length; ++i) {
-              const transcriptSegment = event.results[i][0].transcript;
-              fullTranscript += transcriptSegment;
-            }
-            const cleanText = fullTranscript.trim();
-            if (cleanText) {
-              setInput(cleanText);
-            }
-          };
+        rec.onend = () => {
+          setRecording(false);
+        };
 
-          rec.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error);
-            if (event.error === 'not-allowed' || event.error === 'audio-capture' || event.error === 'service-not-allowed') {
-              try {
-                rec.abort();
-              } catch (err) {}
-              startSimulation();
-            } else if (event.error !== 'no-speech') {
-              setRecording(false);
-            }
-          };
-
-          rec.onend = () => {
-            if (!simulationIntervalRef.current) {
-              setRecording(false);
-            }
-          };
-
-          recognitionRef.current = rec;
-          rec.start();
-        } catch (e) {
-          console.error('Speech recognition start failed, using fallback:', e);
-          startSimulation();
-        }
-      } else {
-        // Fallback simulation if browser doesn't support Web Speech API
-        startSimulation();
+        recognitionRef.current = rec;
+        rec.start();
+      } catch (e) {
+        console.error('Speech recognition start failed:', e);
+        setRecording(false);
       }
     }
   };
@@ -2607,35 +2595,37 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
   }
 
   return (
-    <div className={`flex bg-[#000000] text-slate-100 overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
+    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
       {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
       <aside 
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 bg-[#090714] border-r border-[#1a142e] p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans text-slate-100 select-none shadow-2xl`}
+        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 ${
+          isDarkMode ? 'bg-[#090714] border-[#1a142e] text-slate-100' : 'bg-[#f1f3fa] border-slate-200 text-slate-900'
+        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl`}
       >
         {/* Sidebar Header: Brand + Search + Close */}
-        <div className="flex items-center justify-between pb-3 mb-2 px-1 border-b border-white/10">
+        <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-white shadow-md">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-              Arohi <span className="text-[10px] bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 px-2 py-0.5 rounded font-black uppercase border border-purple-500/30">AI</span>
+            <h2 className={`text-lg font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center gap-1.5`}>
+              Arohi <span className={`text-[10px] ${isDarkMode ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-700 border-purple-300'} px-2 py-0.5 rounded font-black uppercase border`}>AI</span>
             </h2>
           </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={() => setShowSearchInput(!showSearchInput)}
-              className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className={`p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'} rounded-full transition-colors cursor-pointer`}
               title="Search Recents"
             >
               <Search className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className={`md:hidden p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'} rounded-full transition-colors cursor-pointer`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -2649,14 +2639,25 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setIsMcpGatewayOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-purple-500/20 border border-amber-500/40 hover:border-amber-400 hover:from-amber-500/30 hover:to-purple-500/30 transition-all cursor-pointer text-left shadow-sm group mb-2"
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
+              isDarkMode 
+                ? 'text-white bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-purple-500/20 border-amber-500/40 hover:border-amber-400 hover:from-amber-500/30 hover:to-purple-500/30' 
+                : 'text-amber-950 bg-gradient-to-r from-amber-100/90 via-orange-100/80 to-purple-100/80 border-amber-300 hover:border-amber-400 hover:from-amber-200/90 hover:to-purple-200/90'
+            } border transition-all cursor-pointer text-left shadow-xs group mb-2`}
           >
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
-              <span className="font-extrabold text-amber-200">Apps & Everyday Tasks</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Zap className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
+              <div className="min-w-0">
+                <div className={`font-extrabold leading-tight ${isDarkMode ? 'text-amber-200' : 'text-amber-950'}`}>
+                  Apps & Everyday Tasks
+                </div>
+                <div className={`text-[10.5px] font-semibold leading-tight mt-0.5 ${isDarkMode ? 'text-amber-300/90' : 'text-amber-900'}`}>
+                  Under Beta Testing Mode
+                </div>
+              </div>
             </div>
-            <span className="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-              LIVE
+            <span className="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ml-2">
+              BETA
             </span>
           </button>
 
@@ -2665,9 +2666,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setIsImageStudioOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
           >
-            <ImageIcon className="w-5 h-5 text-slate-300 shrink-0" />
+            <ImageIcon className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
             <span>Images</span>
           </button>
 
@@ -2676,9 +2677,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setActiveTab('calls');
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
           >
-            <Library className="w-5 h-5 text-slate-300 shrink-0" />
+            <Library className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
             <span>Library</span>
           </button>
 
@@ -2687,9 +2688,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setShowNewNotebookModal(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
           >
-            <Folder className="w-5 h-5 text-slate-300 shrink-0" />
+            <Folder className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
             <span>Projects</span>
           </button>
 
@@ -2698,9 +2699,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setIsVoiceCallOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
           >
-            <Clock className="w-5 h-5 text-slate-300 shrink-0" />
+            <Clock className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
             <span>Scheduled</span>
           </button>
 
@@ -2709,9 +2710,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               setIsIntelligenceStudioOpen(true);
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
           >
-            <Grid className="w-5 h-5 text-slate-300 shrink-0" />
+            <Grid className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
             <span>Plugins & Tools</span>
           </button>
         </div>
@@ -2724,19 +2725,19 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               placeholder="Search conversation titles..."
               value={sidebarSearchQuery}
               onChange={(e) => setSidebarSearchQuery(e?.target?.value ?? "")}
-              className="w-full bg-[#18132d] border border-[#30225d] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#7c3aed]"
+              className={`w-full ${isDarkMode ? 'bg-[#18132d] border-[#30225d] text-white placeholder-slate-400' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'} border rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#7c3aed]`}
               autoFocus
             />
           </div>
         )}
 
         {/* Recents Section Heading */}
-        <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3 pt-2">
+        <div className={`flex items-center justify-between text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-wider mb-2 px-3 pt-2`}>
           <span>Recents</span>
           {activeTab === 'calls' && (
             <button
               onClick={() => setActiveTab('chats')}
-              className="text-[10px] text-blue-400 hover:underline normal-case font-medium cursor-pointer"
+              className="text-[10px] text-blue-500 hover:underline normal-case font-medium cursor-pointer"
             >
               Show Chats
             </button>
@@ -2747,7 +2748,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 px-1 custom-scrollbar">
           {activeTab === 'chats' ? (
             filteredChats.length === 0 ? (
-              <div className="text-center py-8 text-xs text-slate-500 font-medium">
+              <div className={`text-center py-8 text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-medium`}>
                 No recent conversations
               </div>
             ) : (
@@ -2764,15 +2765,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer flex items-center justify-between group ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white font-semibold border border-purple-500/40 shadow-sm'
-                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                        ? (isDarkMode ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white font-semibold border border-purple-500/40 shadow-sm' : 'bg-purple-100 text-purple-950 font-bold border border-purple-300 shadow-xs')
+                        : (isDarkMode ? 'text-slate-300 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900')
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                      <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? 'text-purple-400' : 'text-slate-400'}`} />
+                      <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? (isDarkMode ? 'text-purple-400' : 'text-purple-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`} />
                       <div className="min-w-0">
                         <div className="truncate text-sm leading-tight">{item.title}</div>
-                        <div className="text-[10px] text-slate-400 font-normal flex items-center gap-1.5 mt-0.5">
+                        <div className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-normal flex items-center gap-1.5 mt-0.5`}>
                           <span>{item.date || 'Recent'}</span>
                           {msgCount > 0 && (
                             <>
@@ -2785,14 +2786,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     </div>
                     <Trash2
                       onClick={(e) => deleteChat(item.id, e)}
-                      className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
+                      className={`w-4 h-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} opacity-0 group-hover:opacity-100 hover:text-rose-500 shrink-0 transition-opacity`}
                     />
                   </div>
                 );
               })
             )
           ) : savedCalls.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-500 font-medium">
+            <div className={`text-center py-8 text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-medium`}>
               No saved call logs
             </div>
           ) : (
@@ -2803,15 +2804,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   setSelectedCallDetail(item);
                   if (window.innerWidth < 768) setIsSidebarOpen(false);
                 }}
-                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer flex items-center justify-between group"
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium ${isDarkMode ? 'text-slate-300 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900'} transition-colors cursor-pointer flex items-center justify-between group`}
               >
                 <div className="truncate flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
                   <span className="truncate">{item.date}</span>
                 </div>
                 <Trash2
                   onClick={(e) => deleteCall(item.id, e)}
-                  className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 shrink-0 transition-opacity"
+                  className={`w-4 h-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} opacity-0 group-hover:opacity-100 hover:text-rose-500 shrink-0 transition-opacity`}
                 />
               </div>
             ))
@@ -2819,7 +2820,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
 
         {/* Bottom Bar: Chat Pill + User Profile Circle */}
-        <div className="pt-3 border-t border-white/10 mt-2 px-1 flex items-center justify-between gap-2">
+        <div className={`pt-3 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'} mt-2 px-1 flex items-center justify-between gap-2`}>
           <button
             onClick={() => {
               startNewChat();
@@ -2856,21 +2857,21 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         />
       )}
 
-      {/* CENTER: GEMINI MAIN CHAT WINDOW (Matches Screenshot 1) */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#000000] relative h-full">
+      {/* CENTER: GEMINI MAIN CHAT WINDOW */}
+      <div className={`flex-1 flex flex-col min-w-0 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fe]'} relative h-full`}>
         
         {/* Gemini Minimal Top Header Bar */}
-        <div className="bg-[#000000] border-b border-[#1f1738]/60 px-4 py-3 flex justify-between items-center z-20 shrink-0">
+        <div className={`${isDarkMode ? 'bg-[#000000] border-[#1f1738]/60' : 'bg-white border-slate-200 shadow-xs'} border-b px-4 py-3 flex justify-between items-center z-20 shrink-0`}>
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-[#17122e] transition-colors cursor-pointer"
+              className={`p-1.5 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-[#17122e]' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-lg transition-colors cursor-pointer`}
               title="Toggle Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0 flex items-center gap-2">
-              <h1 className="font-bold text-white text-base sm:text-lg tracking-tight truncate">
+              <h1 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} text-base sm:text-lg tracking-tight truncate`}>
                 {activeChatTitle || 'Arohi AI'}
               </h1>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Core AI Online"></span>
@@ -2880,16 +2881,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => setIsVoiceCallOpen(true)}
-              className="p-2 rounded-full bg-[#181135] hover:bg-[#251b4e] text-emerald-400 border border-[#3b2a80] transition-all cursor-pointer flex items-center gap-1.5"
+              className={`p-2 rounded-full ${isDarkMode ? 'bg-[#181135] hover:bg-[#251b4e] text-emerald-400 border-[#3b2a80]' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5`}
               title="Start Live Voice Call"
             >
               <Phone className="w-4 h-4 animate-pulse" />
-              <span className="text-[11px] font-bold text-white hidden xs:inline pr-1">Voice</span>
+              <span className={`text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'} hidden xs:inline pr-1`}>Voice</span>
             </button>
 
             <button
               onClick={() => handleSendMessage("Activate live video camera stream analysis")}
-              className="p-2 rounded-full bg-[#181135] hover:bg-[#251b4e] text-violet-300 border border-[#3b2a80] transition-all cursor-pointer"
+              className={`p-2 rounded-full ${isDarkMode ? 'bg-[#181135] hover:bg-[#251b4e] text-violet-300 border-[#3b2a80]' : 'bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200'} border transition-all cursor-pointer`}
               title="Camera Stream"
             >
               <Video className="w-4 h-4" />
@@ -2900,40 +2901,40 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <div className="relative">
               <button
                 onClick={() => setActiveMessageMenuId(activeMessageMenuId === 'header' ? null : 'header')}
-                className="p-2 rounded-full hover:bg-[#181135] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className={`p-2 rounded-full ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-[#181135]' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
                 title="Options"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
 
               {activeMessageMenuId === 'header' && (
-                <div className="absolute right-0 top-11 w-52 bg-[#120c2b] border border-[#302166] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className={`absolute right-0 top-11 w-52 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
                   <button
                     onClick={() => {
                       setIsMemoryModalOpen(true);
                       setActiveMessageMenuId(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-[#211745] rounded-xl flex items-center gap-2"
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-amber-300 hover:bg-[#211745]' : 'text-amber-800 hover:bg-amber-50'} rounded-xl flex items-center gap-2`}
                   >
-                    <Brain className="w-3.5 h-3.5 text-amber-400" /> Personalization Memory
+                    <Brain className="w-3.5 h-3.5 text-amber-500" /> Personalization Memory
                   </button>
                   <button
                     onClick={() => {
                       handleSummarizeChat();
                       setActiveMessageMenuId(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-[#211745] hover:text-white rounded-xl flex items-center gap-2"
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Generate AI Summary
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Generate AI Summary
                   </button>
                   <button
                     onClick={() => {
                       setMessages([messages[0]]);
                       setActiveMessageMenuId(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-[#211745] hover:text-white rounded-xl flex items-center gap-2"
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                   >
-                    <RefreshCw className="w-3.5 h-3.5 text-blue-400" /> Clear Messages
+                    <RefreshCw className="w-3.5 h-3.5 text-blue-500" /> Clear Messages
                   </button>
                   {onMinimize && (
                     <button
@@ -2941,7 +2942,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         onMinimize();
                         setActiveMessageMenuId(null);
                       }}
-                      className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-[#211745] hover:text-white rounded-xl flex items-center gap-2"
+                      className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                     >
                       <Minus className="w-3.5 h-3.5 text-indigo-400" /> Minimize
                     </button>
@@ -2952,7 +2953,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         onClose();
                         setActiveMessageMenuId(null);
                       }}
-                      className="w-full text-left px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-xl flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 rounded-xl flex items-center gap-2"
                     >
                       <X className="w-3.5 h-3.5" /> Close Chat
                     </button>
@@ -2963,8 +2964,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
         </div>
 
-        {/* Messages Canvas Container (Spacious, High legibility, Black Canvas - Screenshot 1 Match) */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 space-y-8 bg-[#000000]">
+        {/* Messages Canvas Container */}
+        <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 space-y-8 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fe]'}`}>
           {messages.map((msg) => {
             const summaryParsed = msg.role === 'assistant'
               ? parseMessageCallSummary(msg.content)
@@ -2991,30 +2992,34 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 {/* Message Header Role Tag */}
                 <div className="flex items-center gap-2 mb-1.5 px-1">
                   {msg.role === 'assistant' ? (
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#c084fc]">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isDarkMode ? 'text-[#c084fc]' : 'text-purple-700 font-extrabold'}`}>
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                       <span>AROHI AI</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                       <span>You</span>
                     </div>
                   )}
-                  <span className="text-[10px] text-slate-500 font-medium">{msg.timestamp}</span>
+                  <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-medium`}>{msg.timestamp}</span>
                 </div>
 
                 {/* Message Content Container */}
                 <div className={`w-full text-left ${
                   msg.role === 'user'
                     ? 'bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-white p-4 sm:p-5 rounded-2xl rounded-tr-xs shadow-lg max-w-[85%]'
-                    : 'text-slate-100 p-1 sm:p-2 font-normal text-base leading-relaxed'
+                    : (isDarkMode ? 'text-slate-100 p-1 sm:p-2 font-normal text-base leading-relaxed' : 'text-slate-800 p-1 sm:p-2 font-normal text-base leading-relaxed')
                 }`}>
                   {/* Parse standard markdown formatting */}
-                  <div className={`prose prose-invert prose-p:text-slate-100 prose-p:leading-relaxed prose-li:text-slate-100 prose-strong:text-[#c084fc] prose-strong:font-bold prose-headings:text-white max-w-none text-sm sm:text-base leading-relaxed ${
-                    msg.role === 'assistant' ? 'text-slate-100 font-sans tracking-wide space-y-3' : 'text-white'
+                  <div className={`prose ${
+                    isDarkMode 
+                      ? 'prose-invert prose-p:text-slate-100 prose-p:leading-relaxed prose-li:text-slate-100 prose-strong:text-[#c084fc] prose-strong:font-bold prose-headings:text-white text-slate-100' 
+                      : 'prose-p:text-slate-800 prose-p:leading-relaxed prose-li:text-slate-800 prose-strong:text-purple-900 prose-strong:font-bold prose-headings:text-slate-900 text-slate-800'
+                  } max-w-none text-sm sm:text-base leading-relaxed ${
+                    msg.role === 'assistant' ? 'font-sans tracking-wide space-y-3' : 'text-white'
                   }`}>
                     {msg.role === 'assistant' && msg.isStreaming && !parsed.cleanedContent ? (
-                      <div className="flex items-center gap-2.5 text-xs font-semibold text-violet-300 py-1">
+                      <div className={`flex items-center gap-2.5 text-xs font-semibold ${isDarkMode ? 'text-violet-300' : 'text-purple-700'} py-1`}>
                         <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin shrink-0">
                           <Sparkles className="w-2.5 h-2.5" />
                         </div>
@@ -3022,7 +3027,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       </div>
                     ) : (
                       <>
-                        {renderMarkdown(parsed.cleanedContent)}
+                        {renderMarkdown(parsed.cleanedContent, isDarkMode)}
                         {msg.role === 'assistant' && msg.isStreaming && (
                           <span className="inline-block w-2 h-4 ml-1 bg-amber-400 animate-pulse rounded-xs align-middle" />
                         )}
@@ -3031,14 +3036,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   </div>
 
                   {resumeParsed.resumeData && (
-                    <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#1b1342] to-[#25155c] border border-[#a78bfa]/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                    <div className={`mt-4 p-4 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-[#1b1342] to-[#25155c] border-[#a78bfa]/40' : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'} border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left`}>
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7c3aed]/30 rounded-xl text-[#c084fc] border border-[#7c3aed]/50 shrink-0">
-                          <Briefcase className="w-5 h-5 text-indigo-300" />
+                        <div className={`p-2 ${isDarkMode ? 'bg-[#7c3aed]/30 text-[#c084fc] border-[#7c3aed]/50' : 'bg-purple-100 text-purple-700 border-purple-200'} rounded-xl border shrink-0`}>
+                          <Briefcase className={`w-5 h-5 ${isDarkMode ? 'text-indigo-300' : 'text-purple-700'}`} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white uppercase tracking-wider">Download Word Resume</h4>
-                          <p className="text-[10px] text-slate-300 mt-0.5 font-semibold">Professional Microsoft Word (.docx) layout ready for HR</p>
+                          <h4 className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} uppercase tracking-wider`}>Download Word Resume</h4>
+                          <p className={`text-[10px] ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} mt-0.5 font-semibold`}>Professional Microsoft Word (.docx) layout ready for HR</p>
                         </div>
                       </div>
                       <button
@@ -3060,18 +3065,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   )}
 
                   {parsed.mcpData && (
-                    <McpApprovalCard payload={parsed.mcpData} />
+                    <McpApprovalCard payload={parsed.mcpData} isDarkMode={isDarkMode} />
                   )}
                 </div>
 
-                {/* GEMINI-STYLE ACTION BAR UNDER AI RESPONSES (Exact match for Screenshot 1!) */}
+                {/* GEMINI-STYLE ACTION BAR UNDER AI RESPONSES */}
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mt-2 px-1 text-slate-400">
+                  <div className={`flex items-center gap-2 mt-2 px-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                     {/* Thumbs Up */}
                     <button
                       onClick={() => toggleLikeMessage(msg.id)}
-                      className={`p-1.5 rounded-full hover:bg-[#1a1435] transition-colors cursor-pointer ${
-                        isLiked ? 'text-[#c084fc] bg-[#1a1435]' : 'hover:text-white'
+                      className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                        isDarkMode 
+                          ? (isLiked ? 'text-[#c084fc] bg-[#1a1435]' : 'hover:bg-[#1a1435] hover:text-white')
+                          : (isLiked ? 'text-purple-700 bg-purple-100' : 'hover:bg-slate-200 hover:text-slate-900')
                       }`}
                       title="Good response"
                     >
@@ -3081,8 +3088,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     {/* Thumbs Down */}
                     <button
                       onClick={() => toggleDislikeMessage(msg.id)}
-                      className={`p-1.5 rounded-full hover:bg-[#1a1435] transition-colors cursor-pointer ${
-                        isDisliked ? 'text-rose-400 bg-[#1a1435]' : 'hover:text-white'
+                      className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                        isDarkMode
+                          ? (isDisliked ? 'text-rose-400 bg-[#1a1435]' : 'hover:bg-[#1a1435] hover:text-white')
+                          : (isDisliked ? 'text-rose-600 bg-rose-100' : 'hover:bg-slate-200 hover:text-slate-900')
                       }`}
                       title="Bad response"
                     >
@@ -3092,13 +3101,13 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     {/* Copy Button */}
                     <button
                       onClick={() => copyMessageToClipboard(msg.id, parsed.cleanedContent)}
-                      className="p-1.5 rounded-full hover:bg-[#1a1435] hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                      className={`p-1.5 rounded-full ${isDarkMode ? 'hover:bg-[#1a1435] hover:text-white' : 'hover:bg-slate-200 hover:text-slate-900'} transition-colors cursor-pointer flex items-center gap-1`}
                       title="Copy response"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="w-4 h-4 text-emerald-400" />
-                          <span className="text-[10px] text-emerald-400 font-bold">Copied!</span>
+                          <Check className="w-4 h-4 text-emerald-500" />
+                          <span className="text-[10px] text-emerald-500 font-bold">Copied!</span>
                         </>
                       ) : (
                         <Copy className="w-4 h-4" />
@@ -3108,8 +3117,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     {/* Text to Speech Button */}
                     <button
                       onClick={() => speakMessage(msg.id, parsed.cleanedContent)}
-                      className={`p-1.5 rounded-full hover:bg-[#1a1435] transition-colors cursor-pointer ${
-                        isSpeaking ? 'text-amber-400 bg-[#1a1435] animate-pulse' : 'hover:text-white'
+                      className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                        isSpeaking 
+                          ? (isDarkMode ? 'text-amber-400 bg-[#1a1435] animate-pulse' : 'text-amber-600 bg-amber-100 animate-pulse')
+                          : (isDarkMode ? 'hover:bg-[#1a1435] hover:text-white' : 'hover:bg-slate-200 hover:text-slate-900')
                       }`}
                       title={isSpeaking ? "Stop speech" : "Read aloud"}
                     >
@@ -3120,31 +3131,31 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     <div className="relative">
                       <button
                         onClick={() => setActiveMessageMenuId(activeMessageMenuId === msg.id ? null : msg.id)}
-                        className="p-1.5 rounded-full hover:bg-[#1a1435] hover:text-white transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-full ${isDarkMode ? 'hover:bg-[#1a1435] hover:text-white' : 'hover:bg-slate-200 hover:text-slate-900'} transition-colors cursor-pointer`}
                         title="More options"
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
 
                       {activeMessageMenuId === msg.id && (
-                        <div className="absolute left-0 bottom-8 w-44 bg-[#120c2b] border border-[#302166] rounded-2xl shadow-2xl p-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                        <div className={`absolute left-0 bottom-8 w-44 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl p-1.5 z-30 animate-in fade-in zoom-in-95 duration-150`}>
                           <button
                             onClick={() => {
                               exportToPDF('Arohi_AI_Response', 'Arohi AI Response Document', parsed.cleanedContent);
                               setActiveMessageMenuId(null);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-[#211745] hover:text-white rounded-xl flex items-center gap-2 cursor-pointer"
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
                           >
-                            <FileText className="w-3.5 h-3.5 text-rose-400" /> Export PDF
+                            <FileText className="w-3.5 h-3.5 text-rose-500" /> Export PDF
                           </button>
                           <button
                             onClick={() => {
                               exportToWord('Arohi_AI_Response', 'Arohi AI Response Document', parsed.cleanedContent);
                               setActiveMessageMenuId(null);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-[#211745] hover:text-white rounded-xl flex items-center gap-2 cursor-pointer"
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
                           >
-                            <FileText className="w-3.5 h-3.5 text-blue-400" /> Export DOCX
+                            <FileText className="w-3.5 h-3.5 text-blue-500" /> Export DOCX
                           </button>
                         </div>
                       )}
@@ -3156,17 +3167,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           })}
 
           {isLoading && !messages.some(m => m.isStreaming) && (
-            <div className="flex items-center gap-3 max-w-4xl mx-auto w-full py-4 text-slate-400">
+            <div className={`flex items-center gap-3 max-w-4xl mx-auto w-full py-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-violet-300 animate-pulse">
+              <div className={`text-xs sm:text-sm font-semibold ${isDarkMode ? 'text-violet-300' : 'text-purple-700'} animate-pulse`}>
                 AROHI is analyzing and formulating response...
               </div>
             </div>
           )}
-
-
 
           <div ref={messagesEndRef} />
         </div>
@@ -3189,8 +3198,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 onClick={() => setSelectedAudienceCategory(cat.id)}
                 className={`px-2.5 py-1 rounded-full shrink-0 transition-all cursor-pointer ${
                   selectedAudienceCategory === cat.id
-                    ? 'bg-[#211742] text-white border border-[#5b3dae] font-extrabold shadow-sm'
-                    : 'bg-[#0f0b1e] text-slate-400 hover:text-slate-200 border border-[#1e1738]'
+                    ? (isDarkMode ? 'bg-[#211742] text-white border border-[#5b3dae] font-extrabold shadow-sm' : 'bg-purple-100 text-purple-950 border border-purple-300 font-extrabold shadow-xs')
+                    : (isDarkMode ? 'bg-[#0f0b1e] text-slate-400 hover:text-slate-200 border border-[#1e1738]' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 shadow-2xs')
                 }`}
               >
                 {cat.label}
@@ -3199,28 +3208,61 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
         </div>
 
-        {/* GEMINI AMBIENT AURA FLOATING BOTTOM DOCK BAR (Exact match for Screenshot 1!) */}
+        {/* GEMINI AMBIENT AURA FLOATING BOTTOM DOCK BAR */}
         <div className="p-3 sm:p-4 max-w-4xl mx-auto w-full z-20">
           
           {uploadedFileName && (
-            <div className="mb-2 px-3 py-1.5 bg-[#1b123d] text-violet-200 text-xs font-semibold rounded-2xl flex items-center justify-between border border-[#4c31a5]">
+            <div className={`mb-2 px-3 py-1.5 ${isDarkMode ? 'bg-[#1b123d] text-violet-200 border-[#4c31a5]' : 'bg-purple-50 text-purple-900 border-purple-200'} text-xs font-semibold rounded-2xl flex items-center justify-between border`}>
               <span className="truncate flex items-center gap-1.5">
-                <Paperclip className="w-3.5 h-3.5 text-violet-400" /> File attached: {uploadedFileName}
+                <Paperclip className={`w-3.5 h-3.5 ${isDarkMode ? 'text-violet-400' : 'text-purple-600'}`} /> File attached: {uploadedFileName}
               </span>
               <button 
                 onClick={() => setUploadedFileName(null)}
-                className="text-[10px] font-bold text-rose-400 hover:underline uppercase cursor-pointer"
+                className="text-[10px] font-bold text-rose-500 hover:underline uppercase cursor-pointer"
               >
                 Remove
               </button>
             </div>
           )}
 
+          {/* Active Voice Input Banner */}
+          {recording && (
+            <div className="mb-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-rose-950/90 via-purple-950/90 to-indigo-950/90 border border-rose-500/50 shadow-xl backdrop-blur-md flex items-center justify-between gap-2.5 animate-fadeIn">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="relative flex h-3 w-3 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-black text-rose-300 uppercase tracking-wider block">
+                    Listening ({language.toUpperCase()})...
+                  </span>
+                  <p className="text-xs text-white font-medium truncate max-w-[280px] sm:max-w-[400px]">
+                    {input ? `"${input}"` : "Speak clearly into your microphone..."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className="text-[10px] uppercase tracking-wider font-black px-3 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all cursor-pointer shrink-0 shadow-md hover:scale-105 active:scale-95"
+              >
+                Done
+              </button>
+            </div>
+          )}
+
           {/* Floating Gemini Capsule Dock */}
-          <div className="bg-[#0e0a21]/90 backdrop-blur-2xl border border-[#2b2158] rounded-full p-2 sm:p-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.8)] flex items-center gap-2">
+          <div className={`${
+            recording
+              ? 'bg-rose-950/30 border-rose-500/70 shadow-[0_0_25px_rgba(244,63,94,0.35)] ring-2 ring-rose-500/40'
+              : isDarkMode 
+                ? 'bg-[#0e0a21]/90 border-[#2b2158] shadow-[0_10px_35px_rgba(0,0,0,0.8)]' 
+                : 'bg-white/95 border-purple-200/90 shadow-[0_10px_30px_rgba(124,58,237,0.12)]'
+          } backdrop-blur-2xl border rounded-full p-2 sm:p-2.5 flex items-center gap-2 transition-all`}>
             
             {/* Camera / Vision Stream Button */}
-            <label className="p-2.5 sm:p-3 bg-[#181136] hover:bg-[#271c54] rounded-full text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0" title="Camera / Vision Upload">
+            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0`} title="Camera / Vision Upload">
               <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
               <input 
                 type="file" 
@@ -3231,7 +3273,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </label>
 
             {/* Document Upload Button */}
-            <label className="p-2.5 sm:p-3 bg-[#181136] hover:bg-[#271c54] rounded-full text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0" title="Attach Document">
+            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0`} title="Attach Document">
               <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
               <input 
                 type="file" 
@@ -3244,37 +3286,41 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             {/* Text Input Box */}
             <input
               type="text"
-              placeholder="Tell me what you want to achieve..."
+              placeholder={recording ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
               value={input}
               onChange={(e) => setInput(e?.target?.value ?? "")}
               onKeyDown={handleKeyPress}
-              className="flex-1 min-w-0 bg-transparent px-2 sm:px-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none font-medium"
+              className={`flex-1 min-w-0 bg-transparent px-2 sm:px-3 py-2 text-sm ${
+                recording 
+                  ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
+                  : isDarkMode ? 'text-white placeholder-slate-400' : 'text-slate-900 placeholder-slate-400'
+              } focus:outline-none font-medium`}
             />
 
             {/* Microphone Speech to Text Button */}
             <button
               onClick={toggleRecording}
-              className={`p-2.5 sm:p-3 rounded-full transition-colors shrink-0 cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-full transition-all shrink-0 cursor-pointer ${
                 recording 
-                  ? 'bg-rose-600 text-white animate-pulse' 
-                  : 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white'
+                  ? 'bg-rose-600 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)] ring-4 ring-rose-500/40' 
+                  : (isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700')
               }`}
-              title="Speech to text"
+              title={recording ? "Stop listening" : "Speech to text (Voice Input)"}
             >
-              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${recording ? 'animate-bounce' : ''}`} />
             </button>
 
             {/* Send Button */}
             <button
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !uploadedFileName) || isLoading}
-              className="p-2.5 sm:p-3 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:bg-[#181230] disabled:text-slate-600 text-white rounded-full shadow-md cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center"
+              className={`p-2.5 sm:p-3 bg-[#7c3aed] hover:bg-[#6d28d9] ${isDarkMode ? 'disabled:bg-[#181230] disabled:text-slate-600' : 'disabled:bg-slate-200 disabled:text-slate-400'} text-white rounded-full shadow-md cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center`}
             >
               <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
-          <div className="mt-2 text-center text-[10px] text-slate-500 font-medium">
+          <div className={`mt-2 text-center text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'} font-medium`}>
             Arohi AI can make mistakes. Check important info.
           </div>
         </div>

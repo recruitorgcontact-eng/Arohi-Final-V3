@@ -5,6 +5,7 @@ export interface ArohiChatLinkProps {
   href: string;
   label?: string;
   className?: string;
+  isDarkMode?: boolean;
 }
 
 export function extractAndCleanUrl(raw: string): { url: string; href: string; leadingPunct: string; trailingPunct: string } {
@@ -33,7 +34,7 @@ export function extractAndCleanUrl(raw: string): { url: string; href: string; le
   return { url: str, href, leadingPunct, trailingPunct };
 }
 
-export const ArohiChatLink: React.FC<ArohiChatLinkProps> = ({ href, label, className = '' }) => {
+export const ArohiChatLink: React.FC<ArohiChatLinkProps> = ({ href, label, className = '', isDarkMode = true }) => {
   let cleanHref = href.trim();
   if (cleanHref.startsWith('www.')) {
     cleanHref = 'https://' + cleanHref;
@@ -70,32 +71,36 @@ export const ArohiChatLink: React.FC<ArohiChatLinkProps> = ({ href, label, class
       target={isMail ? '_self' : '_blank'}
       rel="noopener noreferrer"
       title={`Open ${cleanHref}`}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 my-0.5 mx-0.5 rounded-lg font-bold text-xs sm:text-sm tracking-wide transition-all duration-200 active:scale-95 no-underline cursor-pointer align-middle group border shadow-md shadow-violet-950/40 ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 my-0.5 mx-0.5 rounded-lg font-bold text-xs sm:text-sm tracking-wide transition-all duration-200 active:scale-95 no-underline cursor-pointer align-middle group border ${
         isMail
-          ? 'bg-gradient-to-r from-rose-950/80 via-pink-950/80 to-amber-950/80 hover:from-rose-900/90 hover:to-amber-900/90 text-rose-200 border-rose-500/50 shadow-rose-950/40'
-          : 'bg-gradient-to-r from-[#1b123d] via-[#241757] to-[#181136] hover:from-[#2a1a63] hover:to-[#20144d] text-amber-300 hover:text-amber-100 border-amber-500/50 hover:border-amber-400'
+          ? (isDarkMode
+              ? 'bg-gradient-to-r from-rose-950/80 via-pink-950/80 to-amber-950/80 hover:from-rose-900/90 hover:to-amber-900/90 text-rose-200 border-rose-500/50 shadow-md shadow-rose-950/40'
+              : 'bg-rose-50 hover:bg-rose-100 text-rose-900 border-rose-300 shadow-xs')
+          : (isDarkMode
+              ? 'bg-gradient-to-r from-[#1b123d] via-[#241757] to-[#181136] hover:from-[#2a1a63] hover:to-[#20144d] text-amber-300 hover:text-amber-100 border-amber-500/50 hover:border-amber-400 shadow-md shadow-violet-950/40'
+              : 'bg-purple-50 hover:bg-purple-100 text-purple-950 hover:text-purple-900 border-purple-300 hover:border-purple-400 shadow-xs')
       } ${className}`}
     >
       {isMail ? (
-        <Mail className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+        <Mail className={`w-3.5 h-3.5 ${isDarkMode ? 'text-rose-400' : 'text-rose-600'} shrink-0`} />
       ) : (
-        <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:rotate-12 transition-transform duration-200" />
+        <Globe className={`w-3.5 h-3.5 ${isDarkMode ? 'text-amber-400' : 'text-purple-600'} shrink-0 group-hover:rotate-12 transition-transform duration-200`} />
       )}
 
       <span className="truncate max-w-[240px] sm:max-w-[420px] leading-tight">{displayLabel}</span>
 
       {!isRaw && domain && !isMail && (
-        <span className="text-[10px] font-mono font-medium text-purple-300/80 bg-purple-950/80 border border-purple-700/50 px-1.5 py-0.2 rounded shrink-0 hidden md:inline-block">
+        <span className={`text-[10px] font-mono font-medium ${isDarkMode ? 'text-purple-300/80 bg-purple-950/80 border-purple-700/50' : 'text-purple-700 bg-purple-100/90 border-purple-300'} border px-1.5 py-0.2 rounded shrink-0 hidden md:inline-block`}>
           {domain}
         </span>
       )}
 
-      <ExternalLink className="w-3 h-3 text-amber-400/80 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+      <ExternalLink className={`w-3 h-3 ${isDarkMode ? 'text-amber-400/80' : 'text-purple-500'} shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200`} />
     </a>
   );
 };
 
-export function parsePlainSegmentsWithLinks(plainText: string, keyPrefix: string): React.ReactNode[] {
+export function parsePlainSegmentsWithLinks(plainText: string, keyPrefix: string, isDarkMode = true): React.ReactNode[] {
   if (!plainText) return [];
 
   // Regex to detect raw URLs (https://, http://, www.)
@@ -126,7 +131,7 @@ export function parsePlainSegmentsWithLinks(plainText: string, keyPrefix: string
     }
 
     nodes.push(
-      <ArohiChatLink key={`${keyPrefix}-rawurl-${mIdx}`} href={href} label={url} />
+      <ArohiChatLink key={`${keyPrefix}-rawurl-${mIdx}`} href={href} label={url} isDarkMode={isDarkMode} />
     );
 
     if (trailingPunct) {

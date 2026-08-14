@@ -462,8 +462,8 @@ export default function McpGatewayModal({ isOpen, onClose, onSendPromptToChat }:
                 <h3 className="text-sm sm:text-base font-extrabold text-white truncate">
                   Apps & Everyday Tasks
                 </h3>
-                <span className="hidden sm:inline-flex text-[9px] bg-gradient-to-r from-amber-500/20 to-emerald-500/20 text-amber-300 px-2 py-0.5 rounded-full font-black uppercase tracking-wider border border-amber-500/30 items-center gap-1 shrink-0">
-                  <Sparkles className="w-2.5 h-2.5 text-amber-300" /> Ready
+                <span className="hidden sm:inline-flex text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-black uppercase tracking-wider border border-amber-500/40 items-center gap-1 shrink-0">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-300" /> Beta Testing
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 truncate">
