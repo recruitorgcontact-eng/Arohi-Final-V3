@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { GLOBAL_LANGUAGES } from '../data/seoLocationsData';
+import { getAudienceBySlug } from '../data/seoAudienceData';
 import { Language } from '../translations';
 
 interface SEOHeadProps {
   activeTab?: string;
   selectedState?: string;
   selectedAudience?: string;
+  selectedAudienceSlug?: string;
   currentLanguage?: Language;
 }
 
@@ -52,12 +54,17 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   }
 };
 
-export default function SEOHead({ activeTab, selectedState, selectedAudience, currentLanguage = 'en' }: SEOHeadProps) {
+export default function SEOHead({ activeTab, selectedState, selectedAudience, selectedAudienceSlug, currentLanguage = 'en' }: SEOHeadProps) {
   useEffect(() => {
     let title = "Arohi AI - World & India's #1 Multilingual Opportunity Engine (arohiai.com)";
     let desc = "Arohi AI empowers Students, Job Seekers, MSMEs, Teachers, Scientists, Engineers, Doctors, Advocates, Thespians, and Artists with live voice calling in 150+ languages globally and regionally.";
 
-    if (selectedState) {
+    const audienceObj = selectedAudienceSlug ? getAudienceBySlug(selectedAudienceSlug) : undefined;
+
+    if (audienceObj) {
+      title = `${audienceObj.title} - Arohi AI Opportunity Engine (arohiai.com)`;
+      desc = audienceObj.metaDescription;
+    } else if (selectedState) {
       title = `Arohi AI ${selectedState} Career & Opportunity Portal | Arohi AI (arohiai.com)`;
       desc = `Explore top jobs, competitive exam prep, MSME setup, and government schemes tailored for ${selectedState} students, job seekers, and entrepreneurs with Arohi AI.`;
     } else if (selectedAudience) {
@@ -134,7 +141,7 @@ export default function SEOHead({ activeTab, selectedState, selectedAudience, cu
       document.head.appendChild(link);
     });
 
-  }, [activeTab, selectedState, selectedAudience, currentLanguage]);
+  }, [activeTab, selectedState, selectedAudience, selectedAudienceSlug, currentLanguage]);
 
   return null;
 }

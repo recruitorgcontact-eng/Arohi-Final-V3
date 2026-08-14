@@ -128,43 +128,99 @@ export default function WelcomeLanding({
   const audioContextRef = useRef<AudioContext | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
+  const spokenTranscriptRef = useRef<string>('');
+  const autoSubmitTimerRef = useRef<any>(null);
+  const hasSubmittedVoiceRef = useRef<boolean>(false);
 
   useEffect(() => {
     return () => {
-      stopVoiceListening();
+      stopVoiceListening(false);
     };
   }, []);
 
-  const stopVoiceListening = () => {
+  // Safe voice stop helper
+  const stopVoiceListening = (submitIfTextAvailable = false) => {
+    if (autoSubmitTimerRef.current) {
+      clearTimeout(autoSubmitTimerRef.current);
+      autoSubmitTimerRef.current = null;
+    }
+
     if (recognitionRef.current) {
       try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
         recognitionRef.current.stop();
       } catch (e) {}
       recognitionRef.current = null;
     }
+
     if (mediaStreamRef.current) {
       try {
         mediaStreamRef.current.getTracks().forEach(t => t.stop());
       } catch (e) {}
       mediaStreamRef.current = null;
     }
+
     if (audioContextRef.current) {
       try {
         audioContextRef.current.close();
       } catch (e) {}
       audioContextRef.current = null;
     }
+
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
     }
+
     setIsListening(false);
     setMicAudioLevel(0);
+
+    if (submitIfTextAvailable && !hasSubmittedVoiceRef.current) {
+      const query = spokenTranscriptRef.current.trim() || landingInputText.trim();
+      if (query.length > 0) {
+        hasSubmittedVoiceRef.current = true;
+        setLandingInputText('');
+        spokenTranscriptRef.current = '';
+        if (onQuickChat) {
+          onQuickChat(query);
+        } else {
+          onEnter();
+        }
+      }
+    }
+  };
+
+  // Submit recorded voice query directly to Arohi Chat
+  const submitVoiceQuery = (textToSubmit?: string) => {
+    if (hasSubmittedVoiceRef.current) return;
+    const finalQuery = (textToSubmit || spokenTranscriptRef.current || landingInputText).trim();
+    if (!finalQuery) {
+      stopVoiceListening(false);
+      return;
+    }
+
+    hasSubmittedVoiceRef.current = true;
+    stopVoiceListening(false);
+    setLandingInputText('');
+    spokenTranscriptRef.current = '';
+
+    if (onQuickChat) {
+      onQuickChat(finalQuery);
+    } else {
+      onEnter();
+    }
   };
 
   const toggleVoiceInput = async () => {
     if (isListening) {
-      stopVoiceListening();
+      // If already listening, stopping should submit any spoken query
+      const currentSpoken = spokenTranscriptRef.current.trim() || landingInputText.trim();
+      if (currentSpoken) {
+        submitVoiceQuery(currentSpoken);
+      } else {
+        stopVoiceListening(false);
+      }
       return;
     }
 
@@ -181,6 +237,9 @@ export default function WelcomeLanding({
     }
 
     setSpeechError(null);
+    hasSubmittedVoiceRef.current = false;
+    spokenTranscriptRef.current = '';
+    setLandingInputText('');
 
     // Warm up microphone permissions and create audio visualizer
     try {
@@ -264,7 +323,19 @@ export default function WelcomeLanding({
         }
         const cleanTranscript = (finalTranscript + interimTranscript).trim();
         if (cleanTranscript) {
+          spokenTranscriptRef.current = cleanTranscript;
           setLandingInputText(cleanTranscript);
+
+          // Reset silence timer on every newly recognized chunk of speech
+          if (autoSubmitTimerRef.current) {
+            clearTimeout(autoSubmitTimerRef.current);
+          }
+          // After 2.0 seconds of silence following spoken words, auto-submit to chat
+          autoSubmitTimerRef.current = setTimeout(() => {
+            if (spokenTranscriptRef.current.trim().length > 0) {
+              submitVoiceQuery(spokenTranscriptRef.current.trim());
+            }
+          }, 2000);
         }
       };
 
@@ -272,26 +343,23 @@ export default function WelcomeLanding({
         console.warn("Speech recognition error:", event.error);
         if (event.error === 'not-allowed') {
           setSpeechError("Microphone permission was denied. Please allow microphone access to speak.");
-          stopVoiceListening();
+          stopVoiceListening(false);
         } else if (event.error === 'audio-capture') {
           setSpeechError("No microphone hardware found. Please check your mic connection.");
-          stopVoiceListening();
+          stopVoiceListening(false);
         } else if (event.error === 'no-speech') {
           // Keep listening for speech without throwing a harsh error
         } else if (event.error === 'network') {
           setSpeechError("Network error with speech recognition service. Please try again.");
-          stopVoiceListening();
+          stopVoiceListening(false);
         }
       };
 
       rec.onend = () => {
-        // If still flagged as listening (e.g. temporary pause), don't abruptly clear unless stopped
-        if (isListening && recognitionRef.current) {
-          try {
-            rec.start();
-          } catch (e) {
-            setIsListening(false);
-          }
+        // If recognition ended naturally and user had spoken something, submit it!
+        const queryToSubmit = spokenTranscriptRef.current.trim();
+        if (queryToSubmit.length > 0 && !hasSubmittedVoiceRef.current) {
+          submitVoiceQuery(queryToSubmit);
         } else {
           setIsListening(false);
         }
@@ -301,7 +369,7 @@ export default function WelcomeLanding({
       rec.start();
     } catch (err: any) {
       console.error("Speech recognition start failed:", err);
-      stopVoiceListening();
+      stopVoiceListening(false);
       setSpeechError("Could not start voice input. You can open Arohi Voice Call for direct interactive speech.");
       setTimeout(() => setSpeechError(null), 4000);
     }
@@ -957,16 +1025,22 @@ export default function WelcomeLanding({
                         Listening ({LANGUAGES_LIST.find(l => l.code === language)?.english || 'Native Language'})...
                       </span>
                     </div>
-                    <p className="text-xs text-white font-medium truncate mt-0.5 max-w-[280px] sm:max-w-[360px]">
+                    <p className="text-xs text-white font-semibold truncate mt-0.5 max-w-[280px] sm:max-w-[360px]">
                       {landingInputText ? `"${landingInputText}"` : "Speak clearly into your microphone..."}
                     </p>
+                    {landingInputText && (
+                      <p className="text-[10px] text-purple-300/80 animate-pulse mt-0.5">
+                        Speaking captured • Opening chat in a moment...
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
                   {landingInputText.trim().length > 0 && (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={() => submitVoiceQuery(landingInputText)}
                       className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-rose-500 hover:from-purple-400 hover:to-rose-400 text-white text-[11px] font-black uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1 hover:scale-105 active:scale-95 shrink-0"
                     >
                       <Send className="w-3 h-3" /> Ask Arohi
@@ -974,8 +1048,14 @@ export default function WelcomeLanding({
                   )}
                   <button
                     type="button"
-                    onClick={stopVoiceListening}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-bold uppercase tracking-wider border border-white/20 transition-all cursor-pointer shrink-0"
+                    onClick={() => {
+                      if (landingInputText.trim().length > 0 || spokenTranscriptRef.current.trim().length > 0) {
+                        submitVoiceQuery();
+                      } else {
+                        stopVoiceListening(false);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold uppercase tracking-wider border border-white/25 transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     Done
                   </button>

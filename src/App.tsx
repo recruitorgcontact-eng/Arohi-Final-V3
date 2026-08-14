@@ -38,6 +38,8 @@ import { BlogPage } from './components/BlogPage';
 import PWAInstaller from './components/PWAInstaller';
 import BottomNavBar from './components/BottomNavBar';
 import ArohiLandingPage from './components/ArohiLandingPage';
+import AudienceLandingPage from './components/AudienceLandingPage';
+import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
 import SeoHubModal from './components/SeoHubModal';
 import GlobalSEODirectory from './components/GlobalSEODirectory';
@@ -100,7 +102,15 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'ur', 'kn', 'ml', 'pa', 'as', 'ru', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'pt', 'it', 'ko', 'tr', 'id', 'sw', 'am', 'ha', 'yo', 'zu'];
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience'];
+
+  const [selectedAudienceSlug, setSelectedAudienceSlug] = useState<string>(() => {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if (pathParts[0] === 'audience' && pathParts[1]) {
+      return pathParts[1];
+    }
+    return '';
+  });
 
   const [selectedState, setSelectedState] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -230,6 +240,7 @@ export default function App() {
     }
     const pathParts = path.split('/').filter(Boolean);
     if (pathParts.length > 0) {
+      if (pathParts[0] === 'audience' && pathParts[1]) return 'audience';
       if (pathParts[0] === 'state' || pathParts[0] === 'country') return 'home';
       if (VALID_LANGUAGES.includes(pathParts[0] as Language)) {
         const subTab = pathParts[1] || 'home';
@@ -248,6 +259,12 @@ export default function App() {
     const handlePopState = () => {
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       if (pathParts.length > 0) {
+        if (pathParts[0] === 'audience' && pathParts[1]) {
+          setSelectedAudienceSlug(pathParts[1]);
+          setActiveTab('audience');
+          setHasEntered(true);
+          return;
+        }
         if (pathParts[0] === 'state' && pathParts[1]) {
           setSelectedState(pathParts[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
           setActiveTab('home');
@@ -283,7 +300,9 @@ export default function App() {
   useEffect(() => {
     const currentPath = window.location.pathname;
     let targetPath = activeTab === 'home' ? '/' : `/${activeTab}`;
-    if (selectedState) {
+    if (activeTab === 'audience' && selectedAudienceSlug) {
+      targetPath = `/audience/${selectedAudienceSlug}`;
+    } else if (selectedState) {
       targetPath = `/state/${selectedState.toLowerCase().replace(/\s+/g, '-')}`;
     } else if (language !== 'en') {
       targetPath = `/${language}${activeTab === 'home' ? '' : `/${activeTab}`}`;
@@ -291,7 +310,7 @@ export default function App() {
     if (currentPath !== targetPath && currentPath !== `/index.html`) {
       window.history.pushState(null, '', targetPath);
     }
-  }, [activeTab, language, selectedState]);
+  }, [activeTab, language, selectedState, selectedAudienceSlug]);
 
   useEffect(() => {
     // Initial page load telemetry for Arohiai.com persistent visitor counter
@@ -1788,6 +1807,33 @@ export default function App() {
           />
         );
       }
+      case 'audience': {
+        const matchedAudience = (selectedAudienceSlug ? getAudienceBySlug(selectedAudienceSlug) : null) || TARGET_AUDIENCES_SEO[0];
+        return (
+          <AudienceLandingPage
+            audience={matchedAudience}
+            isDarkMode={isDarkMode}
+            language={language}
+            onNavigateToTab={(tab, initialPrompt) => {
+              if (initialPrompt) {
+                setChatInitialPrompt(initialPrompt);
+                setIsChatOpen(true);
+                setIsChatMinimized(false);
+                setHasEntered(true);
+                setActiveTab('arohi');
+              } else {
+                setActiveTab(tab);
+                setSelectedAudienceSlug('');
+              }
+            }}
+            onSelectAudience={(slug) => {
+              setSelectedAudienceSlug(slug);
+              window.history.pushState(null, '', `/audience/${slug}`);
+            }}
+            onOpenDirectory={() => setIsRegionModalOpen(true)}
+          />
+        );
+      }
       default:
         return renderHomeHero();
     }
@@ -2800,7 +2846,7 @@ export default function App() {
       <BackgroundScrollEffects />
 
       {/* Dynamic SEO Head Title and Meta Description Updates */}
-      <SEOHead activeTab={activeTab} selectedState={selectedState} currentLanguage={language} />
+      <SEOHead activeTab={activeTab} selectedState={selectedState} selectedAudienceSlug={selectedAudienceSlug} currentLanguage={language} />
 
       {/* 1. Brand Header (Removed as per user request) */}
 
@@ -4002,6 +4048,11 @@ export default function App() {
           changeCountry(countryCode);
           setSelectedState('');
           setActiveTab('home');
+          setHasEntered(true);
+        }}
+        onSelectAudience={(audienceSlug) => {
+          setSelectedAudienceSlug(audienceSlug);
+          setActiveTab('audience');
           setHasEntered(true);
         }}
         onTriggerAutoLocation={() => {

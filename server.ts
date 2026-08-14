@@ -2365,14 +2365,7 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
 // Resilient API calling helper with automatic fallback models to prevent 503 "High Demand" or 429 "Quota Exhausted" errors
 async function generateContentWithFallback(aiClientInstance: GoogleGenAI, options: any) {
   // Official valid Gemini models for text and multimodal tasks according to @google/genai guidelines
-  const modelsWithTools = [
-    'gemini-3.6-flash',
-    'gemini-3.1-flash-lite',
-    'gemini-flash-latest'
-  ];
-
-  // General models to try
-  const modelsGeneral = [
+  const fallbackModels = [
     'gemini-3.6-flash',
     'gemini-3.1-flash-lite',
     'gemini-flash-latest'
@@ -2380,24 +2373,30 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
 
   let lastError = null;
   const hasTools = !!(options?.config?.tools || options?.tools);
+  const unavailableModels = new Set<string>();
 
   // 1. If tools are requested (e.g. googleSearch), attempt tool-compatible models FIRST with tools enabled
   if (hasTools) {
-    for (const model of modelsWithTools) {
+    for (const model of fallbackModels) {
+      if (unavailableModels.has(model)) continue;
       try {
         console.log(`Attempting generateContent WITH search tools on model: ${model}`);
         const response = await aiClientInstance.models.generateContent({
           ...options,
           model: model,
         });
-        return response;
+        if (response) return response;
       } catch (err: any) {
         const errStr = err?.message || String(err);
         lastError = err;
+        const isUnavailableOr503 = err?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') || errStr.includes('overloaded');
         const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+        
+        unavailableModels.add(model);
         if (isQuotaError) {
-          console.warn(`[Gemini API] Quota limit reached on model ${model}. Attempting non-tool fallback...`);
-          break; // Stop trying tool models, fall through to optionsWithoutTools or fallback
+          console.warn(`[Gemini API] Quota limit reached on model ${model}. Attempting fallback models...`);
+        } else if (isUnavailableOr503) {
+          console.warn(`[Gemini API] Model ${model} unavailable (503 High Demand). Seamlessly switching to next model...`);
         } else {
           console.warn(`Model ${model} with tools failed: ${errStr}. Trying next model...`);
         }
@@ -2405,7 +2404,7 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   }
 
-  // 2. If tools were not requested OR tool models hit error/quota, try general fallback models without tools
+  // 2. If tools were not requested OR tool models hit error/quota, try fallback models without tools
   let optionsWithoutTools = { ...options };
   if (optionsWithoutTools.config?.tools) {
     const { tools, ...restConfig } = optionsWithoutTools.config;
@@ -2415,21 +2414,30 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     delete optionsWithoutTools.tools;
   }
 
-  for (const model of modelsGeneral) {
+  // Prioritize models that haven't encountered a 503 / 429 yet
+  const orderedModels = [
+    ...fallbackModels.filter(m => !unavailableModels.has(m)),
+    ...fallbackModels.filter(m => unavailableModels.has(m))
+  ];
+
+  for (const model of orderedModels) {
     try {
       console.log(`Attempting generateContent without tools on model: ${model}`);
       const response = await aiClientInstance.models.generateContent({
         ...optionsWithoutTools,
         model: model,
       });
-      return response;
+      if (response) return response;
     } catch (err: any) {
       const errStr = err?.message || String(err);
       lastError = err;
       const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+      const isUnavailableOr503 = err?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') || errStr.includes('overloaded');
+      
       if (isQuotaError) {
-        console.warn(`[Gemini API] Quota limit reached on model ${model}. Switching directly to smart AROHI fallback engine.`);
-        break; // Quota exhausted for this key across models, stop looping
+        console.warn(`[Gemini API] Quota limit reached on model ${model}. Trying next alternative model...`);
+      } else if (isUnavailableOr503) {
+        console.warn(`[Gemini API] Model ${model} is experiencing high demand (503). Trying next model...`);
       } else {
         console.warn(`Model ${model} failed: ${errStr}. Trying next model...`);
       }
@@ -2453,7 +2461,7 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   } catch (e) {}
 
-  console.warn("Gemini API calls unavailable or quota limit reached. Using resilient Arohi AI fallback engine...");
+  console.warn("All Gemini API models temporarily unavailable or quota limited. Using resilient Arohi AI fallback engine...");
   let liveSearchData: any[] = [];
   try {
     if (requiresRealtimeSearch(extractedPrompt)) {
@@ -2470,35 +2478,35 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
 
 // Resilient API streaming helper with automatic fallback models for real-time response delivery
 async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, options: any) {
-  const modelsWithTools = [
-    'gemini-3.6-flash',
-    'gemini-3.1-flash-lite',
-    'gemini-flash-latest'
-  ];
-
-  const modelsGeneral = [
+  const fallbackModels = [
     'gemini-3.6-flash',
     'gemini-3.1-flash-lite',
     'gemini-flash-latest'
   ];
 
   const hasTools = !!(options?.config?.tools || options?.tools);
+  const unavailableModels = new Set<string>();
 
   if (hasTools) {
-    for (const model of modelsWithTools) {
+    for (const model of fallbackModels) {
+      if (unavailableModels.has(model)) continue;
       try {
         console.log(`Attempting generateContentStream WITH search tools on model: ${model}`);
         const streamResponse = await aiClientInstance.models.generateContentStream({
           ...options,
           model: model,
         });
-        return streamResponse;
+        if (streamResponse) return streamResponse;
       } catch (err: any) {
         const errStr = err?.message || String(err);
         const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+        const isUnavailableOr503 = err?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') || errStr.includes('overloaded');
+        
+        unavailableModels.add(model);
         if (isQuotaError) {
           console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Attempting stream without tools...`);
-          break; // Stop retrying tool models, fall through to non-tool stream
+        } else if (isUnavailableOr503) {
+          console.warn(`[Gemini API Stream] Model ${model} unavailable (503 High Demand). Switching to next model...`);
         } else {
           console.warn(`Stream model ${model} with tools failed: ${errStr}. Trying next model...`);
         }
@@ -2515,20 +2523,28 @@ async function generateContentStreamWithFallback(aiClientInstance: GoogleGenAI, 
     delete optionsWithoutTools.tools;
   }
 
-  for (const model of modelsGeneral) {
+  const orderedModels = [
+    ...fallbackModels.filter(m => !unavailableModels.has(m)),
+    ...fallbackModels.filter(m => unavailableModels.has(m))
+  ];
+
+  for (const model of orderedModels) {
     try {
       console.log(`Attempting generateContentStream without tools on model: ${model}`);
       const streamResponse = await aiClientInstance.models.generateContentStream({
         ...optionsWithoutTools,
         model: model,
       });
-      return streamResponse;
+      if (streamResponse) return streamResponse;
     } catch (err: any) {
       const errStr = err?.message || String(err);
       const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
+      const isUnavailableOr503 = err?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') || errStr.includes('overloaded');
+      
       if (isQuotaError) {
-        console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Halting Gemini stream retries to use smart AROHI fallback engine.`);
-        return null;
+        console.warn(`[Gemini API Stream] Quota limit reached on model ${model}. Trying next alternative model...`);
+      } else if (isUnavailableOr503) {
+        console.warn(`[Gemini API Stream] Model ${model} is experiencing high demand (503). Trying next stream model...`);
       } else {
         console.warn(`Stream model ${model} without tools failed: ${errStr}. Trying next model...`);
       }
@@ -7381,6 +7397,107 @@ function serveIndexWithSEO(req: express.Request, res: express.Response) {
       const countryCode = pathParts[1].toUpperCase();
       customTitle = `Arohi AI Global ${countryCode} Career & Opportunity Portal | Arohi AI (arohiai.com)`;
       customDesc = `Global career opportunities, skills, resume analysis, and AI voice guidance for ${countryCode} on Arohi AI.`;
+    } else if (firstSegment === 'audience' && pathParts[1]) {
+      const audSlug = pathParts[1].toLowerCase();
+      const audTitleMap: Record<string, { title: string; desc: string }> = {
+        'students-exam-aspirants': {
+          title: 'Arohi AI for Students & Exam Aspirants - Study Notes, CBSE/ICSE & Doubts (arohiai.com)',
+          desc: 'AI Study Mentor for CBSE Class 1-12, JEE, NEET, UPSC, and State Boards in Odia, Hindi, English. Voice doubt solver, revision timetables & mock quizzes.'
+        },
+        'job-seekers-professionals': {
+          title: 'Arohi AI for Job Seekers - Free ATS Resume Checker & Voice Mock Interviews (arohiai.com)',
+          desc: 'Calculate ATS resume scores, practice real-time voice mock interviews with AI recruiters, and browse verified Sarkari & corporate jobs.'
+        },
+        'divyangjan-pwd': {
+          title: 'Arohi AI for Divyangjan & PwD - 4% Govt Job Reservation, UDID & Voice AI (arohiai.com)',
+          desc: 'Dedicated accessibility guide for Divyangjan: 4% Sarkari job reservation norms (RPwD Act 2016), UDID card steps, ADIP assistive aids, and 100% hands-free voice AI.'
+        },
+        'msme-small-business': {
+          title: 'Arohi AI for MSME & Small Businesses - Mudra Loans, PMEGP & Udyam Setup (arohiai.com)',
+          desc: 'Apply for Mudra Loans up to ₹10 Lakhs, PMEGP 35% subsidies, Udyam MSME registration, and GST compliance roadmaps on Arohi AI.'
+        },
+        'farmers-rural-entrepreneurs': {
+          title: 'Arohi AI for Farmers - PM-Kisan Status, Kisan Credit Card & Crop Advisory (arohiai.com)',
+          desc: 'Check PM-Kisan ₹6,000 instalments, apply for Kisan Credit Card (KCC) 4% interest loans, and speak in regional dialects for crop advice.'
+        },
+        'women-entrepreneurs-shg': {
+          title: 'Arohi AI for Women Entrepreneurs - Stand-Up India & Subhadra Yojana (arohiai.com)',
+          desc: 'Unlock ₹10 Lakh to ₹1 Crore Stand-Up India loans, Subhadra Yojana ₹50,000 financial support, Mahila Samman Savings, and SHG enterprise funding.'
+        },
+        'software-engineers-developers': {
+          title: 'Arohi AI for Software Engineers - System Design, Full-Stack & Tech Roadmaps (arohiai.com)',
+          desc: 'Master System Design, React, Node.js, Python, and cloud architectures with live code reviews and technical voice mock interviews.'
+        },
+        'content-creators-influencers': {
+          title: 'Arohi AI for Content Creators - YouTube Script Generator & Multilingual Voice (arohiai.com)',
+          desc: 'Generate viral YouTube scripts, Reels hooks, SEO tags, and natural voiceover reading in 150+ regional languages on Arohi AI.'
+        },
+        'digital-marketers-seo-experts': {
+          title: 'Arohi AI for Digital Marketers & SEO Pros - Schema.org & Programmatic SEO (arohiai.com)',
+          desc: 'Rank #1 on Google with automated JSON-LD schema markup, high-intent keyword clustering, high-converting ad copy, and multilingual SEO hubs.'
+        },
+        'teachers-professors-educators': {
+          title: 'Arohi AI for Teachers & Educators - Lesson Plans, Quizzes & NEP 2020 (arohiai.com)',
+          desc: 'Generate 45-minute lesson plans, MCQ quizzes, grading rubrics, and multilingual teaching explanations aligned with NEP 2020.'
+        },
+        'freelancers-remote-workers': {
+          title: 'Arohi AI for Freelancers - Winning Upwork Proposals & Global Remote Jobs (arohiai.com)',
+          desc: 'Write high-converting Upwork/Fiverr client proposals, freelance rate calculators, contract drafting, and remote work job alerts.'
+        },
+        'healthcare-wellness-seekers': {
+          title: 'Arohi AI for Healthcare - Ayushman Bharat PM-JAY & ABHA Health Card (arohiai.com)',
+          desc: 'Check Ayushman Bharat ₹5 Lakh cashless treatment eligibility, generate ABHA cards, and get simple explanations of medical reports.'
+        },
+        'legal-compliance-advisors': {
+          title: 'Arohi AI for Legal & Citizens - RTI Drafts, Consumer Court & Citizen Rights (arohiai.com)',
+          desc: 'Draft RTI applications, Consumer Court complaints, Bharatiya Nyaya Sanhita overview, CLAT study notes, and citizen grievance assistance.'
+        },
+        'finance-traders-investors': {
+          title: 'Arohi AI for Finance & Investing - New vs Old Tax Regime & SIP Calculator (arohiai.com)',
+          desc: 'Compare New vs Old Tax Regimes, calculate SIP compound maturity, Section 80C deductions, and mutual fund investment strategies.'
+        },
+        'real-estate-property-buyers': {
+          title: 'Arohi AI for Real Estate - PMAY Housing Subsidy & RERA Project Checks (arohiai.com)',
+          desc: 'PMAY 2.0 housing interest subsidies up to ₹2.67 Lakhs, RERA builder verification checklists, home loan EMI calculations, and land records.'
+        },
+        'senior-citizens-retirees': {
+          title: 'Arohi AI for Senior Citizens - Jeevan Pramaan Life Certificate & SCSS (arohiai.com)',
+          desc: 'Digital Life Certificate (Jeevan Pramaan) face auth, Senior Citizen Savings Scheme (SCSS 8.2% return), and warm voice companionship.'
+        },
+        'multilingual-vernacular-speakers': {
+          title: 'Arohi AI Multilingual Hub - Live Voice in 150+ Regional Languages (arohiai.com)',
+          desc: 'Speak naturally in Odia (ଓଡ଼ିଆ), Hindi (हिन्दी), Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi & 150+ languages with zero barrier.'
+        },
+        'startup-founders-innovators': {
+          title: 'Arohi AI for Startups - DPIIT Tax Exemption & Seed Fund Scheme (arohiai.com)',
+          desc: 'Startup India DPIIT 3-year tax exemptions, Seed Fund Scheme (SISFS up to ₹50 Lakhs), investor pitch deck creation, and startup grants.'
+        },
+        'ecommerce-retail-sellers': {
+          title: 'Arohi AI for E-commerce Sellers - Amazon SEO & ONDC Onboarding (arohiai.com)',
+          desc: 'Optimize Amazon and Flipkart product listing titles, bullet points, and register as a seller on ONDC zero-commission commerce.'
+        },
+        'sarkari-govt-job-aspirants': {
+          title: 'Arohi AI for Sarkari Aspirants - UPSC, SSC, Railways & OPSC Live Updates (arohiai.com)',
+          desc: 'Track live Sarkari Naukri notifications, UPSC/SSC CGL syllabus notes, Railway RRB vacancies, and practice with AI mock interview panels.'
+        },
+        'corporate-hr-recruiters': {
+          title: 'Arohi AI for HR & Recruiters - Job Description Generator & ATS Rubrics (arohiai.com)',
+          desc: 'Generate standardized Job Descriptions, ATS candidate screening benchmarks, technical interview rubrics, and D&I hiring compliance.'
+        },
+        'creative-artists-writers': {
+          title: 'Arohi AI for Artists & Writers - Story Outlines, Screenplays & Poetry (arohiai.com)',
+          desc: 'Develop 3-act story outlines, screenplay formats, regional classical poetry (Odia/Hindi), and photorealistic digital art prompts.'
+        }
+      };
+
+      if (audTitleMap[audSlug]) {
+        customTitle = audTitleMap[audSlug].title;
+        customDesc = audTitleMap[audSlug].desc;
+      } else {
+        const niceName = audSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        customTitle = `Arohi AI for ${niceName} - Tailored Opportunities & Growth Guide (arohiai.com)`;
+        customDesc = `Custom AI voice guidance, career roadmaps, tools, and opportunities crafted specifically for ${niceName} on Arohi AI.`;
+      }
     } else if (validLanguages.includes(firstSegment)) {
       lang = firstSegment;
     }
@@ -7497,6 +7614,26 @@ function serveSitemap(req: express.Request, res: express.Response) {
     xml += `    <lastmod>${lastmod}</lastmod>\n`;
     xml += '    <changefreq>weekly</changefreq>\n';
     xml += '    <priority>0.8</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  // 4. Target Audience Specific Portals (20+ Audience Segments)
+  const audienceSlugs = [
+    'students-exam-aspirants', 'job-seekers-professionals', 'divyangjan-pwd', 'msme-small-business',
+    'farmers-rural-entrepreneurs', 'women-entrepreneurs-shg', 'software-engineers-developers',
+    'content-creators-influencers', 'digital-marketers-seo-experts', 'teachers-professors-educators',
+    'freelancers-remote-workers', 'healthcare-wellness-seekers', 'legal-compliance-advisors',
+    'finance-traders-investors', 'real-estate-property-buyers', 'senior-citizens-retirees',
+    'multilingual-vernacular-speakers', 'startup-founders-innovators', 'ecommerce-retail-sellers',
+    'sarkari-govt-job-aspirants', 'corporate-hr-recruiters', 'creative-artists-writers'
+  ];
+  audienceSlugs.forEach(slug => {
+    const audUrl = `${baseUrl}/audience/${slug}`;
+    xml += '  <url>\n';
+    xml += `    <loc>${audUrl}</loc>\n`;
+    xml += `    <lastmod>${lastmod}</lastmod>\n`;
+    xml += '    <changefreq>daily</changefreq>\n';
+    xml += '    <priority>0.9</priority>\n';
     xml += '  </url>\n';
   });
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Globe, MapPin, Flag, X, Search, Sparkles, Check, Compass, Loader2 } from 'lucide-react';
+import { Globe, MapPin, Flag, X, Search, Sparkles, Check, Compass, Loader2, Users, ArrowRight } from 'lucide-react';
 import { GLOBAL_LANGUAGES, INDIAN_STATES, WORLD_COUNTRIES } from '../data/seoLocationsData';
+import { TARGET_AUDIENCES_SEO } from '../data/seoAudienceData';
 import { Language } from '../translations';
 import { reverseGeocode } from '../utils/geolocation';
 
@@ -11,6 +12,7 @@ interface GlobalSEODirectoryProps {
   onSelectLanguage: (lang: Language) => void;
   onSelectState?: (stateName: string) => void;
   onSelectCountry?: (countryCode: string) => void;
+  onSelectAudience?: (audienceSlug: string) => void;
   onTriggerAutoLocation?: () => void;
 }
 
@@ -21,9 +23,10 @@ export default function GlobalSEODirectory({
   onSelectLanguage,
   onSelectState,
   onSelectCountry,
+  onSelectAudience,
   onTriggerAutoLocation
 }: GlobalSEODirectoryProps) {
-  const [activeTab, setActiveTab] = useState<'languages' | 'states' | 'countries'>('languages');
+  const [activeTab, setActiveTab] = useState<'audiences' | 'languages' | 'states' | 'countries'>('audiences');
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [geoStatusMsg, setGeoStatusMsg] = useState<string | null>(null);
@@ -99,6 +102,15 @@ export default function GlobalSEODirectory({
     }
     onClose();
   };
+
+  const filteredAudiences = TARGET_AUDIENCES_SEO.filter(
+    (a) =>
+      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.popularSearches.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const filteredLanguages = GLOBAL_LANGUAGES.filter(
     (l) =>
@@ -214,6 +226,18 @@ export default function GlobalSEODirectory({
           {/* Navigation Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <button
+              onClick={() => setActiveTab('audiences')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'audiences'
+                  ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-sm'
+                  : 'bg-slate-800/40 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-purple-400" />
+              <span>Target Audiences (20+)</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('languages')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'languages'
@@ -253,6 +277,66 @@ export default function GlobalSEODirectory({
 
         {/* Modal Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 relative z-10">
+          {/* Target Audiences Grid */}
+          {activeTab === 'audiences' && (
+            <div>
+              <div className="flex items-center justify-between mb-3 text-xs text-slate-400">
+                <span className="flex items-center gap-1.5 font-semibold">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  Tailored Opportunity Portals for 20+ Key Audiences:
+                </span>
+                <span className="text-[11px] font-mono text-slate-500">
+                  {filteredAudiences.length} portal{filteredAudiences.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {filteredAudiences.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 text-xs">
+                  No target audience matched "{searchQuery}"
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  {filteredAudiences.map((aud) => (
+                    <a
+                      key={aud.slug}
+                      href={`/audience/${aud.slug}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (onSelectAudience) onSelectAudience(aud.slug);
+                        const newPath = `/audience/${aud.slug}`;
+                        window.history.pushState(null, '', newPath);
+                        onClose();
+                      }}
+                      className="p-3.5 rounded-2xl border border-slate-800/90 bg-slate-900/60 hover:bg-slate-800/90 hover:border-purple-500/60 transition-all flex flex-col justify-between gap-2.5 text-slate-300 hover:text-white group cursor-pointer shadow-sm hover:shadow-[0_4px_20px_rgba(124,58,237,0.15)]"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-purple-500/15 border border-purple-500/30 text-purple-300">
+                            {aud.category}
+                          </span>
+                          <span className="text-[9px] text-slate-500 font-mono">
+                            {aud.badge}
+                          </span>
+                        </div>
+                        <h4 className="font-extrabold text-sm text-slate-100 group-hover:text-purple-300 transition-colors line-clamp-1">
+                          {aud.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                          {aud.shortDesc}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-[10px] font-bold text-purple-400 group-hover:text-purple-300">
+                        <span>Open Audience Hub</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Languages Grid */}
           {activeTab === 'languages' && (
             <div>
