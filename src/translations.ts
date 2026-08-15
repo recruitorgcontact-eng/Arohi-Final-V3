@@ -1,4 +1,4 @@
-export type Language = 'en' | 'hi' | 'or' | 'bn' | 'te' | 'mr' | 'ta' | 'gu' | 'ur' | 'kn' | 'ml' | 'pa' | 'as' | 'ru' | 'es' | 'fr' | 'de' | 'ja' | 'zh' | 'ar' | 'pt' | 'it' | 'ko' | 'tr' | 'id' | 'sw' | 'am' | 'ha' | 'yo' | 'zu';
+export type Language = string;
 
 export const translations = {
   en: {

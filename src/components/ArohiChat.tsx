@@ -516,6 +516,64 @@ function parseMessageMcpPayload(content: string) {
   };
 }
 
+// Helper to dynamically extract genuine conversation topic titles from actual user queries
+export function getConversationTopicTitle(chat?: SavedChat | { messages?: Message[]; title?: string }): string {
+  if (!chat || !chat.messages || !Array.isArray(chat.messages) || chat.messages.length === 0) {
+    return 'New Conversation';
+  }
+
+  // 1. Prioritize extracting the first genuine question/query asked by the user
+  const firstUserMsg = chat.messages.find(
+    m => m && m.role === 'user' && m.content && typeof m.content === 'string' && m.content.trim().length > 0
+  );
+
+  if (firstUserMsg) {
+    let clean = firstUserMsg.content
+      .replace(/\[File Uploaded:.*?\]/g, '')
+      .replace(/\[RESUME_DOCX_DATA_START\][\s\S]*?\[RESUME_DOCX_DATA_END\]/g, '')
+      .replace(/\[CALL_SUMMARY_DATA_START\][\s\S]*?\[CALL_SUMMARY_DATA_END\]/g, '')
+      .replace(/\[AROHI_MCP_PAYLOAD_START\][\s\S]*?\[AROHI_MCP_PAYLOAD_END\]/g, '')
+      .trim();
+
+    if (clean) {
+      // Remove leading markdown headers or bullets
+      clean = clean.replace(/^[#*\-—\s>]+/, '').trim();
+      const firstLine = clean.split('\n')[0].trim();
+      if (firstLine.length > 0) {
+        return firstLine.length > 38 ? firstLine.substring(0, 36) + '...' : firstLine;
+      }
+    }
+  }
+
+  // 2. Check for specialized assistant outputs (voice consultation, generated media)
+  const firstAssistantMsg = chat.messages.find(
+    m => m && m.id !== 'welcome' && m.role === 'assistant' && m.content && typeof m.content === 'string'
+  );
+  if (firstAssistantMsg && firstAssistantMsg.content) {
+    if (firstAssistantMsg.content.includes('Voice Consultation')) return 'Voice Consultation';
+    if (firstAssistantMsg.content.includes('Image Created') || firstAssistantMsg.content.includes('![')) return 'AI Image Studio';
+    if (firstAssistantMsg.content.includes('Music Soundtrack')) return 'AI Music Composition';
+    if (firstAssistantMsg.content.includes('Video Created')) return 'AI Video Studio';
+  }
+
+  // 3. Fallback to existing saved title if it's already a specific topic
+  const existing = (chat.title || '').trim();
+  if (
+    existing &&
+    !existing.toLowerCase().includes("let's get started") &&
+    !existing.toLowerCase().includes("lets get started") &&
+    !existing.toLowerCase().startsWith("hi ") &&
+    existing !== 'New Conversation' &&
+    existing !== 'New Discussion' &&
+    existing !== 'New Chat' &&
+    existing !== 'Arohi AI Consultation'
+  ) {
+    return existing;
+  }
+
+  return 'New Conversation';
+}
+
 export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en', isDarkMode = true }: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
@@ -1474,7 +1532,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map((c: SavedChat) => ({
+            ...c,
+            title: getConversationTopicTitle(c)
+          }));
         }
       }
       // Also check fallback guest keys if userId is provided
@@ -1483,7 +1544,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         if (guestStored) {
           const parsed = JSON.parse(guestStored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed.map((c: SavedChat) => ({
+              ...c,
+              title: getConversationTopicTitle(c)
+            }));
           }
         }
       }
@@ -1499,7 +1563,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     const cached = getInitialChats(user?.uid);
     if (cached.length > 0) return cached;
     if (userData?.arohiChats && Array.isArray(userData.arohiChats) && userData.arohiChats.length > 0) {
-      return userData.arohiChats;
+      return userData.arohiChats.map(c => ({
+        ...c,
+        title: getConversationTopicTitle(c)
+      }));
     }
     return [];
   });
@@ -1522,15 +1589,13 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     ? (userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || 'User') 
     : 'User';
   const currentChatObj = savedChats.find(c => c.id === activeChatId) || savedChats[0];
-  const rawChatTitle = currentChatObj ? currentChatObj.title : 'Arohi AI Consultation';
-  const activeChatTitle = (!rawChatTitle || rawChatTitle === 'New Conversation' || rawChatTitle === 'New Discussion' || rawChatTitle === 'Arohi AI Consultation' || rawChatTitle.toLowerCase().includes('hi arohi'))
-    ? (user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!")
-    : rawChatTitle;
+  const activeChatTitle = currentChatObj ? getConversationTopicTitle(currentChatObj) : 'New Conversation';
 
-  const filteredChats = savedChats.filter(chat => 
-    chat.title.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
-    chat.messages.some(m => m.content.toLowerCase().includes(sidebarSearchQuery.toLowerCase()))
-  );
+  const filteredChats = savedChats.filter(chat => {
+    const topicTitle = getConversationTopicTitle(chat);
+    return topicTitle.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
+      chat.messages.some(m => m.content.toLowerCase().includes(sidebarSearchQuery.toLowerCase()));
+  });
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
 
   // Hydration effect - merges remote and local conversations seamlessly
@@ -1540,7 +1605,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     if (user) {
       const localCached = getInitialChats(user.uid);
       const remoteChats = (userData?.arohiChats && Array.isArray(userData.arohiChats)) ? userData.arohiChats : [];
-      const merged = mergeSavedChats(localCached, remoteChats);
+      const merged = mergeSavedChats(localCached, remoteChats).map(c => ({
+        ...c,
+        title: getConversationTopicTitle(c)
+      }));
 
       if (merged.length > 0) {
         setSavedChats(merged);
@@ -1557,7 +1625,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         const defaultChatId = 'chat-' + Date.now();
         const defaultChat: SavedChat = {
           id: defaultChatId,
-          title: `Hi ${currentUserName}, let's get started!`,
+          title: 'New Conversation',
           date: 'Today',
           messages: [
             {
@@ -1602,7 +1670,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         const defaultChatId = 'chat-' + Date.now();
         const defaultChat: SavedChat = {
           id: defaultChatId,
-          title: "Hi User, let's get started!",
+          title: 'New Conversation',
           date: 'Today',
           messages: [
             {
@@ -1654,7 +1722,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
             const freshData = resData.userData;
             if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
               setSavedChats(prev => {
-                const merged = mergeSavedChats(prev, freshData.arohiChats);
+                const merged = mergeSavedChats(prev, freshData.arohiChats).map(c => ({
+                  ...c,
+                  title: getConversationTopicTitle(c)
+                }));
                 try {
                   localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(merged));
                 } catch (e) {}
@@ -1685,7 +1756,10 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           const freshData = docSnap.data();
           if (freshData.arohiChats && Array.isArray(freshData.arohiChats) && freshData.arohiChats.length > 0) {
             setSavedChats(prev => {
-              const merged = mergeSavedChats(prev, freshData.arohiChats);
+              const merged = mergeSavedChats(prev, freshData.arohiChats).map(c => ({
+                ...c,
+                title: getConversationTopicTitle(c)
+              }));
               try {
                 localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(merged));
               } catch (e) {}
@@ -1711,7 +1785,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     fetchLatestHistory();
   }, [user, hasFetchedLatest]);
 
-  // Persist messages changes safely without cyclic dependency loops
+  // Persist messages changes safely and dynamically update conversation topic titles
   useEffect(() => {
     if (!activeChatId || messages.length === 0) return;
 
@@ -1719,36 +1793,24 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     if (prevSyncedMessagesJsonRef.current === messagesJson) return;
     prevSyncedMessagesJsonRef.current = messagesJson;
 
-    const hasUserMessage = messages.some(m => m.role === 'user');
+    const hasUserMessage = messages.some(m => m && m.role === 'user' && m.content && m.content.trim().length > 0);
 
     setSavedChats(prevChats => {
       const chatIndex = prevChats.findIndex(c => c.id === activeChatId);
       let updatedChats: SavedChat[];
 
+      const dynamicTitle = getConversationTopicTitle({ messages, title: prevChats[chatIndex]?.title });
+
       if (chatIndex === -1) {
         const newChat: SavedChat = {
           id: activeChatId,
-          title: hasUserMessage ? 'New Conversation' : (user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!"),
+          title: dynamicTitle,
           date: 'Today',
           messages
         };
         updatedChats = [newChat, ...prevChats];
       } else {
-        const existing = prevChats[chatIndex];
-        let title = existing.title;
-        if (!title || title === 'New Conversation' || title === 'New Discussion' || title === 'New Chat' || title.toLowerCase().includes('hi arohi') || title.toLowerCase().includes('hi user') || title.toLowerCase().includes('lets get started')) {
-          const firstUserMsg = messages.find(m => m.role === 'user');
-          if (firstUserMsg) {
-            const cleaned = firstUserMsg.content.replace(/\[File Uploaded:.*?\]/g, '').trim();
-            if (cleaned.toLowerCase().includes('hi arohi') || cleaned.toLowerCase().includes('hi user')) {
-              title = user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!";
-            } else {
-              title = cleaned.length > 32 ? cleaned.substring(0, 30) + '...' : cleaned;
-            }
-          }
-        }
-
-        updatedChats = prevChats.map(c => c.id === activeChatId ? { ...c, title, messages } : c);
+        updatedChats = prevChats.map(c => c.id === activeChatId ? { ...c, title: dynamicTitle, messages } : c);
       }
 
       // Re-order: Move active conversation to top if user sent messages
@@ -2570,7 +2632,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     const newChatId = 'chat-' + Date.now();
     const newChat: SavedChat = {
       id: newChatId,
-      title: 'New Discussion',
+      title: 'New Conversation',
       date: 'Today',
       messages: [
         {
@@ -2588,9 +2650,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     setMessages(newChat.messages);
 
     if (user) {
-      updateArohiChats(updatedChats);
+      updateArohiChats(updatedChats).catch(() => {});
+      try {
+        localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updatedChats));
+      } catch (e) {}
     } else {
-      localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
+      try {
+        localStorage.setItem('guest_arohi_chats', JSON.stringify(updatedChats));
+      } catch (e) {}
     }
   };
 
@@ -2869,36 +2936,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         {/* New Chat Button */}
         <button
           onClick={() => {
-            const newChatId = 'chat-' + Date.now();
-            const newChat: SavedChat = {
-              id: newChatId,
-              title: user ? `Hi ${currentUserName}, let's get started!` : "Hi User, let's get started!",
-              date: 'Today',
-              messages: [
-                {
-                  id: 'welcome',
-                  role: 'assistant',
-                  content: getWelcomeContent(language),
-                  timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                }
-              ]
-            };
-            setSavedChats(prev => {
-              const updated = [newChat, ...prev];
-              if (user) {
-                updateArohiChats(updated).catch(() => {});
-                try {
-                  localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updated));
-                } catch (e) {}
-              } else {
-                try {
-                  localStorage.setItem('guest_arohi_chats', JSON.stringify(updated));
-                } catch (e) {}
-              }
-              return updated;
-            });
-            setActiveChatId(newChatId);
-            setMessages(newChat.messages);
+            startNewChat();
             if (window.innerWidth < 768) setIsSidebarOpen(false);
           }}
           className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 mb-2 rounded-xl text-sm font-bold ${
@@ -2934,6 +2972,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             ) : (
               filteredChats.map((item) => {
                 const isActive = activeChatId === item.id;
+                const displayTitle = getConversationTopicTitle(item);
                 const msgCount = item.messages ? item.messages.filter(m => m.id !== 'welcome').length : 0;
                 return (
                   <div
@@ -2952,7 +2991,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
                       <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? (isDarkMode ? 'text-purple-400' : 'text-purple-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`} />
                       <div className="min-w-0">
-                        <div className="truncate text-sm leading-tight">{item.title}</div>
+                        <div className="truncate text-sm leading-tight">{displayTitle}</div>
                         <div className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-normal flex items-center gap-1.5 mt-0.5`}>
                           <span>{item.date || 'Recent'}</span>
                           {msgCount > 0 && (

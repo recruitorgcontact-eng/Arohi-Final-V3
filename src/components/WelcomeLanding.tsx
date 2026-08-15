@@ -1447,8 +1447,8 @@ export default function WelcomeLanding({
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Language ({language.toUpperCase()})
                     </p>
-                    <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                      {LANGUAGES_LIST.length} Languages
+                    <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                      150+ Languages
                     </span>
                   </div>
 

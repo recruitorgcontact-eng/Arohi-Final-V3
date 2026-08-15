@@ -7,6 +7,7 @@ import AdminPanel from './components/AdminPanel';
 import { useAuth } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
 import { Language, getTranslation } from './translations';
+import { ALL_150_PLUS_LANGUAGES } from './data/languagesData';
 
 
 // Core Tab Components
@@ -101,7 +102,7 @@ export default function App() {
     }
   }, [hasEntered, user]);
 
-  const VALID_LANGUAGES: Language[] = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'ur', 'kn', 'ml', 'pa', 'as', 'ru', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'pt', 'it', 'ko', 'tr', 'id', 'sw', 'am', 'ha', 'yo', 'zu'];
+  const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
   const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience'];
 
   const [selectedAudienceSlug, setSelectedAudienceSlug] = useState<string>(() => {
