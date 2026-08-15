@@ -7,8 +7,10 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid, Box, Maximize2, Eye
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown
 } from 'lucide-react';
+import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
+import MoveChatToProjectModal from './MoveChatToProjectModal';
 import Arohi3DLearningWorkspace from './learning3d/Arohi3DLearningWorkspace';
 import McpGatewayModal from './McpGatewayModal';
 import McpApprovalCard from './McpApprovalCard';
@@ -43,6 +45,7 @@ interface SavedChat {
   title: string;
   date: string;
   messages: Message[];
+  projectId?: string;
 }
 
 interface ArohiChatProps {
@@ -982,6 +985,130 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [showNewNotebookModal, setShowNewNotebookModal] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState('');
 
+  // ChatGPT-style Arohi Projects States & Handlers
+  const [isProjectsModalOpen, setIsProjectsModalOpen] = useState(false);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [moveChatModalTarget, setMoveChatModalTarget] = useState<{
+    chatId: string;
+    title: string;
+    currentProjectId?: string | null;
+  } | null>(null);
+
+  // Inline editing project title in sidebar
+  const [editingSidebarProjectId, setEditingSidebarProjectId] = useState<string | null>(null);
+  const [editingSidebarProjectName, setEditingSidebarProjectName] = useState<string>('');
+  const [isSidebarProjectsListExpanded, setIsSidebarProjectsListExpanded] = useState<boolean>(true);
+
+  const startInlineEditProject = (projectId: string, currentName: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingSidebarProjectId(projectId);
+    setEditingSidebarProjectName(currentName);
+  };
+
+  const saveInlineEditProject = (projectId: string) => {
+    const trimmed = editingSidebarProjectName.trim();
+    if (trimmed && trimmed.length > 0) {
+      handleUpdateProject(projectId, { name: trimmed });
+    }
+    setEditingSidebarProjectId(null);
+    setEditingSidebarProjectName('');
+  };
+
+  const cancelInlineEditProject = () => {
+    setEditingSidebarProjectId(null);
+    setEditingSidebarProjectName('');
+  };
+
+  const getInitialProjects = (userId?: string): ArohiProject[] => {
+    try {
+      const key = userId ? `arohi_projects_${userId}` : 'guest_arohi_projects';
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // Filter out any legacy demo projects so the user's workspace starts pure and empty
+          const customUserProjects = parsed.filter(p => !['proj-career', 'proj-msme', 'proj-study'].includes(p.id));
+          return customUserProjects;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading projects:', e);
+    }
+    return [];
+  };
+
+  const [projects, setProjects] = useState<ArohiProject[]>(() => getInitialProjects(user?.uid));
+
+  const saveProjects = (newProjects: ArohiProject[]) => {
+    setProjects(newProjects);
+    try {
+      const key = user?.uid ? `arohi_projects_${user.uid}` : 'guest_arohi_projects';
+      localStorage.setItem(key, JSON.stringify(newProjects));
+    } catch (e) {
+      console.warn('Failed to save projects to storage:', e);
+    }
+  };
+
+  const handleCreateProject = (p: Omit<ArohiProject, 'id' | 'createdAt' | 'updatedAt'>): string => {
+    const newId = `proj-${Date.now()}`;
+    const newProj: ArohiProject = {
+      ...p,
+      id: newId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const updated = [newProj, ...projects];
+    saveProjects(updated);
+    return newId;
+  };
+
+  const handleUpdateProject = (id: string, updates: Partial<ArohiProject>) => {
+    const updated = projects.map(p => p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p);
+    saveProjects(updated);
+  };
+
+  const handleDeleteProject = (id: string) => {
+    const updated = projects.filter(p => p.id !== id);
+    saveProjects(updated);
+    setSavedChats(prev => {
+      const updatedChats = prev.map(c => c.projectId === id ? { ...c, projectId: undefined } : c);
+      if (user) updateArohiChats(updatedChats).catch(() => {});
+      try {
+        const key = user?.uid ? `arohi_saved_chats_${user.uid}` : 'guest_arohi_chats';
+        localStorage.setItem(key, JSON.stringify(updatedChats));
+      } catch (e) {}
+      return updatedChats;
+    });
+    if (activeProjectId === id) {
+      setActiveProjectId(null);
+    }
+  };
+
+  const handleMoveChatToProject = (chatId: string, targetProjectId: string | null) => {
+    setSavedChats(prev => {
+      const updatedChats = prev.map(c => {
+        if (c.id === chatId) {
+          return {
+            ...c,
+            projectId: targetProjectId || undefined
+          };
+        }
+        return c;
+      });
+      if (user) updateArohiChats(updatedChats).catch(() => {});
+      try {
+        const key = user?.uid ? `arohi_saved_chats_${user.uid}` : 'guest_arohi_chats';
+        localStorage.setItem(key, JSON.stringify(updatedChats));
+      } catch (e) {}
+      return updatedChats;
+    });
+  };
+
+  const handleStartChatInProject = (projectId: string) => {
+    setActiveProjectId(projectId);
+    startNewChat(projectId);
+  };
+
   const toggleLikeMessage = (id: string) => {
     setLikedMessageIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -1592,6 +1719,9 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const activeChatTitle = currentChatObj ? getConversationTopicTitle(currentChatObj) : 'New Conversation';
 
   const filteredChats = savedChats.filter(chat => {
+    if (activeProjectId && chat.projectId !== activeProjectId) {
+      return false;
+    }
     const topicTitle = getConversationTopicTitle(chat);
     return topicTitle.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
       chat.messages.some(m => m.content.toLowerCase().includes(sidebarSearchQuery.toLowerCase()));
@@ -2491,6 +2621,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     setMessages((prev) => [...prev, initialAssistantMessage]);
     setIsLoading(true);
 
+    const currentChat = savedChats.find(c => c.id === activeChatId);
+    const targetProjId = currentChat?.projectId || activeProjectId;
+    const activeProj = targetProjId ? projects.find(p => p.id === targetProjId) : null;
+    let effectiveSystemContext = userMemory?.summaryContext || '';
+    if (activeProj) {
+      const projIntro = `[ACTIVE PROJECT CONTEXT: "${activeProj.name}"${activeProj.description ? ` - ${activeProj.description}` : ''}]`;
+      const projRules = activeProj.customInstructions ? `\nCustom Project Instructions to follow strictly:\n${activeProj.customInstructions}` : '';
+      effectiveSystemContext = `${effectiveSystemContext}\n${projIntro}${projRules}`.trim();
+    }
+
     try {
       const response = await fetch('/api/chat-stream', {
         method: 'POST',
@@ -2503,7 +2643,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           file: fileToSend,
           language: language,
           uid: user?.uid,
-          systemContext: userMemory?.summaryContext
+          systemContext: effectiveSystemContext
         })
       });
 
@@ -2582,7 +2722,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             file: fileToSend,
             language: language,
             uid: user?.uid,
-            systemContext: userMemory?.summaryContext
+            systemContext: effectiveSystemContext
           })
         });
         if (fallbackRes.ok) {
@@ -2628,12 +2768,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     }
   };
 
-  const startNewChat = () => {
+  const startNewChat = (customProjectId?: string | null) => {
+    const targetProjId = customProjectId !== undefined 
+      ? (customProjectId || undefined) 
+      : (activeProjectId || undefined);
+
     const newChatId = 'chat-' + Date.now();
     const newChat: SavedChat = {
       id: newChatId,
       title: 'New Conversation',
       date: 'Today',
+      projectId: targetProjId,
       messages: [
         {
           id: 'welcome',
@@ -2874,50 +3019,220 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('calls');
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
-          >
-            <Library className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
-            <span>Library</span>
-          </button>
+          {/* Arohi Projects (ChatGPT-style Workspace) */}
+          <div className="w-full">
+            <div className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
+              activeProjectId
+                ? (isDarkMode ? 'bg-purple-900/40 text-purple-200 border border-purple-500/50 shadow-xs' : 'bg-purple-100 text-purple-950 border border-purple-300 font-bold')
+                : (isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70')
+            } transition-colors`}>
+              <button
+                onClick={() => {
+                  setIsProjectsModalOpen(true);
+                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                }}
+                className="flex items-center gap-3.5 min-w-0 flex-1 cursor-pointer text-left"
+              >
+                <Folder className={`w-5 h-5 ${activeProjectId ? 'text-purple-400' : (isDarkMode ? 'text-slate-300' : 'text-slate-600')} shrink-0`} />
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate leading-tight">Projects</span>
+                  {activeProjectId && (
+                    <span className="text-[10px] text-purple-400 block truncate font-normal">
+                      {projects.find(p => p.id === activeProjectId)?.name || 'Filtered'}
+                    </span>
+                  )}
+                </div>
+              </button>
+              
+              <div className="flex items-center gap-1 shrink-0">
+                {projects.length > 0 && (
+                  <button
+                    onClick={() => setIsSidebarProjectsListExpanded(!isSidebarProjectsListExpanded)}
+                    className="p-1 rounded-md text-purple-400 hover:text-purple-200 hover:bg-purple-500/20 cursor-pointer"
+                    title={isSidebarProjectsListExpanded ? "Collapse Projects" : "Expand Projects"}
+                  >
+                    {isSidebarProjectsListExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsProjectsModalOpen(true)}
+                  className="text-[10px] bg-purple-500/20 text-purple-300 font-extrabold px-1.5 py-0.5 rounded-md shrink-0 border border-purple-500/30 hover:bg-purple-500/30 cursor-pointer"
+                  title="Open Projects Manager"
+                >
+                  {projects.length}
+                </button>
+              </div>
+            </div>
 
-          <button
-            onClick={() => {
-              setShowNewNotebookModal(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
-          >
-            <Folder className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
-            <span>Projects</span>
-          </button>
+            {/* Expandable Sidebar Projects List with Direct Inline Renaming */}
+            {projects.length > 0 && isSidebarProjectsListExpanded && (
+              <div className="mt-1.5 mb-2 pl-3 pr-1 space-y-1 border-l-2 border-purple-500/30 ml-4">
+                {projects.map((proj) => {
+                  const isEditingThis = editingSidebarProjectId === proj.id;
+                  const isProjActive = activeProjectId === proj.id;
+                  const projChatCount = savedChats.filter(c => c.projectId === proj.id).length;
 
-          <button
-            onClick={() => {
-              setIsVoiceCallOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
-          >
-            <Clock className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
-            <span>Scheduled</span>
-          </button>
+                  if (isEditingThis) {
+                    return (
+                      <div 
+                        key={proj.id}
+                        className={`flex items-center gap-1.5 p-1.5 rounded-lg border text-xs ${
+                          isDarkMode ? 'bg-purple-950/90 border-purple-400 text-white' : 'bg-white border-purple-400 text-purple-950 shadow-sm'
+                        }`}
+                      >
+                        <input
+                          type="text"
+                          value={editingSidebarProjectName}
+                          onChange={(e) => setEditingSidebarProjectName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveInlineEditProject(proj.id);
+                            if (e.key === 'Escape') cancelInlineEditProject();
+                          }}
+                          onBlur={() => saveInlineEditProject(proj.id)}
+                          autoFocus
+                          placeholder="Project name..."
+                          className={`w-full px-2 py-0.5 text-xs font-semibold rounded bg-transparent border-0 focus:outline-none focus:ring-0 ${
+                            isDarkMode ? 'text-white' : 'text-purple-950'
+                          }`}
+                        />
+                        <button
+                          onClick={() => saveInlineEditProject(proj.id)}
+                          className="p-1 text-emerald-400 hover:text-emerald-300 shrink-0 cursor-pointer"
+                          title="Save (Enter)"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={cancelInlineEditProject}
+                          className="p-1 text-rose-400 hover:text-rose-300 shrink-0 cursor-pointer"
+                          title="Cancel (Esc)"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  }
 
-          <button
-            onClick={() => {
-              setIsIntelligenceStudioOpen(true);
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'} transition-colors cursor-pointer text-left`}
-          >
-            <Grid className={`w-5 h-5 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} shrink-0`} />
-            <span>Plugins & Tools</span>
-          </button>
+                  return (
+                    <div
+                      key={proj.id}
+                      className={`group flex items-center justify-between p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                        isProjActive
+                          ? (isDarkMode ? 'bg-purple-900/50 text-purple-200 font-bold border border-purple-500/40' : 'bg-purple-100 text-purple-950 font-bold')
+                          : (isDarkMode ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-700 hover:bg-slate-200/60 hover:text-slate-900')
+                      }`}
+                      onClick={() => setActiveProjectId(isProjActive ? null : proj.id)}
+                      title={`Click to filter by ${proj.name}. Click pen icon to rename.`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Folder className={`w-3.5 h-3.5 ${isProjActive ? 'text-purple-400' : 'text-slate-400'} shrink-0`} />
+                        <span 
+                          className="truncate max-w-[110px]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startInlineEditProject(proj.id, proj.name, e);
+                          }}
+                          title="Click project name to rename inline"
+                        >
+                          {proj.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[10px] text-slate-400 px-1 py-0.2 rounded bg-slate-500/10 font-medium">
+                          {projChatCount}
+                        </span>
+                        <button
+                          onClick={(e) => startInlineEditProject(proj.id, proj.name, e)}
+                          className="p-1 rounded opacity-0 group-hover:opacity-100 text-slate-400 hover:text-purple-400 hover:bg-purple-500/20 cursor-pointer transition-opacity"
+                          title="Rename Project"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Active Project Banner Filter Indicator */}
+        {activeProjectId && (
+          <div className={`mb-3 mx-0.5 p-2.5 rounded-xl border flex items-center justify-between text-xs ${
+            isDarkMode ? 'bg-purple-950/50 border-purple-500/40 text-purple-200 shadow-sm' : 'bg-purple-50 border-purple-300 text-purple-900'
+          }`}>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Folder className="w-4 h-4 text-purple-400 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9px] uppercase tracking-wider font-extrabold text-purple-400">Active Project</div>
+                {editingSidebarProjectId === activeProjectId ? (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <input
+                      type="text"
+                      value={editingSidebarProjectName}
+                      onChange={(e) => setEditingSidebarProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveInlineEditProject(activeProjectId);
+                        if (e.key === 'Escape') cancelInlineEditProject();
+                      }}
+                      onBlur={() => saveInlineEditProject(activeProjectId)}
+                      autoFocus
+                      className={`w-full px-2 py-0.5 text-xs font-bold rounded border ${
+                        isDarkMode ? 'bg-purple-900/80 border-purple-400 text-white' : 'bg-white border-purple-400 text-purple-950'
+                      } focus:outline-none focus:ring-1 focus:ring-purple-400`}
+                    />
+                    <button
+                      onClick={() => saveInlineEditProject(activeProjectId)}
+                      className="p-1 text-emerald-400 hover:text-emerald-300 cursor-pointer shrink-0"
+                      title="Save name"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={cancelInlineEditProject}
+                      className="p-1 text-rose-400 hover:text-rose-300 cursor-pointer shrink-0"
+                      title="Cancel"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => {
+                      const curProj = projects.find(p => p.id === activeProjectId);
+                      if (curProj) startInlineEditProject(curProj.id, curProj.name);
+                    }}
+                    className="group/title flex items-center gap-1.5 cursor-pointer min-w-0 mt-0.5"
+                    title="Click project name to rename inline"
+                  >
+                    <span className="font-bold truncate text-xs hover:underline decoration-dotted">
+                      {projects.find(p => p.id === activeProjectId)?.name}
+                    </span>
+                    <Edit3 className="w-3 h-3 text-purple-400 opacity-60 group-hover/title:opacity-100 shrink-0 transition-opacity" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <button
+                onClick={() => handleStartChatInProject(activeProjectId)}
+                className="text-[10px] px-2 py-0.5 rounded-md bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer"
+                title="New Chat in this Project"
+              >
+                + Chat
+              </button>
+              <button
+                onClick={() => setActiveProjectId(null)}
+                className="text-[10px] text-slate-400 hover:text-white underline font-semibold cursor-pointer"
+                title="Show all chats"
+              >
+                Show All
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Search input when toggled */}
         {showSearchInput && (
@@ -2946,12 +3261,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           } transition-all cursor-pointer`}
         >
           <Plus className="w-4 h-4" />
-          <span>New Chat</span>
+          <span>{activeProjectId ? 'New Chat in Project' : 'New Chat'}</span>
         </button>
 
         {/* Recents Section Heading */}
         <div className={`flex items-center justify-between text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-wider mb-2 px-3 pt-1`}>
-          <span>Recents</span>
+          <span>{activeProjectId ? 'Project Recents' : 'Recents'}</span>
           {activeTab === 'calls' && (
             <button
               onClick={() => setActiveTab('chats')}
@@ -2967,13 +3282,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           {activeTab === 'chats' ? (
             filteredChats.length === 0 ? (
               <div className={`text-center py-8 text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-medium`}>
-                No recent conversations
+                {activeProjectId ? 'No chats in this project yet' : 'No recent conversations'}
               </div>
             ) : (
               filteredChats.map((item) => {
                 const isActive = activeChatId === item.id;
                 const displayTitle = getConversationTopicTitle(item);
                 const msgCount = item.messages ? item.messages.filter(m => m.id !== 'welcome').length : 0;
+                const projObj = item.projectId ? projects.find(p => p.id === item.projectId) : null;
                 return (
                   <div
                     key={item.id}
@@ -3000,13 +3316,40 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                               <span>{msgCount} {msgCount === 1 ? 'msg' : 'msgs'}</span>
                             </>
                           )}
+                          {projObj && (
+                            <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
+                              isDarkMode ? 'bg-purple-950/70 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-800'
+                            } truncate max-w-[80px]`}>
+                              📁 {projObj.name}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <Trash2
-                      onClick={(e) => deleteChat(item.id, e)}
-                      className={`w-4 h-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} opacity-0 group-hover:opacity-100 hover:text-rose-500 shrink-0 transition-opacity`}
-                    />
+
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMoveChatModalTarget({
+                            chatId: item.id,
+                            title: displayTitle,
+                            currentProjectId: item.projectId
+                          });
+                        }}
+                        className="p-1 rounded-md text-slate-400 hover:text-purple-400 hover:bg-purple-500/20 cursor-pointer"
+                        title="Move to Project"
+                      >
+                        <Folder className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => deleteChat(item.id, e)}
+                        className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-500/20 cursor-pointer"
+                        title="Delete Chat"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -3093,6 +3436,22 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               <h1 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} text-base sm:text-lg tracking-tight truncate`}>
                 {activeChatTitle || 'Arohi AI'}
               </h1>
+              {currentChatObj?.projectId && (
+                <button
+                  onClick={() => setIsProjectsModalOpen(true)}
+                  className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition-colors cursor-pointer ${
+                    isDarkMode 
+                      ? 'bg-purple-950/70 text-purple-300 border-purple-500/40 hover:bg-purple-900/80' 
+                      : 'bg-purple-100 text-purple-900 border-purple-300 hover:bg-purple-200'
+                  }`}
+                  title="View Project Workspace"
+                >
+                  <Folder className="w-3 h-3 text-purple-400 shrink-0" />
+                  <span className="truncate max-w-[130px]">
+                    {projects.find(p => p.id === currentChatObj.projectId)?.name || 'Project'}
+                  </span>
+                </button>
+              )}
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Core AI Online"></span>
               <span className={`hidden sm:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
                 isDarkMode 
@@ -3134,7 +3493,32 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               </button>
 
               {activeMessageMenuId === 'header' && (
-                <div className={`absolute right-0 top-11 w-52 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                <div className={`absolute right-0 top-11 w-56 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                  <button
+                    onClick={() => {
+                      if (currentChatObj) {
+                        setMoveChatModalTarget({
+                          chatId: currentChatObj.id,
+                          title: activeChatTitle,
+                          currentProjectId: currentChatObj.projectId
+                        });
+                      }
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-purple-300 hover:bg-[#211745]' : 'text-purple-700 hover:bg-purple-50'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                  >
+                    <Folder className="w-3.5 h-3.5 text-purple-400" /> Move Chat to Project
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsProjectsModalOpen(true);
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-indigo-300 hover:bg-[#211745]' : 'text-indigo-700 hover:bg-indigo-50'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-indigo-400" /> Manage Projects
+                  </button>
+                  <div className={`my-1 border-t ${isDarkMode ? 'border-[#302166]' : 'border-slate-100'}`} />
                   <button
                     onClick={() => {
                       if (navigator.share) {
@@ -5847,6 +6231,44 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         onClose={() => setIsWorkflowOrchestratorOpen(false)}
         onSendPromptToChat={(promptText) => handleSendMessage(promptText)}
       />
+
+      {/* ChatGPT-style Arohi Projects Workspace Modal */}
+      <ArohiProjectsModal
+        isOpen={isProjectsModalOpen}
+        onClose={() => setIsProjectsModalOpen(false)}
+        projects={projects}
+        savedChats={savedChats}
+        activeProjectId={activeProjectId}
+        onSelectProject={(projId) => setActiveProjectId(projId)}
+        onCreateProject={handleCreateProject}
+        onUpdateProject={handleUpdateProject}
+        onDeleteProject={handleDeleteProject}
+        onStartChatInProject={handleStartChatInProject}
+        onMoveChatToProject={handleMoveChatToProject}
+        onOpenChat={(chatId) => {
+          const found = savedChats.find(c => c.id === chatId);
+          if (found) {
+            setActiveChatId(found.id);
+            setMessages(found.messages);
+          }
+        }}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Move Chat to Project Modal */}
+      {moveChatModalTarget && (
+        <MoveChatToProjectModal
+          isOpen={Boolean(moveChatModalTarget)}
+          onClose={() => setMoveChatModalTarget(null)}
+          chatId={moveChatModalTarget.chatId}
+          chatTitle={moveChatModalTarget.title}
+          currentProjectId={moveChatModalTarget.currentProjectId}
+          projects={projects}
+          onMoveChat={handleMoveChatToProject}
+          onCreateProject={handleCreateProject}
+          isDarkMode={isDarkMode}
+        />
+      )}
 
     </div>
   );
