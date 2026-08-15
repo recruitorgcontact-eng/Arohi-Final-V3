@@ -3209,9 +3209,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 {/* Message Header Role Tag */}
                 <div className="flex items-center gap-2 mb-1.5 px-1">
                   {msg.role === 'assistant' ? (
-                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isDarkMode ? 'text-[#c084fc]' : 'text-purple-700 font-extrabold'}`}>
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>AROHI AI</span>
+                    <div className="flex items-center gap-2">
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-purple-950/90 via-[#22134a] to-indigo-950/90 text-purple-200 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.2)]' 
+                          : 'bg-purple-100 text-purple-950 border border-purple-300 shadow-xs'
+                      }`}>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Arohi Xaldra 7.0</span>
+                      </div>
                     </div>
                   ) : (
                     <div className={`flex items-center gap-1.5 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -3448,34 +3454,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Audience Category & Prompt Selector Row */}
-        <div className="px-4 sm:px-8 max-w-4xl mx-auto w-full mb-1">
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[10px] font-bold">
-            {[
-              { id: 'all', label: '🌟 All (20+ Audiences)' },
-              { id: 'students', label: '🎓 Students & School' },
-              { id: 'jobs', label: '💼 Jobs & Careers' },
-              { id: 'sarkari', label: '🏛️ Sarkari Exams' },
-              { id: 'msme', label: '🏢 MSMEs & Startups' },
-              { id: 'academics', label: '👩‍🏫 Teachers & Academics' },
-              { id: 'research_medical', label: '🔬 Healthcare & Research' },
-              { id: 'homemakers', label: '🏡 Homemakers & SHG' }
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedAudienceCategory(cat.id)}
-                className={`px-2.5 py-1 rounded-full shrink-0 transition-all cursor-pointer ${
-                  selectedAudienceCategory === cat.id
-                    ? (isDarkMode ? 'bg-[#211742] text-white border border-[#5b3dae] font-extrabold shadow-sm' : 'bg-purple-100 text-purple-950 border border-purple-300 font-extrabold shadow-xs')
-                    : (isDarkMode ? 'bg-[#0f0b1e] text-slate-400 hover:text-slate-200 border border-[#1e1738]' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 shadow-2xs')
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* GEMINI AMBIENT AURA FLOATING BOTTOM DOCK BAR */}
         <div className="p-3 sm:p-4 max-w-4xl mx-auto w-full z-20">
           
@@ -3519,6 +3497,21 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               </button>
             </div>
           )}
+
+          {/* Arohi Xaldra 7.0 Model Indicator Watermark */}
+          <div className="flex items-center justify-between px-3.5 pb-1.5 text-[11px]">
+            <div className="flex items-center gap-1.5 font-semibold select-none">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Model:</span>
+              <span className="font-extrabold bg-gradient-to-r from-purple-400 via-violet-300 to-indigo-300 bg-clip-text text-transparent">
+                Arohi Xaldra 7.0
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block"></span>
+              <span className={isDarkMode ? 'text-emerald-400/90 font-semibold' : 'text-emerald-700 font-semibold'}>Zero-Downtime Active</span>
+            </div>
+          </div>
 
           {/* Floating Gemini Capsule Dock */}
           <div className={`${
@@ -3588,8 +3581,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </button>
           </div>
 
-          <div className={`mt-2 text-center text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'} font-medium`}>
-            Arohi AI can make mistakes. Check important info.
+          <div className={`mt-2 text-center text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'} font-medium flex items-center justify-center gap-2`}>
+            <span>Arohi Xaldra 7.0</span>
+            <span>•</span>
+            <span>Arohi AI Universal Ecosystem</span>
           </div>
         </div>
 

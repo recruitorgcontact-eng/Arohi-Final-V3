@@ -119,6 +119,7 @@ export default function WelcomeLanding({
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [drawerLangSearch, setDrawerLangSearch] = useState('');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -1440,26 +1441,81 @@ export default function WelcomeLanding({
                   </button>
                 </div>
 
-                {/* Language Switcher inside Drawer */}
+                {/* Language Switcher inside Drawer with Full Scrolling & Search */}
                 <div className="space-y-2 pt-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Language ({language.toUpperCase()})</p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {LANGUAGES_LIST.slice(0, 6).map((l) => (
+                  <div className="flex items-center justify-between px-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Language ({language.toUpperCase()})
+                    </p>
+                    <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                      {LANGUAGES_LIST.length} Languages
+                    </span>
+                  </div>
+
+                  {/* Optional Quick Search Filter for Languages */}
+                  <div className="relative px-1">
+                    <input
+                      type="text"
+                      value={drawerLangSearch}
+                      onChange={(e) => setDrawerLangSearch(e.target.value)}
+                      placeholder="Search language..."
+                      className={`w-full text-xs px-3 py-1.5 rounded-xl border outline-none transition-all ${
+                        isDarkMode
+                          ? 'bg-[#0a0c1a] border-slate-850 text-slate-100 placeholder:text-slate-500 focus:border-purple-500'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-purple-400'
+                      }`}
+                    />
+                    {drawerLangSearch && (
                       <button
-                        key={l.code}
-                        onClick={() => {
-                          onLanguageChange(l.code as Language);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all cursor-pointer ${
-                          language === l.code 
-                            ? 'bg-purple-600 text-white' 
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}
+                        onClick={() => setDrawerLangSearch('')}
+                        className="absolute right-3 top-1.5 text-[10px] text-slate-400 hover:text-white font-bold"
                       >
-                        {l.native}
+                        ✕
                       </button>
-                    ))}
+                    )}
+                  </div>
+
+                  {/* Scrollable Languages Grid */}
+                  <div className="grid grid-cols-2 gap-1.5 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                    {LANGUAGES_LIST.filter((l) => {
+                      if (!drawerLangSearch.trim()) return true;
+                      const q = drawerLangSearch.toLowerCase();
+                      return (
+                        l.native.toLowerCase().includes(q) ||
+                        l.english.toLowerCase().includes(q) ||
+                        l.code.toLowerCase().includes(q)
+                      );
+                    }).map((l) => {
+                      const isSelected = language === l.code;
+                      return (
+                        <button
+                          key={l.code}
+                          onClick={() => {
+                            onLanguageChange(l.code as Language);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`px-3 py-2 rounded-xl text-left transition-all cursor-pointer flex flex-col justify-center min-w-0 border ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-900/30'
+                              : isDarkMode
+                              ? 'bg-[#111428] hover:bg-[#191e3a] border-slate-800/80 text-slate-200 hover:border-slate-700'
+                              : 'bg-slate-100 hover:bg-purple-50 border-slate-200 text-slate-700 hover:text-purple-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-bold truncate">{l.native}</span>
+                            {isSelected && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] shrink-0 shadow-[0_0_6px_#00e676]"></span>
+                            )}
+                          </div>
+                          {l.native !== l.english && (
+                            <span className={`text-[9px] truncate ${isSelected ? 'text-purple-200' : 'text-slate-400'}`}>
+                              {l.english}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

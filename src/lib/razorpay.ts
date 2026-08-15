@@ -97,7 +97,7 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
           razorpay_order_id: orderData.order_id,
           razorpay_payment_id: demoPaymentId,
           razorpay_signature: demoSig,
-          userEmail: options.userEmail || 'elitetraderjunoon@gmail.com',
+          userEmail: options.userEmail || '',
           planName: options.planName,
           amount: rawPrice,
           currency: currency
@@ -138,11 +138,12 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
       order_id: orderData.order_id,
       prefill: {
         name: options.userName || '',
-        email: options.userEmail || 'elitetraderjunoon@gmail.com',
+        email: options.userEmail || '',
         contact: options.userPhone || ''
       },
       notes: {
         planName: options.planName,
+        userEmail: options.userEmail || '',
         ...options.notes
       },
       theme: {
@@ -162,7 +163,7 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
               razorpay_order_id: paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
               razorpay_signature: paymentResponse.razorpay_signature,
-              userEmail: options.userEmail || 'elitetraderjunoon@gmail.com',
+              userEmail: options.userEmail || '',
               planName: options.planName,
               amount: rawPrice,
               currency: currency
@@ -230,7 +231,7 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
                 razorpay_order_id: orderData.order_id,
                 razorpay_payment_id: fallbackPayId,
                 razorpay_signature: fallbackSig,
-                userEmail: options.userEmail || 'elitetraderjunoon@gmail.com',
+                userEmail: options.userEmail || '',
                 planName: options.planName,
                 amount: options.amountInRupees
               })

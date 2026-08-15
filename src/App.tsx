@@ -636,6 +636,7 @@ export default function App() {
   const [pendingSubscriptionDetail, setPendingSubscriptionDetail] = useState<{ tierName: string; price: number; margin: number } | null>(null);
 
   const [checkoutPath, setCheckoutPath] = useState<{ id: string; title: string; price: string } | null>(null);
+  const [customerEmailInput, setCustomerEmailInput] = useState<string>('');
   const [selectedPaymentGateway, setSelectedPaymentGateway] = useState<'upi' | 'googleplay'>('upi');
   const [isProcessingPlayStore, setIsProcessingPlayStore] = useState<boolean>(false);
   const [playStoreSuccess, setPlayStoreSuccess] = useState<boolean>(false);
@@ -834,26 +835,28 @@ export default function App() {
         updatedDetails[pathId] = { tierName: 'Starter Plan', price: 399, margin: 199.5 };
       }
       
+      const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
       // Trace this subscription event
       fetch('/api/track-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'enroll',
-          description: `User elitetraderjunoon@gmail.com activated subscription for "${planName || pathId}" via ${paymentMethod || 'Web Gateway'}`,
-          metadata: { planId: pathId, user: 'elitetraderjunoon@gmail.com', method: paymentMethod || 'Web Gateway' }
+          description: `User ${activeUserEmail} activated subscription for "${planName || pathId}" via ${paymentMethod || 'Web Gateway'}`,
+          metadata: { planId: pathId, user: activeUserEmail, method: paymentMethod || 'Web Gateway' }
         })
       }).catch(err => console.log('Telemetry offline:', err));
     } else {
       delete updatedDetails[pathId];
+      const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
       
       fetch('/api/track-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'admin',
-          description: `User elitetraderjunoon@gmail.com cancelled subscription for "${planName || pathId}"`,
-          metadata: { planId: pathId, user: 'elitetraderjunoon@gmail.com' }
+          description: `User ${activeUserEmail} cancelled subscription for "${planName || pathId}"`,
+          metadata: { planId: pathId, user: activeUserEmail }
         })
       }).catch(err => console.log('Telemetry offline:', err));
     }
@@ -3037,6 +3040,7 @@ export default function App() {
                   const finalPayable = Math.max(0, chosenTier.price - coinsToRedeem);
                   const priceText = coinsToRedeem > 0 ? `${sym}${finalPayable} (${sym}${coinsToRedeem} Off via Coins)` : `${sym}${chosenTier.price}`;
                   
+                  const dynamicEmail = user?.email || customerEmailInput.trim() || 'customer@arohiai.com';
                   setCheckoutPath({
                     id: 'path1',
                     title: title,
@@ -3048,7 +3052,7 @@ export default function App() {
                       amountInRupees: finalPayable,
                       currency: currency,
                       planName: title,
-                      userEmail: user?.email || 'elitetraderjunoon@gmail.com',
+                      userEmail: dynamicEmail,
                       userName: user?.displayName || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
                         setIsProcessingRazorpay(false);
@@ -3669,6 +3673,24 @@ export default function App() {
                 </span>
               </div>
 
+              {/* Dynamic User Email for Receipt & Subscription */}
+              <div className="border-t border-[#1d274f] pt-3 space-y-1.5 text-left">
+                <label className="text-[10px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Billing / Account Email Address</span>
+                </label>
+                <input
+                  type="email"
+                  value={customerEmailInput || user?.email || ''}
+                  onChange={(e) => setCustomerEmailInput(e.target.value)}
+                  placeholder="Enter your email for payment receipt"
+                  className="w-full bg-[#0a0f24] border border-[#2d3a6d] rounded-xl px-3 py-2 text-xs font-semibold text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-400"
+                />
+                <p className="text-[9px] text-slate-400">
+                  Your Razorpay payment receipt & subscription confirmation will be sent to this email.
+                </p>
+              </div>
+
               <div className="border-t border-[#1d274f] pt-3 space-y-1.5 text-xs text-slate-300">
                 <div className="flex justify-between">
                   <span>Gateway Provider:</span>
@@ -3689,6 +3711,11 @@ export default function App() {
               <button
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
+                  const effectiveEmail = (customerEmailInput.trim() || user?.email || '').trim();
+                  if (!effectiveEmail) {
+                    alert('Please enter your email address to proceed with Razorpay checkout.');
+                    return;
+                  }
                   const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
                   setIsProcessingRazorpay(true);
                   try {
@@ -3696,8 +3723,8 @@ export default function App() {
                       amountInRupees: numericPrice,
                       currency: currency,
                       planName: checkoutPath.title,
-                      userEmail: user?.email || 'elitetraderjunoon@gmail.com',
-                      userName: user?.displayName || 'Arohi AI Premium Member',
+                      userEmail: effectiveEmail,
+                      userName: user?.displayName || effectiveEmail.split('@')[0] || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
                         setIsProcessingRazorpay(false);
                         const planTitle = checkoutPath.title;

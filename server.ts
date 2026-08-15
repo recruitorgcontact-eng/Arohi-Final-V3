@@ -2489,7 +2489,24 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     }
   } catch (e) {}
 
-  console.warn("All Gemini API models temporarily unavailable or quota limited. Using resilient Arohi AI fallback engine...");
+  // 3. Resilient Secondary LLM Engine: Groq (DeepSeek R1 / Llama 3.3 70B)
+  try {
+    const groqResponse = await callGroqChatFallback(
+      Array.isArray(options?.contents) ? options.contents : [{ role: 'user', content: extractedPrompt }],
+      options?.config?.systemInstruction
+    );
+    if (groqResponse && groqResponse.trim()) {
+      console.log("[Arohi Xaldra 7.0] Successfully delivered response via Groq DeepSeek/Llama secondary engine.");
+      return {
+        text: groqResponse.trim(),
+        candidates: [{ content: { parts: [{ text: groqResponse.trim() }] } }]
+      };
+    }
+  } catch (groqErr) {
+    console.warn("[Groq Fallback] Error in Groq inference:", groqErr);
+  }
+
+  console.warn("All Gemini and Groq API models temporarily unavailable or quota limited. Using resilient Arohi AI fallback engine...");
   let liveSearchData: any[] = [];
   try {
     if (requiresRealtimeSearch(extractedPrompt)) {
@@ -2502,6 +2519,181 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
     text: fallbackText,
     candidates: [{ content: { parts: [{ text: fallbackText }] } }]
   };
+}
+
+// Ultra-fast Groq API Fallback Engine (DeepSeek R1 / Llama 3.3 70B)
+async function callGroqChatFallback(
+  contents: any[],
+  systemInstruction?: string
+): Promise<string | null> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || !apiKey.trim()) return null;
+
+  const groqModels = [
+    'deepseek-r1-distill-llama-70b',
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant'
+  ];
+
+  const chatMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction && systemInstruction.trim()) {
+    chatMessages.push({ role: 'system', content: systemInstruction.trim() });
+  }
+
+  if (Array.isArray(contents)) {
+    for (const c of contents) {
+      if (!c) continue;
+      const role = c.role === 'model' || c.role === 'assistant' ? 'assistant' : 'user';
+      let text = '';
+      if (typeof c === 'string') {
+        text = c;
+      } else if (Array.isArray(c.parts)) {
+        text = c.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).join(' ');
+      } else if (typeof c.content === 'string') {
+        text = c.content;
+      }
+      if (text.trim()) {
+        chatMessages.push({ role, content: text.trim() });
+      }
+    }
+  }
+
+  if (chatMessages.length === 0) return null;
+
+  for (const model of groqModels) {
+    try {
+      console.log(`[Arohi Xaldra 7.0 / Groq Engine] Attempting inference on ${model}...`);
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: chatMessages,
+          temperature: 0.7,
+          max_tokens: 4096
+        })
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const content = data?.choices?.[0]?.message?.content;
+        if (content && content.trim()) {
+          console.log(`[Arohi Xaldra 7.0 / Groq Engine] Successfully responded using ${model}`);
+          return content.trim();
+        }
+      } else {
+        const errText = await resp.text();
+        console.warn(`[Groq Engine] Model ${model} returned status ${resp.status}:`, errText);
+      }
+    } catch (err: any) {
+      console.warn(`[Groq Engine] Network error on ${model}:`, err?.message || err);
+    }
+  }
+
+  return null;
+}
+
+// Ultra-fast Groq Streaming Fallback Engine
+async function callGroqChatStreamFallback(
+  contents: any[],
+  systemInstruction: string | undefined,
+  onChunk: (chunk: string) => void
+): Promise<string | null> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || !apiKey.trim()) return null;
+
+  const groqModels = [
+    'deepseek-r1-distill-llama-70b',
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant'
+  ];
+
+  const chatMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction && systemInstruction.trim()) {
+    chatMessages.push({ role: 'system', content: systemInstruction.trim() });
+  }
+
+  if (Array.isArray(contents)) {
+    for (const c of contents) {
+      if (!c) continue;
+      const role = c.role === 'model' || c.role === 'assistant' ? 'assistant' : 'user';
+      let text = '';
+      if (typeof c === 'string') {
+        text = c;
+      } else if (Array.isArray(c.parts)) {
+        text = c.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).join(' ');
+      } else if (typeof c.content === 'string') {
+        text = c.content;
+      }
+      if (text.trim()) {
+        chatMessages.push({ role, content: text.trim() });
+      }
+    }
+  }
+
+  if (chatMessages.length === 0) return null;
+
+  for (const model of groqModels) {
+    try {
+      console.log(`[Arohi Xaldra 7.0 / Groq Stream Engine] Attempting streaming on ${model}...`);
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: chatMessages,
+          temperature: 0.7,
+          max_tokens: 4096,
+          stream: true
+        })
+      });
+
+      if (resp.ok && resp.body) {
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let fullText = '';
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed === 'data: [DONE]') continue;
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(trimmed.slice(6));
+                const delta = parsed?.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                  fullText += delta;
+                  onChunk(delta);
+                }
+              } catch (parseErr) {}
+            }
+          }
+        }
+
+        if (fullText.trim()) {
+          console.log(`[Arohi Xaldra 7.0 / Groq Stream Engine] Stream finished via ${model} (${fullText.length} chars)`);
+          return fullText.trim();
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[Groq Stream Engine] Error on ${model}:`, err?.message || err);
+    }
+  }
+
+  return null;
 }
 
 // Resilient API streaming helper with automatic fallback models for real-time response delivery
@@ -3870,7 +4062,28 @@ app.post('/api/chat-stream', async (req, res) => {
       }
     }
 
-    // High-speed simulated typewriter fallback if aiClient stream/api unavailable or quota limit hit
+    // 4. Fourth attempt: Stream via Groq DeepSeek R1 / Llama 3.3 70B
+    if (!streamedSuccess) {
+      try {
+        const groqStreamed = await callGroqChatStreamFallback(
+          [...formattedHistory, { role: 'user', content: messageText }],
+          dynamicInstruction,
+          (chunk) => {
+            accumulatedResponse += chunk;
+            sendChunk(chunk);
+            streamedSuccess = true;
+          }
+        );
+        if (groqStreamed && streamedSuccess) {
+          sendDone(accumulatedResponse);
+          return;
+        }
+      } catch (groqErr) {
+        console.warn('Groq streaming fallback failed:', groqErr);
+      }
+    }
+
+    // High-speed simulated typewriter fallback if aiClient & Groq stream/api unavailable or quota limit hit
     const fallbackText = getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData);
     const chunkSize = 8;
     for (let i = 0; i < fallbackText.length; i += chunkSize) {
@@ -4908,7 +5121,7 @@ Keep the tone encouraging, professional, and directly actionable. Use bold headi
   }
 });
 
-// 1.25. Analyze Voice Call Turns Endpoint using Gemini SDK
+// 1.25. Analyze Voice Call Turns Endpoint using Gemini SDK & Context-Aware Prompting
 app.post('/api/analyze-call', async (req, res) => {
   const { turns, callDuration, uid } = req.body;
   if (!turns || !Array.isArray(turns)) {
@@ -4928,24 +5141,44 @@ app.post('/api/analyze-call', async (req, res) => {
     let parsed: any = null;
     const userSpokenTurns = validatedTurns.filter(t => t.speaker === 'user');
 
-    if (aiClient && validatedTurns.length > 0 && userSpokenTurns.length > 0) {
-      const text = validatedTurns.map(t => `${t.speaker === 'user' ? 'User/Caller' : 'Arohi AI'}: ${t.text}`).join('\n');
+    if (validatedTurns.length > 0) {
+      const conversationTranscript = validatedTurns
+        .map(t => `${t.speaker === 'user' ? 'User/Caller' : 'Arohi AI'}: "${t.text}"`)
+        .join('\n');
       
-      const prompt = `Analyze the following real-time voice call transcript between a user and AROHI AI with 100% strict factual fidelity.
+      const structuredAnalysisPrompt = `You are an expert executive conversation analyst for AROHI AI.
+Analyze the following voice call transcript between the User and Arohi AI with 100% strict factual fidelity to what was ACTUALLY discussed in this specific session.
 
-CRITICAL INSTRUCTIONS:
-1. SUMMARY: Write a concise, 1-2 sentence executive summary of EXACTLY what the user asked/discussed and what guidance Arohi provided in this call.
-   - Include the real topic, subject matter, specific names, numbers, or questions mentioned by the user.
-   - NEVER make up or assume generic topics (e.g. do NOT claim they discussed brick factories, bakery setups, ATS resumes, Mudra loans, or coding exams unless specifically mentioned in this transcript).
-2. PRIORITIES / NEXT STEPS: Provide an array of exactly 2-3 actionable, concrete next steps strictly tailored to what was ACTUALLY discussed on this call.
-3. COMPLETED MILESTONES: Provide an array of 1-2 accomplishments achieved during this conversation (e.g. "Addressed user query on [topic]", "Outlined key strategies for [subject]"). Do NOT include system/API technical event descriptions.
-4. TOPICS & CLASSIFICATION: Classify whether the discussion touched upon business/finance, resumes, job recruitment, or technical courses based ONLY on the transcript.
+CRITICAL CONTEXT-AWARE EXTRACTION MANDATES:
+1. SUMMARY:
+   - Provide a factual, highly specific 1-2 sentence executive summary of the real discussion.
+   - You MUST mention the exact domain, question, or problem the user presented (e.g. specific career path, business idea, exam syllabus, technical question, language query, or product inquiry).
+   - State the specific advice, guidance, or solutions that Arohi gave during the call.
+   - ABSOLUTE PROHIBITION ON GENERIC SLOP: Never invent unmentioned topics (do NOT mention government schemes, Mudra loans, ATS evaluation, or resume tailoring unless the user or Arohi explicitly talked about them).
 
-Return a clean, valid JSON object with the following schema:
+2. KEY ACTION ITEMS & PRIORITIES:
+   - Extract 2-3 concrete, actionable next steps directly derived from what the caller needs to do next based on the advice given.
+   - Avoid vague placeholders like "Review discussion points". Be specific (e.g., "Draft the initial business proposal for [Topic]", "Practice question set on [Subject]", "Apply for [Specific Role/Scheme mentioned]").
+
+3. COMPLETED MILESTONES / KEY TOPICS DISCUSSED:
+   - Extract 2-3 specific topics or problem statements that were addressed or resolved during this conversation.
+
+4. TOPIC TAGGING & CATEGORIZATION:
+   - Dynamically identify the main topic tags (e.g., ["Tech", "Interview Prep", "MSME", "Odia Language", "Trading", "Academics"]).
+   - Set boolean flags for category classification based solely on the transcript.
+
+Return ONLY a valid JSON object matching this schema:
 {
-  "summary": "1-2 sentence faithful summary of the actual call",
-  "priorities": ["Concrete next step 1 tailored to call", "Concrete next step 2 tailored to call"],
-  "completedTasks": ["Accomplished milestone 1"],
+  "summary": "1-2 sentence precise, factual summary referencing the actual user inquiry and Arohi's answers",
+  "priorities": [
+    "Specific, actionable next step 1 tailored to the transcript",
+    "Specific, actionable next step 2 tailored to the transcript"
+  ],
+  "completedTasks": [
+    "Topic or milestone 1 addressed in the call",
+    "Topic or milestone 2 resolved in the call"
+  ],
+  "keyTopics": ["Topic 1", "Topic 2"],
   "isCareerRelated": boolean,
   "topics": {
     "business": boolean,
@@ -4955,25 +5188,44 @@ Return a clean, valid JSON object with the following schema:
   }
 }
 
-Call Transcript Turns:
-${text}`;
+VOICE CALL TRANSCRIPT:
+${conversationTranscript}`;
 
-      try {
-        const response = await generateContentWithFallback(aiClient, {
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            systemInstruction: 'You are AROHI AI, an intelligent executive conversation analyst. Synthesize voice call sessions with pristine factual accuracy and zero template hallucination.',
-            temperature: 0.2
+      // 1. Attempt using Gemini
+      if (aiClient) {
+        try {
+          const response = await generateContentWithFallback(aiClient, {
+            contents: structuredAnalysisPrompt,
+            config: {
+              responseMimeType: 'application/json',
+              systemInstruction: 'You are AROHI AI conversation intelligence engine. Extract context-aware action items, topics, and truthful summaries from live voice call sessions.',
+              temperature: 0.1
+            }
+          });
+
+          if (response && response.text) {
+            const cleanJson = response.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(cleanJson);
           }
-        });
-
-        if (response && response.text) {
-          const cleanJson = response.text.replace(/```json/gi, '').replace(/```/g, '').trim();
-          parsed = JSON.parse(cleanJson);
+        } catch (geminiErr: any) {
+          console.warn('[Voice Analysis] Gemini API call warning:', geminiErr?.message || geminiErr);
         }
-      } catch (geminiErr) {
-        console.error('Error generating AI voice call analysis with Gemini:', geminiErr);
+      }
+
+      // 2. Fallback to Groq (DeepSeek / Llama 3.3) for fast JSON analysis if Gemini unavailable
+      if (!parsed || !parsed.summary) {
+        try {
+          const groqAnalysis = await callGroqChatFallback(
+            [{ role: 'user', content: structuredAnalysisPrompt }],
+            'You are an executive conversation analyst. Output only valid JSON without markdown fences.'
+          );
+          if (groqAnalysis) {
+            const cleanJson = groqAnalysis.replace(/```json/gi, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(cleanJson);
+          }
+        } catch (groqErr) {
+          console.warn('[Voice Analysis] Groq fallback analysis warning:', groqErr);
+        }
       }
     }
 
