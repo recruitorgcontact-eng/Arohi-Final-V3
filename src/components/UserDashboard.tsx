@@ -241,16 +241,21 @@ export default function UserDashboard({
       }
 
       if (userData.profile) {
-        const pName = userData.profile.name || user.displayName || user.email?.split('@')[0] || 'Candidate Profile';
+        const rawName = userData.profile.name || user.displayName || user.email?.split('@')[0] || '';
+        const pName = (rawName === 'Candidate Profile' || rawName === 'Honored Guest' || rawName === 'Guest Candidate') ? '' : rawName;
         const pEmail = userData.profile.email || user.email || '';
-        const pPhone = userData.profile.phone || '';
-        const pLoc = userData.profile.location || '';
-        const pEdu = userData.profile.education || '';
-        const pGoal = userData.profile.activeGoal || '';
+        const rawPhone = userData.profile.phone || '';
+        const pPhone = rawPhone === '+91 98765 43210' ? '' : rawPhone;
+        const rawLoc = userData.profile.location || '';
+        const pLoc = (rawLoc === 'Delhi NCR' || rawLoc === 'Delhi') ? '' : rawLoc;
+        const rawEdu = userData.profile.education || '';
+        const pEdu = (rawEdu === 'Graduate' || rawEdu === 'Business Owner') ? '' : rawEdu;
+        const rawGoal = userData.profile.activeGoal || '';
+        const pGoal = (rawGoal === 'Skills, Courses & Career Preparation' || rawGoal === 'Mudra Loan Business & Franchise Setup' || rawGoal.toLowerCase() === 'career upskilling') ? '' : rawGoal;
         const pResume = (userData as any).profile?.resumeUrl || '';
 
         setProfile({
-          name: pName,
+          name: pName || user.displayName || user.email?.split('@')[0] || 'Candidate Profile',
           email: pEmail,
           phone: pPhone,
           location: pLoc,
@@ -259,7 +264,7 @@ export default function UserDashboard({
           resumeUrl: pResume
         });
         
-        setEditedName(pName);
+        setEditedName(pName || user.displayName || user.email?.split('@')[0] || '');
         setEditedPhone(pPhone);
         setEditedLocation(pLoc);
         setEditedEducation(pEdu);
@@ -347,16 +352,21 @@ export default function UserDashboard({
         businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 0
       });
 
-      const guestName = localStorage.getItem('recruit_user_name') || 'Guest Candidate';
+      const rawGuestName = localStorage.getItem('recruit_user_name') || '';
+      const guestName = (rawGuestName === 'Candidate Profile' || rawGuestName === 'Honored Guest' || rawGuestName === 'Guest Candidate') ? '' : rawGuestName;
       const guestEmail = localStorage.getItem('recruit_user_email') || '';
-      const guestPhone = localStorage.getItem('recruit_user_phone') || '';
-      const guestLocation = localStorage.getItem('recruit_user_location') || '';
-      const guestEducation = localStorage.getItem('recruit_user_education') || '';
-      const guestGoal = localStorage.getItem('recruit_user_active_goal') || '';
+      const rawGuestPhone = localStorage.getItem('recruit_user_phone') || '';
+      const guestPhone = rawGuestPhone === '+91 98765 43210' ? '' : rawGuestPhone;
+      const rawGuestLocation = localStorage.getItem('recruit_user_location') || '';
+      const guestLocation = (rawGuestLocation === 'Delhi NCR' || rawGuestLocation === 'Delhi') ? '' : rawGuestLocation;
+      const rawGuestEducation = localStorage.getItem('recruit_user_education') || '';
+      const guestEducation = (rawGuestEducation === 'Graduate' || rawGuestEducation === 'Business Owner') ? '' : rawGuestEducation;
+      const rawGuestGoal = localStorage.getItem('recruit_user_active_goal') || '';
+      const guestGoal = (rawGuestGoal === 'Skills, Courses & Career Preparation' || rawGuestGoal === 'Mudra Loan Business & Franchise Setup' || rawGuestGoal.toLowerCase() === 'career upskilling') ? '' : rawGuestGoal;
       const guestResume = localStorage.getItem('recruit_guest_resume_url') || '';
 
       setProfile({
-        name: guestName,
+        name: guestName || 'Guest Candidate',
         email: guestEmail,
         phone: guestPhone,
         location: guestLocation,

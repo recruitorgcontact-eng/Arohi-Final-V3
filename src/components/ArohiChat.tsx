@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid, Box
+  Brain, Cpu, Layers, Workflow, Clock, Folder, Grid, Box, Maximize2, Eye
 } from 'lucide-react';
 import Arohi3DLearningWorkspace from './learning3d/Arohi3DLearningWorkspace';
 import McpGatewayModal from './McpGatewayModal';
@@ -95,6 +95,80 @@ function preprocessMarkdownLinks(text: string): string {
   });
 
   return cleaned;
+}
+
+// Global helper functions for Image Sharing & Download
+export async function downloadArohiImage(url: string, filename = `arohi-image-${Date.now()}.jpg`) {
+  try {
+    if (url.startsWith('data:')) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+}
+
+export async function shareArohiImage(url: string, title = 'Arohi AI Generated Image') {
+  try {
+    if (navigator.share) {
+      if (url.startsWith('http')) {
+        await navigator.share({
+          title,
+          text: `Created with Arohi AI: ${title}`,
+          url: url
+        });
+        return;
+      } else if (url.startsWith('data:')) {
+        try {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const file = new File([blob], `${title.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title,
+              text: `Created with Arohi AI: ${title}`
+            });
+            return;
+          }
+        } catch {
+          // fallback
+        }
+      }
+    }
+    if (url.startsWith('http')) {
+      await navigator.clipboard.writeText(url);
+      alert('Image link copied to clipboard!');
+    } else {
+      downloadArohiImage(url, `${title.replace(/\s+/g, '_')}.jpg`);
+    }
+  } catch (err: any) {
+    if (err.name !== 'AbortError') {
+      console.warn('Share error:', err);
+    }
+  }
 }
 
 function renderMarkdown(content: string, isDarkMode = true) {
@@ -238,19 +312,51 @@ function renderMarkdown(content: string, isDarkMode = true) {
   lines.forEach((line, index) => {
     const trimmed = line.trim();
     
-    // Check for Headers
+    // Check for Headers & Media
     if (trimmed.startsWith('![')) {
       pushList(index);
       const match = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
       if (match) {
-        const alt = match[1];
+        const alt = match[1] || 'Generated AI Artwork';
         const src = match[2];
         elements.push(
-          <div key={index} className={`my-3 rounded-xl overflow-hidden border ${isDarkMode ? 'border-[#7c3aed]/50 bg-[#0b081f]' : 'border-purple-200 bg-purple-50/60'} shadow-2xl p-2 text-center group`}>
-            <img src={src} alt={alt} className="w-full h-auto max-h-[420px] object-cover rounded-lg shadow-md transition-all group-hover:scale-[1.01]" referrerPolicy="no-referrer" />
-            <p className={`text-[11px] ${isDarkMode ? 'text-slate-200' : 'text-slate-700'} mt-2 font-semibold flex items-center justify-center gap-1.5`}>
-              <Sparkles className={`w-3.5 h-3.5 ${isDarkMode ? 'text-violet-400' : 'text-purple-600'}`} /> {alt || 'Generated Image'}
-            </p>
+          <div key={index} className={`my-3 rounded-2xl overflow-hidden border ${isDarkMode ? 'border-violet-500/30 bg-[#0d0922]' : 'border-slate-200 bg-slate-50/80'} shadow-xl p-2 group relative max-w-2xl mx-auto`}>
+            <div className="relative overflow-hidden rounded-xl bg-black/20">
+              <img 
+                src={src} 
+                alt={alt} 
+                className="w-full h-auto max-h-[460px] object-cover rounded-xl shadow-md transition-all duration-300 group-hover:scale-[1.008]" 
+                referrerPolicy="no-referrer" 
+              />
+              {/* Floating Action Overlay on Image: Instant Download & Share */}
+              <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadArohiImage(src, `${alt.replace(/\s+/g, '_')}.jpg`);
+                  }}
+                  className="text-white hover:text-cyan-300 flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md transition-colors cursor-pointer"
+                  title="Download Image"
+                >
+                  <Download className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Download</span>
+                </button>
+                <div className="w-[1px] h-3 bg-white/25" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    shareArohiImage(src, alt);
+                  }}
+                  className="text-white hover:text-purple-300 flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md transition-colors cursor-pointer"
+                  title="Share Image"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-purple-300" />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
           </div>
         );
       } else {
@@ -1784,30 +1890,35 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       return;
     }
 
-    const isImageRequest = lowerText.startsWith('generate image') || 
-                           lowerText.startsWith('create image') || 
-                           lowerText.startsWith('draw') || 
-                           lowerText.startsWith('/image') || 
-                           lowerText.includes('feature 8') || 
-                           lowerText.includes('feature #8') || 
-                           lowerText.includes('generate high-quality images') || 
-                           lowerText.includes('generate high quality images') || 
-                           lowerText.includes('generate an image of') || 
-                           lowerText.includes('generate image of') || 
-                           lowerText.includes('create a logo for') ||
-                           lowerText.includes('create an image of');
+    const isImageRequest = 
+      /^\/image\b/i.test(text) ||
+      /\b(generate|create|make|draw|render|paint|design)\b.*?\b(image|picture|photo|logo|illustration|artwork|wallpaper|avatar|robot|portrait|workspace|office|interior)\b/i.test(text) ||
+      /\b(image\s+of|picture\s+of|photo\s+of|sketch\s+of|painting\s+of|drawing\s+of)\b/i.test(text) ||
+      lowerText.startsWith('generate image') || 
+      lowerText.startsWith('create image') || 
+      lowerText.startsWith('draw') || 
+      lowerText.startsWith('/image') || 
+      lowerText.includes('feature 8') || 
+      lowerText.includes('feature #8') || 
+      lowerText.includes('generate high-quality images') || 
+      lowerText.includes('generate high quality images') || 
+      lowerText.includes('generate an image of') || 
+      lowerText.includes('generate image of') || 
+      lowerText.includes('create a logo for') ||
+      lowerText.includes('create an image of') ||
+      (lowerText.includes('realistic') && messages.length > 0 && messages.some(m => m.content.includes('![')));
 
     if (isImageRequest) {
       let promptText = text
-        .replace(/^(feature 8|feature #8|implement feature 8|generate high-quality images|generate high quality images|generate image of|create image of|generate an image of|create an image of|create a logo for|generate image|create image|draw|\/image)/i, '')
+        .replace(/^(feature 8|feature #8|implement feature 8|generate high-quality images|generate high quality images|generate image of|create image of|generate an image of|create an image of|create a logo for|generate image|create image|draw|\/image|make an image of|make image of|render an image of|draw an image of|create a picture of|picture of|photo of)/i, '')
         .trim();
-      if (!promptText) promptText = "High-resolution hero banner and concept art for modern tech ecosystem";
+      if (!promptText) promptText = text;
 
       const loadingMsgId = (Date.now() + 1).toString();
       const loadingAssistantMessage: Message = {
         id: loadingMsgId,
         role: 'assistant',
-        content: `✨ *Arohi AI Image Engine is crafting your high-quality artwork for: "${promptText}"...*`,
+        content: `🎨 *Creating image...*`,
         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -1827,14 +1938,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         const data = await res.json();
 
         if (data.success && data.imageUrl) {
-          const formattedResponse = `Here is the high-quality AI artwork generated for your request:
-
-![${promptText}](${data.imageUrl})
-
-**Prompt**: ${promptText}
-**Aspect Ratio**: 16:9 High-Res Banner | **Style**: Photorealistic 8K
-
-*Created using Arohi AI: Generate High-Quality Images Studio.*`;
+          // Deliver purely the image result directly without extra unnecessary text
+          const formattedResponse = `![${promptText}](${data.imageUrl})`;
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
@@ -1846,7 +1951,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
               userEmail: uEmail,
               userName: uName,
               sender: 'arohi',
-              text: `[Image Generated for prompt: ${promptText}]`,
+              text: `[Image Generated: ${promptText}]`,
               topic: activeTopic
             })
           }).catch(() => {});
@@ -2590,9 +2695,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       <aside 
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 ${
+        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
           isDarkMode ? 'bg-[#090714] border-[#1a142e] text-slate-100' : 'bg-[#f1f3fa] border-slate-200 text-slate-900'
-        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl`}
+        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl overflow-hidden`}
       >
         {/* Sidebar Header: Brand + Search + Close */}
         <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
@@ -2768,7 +2873,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
 
         {/* Scrollable Conversation History */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 px-1 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1.5 px-1 arohi-recents-scrollbar custom-scrollbar overscroll-contain">
           {activeTab === 'chats' ? (
             filteredChats.length === 0 ? (
               <div className={`text-center py-8 text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-medium`}>
@@ -2939,6 +3044,36 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
               {activeMessageMenuId === 'header' && (
                 <div className={`absolute right-0 top-11 w-52 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        const allText = messages.map(m => `${m.role === 'user' ? 'User' : 'Arohi AI'}: ${m.content}`).join('\n\n');
+                        navigator.share({
+                          title: activeChatTitle || 'Arohi AI Conversation',
+                          text: allText
+                        }).catch(() => {});
+                      } else {
+                        const allText = messages.map(m => `${m.role === 'user' ? 'User' : 'Arohi AI'}: ${m.content}`).join('\n\n');
+                        navigator.clipboard.writeText(allText);
+                        alert('Conversation copied to clipboard!');
+                      }
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-purple-300 hover:bg-[#211745]' : 'text-purple-700 hover:bg-purple-50'} rounded-xl flex items-center gap-2`}
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-purple-400" /> Share Conversation
+                  </button>
+                  <button
+                    onClick={() => {
+                      const allText = messages.map(m => `### ${m.role === 'user' ? 'User' : 'Arohi AI'}\n${m.content}`).join('\n\n---\n\n');
+                      exportToPDF(activeChatTitle || 'Arohi_Conversation', 'Arohi AI Conversation Transcript', allText);
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-cyan-300 hover:bg-[#211745]' : 'text-cyan-700 hover:bg-cyan-50'} rounded-xl flex items-center gap-2`}
+                  >
+                    <Download className="w-3.5 h-3.5 text-cyan-400" /> Download PDF
+                  </button>
+                  <div className={`my-1 border-t ${isDarkMode ? 'border-[#302166]' : 'border-slate-100'}`} />
                   <button
                     onClick={() => {
                       setIsMemoryModalOpen(true);
@@ -3168,7 +3303,58 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       </button>
 
                       {activeMessageMenuId === msg.id && (
-                        <div className={`absolute left-0 bottom-8 w-44 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl p-1.5 z-30 animate-in fade-in zoom-in-95 duration-150`}>
+                        <div className={`absolute left-0 bottom-8 w-48 ${isDarkMode ? 'bg-[#120c2b] border-[#302166] text-slate-200' : 'bg-white border-slate-200 text-slate-700 shadow-xl'} border rounded-2xl p-1.5 z-30 animate-in fade-in zoom-in-95 duration-150`}>
+                          {/* Image specific Share and Download buttons */}
+                          {(() => {
+                            const imgMatch = msg.content.match(/!\[(.*?)\]\((.*?)\)/);
+                            if (imgMatch) {
+                              const altText = imgMatch[1] || 'arohi-artwork';
+                              const imgSrc = imgMatch[2];
+                              return (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      shareArohiImage(imgSrc, altText);
+                                      setActiveMessageMenuId(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-purple-300 hover:bg-[#211745] hover:text-white' : 'text-purple-700 hover:bg-purple-50 hover:text-purple-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                                  >
+                                    <Share2 className="w-3.5 h-3.5 text-purple-400" /> Share Image
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      downloadArohiImage(imgSrc, `${altText.replace(/\s+/g, '_')}.jpg`);
+                                      setActiveMessageMenuId(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-cyan-300 hover:bg-[#211745] hover:text-white' : 'text-cyan-700 hover:bg-cyan-50 hover:text-cyan-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                                  >
+                                    <Download className="w-3.5 h-3.5 text-cyan-400" /> Download Image
+                                  </button>
+                                  <div className={`my-1 border-t ${isDarkMode ? 'border-[#302166]' : 'border-slate-100'}`} />
+                                </>
+                              );
+                            }
+                            return (
+                              <button
+                                onClick={() => {
+                                  if (navigator.share) {
+                                    navigator.share({
+                                      title: 'Arohi AI Response',
+                                      text: parsed.cleanedContent
+                                    }).catch(() => {});
+                                  } else {
+                                    navigator.clipboard.writeText(parsed.cleanedContent);
+                                    alert('Response copied to clipboard!');
+                                  }
+                                  setActiveMessageMenuId(null);
+                                }}
+                                className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-purple-300 hover:bg-[#211745] hover:text-white' : 'text-purple-700 hover:bg-purple-50 hover:text-purple-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                              >
+                                <Share2 className="w-3.5 h-3.5 text-purple-400" /> Share Text
+                              </button>
+                            );
+                          })()}
+
                           <button
                             onClick={() => {
                               exportToPDF('Arohi_AI_Response', 'Arohi AI Response Document', parsed.cleanedContent);

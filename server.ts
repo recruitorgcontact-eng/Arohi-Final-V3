@@ -619,24 +619,21 @@ app.post('/api/auth/signup', async (req, res) => {
       profile: {
         name: name,
         email: email,
-        phone: mobile || '+91 98765 43210',
-        location: 'Delhi NCR',
-        education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
-        activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+        phone: mobile || '',
+        location: '',
+        education: '',
+        activeGoal: ''
       },
       enrolledCourses: [],
       completedModules: {},
       checkedChecklist: {},
       earnedCertificates: [],
-      savedItems: [
-        { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-        { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-      ],
+      savedItems: [],
       applications: [],
       diagnostics: {
-        atsScore: 74,
+        atsScore: 0,
         interviewScore: 0,
-        businessScore: 84
+        businessScore: 0
       },
       activities: [],
       updatedAt: new Date().toISOString()
@@ -697,24 +694,21 @@ app.post('/api/auth/signin', async (req, res) => {
         profile: {
           name: data.displayName || 'Honored Guest',
           email: email,
-          phone: '+91 98765 43210',
-          location: 'Delhi NCR',
-          education: 'Graduate',
-          activeGoal: 'Skills, Courses & Career Preparation'
+          phone: '',
+          location: '',
+          education: '',
+          activeGoal: ''
         },
         enrolledCourses: [],
         completedModules: {},
         checkedChecklist: {},
         earnedCertificates: [],
-        savedItems: [
-          { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-          { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-        ],
+        savedItems: [],
         applications: [],
         diagnostics: {
-          atsScore: 74,
+          atsScore: 0,
           interviewScore: 0,
-          businessScore: 84
+          businessScore: 0
         },
         activities: [],
         updatedAt: new Date().toISOString()
@@ -763,24 +757,21 @@ app.post('/api/auth/google-sync', async (req, res) => {
         profile: {
           name: displayName || 'Honored Guest',
           email: email || '',
-          phone: '+91 98765 43210',
-          location: 'Delhi NCR',
-          education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
-          activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+          phone: '',
+          location: '',
+          education: '',
+          activeGoal: ''
         },
         enrolledCourses: [],
         completedModules: {},
         checkedChecklist: {},
         earnedCertificates: [],
-        savedItems: [
-          { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-          { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-        ],
+        savedItems: [],
         applications: [],
         diagnostics: {
-          atsScore: 74,
+          atsScore: 0,
           interviewScore: 0,
-          businessScore: 84
+          businessScore: 0
         },
         activities: [],
         updatedAt: new Date().toISOString()
@@ -2833,6 +2824,9 @@ When asked what Arohi AI can do for Divyang, physically disabled, specially able
 
 Response Guidelines:
 - Always be respectful, professional, and factual.
+- CLEAN & DIRECT IMAGE DELIVERY DIRECTIVE:
+  * When asked to generate, create, draw, or render an image or artwork, deliver the visual result directly.
+  * DO NOT append unwanted long explanatory essays, unsolicited blueprints, technical specifications, or unnecessary commentary after the image unless specifically requested by the user.
 - STRICT RELEVANCE & NO UNPROMPTED MINISTERIAL MENTIONS DIRECTIVE:
   * Answer strictly what the user asks. Stay 100% focused on the user's specific query, problem, or topic.
   * DO NOT introduce, mention, or bring up ministers, politicians, or public officials (such as Dharmendra Pradhan, Annapurna Devi, or any Union/State ministers) UNLESS the user explicitly asks about that specific minister or political office holder!
@@ -3418,16 +3412,26 @@ app.post('/api/chat', async (req, res) => {
             const userData = userSnap.data();
             const displayName = userData.displayName || '';
             const profile = userData.profile || {};
-            const activeGoal = profile.activeGoal || '';
-            const education = profile.education || '';
+            const rawProfile = userData.profile || {};
+            const cleanProf = {
+              name: rawProfile.name || '',
+              activeGoal: (rawProfile.activeGoal === 'Skills, Courses & Career Preparation' || rawProfile.activeGoal === 'Mudra Loan Business & Franchise Setup' || (rawProfile.activeGoal || '').toLowerCase() === 'career upskilling') ? '' : (rawProfile.activeGoal || '').trim(),
+              location: (rawProfile.location === 'Delhi NCR' || rawProfile.location === 'Delhi') ? '' : (rawProfile.location || '').trim(),
+              education: (rawProfile.education === 'Graduate' || rawProfile.education === 'Business Owner') ? '' : (rawProfile.education || '').trim(),
+              phone: (rawProfile.phone === '+91 98765 43210') ? '' : (rawProfile.phone || '').trim()
+            };
+            const activeGoal = cleanProf.activeGoal;
+            const education = cleanProf.education;
+            const location = cleanProf.location;
+            const phone = cleanProf.phone;
             
-            let memoryContext = `\n\n=== USER IDENTITY & PERSONALIZED PROFILE MEMORY ===`;
+            let memoryContext = `\n\n=== USER IDENTITY & NATURAL MEMORY CONTEXT ===`;
             memoryContext += `\n* Name: ${displayName || 'Honored Guest'}`;
             if (userData.email) memoryContext += `\n* Email: ${userData.email}`;
-            if (activeGoal) memoryContext += `\n* Active Career/MSME Goal: ${activeGoal}`;
+            if (activeGoal) memoryContext += `\n* Active Career/Interest Goal: ${activeGoal}`;
             if (education) memoryContext += `\n* Education Background: ${education}`;
-            if (profile.location) memoryContext += `\n* Location: ${profile.location}`;
-            if (profile.phone) memoryContext += `\n* Contact Phone: ${profile.phone}`;
+            if (location) memoryContext += `\n* Location: ${location}`;
+            if (phone) memoryContext += `\n* Contact Phone: ${phone}`;
             
             // Summarize past chats in detail (Lifetime memory of all user chats)
             if (userData.arohiChats && userData.arohiChats.length > 0) {
@@ -3458,10 +3462,10 @@ app.post('/api/chat', async (req, res) => {
               });
             }
 
-            memoryContext += `\n\nAROHI's MEMORY INSTRUCTIONS:
-1. PERSISTENT MEMORY RECALL: You are Arohi AI, endowed with long-term memory. You possess exact recall of the user's profile details (Name: ${displayName || 'User'}, Goal: ${activeGoal || 'Exploring opportunities'}, Education: ${education || 'N/A'}, Location: ${profile.location || 'N/A'}) and past text chats/voice calls listed above.
-2. PERSONALIZED CONTINUITY: Whenever the user asks what you remember, mentions a previous topic, or continues a conversation, warmly reference your memory, confirm your recall of their details, and offer proactive continuity.
-3. ADAPTIVE CONVERSATION: Naturally weave their name and career/educational goals into your responses without sounding artificial.`;
+            memoryContext += `\n\nAROHI's MEMORY & PERSONALIZATION INSTRUCTIONS:
+1. NATURAL USER UNDERSTANDING: Never assume or fix a default location (such as Delhi) or default career goals unless the user has explicitly provided it. Arohi naturally gets to know the user from their queries, chats, and calls.
+2. ACCURATE LIFETIME MEMORY: Whenever the user asks what you remember, mentions past topics, or continues an ongoing conversation, accurately reference their actual queries, interactions, and details that they personally provided.
+3. CONTEXTUAL & EMPATHETIC CONVERSATION: Weave their shared interests and name into your guidance naturally without sounding artificial.`;
             
             dynamicInstruction += memoryContext;
           }
@@ -3658,16 +3662,26 @@ app.post('/api/chat-stream', async (req, res) => {
             const userData = userSnap.data();
             const displayName = userData.displayName || '';
             const profile = userData.profile || {};
-            const activeGoal = profile.activeGoal || '';
-            const education = profile.education || '';
+            const rawProfile = userData.profile || {};
+            const cleanProf = {
+              name: rawProfile.name || '',
+              activeGoal: (rawProfile.activeGoal === 'Skills, Courses & Career Preparation' || rawProfile.activeGoal === 'Mudra Loan Business & Franchise Setup' || (rawProfile.activeGoal || '').toLowerCase() === 'career upskilling') ? '' : (rawProfile.activeGoal || '').trim(),
+              location: (rawProfile.location === 'Delhi NCR' || rawProfile.location === 'Delhi') ? '' : (rawProfile.location || '').trim(),
+              education: (rawProfile.education === 'Graduate' || rawProfile.education === 'Business Owner') ? '' : (rawProfile.education || '').trim(),
+              phone: (rawProfile.phone === '+91 98765 43210') ? '' : (rawProfile.phone || '').trim()
+            };
+            const activeGoal = cleanProf.activeGoal;
+            const education = cleanProf.education;
+            const location = cleanProf.location;
+            const phone = cleanProf.phone;
             
-            let memoryContext = `\n\n=== USER IDENTITY & PERSONALIZED PROFILE MEMORY ===`;
+            let memoryContext = `\n\n=== USER IDENTITY & NATURAL MEMORY CONTEXT ===`;
             memoryContext += `\n* Name: ${displayName || 'Honored Guest'}`;
             if (userData.email) memoryContext += `\n* Email: ${userData.email}`;
-            if (activeGoal) memoryContext += `\n* Active Career/MSME Goal: ${activeGoal}`;
+            if (activeGoal) memoryContext += `\n* Active Career/Interest Goal: ${activeGoal}`;
             if (education) memoryContext += `\n* Education Background: ${education}`;
-            if (profile.location) memoryContext += `\n* Location: ${profile.location}`;
-            if (profile.phone) memoryContext += `\n* Contact Phone: ${profile.phone}`;
+            if (location) memoryContext += `\n* Location: ${location}`;
+            if (phone) memoryContext += `\n* Contact Phone: ${phone}`;
             
             if (userData.arohiChats && userData.arohiChats.length > 0) {
               memoryContext += `\n\n=== PAST TEXT CHAT CONVERSATIONS RECORDED ===`;
@@ -3696,10 +3710,10 @@ app.post('/api/chat-stream', async (req, res) => {
               });
             }
 
-            memoryContext += `\n\nAROHI's MEMORY INSTRUCTIONS:
-1. PERSISTENT MEMORY RECALL: You are Arohi AI, endowed with long-term memory. You possess exact recall of the user's profile details (Name: ${displayName || 'User'}, Goal: ${activeGoal || 'Exploring opportunities'}, Education: ${education || 'N/A'}, Location: ${profile.location || 'N/A'}) and past text chats/voice calls listed above.
-2. PERSONALIZED CONTINUITY: Whenever the user asks what you remember, mentions a previous topic, or continues a conversation, warmly reference your memory, confirm your recall of their details, and offer proactive continuity.
-3. ADAPTIVE CONVERSATION: Naturally weave their name and career/educational goals into your responses without sounding artificial.`;
+            memoryContext += `\n\nAROHI's MEMORY & PERSONALIZATION INSTRUCTIONS:
+1. NATURAL USER UNDERSTANDING: Never assume or fix a default location (such as Delhi) or default career goals unless the user has explicitly provided it. Arohi naturally gets to know the user from their queries, chats, and calls.
+2. ACCURATE LIFETIME MEMORY: Whenever the user asks what you remember, mentions past topics, or continues an ongoing conversation, accurately reference their actual queries, interactions, and details that they personally provided.
+3. CONTEXTUAL & EMPATHETIC CONVERSATION: Weave their shared interests and name into your guidance naturally without sounding artificial.`;
             
             dynamicInstruction += memoryContext;
           }
@@ -7892,14 +7906,22 @@ async function startServer() {
             const userData = userSnap.data();
             const displayName = userData.displayName || '';
             const profile = userData.profile || {};
-            const activeGoal = profile.activeGoal || '';
-            const education = profile.education || '';
+            const rawProfile = userData.profile || {};
+            const cleanProf = {
+              name: rawProfile.name || '',
+              activeGoal: (rawProfile.activeGoal === 'Skills, Courses & Career Preparation' || rawProfile.activeGoal === 'Mudra Loan Business & Franchise Setup' || (rawProfile.activeGoal || '').toLowerCase() === 'career upskilling') ? '' : (rawProfile.activeGoal || '').trim(),
+              location: (rawProfile.location === 'Delhi NCR' || rawProfile.location === 'Delhi') ? '' : (rawProfile.location || '').trim(),
+              education: (rawProfile.education === 'Graduate' || rawProfile.education === 'Business Owner') ? '' : (rawProfile.education || '').trim()
+            };
+            const activeGoal = cleanProf.activeGoal;
+            const education = cleanProf.education;
+            const location = cleanProf.location;
             
-            let voiceMemory = `\n\n=== USER IDENTITY & PERSONALIZED PROFILE MEMORY ===`;
+            let voiceMemory = `\n\n=== USER IDENTITY & NATURAL MEMORY CONTEXT ===`;
             voiceMemory += `\n* Name: ${displayName || 'Honored Guest'}`;
-            if (activeGoal) voiceMemory += `\n* Active Career/MSME Goal: ${activeGoal}`;
+            if (activeGoal) voiceMemory += `\n* Active Career/Interest Target: ${activeGoal}`;
             if (education) voiceMemory += `\n* Education Background: ${education}`;
-            if (profile.location) voiceMemory += `\n* Location: ${profile.location}`;
+            if (location) voiceMemory += `\n* Location: ${location}`;
             
             // Summarize past chats (Lifetime memory)
             if (userData.arohiChats && userData.arohiChats.length > 0) {
@@ -7919,7 +7941,7 @@ async function startServer() {
               });
             }
 
-            voiceMemory += `\n\nAROHI VOICE MEMORY DIRECTIONS: Warmly recall and use the user's name ("${displayName}") and active goal ("${activeGoal}") in the conversation when appropriate. If they refer to past chats or voice calls listed above, confirm your recollection beautifully and provide helpful continuity. Maintain a highly warm, positive, inspirational, and engaging tone. For standard Q&A keep answers clear, BUT when narrating 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' or giving a speech or story for students or startups, ALL 'Are you still there?' OR 'Should I continue?' PROMPTS ARE STRICTLY DISABLED ONCE INITIATED. ALWAYS tell the complete full-scale unabridged story continuously from start to finish in a single stream without stopping, pausing, asking if you should continue, or checking if the user is still there!`;
+            voiceMemory += `\n\nAROHI VOICE MEMORY DIRECTIONS: Warmly greet the user ("${displayName}") and maintain high empathy and intelligence. Never assume or fix a default city (like Delhi) or career goal unless the user explicitly provided it. Arohi naturally discovers the user's location and interests from what they share in speech and chat. If they refer to past chats or voice calls listed above, confirm your recollection beautifully and provide helpful continuity. Maintain a highly warm, positive, inspirational, and engaging tone. For standard Q&A keep answers clear, BUT when narrating 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' or giving a speech or story for students or startups, ALL 'Are you still there?' OR 'Should I continue?' PROMPTS ARE STRICTLY DISABLED ONCE INITIATED. ALWAYS tell the complete full-scale unabridged story continuously from start to finish in a single stream without stopping, pausing, asking if you should continue, or checking if the user is still there!`;
             
             voiceSystemInstruction += voiceMemory;
           }

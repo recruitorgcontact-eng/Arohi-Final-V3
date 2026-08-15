@@ -30,6 +30,7 @@ interface UserProfile {
   location: string;
   education: string;
   activeGoal: string;
+  resumeUrl?: string;
 }
 
 export interface InteractionLogItem {
@@ -102,18 +103,53 @@ export interface UserData {
   updatedAt?: string;
 }
 
+export function cleanLegacyProfileDefaults(profile?: Partial<UserProfile>): UserProfile {
+  const p: UserProfile = {
+    name: profile?.name || '',
+    email: profile?.email || '',
+    phone: profile?.phone || '',
+    location: profile?.location || '',
+    education: profile?.education || '',
+    activeGoal: profile?.activeGoal || '',
+    resumeUrl: profile?.resumeUrl || ''
+  };
+
+  // Remove legacy dummy defaults that were previously hardcoded for all users
+  if (p.activeGoal === 'Skills, Courses & Career Preparation' || p.activeGoal === 'Mudra Loan Business & Franchise Setup') {
+    p.activeGoal = '';
+  }
+  if (p.location === 'Delhi NCR' || p.location === 'Delhi') {
+    const localLocation = typeof window !== 'undefined' ? localStorage.getItem('recruit_user_location') : null;
+    if (!localLocation || localLocation === 'Delhi NCR' || localLocation === 'Delhi') {
+      p.location = '';
+    }
+  }
+  if (p.education === 'Graduate' || p.education === 'Business Owner') {
+    const localEdu = typeof window !== 'undefined' ? localStorage.getItem('recruit_user_education') : null;
+    if (!localEdu || localEdu === 'Graduate' || localEdu === 'Business Owner') {
+      p.education = '';
+    }
+  }
+  if (p.phone === '+91 98765 43210') {
+    p.phone = '';
+  }
+
+  return p;
+}
+
 export function buildPersonalizationMemory(data: UserData): UserPersonalizationMemory {
   const displayName = data.displayName || data.profile?.name || data.email?.split('@')[0] || 'Honored Guest';
   const email = data.email || '';
   const role = data.role || 'candidate';
-  const profile: UserProfile = data.profile || {
+  const rawProfile: UserProfile = data.profile || {
     name: displayName,
     email: email,
     phone: '',
     location: '',
-    education: role === 'recruiter' ? 'Business Owner' : 'Graduate',
-    activeGoal: role === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+    education: '',
+    activeGoal: ''
   };
+  const profile = cleanLegacyProfileDefaults(rawProfile);
 
   const chats = data.arohiChats || [];
   const calls = data.arohiCalls || [];
@@ -190,7 +226,7 @@ export function buildPersonalizationMemory(data: UserData): UserPersonalizationM
   summaryContext += `* Primary Email: ${email}\n`;
   summaryContext += `* Target Role: ${role === 'recruiter' ? 'Business Owner / Recruiter / Entrepreneur' : 'Jobseeker / Candidate / Student'}\n`;
   if (profile.education) summaryContext += `* Education Background: ${profile.education}\n`;
-  if (profile.activeGoal) summaryContext += `* Active Career Goal: ${profile.activeGoal}\n`;
+  if (profile.activeGoal) summaryContext += `* Active Career/Interest Goal: ${profile.activeGoal}\n`;
   if (profile.location) summaryContext += `* Location: ${profile.location}\n`;
   if (profile.phone) summaryContext += `* Contact Phone: ${profile.phone}\n`;
 
@@ -217,7 +253,7 @@ export function buildPersonalizationMemory(data: UserData): UserPersonalizationM
     summaryContext += `\n* Enrolled Courses: ${data.enrolledCourses.join(', ')}\n`;
   }
 
-  summaryContext += `\nPERSONALIZATION GUIDELINES: You are Arohi AI, a warm, highly empathetic mentor. Use the memory context above to personalize every answer. Greet ${displayName} naturally, remember their past queries and active goals (${profile.activeGoal}), and guide them step-by-step.`;
+  summaryContext += `\nPERSONALIZATION DIRECTIVES: You are Arohi AI, a warm, highly empathetic mentor. Greet ${displayName} naturally, remember their past queries, shared interactions, and genuine goals. Never assume or fix a default location (like Delhi) or career goal unless the user explicitly stated it. Arohi learns dynamically from what the user asks and discusses across chats and calls.`;
 
   return {
     displayName,
@@ -520,22 +556,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: email,
             phone: '',
             location: '',
-            education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
-            activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+            education: '',
+            activeGoal: ''
           },
           enrolledCourses: [],
           completedModules: {},
           checkedChecklist: {},
           earnedCertificates: [],
-          savedItems: [
-            { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-            { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-          ],
+          savedItems: [],
           applications: [],
           diagnostics: {
-            atsScore: 74,
+            atsScore: 0,
             interviewScore: 0,
-            businessScore: 84
+            businessScore: 0
           },
           activities: []
         });
@@ -567,22 +600,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: email,
         phone: '',
         location: '',
-        education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
-        activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+        education: '',
+        activeGoal: ''
       },
       enrolledCourses: [],
       completedModules: {},
       checkedChecklist: {},
       earnedCertificates: [],
-      savedItems: [
-        { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-        { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-      ],
+      savedItems: [],
       applications: [],
       diagnostics: {
-        atsScore: 74,
+        atsScore: 0,
         interviewScore: 0,
-        businessScore: 84
+        businessScore: 0
       },
       activities: []
     };
@@ -751,22 +781,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: firebaseUser.email || '',
           phone: phone || '',
           location: '',
-          education: (role || 'candidate') === 'recruiter' ? 'Business Owner' : 'Graduate',
-          activeGoal: (role || 'candidate') === 'recruiter' ? 'Mudra Loan Business & Franchise Setup' : 'Skills, Courses & Career Preparation'
+          education: '',
+          activeGoal: ''
         },
         enrolledCourses: [],
         completedModules: {},
         checkedChecklist: {},
         earnedCertificates: [],
-        savedItems: [
-          { id: '1', title: 'PM Mudra Loan Scheme', type: 'Scheme', desc: 'Collateral free funding' },
-          { id: '2', title: 'Full-Stack JavaScript certification', type: 'Course', desc: '12 Weeks upskilling path' }
-        ],
+        savedItems: [],
         applications: [],
         diagnostics: {
-          atsScore: 74,
+          atsScore: 0,
           interviewScore: 0,
-          businessScore: 84
+          businessScore: 0
         },
         activities: []
       };
@@ -1243,7 +1270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     businessScore?: number;
   }) => {
     if (!user) return;
-    const currentDiagnostics = userData?.diagnostics || { atsScore: 74, interviewScore: 0, businessScore: 84 };
+    const currentDiagnostics = userData?.diagnostics || { atsScore: 0, interviewScore: 0, businessScore: 0 };
     const updatedDiagnostics = { ...currentDiagnostics, ...diagnosticsUpdate };
     const updatedUserData = userData ? { ...userData, diagnostics: updatedDiagnostics } : null;
 
