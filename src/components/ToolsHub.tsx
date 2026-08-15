@@ -269,6 +269,17 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
           <p className="text-sm text-slate-300 font-medium leading-relaxed">
             From <strong>AI Music Generation</strong>, <strong>Image Studio</strong>, and <strong>Video Scripting</strong> to ATS Resume Auditing, Mock Interview Coaching, Business Loan Calculators, and Code/Math Solvers — launch any tool below instantly.
           </p>
+
+          <div className="pt-2 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => onNavigateTab('solutions')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>Explore 100+ Real Life Solutions Directory (23 Audiences)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 

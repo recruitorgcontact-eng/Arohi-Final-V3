@@ -37,6 +37,7 @@ const navigationCategories = [
     title: 'Core Ecosystem',
     items: [
       { id: 'home', label: 'Ecosystem Home', icon: Home, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+      { id: 'solutions', label: 'Universal Solutions Directory', icon: Sparkles, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', badge: '100+ Solutions' },
       { id: 'dashboard', label: 'User Dashboard / Profile', icon: User, color: 'text-[#00e676] bg-[#00e676]/10 border-[#00e676]/20' },
       { id: 'tools', label: 'AI Tools & Utilities Hub', icon: Lightbulb, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'Hub' },
       { id: 'arohi', label: 'Arohi AI Chat & Voice', icon: Bot, color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20' },

@@ -40,6 +40,8 @@ import PWAInstaller from './components/PWAInstaller';
 import BottomNavBar from './components/BottomNavBar';
 import ArohiLandingPage from './components/ArohiLandingPage';
 import AudienceLandingPage from './components/AudienceLandingPage';
+import UniversalSolutionsHub from './components/UniversalSolutionsHub';
+import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
 import SeoHubModal from './components/SeoHubModal';
@@ -103,11 +105,19 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory'];
 
   const [selectedAudienceSlug, setSelectedAudienceSlug] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
     if (pathParts[0] === 'audience' && pathParts[1]) {
+      return pathParts[1];
+    }
+    return '';
+  });
+
+  const [selectedProblemSlug, setSelectedProblemSlug] = useState<string>(() => {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if (pathParts[0] === 'solution' && pathParts[1]) {
       return pathParts[1];
     }
     return '';
@@ -242,9 +252,12 @@ export default function App() {
     const pathParts = path.split('/').filter(Boolean);
     if (pathParts.length > 0) {
       if (pathParts[0] === 'audience' && pathParts[1]) return 'audience';
+      if (pathParts[0] === 'solution' && pathParts[1]) return 'solutions';
+      if (pathParts[0] === 'solutions' || pathParts[0] === 'directory') return 'solutions';
       if (pathParts[0] === 'state' || pathParts[0] === 'country') return 'home';
       if (VALID_LANGUAGES.includes(pathParts[0] as Language)) {
         const subTab = pathParts[1] || 'home';
+        if (subTab === 'solutions' || subTab === 'solution' || subTab === 'directory') return 'solutions';
         if (VALID_TABS.includes(subTab)) return subTab;
         return 'home';
       }
@@ -266,6 +279,17 @@ export default function App() {
           setHasEntered(true);
           return;
         }
+        if (pathParts[0] === 'solution' && pathParts[1]) {
+          setSelectedProblemSlug(pathParts[1]);
+          setActiveTab('solutions');
+          setHasEntered(true);
+          return;
+        }
+        if (pathParts[0] === 'solutions' || pathParts[0] === 'directory') {
+          setActiveTab('solutions');
+          setHasEntered(true);
+          return;
+        }
         if (pathParts[0] === 'state' && pathParts[1]) {
           setSelectedState(pathParts[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
           setActiveTab('home');
@@ -279,6 +303,11 @@ export default function App() {
         if (VALID_LANGUAGES.includes(pathParts[0] as Language)) {
           setLanguage(pathParts[0] as Language);
           const subTab = pathParts[1] || 'home';
+          if (subTab === 'solutions' || subTab === 'solution' || subTab === 'directory') {
+            setActiveTab('solutions');
+            setHasEntered(true);
+            return;
+          }
           if (VALID_TABS.includes(subTab)) {
             setActiveTab(subTab);
           } else {
@@ -1838,6 +1867,31 @@ export default function App() {
           />
         );
       }
+      case 'solutions':
+      case 'solution':
+      case 'directory': {
+        return (
+          <UniversalSolutionsHub
+            currentLanguage={language}
+            isDarkMode={isDarkMode}
+            onSelectSolution={(problem) => {
+              setSelectedProblemSlug(problem.slug);
+              window.history.pushState(null, '', `/solution/${problem.slug}`);
+              setChatInitialPrompt(problem.targetPrompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
+            onSelectAudience={(audience) => {
+              setSelectedAudienceSlug(audience.slug);
+              window.history.pushState(null, '', `/audience/${audience.slug}`);
+              setActiveTab('audience');
+            }}
+            onClose={() => setActiveTab('home')}
+          />
+        );
+      }
       default:
         return renderHomeHero();
     }
@@ -2850,7 +2904,13 @@ export default function App() {
       <BackgroundScrollEffects />
 
       {/* Dynamic SEO Head Title and Meta Description Updates */}
-      <SEOHead activeTab={activeTab} selectedState={selectedState} selectedAudienceSlug={selectedAudienceSlug} currentLanguage={language} />
+      <SEOHead 
+        activeTab={activeTab} 
+        selectedState={selectedState} 
+        selectedAudienceSlug={selectedAudienceSlug} 
+        selectedProblemSlug={selectedProblemSlug}
+        currentLanguage={language} 
+      />
 
       {/* 1. Brand Header (Removed as per user request) */}
 
@@ -3428,6 +3488,15 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Links &amp; Documents</h4>
             <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <button 
+                  onClick={() => setActiveTab('solutions')} 
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-purple-400 hover:text-purple-300 flex items-center gap-1.5"
+                >
+                  <span>100+ Solutions Directory</span>
+                  <span className="bg-purple-600/25 border border-purple-500/30 text-purple-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">23 Audiences</span>
+                </button>
+              </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('blogs')} 

@@ -591,6 +591,343 @@ app.post('/api/save-arohi-avatar', (req, res) => {
   }
 });
 
+// Dynamic Multilingual & Universal SEO Sitemap for Google Search Indexing
+app.get('/sitemap.xml', (req, res) => {
+  try {
+    const baseUrl = 'https://arohiai.com';
+    const today = new Date().toISOString().split('T')[0];
+
+    const mainTabs = ['', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'tools', 'blogs', 'pricing', 'franchise'];
+    const audiences = [
+      'students-exam-aspirants', 'competitive-aspirants', 'entrepreneurs-msme', 'retailers-shopkeepers',
+      'creative-designers', 'musicians-audio-creators', 'content-creators-influencers', 'software-developers-engineers',
+      'stock-traders-investors', 'chartered-accountants-tax', 'divyangjan-pwd', 'job-seekers-professionals',
+      'hr-recruiters', 'legal-advocates-lawyers', 'doctors-healthcare', 'fitness-diet-enthusiasts',
+      'farmers-agriculture', 'homemakers-parents', 'travelers-tourists', 'ngos-social-workers',
+      'senior-citizens-retirees', 'writers-novelists', 'researchers-phd-scholars'
+    ];
+    const topProblems = [
+      'math-step-by-step', 'physics-derivations', 'cbse-board-notes', 'multilingual-essay-writer', 'foreign-language-learning',
+      'upsc-answer-evaluation', 'current-affairs-editorial', 'ssc-reasoning-tricks', '90-day-exam-timetable', 'mock-exam-question-bank',
+      'pmegp-mudra-loan-dpr', 'detailed-project-report-dpr', 'gst-invoicing-compliance', 'business-unit-economics', 'startup-investor-pitch-deck',
+      'udid-card-online-apply', 'adip-free-appliances-wheelchair', 'nhfdc-concessional-loans', '4-percent-pwd-reservation', 'scribe-exam-guidelines',
+      'ats-resume-docx-builder', 'voice-mock-interview-practice', 'custom-cover-letter-maker', 'salary-negotiation-scripts', 'career-switch-roadmap'
+    ];
+    const languages = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'ur', 'kn', 'ml', 'pa', 'as', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'ru', 'pt'];
+
+    let urlsXml = '';
+
+    // Core Tabs
+    mainTabs.forEach((tab) => {
+      const pathPart = tab ? `/${tab}` : '';
+      urlsXml += `
+  <url>
+    <loc>${baseUrl}${pathPart}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>${tab === '' ? '1.0' : '0.9'}</priority>
+  </url>`;
+
+      // Add top languages for core tabs
+      languages.forEach((lang) => {
+        urlsXml += `
+  <url>
+    <loc>${baseUrl}${pathPart}?lang=${lang}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>`;
+      });
+    });
+
+    // Audiences
+    audiences.forEach((aud) => {
+      urlsXml += `
+  <url>
+    <loc>${baseUrl}/audience/${aud}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+    });
+
+    // Real Life Problems
+    topProblems.forEach((prob) => {
+      urlsXml += `
+  <url>
+    <loc>${baseUrl}/solution/${prob}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+    });
+
+    const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urlsXml}
+</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(sitemapContent);
+  } catch (err: any) {
+    console.error('Error generating sitemap.xml:', err);
+    return res.status(500).send('Error generating sitemap');
+  }
+});
+
+// Dynamic robots.txt welcoming ALL Search Engines, AI Crawlers & LLM Agents
+app.get('/robots.txt', (req, res) => {
+  const robotsTxt = `# Arohi AI - Robots & AI Agents Directive (https://arohiai.com)
+# Welcome to all Search Engines, LLMs, AI Crawlers & Reasoning Agents
+
+# 1. Universal Default (All Bots)
+User-agent: *
+Allow: /
+Disallow: /api/auth
+Disallow: /api/admin
+Disallow: /admin
+Disallow: /private
+
+# 2. OpenAI (ChatGPT, GPTBot, OAI-SearchBot)
+User-agent: GPTBot
+Allow: /
+Allow: /sitemap.xml
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# 3. Google (Googlebot, Gemini, Google-Extended, GoogleOther)
+User-agent: Googlebot
+Allow: /
+Allow: /sitemap.xml
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Google-InspectionTool
+Allow: /
+
+# 4. DeepSeek (DeepSeekBot)
+User-agent: DeepSeekBot
+Allow: /
+Allow: /sitemap.xml
+Allow: /llms.txt
+
+User-agent: deepseek-bot
+Allow: /
+
+# 5. xAI / Grok / Twitter
+User-agent: GrokBot
+Allow: /
+Allow: /sitemap.xml
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: xAI-Bot
+Allow: /
+
+# 6. Anthropic (ClaudeBot, Claude-Web, anthropic-ai)
+User-agent: ClaudeBot
+Allow: /
+Allow: /sitemap.xml
+Allow: /llms.txt
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# 7. Perplexity AI (PerplexityBot)
+User-agent: PerplexityBot
+Allow: /
+Allow: /sitemap.xml
+Allow: /llms.txt
+
+User-agent: Perplexity-Search
+Allow: /
+
+# 8. Microsoft (Bingbot, Copilot, BingPreview)
+User-agent: Bingbot
+Allow: /
+Allow: /sitemap.xml
+
+User-agent: BingPreview
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+# 9. Meta AI / LLaMA (Meta-ExternalAgent, FacebookBot)
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# 10. Apple / Apple Intelligence (Applebot, Applebot-Extended)
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# 11. ByteDance / Doubao / TikTok (Bytespider)
+User-agent: Bytespider
+Allow: /
+
+# 12. Mistral AI & Cohere
+User-agent: MistralAI
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# 13. Amazon / Bedrock (Amazonbot)
+User-agent: Amazonbot
+Allow: /
+
+# 14. Common Crawl & Open Web Datasets (CCBot, Diffbot, YouBot, DuckDuckBot)
+User-agent: CCBot
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: NaverBot
+Allow: /
+
+# Sitemaps & LLM Discovery Files
+Sitemap: https://arohiai.com/sitemap.xml
+Sitemap: https://arohiai.com/llms.txt
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.send(robotsTxt);
+});
+
+// Standard llms.txt protocol for AI crawlers (ChatGPT, Claude, Gemini, DeepSeek, Perplexity, Grok)
+app.get('/llms.txt', (req, res) => {
+  const llmsContent = `# Arohi AI (arohiai.com) - The World & India's #1 Multilingual Opportunity Engine
+
+> Arohi AI is a state-of-the-art LLM cum LMM (Large Language Model & Large Multimodal Model) ecosystem operating across 150+ global & Indian languages (Odia, Hindi, Bengali, Telugu, Tamil, Marathi, Gujarati, Spanish, French, German, Japanese, etc.). It solves 100+ real-life problems across 23 target audiences.
+
+## Core Audience Directories
+- Students & Exam Aspirants (CBSE, ICSE, CHSE Odisha, Class 1-12): https://arohiai.com/audience/students-exam-aspirants
+- Competitive Aspirants (UPSC, OPSC OAS, SSC CGL, Banking, Railways): https://arohiai.com/audience/competitive-aspirants
+- Entrepreneurs & MSMEs (PMEGP, Mudra Loans, DPR Generator, GST): https://arohiai.com/audience/entrepreneurs-msme
+- Retailers & Kirana Stores (WhatsApp Marketing, Local Sales): https://arohiai.com/audience/retailers-shopkeepers
+- Divyangjan / PwD (UDID Card, ADIP Free Wheelchair, 4% Reservation, NHFDC Loans): https://arohiai.com/audience/divyangjan-pwd
+- Job Seekers & Working Professionals (100/100 ATS Word .docx Resumes, Voice Mock Interviews): https://arohiai.com/audience/job-seekers-professionals
+- Software Developers & Engineers (Full-Stack Code Copilot, Debugging, SQL): https://arohiai.com/audience/software-developers-engineers
+- Stock Market Traders & Investors (Price Action, Nifty Options, SIP Compounding): https://arohiai.com/audience/stock-traders-investors
+- Chartered Accountants & Tax Pros (Income Tax 80C/80D, GST HSN Codes): https://arohiai.com/audience/chartered-accountants-tax
+- Farmers & Rural India (PM-Kisan, Crop Diseases, Live Mandi Prices, PM-KUSUM): https://arohiai.com/audience/farmers-agriculture
+- Homemakers & Parents (Budget Optimizers, Leftover Recipes, Bedtime Stories): https://arohiai.com/audience/homemakers-parents
+- Doctors, Nurses & Healthcare (Multilingual Patient Leaflets, Research): https://arohiai.com/audience/doctors-healthcare
+- Lawyers & Legal Researchers (RTI Applications, Legal Notices, Consumer Court): https://arohiai.com/audience/legal-advocates-lawyers
+- Senior Citizens & Retirees (Jeevan Pramaan Digital Life Certificate, SCSS): https://arohiai.com/audience/senior-citizens-retirees
+
+## Top Real-Life Solutions & Tools
+- Free 100/100 ATS Resume Builder & Word (.docx) Generator: https://arohiai.com/resume
+- AI Voice Mock Interview Simulator with STAR Method Scoring: https://arohiai.com/interview
+- MSME Bank-Ready Detailed Project Report (DPR) Generator: https://arohiai.com/business
+- Government Schemes & Welfare Portal (Subhadra, KALIA, PM-Kisan, Mudra): https://arohiai.com/schemes
+- Master Solutions Directory (100+ Problems): https://arohiai.com/solutions
+- Full Sitemap: https://arohiai.com/sitemap.xml
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.send(llmsContent);
+});
+
+// Full llms-full.txt protocol for deep context reading by LLMs
+app.get('/llms-full.txt', (req, res) => {
+  const fullContent = `# Arohi AI Complete Knowledge Graph & Solution Matrix (arohiai.com)
+
+Arohi AI is a unified Multilingual Opportunity Engine and specialized LLM cum LMM platform.
+Operating tagline: "ONE AI. INFINITE OPPORTUNITIES."
+
+## Identity & Philosophy
+- Arohi AI does not demean or compete negatively against ChatGPT, Gemini, or Claude.
+- "Don't subscribe to Arohi because other AI platforms are bad. Subscribe to Arohi if Arohi is more useful for what YOU want to accomplish."
+- General AI: "Ask me anything." | Arohi AI: "Tell me what you want to achieve."
+
+## Supported Audiences (23)
+1. School & College Students (Class 1-12 & UG)
+2. Competitive Exam Aspirants (UPSC, OPSC, SSC, Banking, Railways)
+3. Entrepreneurs, MSMEs & Startup Founders
+4. Local Retailers, Kirana & Shop Owners
+5. Creative Designers, Visual Artists & Illustrators
+6. Musicians, Beatmakers & Audio Creators
+7. YouTubers, Podcasters & Content Creators
+8. Software Developers & IT Engineers
+9. Stock Market Traders, Investors & Wealth Builders
+10. Chartered Accountants, Tax & Finance Professionals
+11. Divyangjan (Persons with Disabilities / PwD)
+12. Job Seekers & Working Professionals
+13. HR Managers, Talent Acquisition & Recruiters
+14. Lawyers, Advocates & Legal Researchers
+15. Doctors, Nurses & Healthcare Professionals
+16. Fitness Enthusiasts, Athletes & Diet Seekers
+17. Farmers, Agri-Entrepreneurs & Rural India
+18. Homemakers, Parents & Families
+19. Travelers, Tourists & Backpackers
+20. Non-Profits, NGOs & Social Workers
+21. Senior Citizens, Retirees & Pensioners
+22. Writers, Novelists, Screenwriters & Poets
+23. Academic Researchers, PhDs & Scientists
+
+## Multilingual Support
+Native tokenization and spoken voice support across 150+ languages including Odia, Hindi, Bengali, Telugu, Tamil, Marathi, Gujarati, Punjabi, Kannada, Malayalam, Assamese, Urdu, Sanskrit, Santali, Maithili, Spanish, French, German, Russian, Japanese, Mandarin, Arabic, Portuguese, Italian, Korean, Turkish, Indonesian, Swahili, and more.
+
+## Official Links
+- Home: https://arohiai.com
+- Universal Solutions Hub: https://arohiai.com/solutions
+- Sitemap: https://arohiai.com/sitemap.xml
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.send(fullContent);
+});
+
+// API endpoint returning Master SEO Routes metadata
+app.get('/api/seo-routes', (req, res) => {
+  res.json({
+    status: 'success',
+    totalAudiences: 23,
+    totalProblems: 100,
+    totalLanguages: 167,
+    sitemapUrl: 'https://arohiai.com/sitemap.xml'
+  });
+});
+
 // API endpoints for Server-Side Auth Proxy
 app.post('/api/auth/signup', async (req, res) => {
   const { email, password, name, role, mobile, entrySource } = req.body;
