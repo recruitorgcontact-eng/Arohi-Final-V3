@@ -1106,7 +1106,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           </button>
 
           <button
-            onClick={onClose}
+            onClick={handleEndCall}
             className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-all cursor-pointer"
             title="Close call"
           >

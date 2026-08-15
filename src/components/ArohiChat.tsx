@@ -1282,10 +1282,61 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       ? `${Math.floor(summaryData.duration / 60)}m ${summaryData.duration % 60}s`
       : '0m';
 
+    const cleanTurns = (summaryData.turns || []).filter(
+      (t: any) => t && t.text && typeof t.text === 'string' && t.text.trim().length > 0
+    );
+    const userSpokenTurns = cleanTurns.filter(
+      (t: any) => t.speaker === 'user' || t.speaker?.toLowerCase() === 'candidate'
+    );
+
+    let callAnalysis = summaryData.analysis;
+    let computedSummaryText = summaryData.summaryText;
+
+    // If we have actual spoken turns, analyze the conversation on the server to obtain genuine discussion points
+    if (cleanTurns.length > 0 && userSpokenTurns.length > 0) {
+      try {
+        const res = await fetch('/api/analyze-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            turns: cleanTurns,
+            callDuration: summaryData.duration,
+            uid: user?.uid
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.analysis) {
+            callAnalysis = data.analysis;
+            computedSummaryText = data.analysis.summary || computedSummaryText;
+          }
+        }
+      } catch (err) {
+        console.error('Error analyzing call transcript turns:', err);
+      }
+    }
+
+    let summaryCardContent = '';
+    if (callAnalysis?.summary && userSpokenTurns.length > 0) {
+      summaryCardContent = `📞 **Voice Consultation Completed** (${durationFormatted})\n\n` +
+        `📌 **Key Discussion Points on Call**:\n${callAnalysis.summary}\n\n`;
+
+      if (callAnalysis.priorities && Array.isArray(callAnalysis.priorities) && callAnalysis.priorities.length > 0) {
+        summaryCardContent += `🎯 **Takeaways & Recommended Next Steps**:\n`;
+        callAnalysis.priorities.forEach((p: string) => {
+          summaryCardContent += `• ${p}\n`;
+        });
+        summaryCardContent += `\n`;
+      }
+      summaryCardContent += `*Feel free to continue this discussion, ask follow-up questions, or request additional guidance right here in chat!*`;
+    } else {
+      summaryCardContent = `📞 **Voice Consultation Ended** (${durationFormatted})\n\nThank you for speaking with AROHI. How else can I assist you today?`;
+    }
+
     const newMsg: Message = {
       id: `call-end-${Date.now()}`,
       role: 'assistant',
-      content: `📞 **Voice Consultation Ended** (${durationFormatted})\n\nThank you for speaking with AROHI. How else can I assist you today?`,
+      content: summaryCardContent,
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
     
@@ -1299,7 +1350,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       targetChatId = 'chat-' + Date.now();
       const newChatContainer = {
         id: targetChatId,
-        title: 'Voice Session',
+        title: userSpokenTurns.length > 0 ? 'Voice Discussion' : 'Voice Session',
         date: 'Today',
         messages: [
           {
@@ -1333,14 +1384,15 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       localStorage.setItem('guest_arohi_chats', JSON.stringify(currentSavedChats));
     }
 
-    // Sync call item
+    // Sync call item with authentic summary
     const newCallItem = {
       id: `call-${Date.now()}`,
       duration: summaryData.duration,
-      turns: summaryData.turns,
+      turns: cleanTurns,
       date: summaryData.date,
-      summaryText: `Voice call completed (${durationFormatted})`,
-      isCareerRelated: true
+      summaryText: computedSummaryText || (userSpokenTurns.length > 0 ? 'Voice Consultation with Arohi AI' : `Voice call completed (${durationFormatted})`),
+      isCareerRelated: callAnalysis ? !callAnalysis.topics?.business : true,
+      analysis: callAnalysis || undefined
     };
 
     const updatedCalls = [newCallItem, ...savedCalls];

@@ -52,7 +52,7 @@ import { openRazorpayCheckout } from './lib/razorpay';
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
 import { Posting, Application, CategoryType } from './types';
-import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 
 // Storage migration helper to seamlessly transition legacy 'recruit_*' keys to 'arohi_*'
 function getStorageItem(key: string): string | null {
@@ -3187,7 +3187,7 @@ export default function App() {
                 </div>
 
                 {/* Social Share Grid */}
-                <div className="grid grid-cols-5 gap-2.5">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
                   {/* WhatsApp */}
                   <a
                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareDetails.text + " " + shareDetails.url)}`}
@@ -3236,6 +3236,22 @@ export default function App() {
                     <span className="text-[9px] font-bold text-slate-300">Twitter / X</span>
                   </a>
 
+                  {/* LinkedIn */}
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareDetails.url)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-blue-700/10 hover:bg-blue-700/20 border border-blue-700/20 hover:border-blue-700/50 transition-all text-center group cursor-pointer active:scale-95"
+                    title="Share via LinkedIn"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-blue-700/20 flex items-center justify-center text-blue-300 group-hover:scale-105 transition-transform">
+                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                      </svg>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-300">LinkedIn</span>
+                  </a>
+
                   {/* Facebook */}
                   <a
                     href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareDetails.url)}`}
@@ -3252,20 +3268,16 @@ export default function App() {
                     <span className="text-[9px] font-bold text-slate-300">Facebook</span>
                   </a>
 
-                  {/* LinkedIn */}
+                  {/* Email */}
                   <a
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareDetails.url)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-blue-700/10 hover:bg-blue-700/20 border border-blue-700/20 hover:border-blue-700/50 transition-all text-center group cursor-pointer active:scale-95"
-                    title="Share via LinkedIn"
+                    href={`mailto:?subject=${encodeURIComponent(shareDetails.title)}&body=${encodeURIComponent(`${shareDetails.text}\n\nExplore Arohi AI here:\n${shareDetails.url}`)}`}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/50 transition-all text-center group cursor-pointer active:scale-95"
+                    title="Share via Email"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-blue-700/20 flex items-center justify-center text-blue-300 group-hover:scale-105 transition-transform">
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-                      </svg>
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-300 group-hover:scale-105 transition-transform">
+                      <Mail className="w-4 h-4" />
                     </div>
-                    <span className="text-[9px] font-bold text-slate-300">LinkedIn</span>
+                    <span className="text-[9px] font-bold text-slate-300">Email</span>
                   </a>
                 </div>
 

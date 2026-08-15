@@ -4806,30 +4806,35 @@ Ensure output is rendered with clear Markdown formatting, bullet points, headers
 // Helper for generating structured summary fallback when Gemini is unavailable
 function generateFallbackSummary(history: any[]) {
   const userMessages = history.filter((h: any) => h.role === 'user' || h.role === 'candidate');
-  const userText = userMessages.map((m: any) => m.content || m.text || '').join(' ');
+  const userText = userMessages.map((m: any) => m.content || m.text || '').join(' ').trim();
+  const allText = history.map((m: any) => m.content || m.text || '').join(' ').trim();
 
-  const topics = [];
-  if (/job|vacancy|exam|ssc|upsc|career|hire|interview/.test(userText.toLowerCase())) topics.push('Career & Placement Strategy');
-  if (/business|bakery|mudra|loan|startup|shop|msme|udyam/.test(userText.toLowerCase())) topics.push('MSME & Business Development');
-  if (/course|learn|skill|upskill|react|python|training/.test(userText.toLowerCase())) topics.push('Skills Upskilling & Certifications');
-  if (topics.length === 0) topics.push('General Career & Growth Consultation');
+  const isCallOnly = /voice consultation completed|voice consultation ended/i.test(allText);
+
+  let summaryText = "";
+  if (userText.length > 10) {
+    summaryText = `The conversation focused on the user's inquiry: "${userText.slice(0, 200)}..." with targeted guidance and actionable next steps provided by AROHI AI.`;
+  } else if (isCallOnly) {
+    summaryText = `The voice consultation concluded. AROHI AI reviewed the user's spoken questions and provided strategic guidance for next steps.`;
+  } else {
+    summaryText = `AROHI AI and the user engaged in a consultation session to address specific goals and formulate tailored next steps.`;
+  }
 
   return `### 📌 Session Executive Summary
-The session focused on **${topics.join(', ')}**. AROHI provided strategic consultation and actionable guidance tailored to your objectives.
+${summaryText}
 
 ### 🎯 Key Objectives Identified
-- **Goal Definition**: Clarified primary target milestones and requirements discussed during the session.
-- **Strategic Mapping**: Evaluated eligibility and optimal pathways for career advancement and business setup.
-- **Resource Alignment**: Identified relevant government schemes, skill programs, and job placement tracks.
+- **Discussion Highlights**: Addressed the user's specific queries and questions directly.
+- **Targeted Guidance**: Synthesized personalized insights and concrete recommendations.
 
 ### ⚡ Step-by-Step Action Plan
-1. **[Review Guidelines]**: Carefully go through the customized recommendations provided by AROHI in this chat.
-2. **[Document & Prepare]**: Gather all required credentials, resumes, or business documentation needed for execution.
-3. **[Apply & Practice]**: Utilize Arohi AI tools (Resume Analyzer, Mock Interview, or Mudra Loan Checker) to proceed to the next stage.
+1. **[Review Discussion Points]**: Revisit the specific insights and points shared by AROHI during the session.
+2. **[Execute Priority Action]**: Move forward on the immediate next steps identified in the conversation.
+3. **[Continuous Follow-up]**: Continue the discussion anytime via voice call or chat to dive deeper.
 
-### 💡 Recommended Tools, Schemes & Resources
-- **Arohi AI Skill Sandbox**: Interactive modules to test skills and build interview confidence.
-- **Government Portals**: Explore official portals (e.g. Udyam MSME Registration, NCS National Career Service).`;
+### 💡 Recommended Tools & Next Steps
+- **Arohi AI Workspace**: Access domain tools, research, and follow-up guidance.
+- **Arohi Live Chat & Voice**: Ask follow-up questions anytime for uninterrupted continuity.`;
 }
 
 // 1.1. AI Summarize Chat Session Endpoint using secondary Gemini prompt
@@ -4846,27 +4851,33 @@ app.post('/api/summarize-chat', async (req, res) => {
     .join('\n\n');
 
   const summarySystemInstruction = `You are AROHI (India's AI Opportunity Advisor). Your task is to act as an expert executive summarizer.
-Analyze the provided chat session history between the user and AROHI AI.
+Analyze the provided chat/voice session history between the user and AROHI AI.
 Synthesize the discussion into a clear, highly structured, bulleted action plan.
+
+CRITICAL FACTUAL INTEGRITY RULES:
+1. TRUTHFUL SUMMARY ONLY: You MUST summarize ONLY the specific topics, ideas, questions, industries, or tasks that were ACTUALLY mentioned or discussed in the provided conversation transcript.
+2. ZERO HALLUCINATION / NO GENERIC SLOP: Never make up or assume generic default tracks (e.g. do NOT mention Mudra loans, Udyam MSME, ATS resume evaluation, PMKVY, or government schemes unless the user or Arohi explicitly discussed them in this transcript).
+3. If the user discussed trading, manufacturing, tech coding, poetry, exam preparation, local queries, or any specific domain, tailor all 4 sections (Executive Summary, Key Objectives, Action Plan, and Recommended Tools) 100% to that exact subject.
+4. If the transcript is brief or contains a voice consultation summary, extract and highlight the exact core points discussed.
 
 Structure your output in Markdown with the following mandatory sections:
 
 ### 📌 Session Executive Summary
-(1-2 concise sentences summarizing the primary topic, user goals, and key guidance provided)
+(1-2 concise sentences faithfully summarizing the primary topic, user goals, and key guidance provided in this specific conversation)
 
 ### 🎯 Key Objectives Identified
-- Bullet point 1
-- Bullet point 2
-- Bullet point 3
+- Bullet point 1 (Specific topic or query from the actual transcript)
+- Bullet point 2 (Specific topic or query from the actual transcript)
+- Bullet point 3 (Specific topic or query from the actual transcript)
 
 ### ⚡ Step-by-Step Action Plan
-1. **[Immediate Action 1]**: Detailed description of what to do first.
-2. **[Next Milestone 2]**: Next step towards achieving the goal.
+1. **[Immediate Action 1]**: Concrete next step directly related to what was discussed.
+2. **[Next Milestone 2]**: Next step towards achieving the specific goal.
 3. **[Follow-up Step 3]**: Long-term execution or verification step.
 
 ### 💡 Recommended Tools, Schemes & Resources
-- **Resource/Scheme 1**: Relevant link, portal, government scheme (e.g. Mudra Loan, PMKVY, Udyam, SSC/UPSC Portal), or tool.
-- **Resource/Scheme 2**: Supporting resource or learning module.
+- **Resource 1**: Relevant link, tool, portal, or learning resource tailored to this exact topic.
+- **Resource 2**: Supporting resource or reference directly applicable to the discussion.
 
 Keep the tone encouraging, professional, and directly actionable. Use bold headings, clear markdown formatting, and crisp bullet points.`;
 
@@ -4876,12 +4887,12 @@ Keep the tone encouraging, professional, and directly actionable. Use bold headi
         contents: [
           {
             role: 'user',
-            parts: [{ text: `Please analyze and summarize this session history into a bulleted action plan:\n\n${formattedTranscript}` }]
+            parts: [{ text: `Please analyze and summarize this session history into a bulleted action plan with 100% factual accuracy to what was actually discussed:\n\n${formattedTranscript}` }]
           }
         ],
         config: {
           systemInstruction: summarySystemInstruction,
-          temperature: 0.4,
+          temperature: 0.2,
         }
       });
 
@@ -4908,48 +4919,69 @@ app.post('/api/analyze-call', async (req, res) => {
   const validatedTurns = turns
     .filter((t: any) => t && typeof t === 'object' && t.text && typeof t.text === 'string' && t.text.trim().length > 0)
     .map((t: any) => ({
-      speaker: t.speaker === 'user' ? 'user' : 'arohi',
+      speaker: t.speaker === 'user' || t.speaker?.toLowerCase() === 'candidate' ? 'user' : 'arohi',
       text: t.text.trim(),
       timestamp: t.timestamp || new Date().toISOString()
     }));
 
   try {
-    let parsed: any;
-    if (aiClient && validatedTurns.length > 0) {
-      const text = validatedTurns.map(t => `${t.speaker === 'user' ? 'Candidate' : 'Arohi AI'}: ${t.text}`).join('\n');
-      
-      const prompt = `Perform a comprehensive conversation analysis on the following real-time Indian voice interaction between a candidate and AROHI AI.
-Analyze the actual dialogue, and extract details such as any specific names, numbers, budgets, or business types they discussed (e.g. "manufacturing setup of flying ash bricks factory with a budget of 10 lakhs" or similar details).
+    let parsed: any = null;
+    const userSpokenTurns = validatedTurns.filter(t => t.speaker === 'user');
 
-Return a clean, valid JSON response with the following fields:
-- summary: (string, a warm, professional, detailed 1-2 sentence executive summary of what was ACTUALLY discussed in this specific call, reflecting real topics, names, budgets, and objectives. Do NOT assume generic templates like a bakery, software development, or a career plan unless actually mentioned in the transcript. Be fully truthful to the actual speech.)
-- priorities: (array of exactly 3 strings, crucial action items or strategic next-step priorities tailored specifically to what they discussed. Do NOT use technical meta-logs or developer/system events like "Initialized AROHI system".)
-- completedTasks: (array of exactly 2-3 strings, completed milestones or accomplishments during the call. Do NOT include technical meta-logs, system operations, API calls, or server/developer events such as "Initialized AROHI system", "Scanned payload", "Parsed JSON", "Set up connection".)
-- isCareerRelated: (boolean, true if the topic is NOT business/MSME/entrepreneurship)
-- topics: (object containing the following booleans):
-  - business: (boolean, true if startup, funding, business, MSME, shop, manufacturing, or factory was discussed)
-  - resume: (boolean, true if resume, CV, biodata, or portfolio was discussed)
-  - jobs: (boolean, true if job vacancy, exams, SSC, PSC, placement was discussed)
-  - courses: (boolean, true if courses, upskilling, certifications, training was discussed)
+    if (aiClient && validatedTurns.length > 0 && userSpokenTurns.length > 0) {
+      const text = validatedTurns.map(t => `${t.speaker === 'user' ? 'User/Caller' : 'Arohi AI'}: ${t.text}`).join('\n');
+      
+      const prompt = `Analyze the following real-time voice call transcript between a user and AROHI AI with 100% strict factual fidelity.
+
+CRITICAL INSTRUCTIONS:
+1. SUMMARY: Write a concise, 1-2 sentence executive summary of EXACTLY what the user asked/discussed and what guidance Arohi provided in this call.
+   - Include the real topic, subject matter, specific names, numbers, or questions mentioned by the user.
+   - NEVER make up or assume generic topics (e.g. do NOT claim they discussed brick factories, bakery setups, ATS resumes, Mudra loans, or coding exams unless specifically mentioned in this transcript).
+2. PRIORITIES / NEXT STEPS: Provide an array of exactly 2-3 actionable, concrete next steps strictly tailored to what was ACTUALLY discussed on this call.
+3. COMPLETED MILESTONES: Provide an array of 1-2 accomplishments achieved during this conversation (e.g. "Addressed user query on [topic]", "Outlined key strategies for [subject]"). Do NOT include system/API technical event descriptions.
+4. TOPICS & CLASSIFICATION: Classify whether the discussion touched upon business/finance, resumes, job recruitment, or technical courses based ONLY on the transcript.
+
+Return a clean, valid JSON object with the following schema:
+{
+  "summary": "1-2 sentence faithful summary of the actual call",
+  "priorities": ["Concrete next step 1 tailored to call", "Concrete next step 2 tailored to call"],
+  "completedTasks": ["Accomplished milestone 1"],
+  "isCareerRelated": boolean,
+  "topics": {
+    "business": boolean,
+    "resume": boolean,
+    "jobs": boolean,
+    "courses": boolean
+  }
+}
 
 Call Transcript Turns:
 ${text}`;
 
-      const response = await generateContentWithFallback(aiClient, {
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          systemInstruction: 'You are AROHI, a brilliant career and business development analyst. Synthesize voice sessions with high fidelity and zero template slop. NEVER include developer or API event descriptions as completed tasks.',
-        }
-      });
+      try {
+        const response = await generateContentWithFallback(aiClient, {
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            systemInstruction: 'You are AROHI AI, an intelligent executive conversation analyst. Synthesize voice call sessions with pristine factual accuracy and zero template hallucination.',
+            temperature: 0.2
+          }
+        });
 
-      parsed = JSON.parse(response.text || '{}');
-    } else {
-      // Return a smart client-side analysis from the server
+        if (response && response.text) {
+          const cleanJson = response.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          parsed = JSON.parse(cleanJson);
+        }
+      } catch (geminiErr) {
+        console.error('Error generating AI voice call analysis with Gemini:', geminiErr);
+      }
+    }
+
+    if (!parsed || !parsed.summary) {
       parsed = runSmartOfflineAnalysis(validatedTurns);
     }
 
-    // 2. Structured logging mechanism to console (fully readable/scannable logs)
+    // 2. Structured logging mechanism to console
     console.log(JSON.stringify({
       tag: 'AROHI_VOICE_SESSION_TRANSCRIPT',
       timestamp: new Date().toISOString(),
@@ -5028,27 +5060,18 @@ ${text}`;
 function runSmartOfflineAnalysis(turns: any[]) {
   if (!turns || turns.length === 0) {
     return {
-      summary: "The voice session completed successfully, but no spoken turns were registered.",
+      summary: "The voice consultation completed.",
       priorities: [
-        "PLANNING: Refine your professional or entrepreneurial strategy with AROHI.",
-        "SKILLS: Focus on learning practical, high-demand industry skills.",
-        "COMPLIANCE: Research state-sponsored developmental programs and support provisions."
+        "Continue your consultation anytime via voice call or chat.",
+        "Share specific questions or goals with AROHI for personalized assistance."
       ],
       completedTasks: [
-        "AROHI Real-Time voice consultation completed"
+        "Voice call session completed"
       ],
       isCareerRelated: true,
       topics: { business: false, resume: false, jobs: false, courses: false }
     };
   }
-
-  const text = turns.map(t => t.text.toLowerCase()).join(' ');
-
-  const isBricks = /brick|ash|fly|cement/.test(text);
-  const isBusiness = isBricks || /bakery|bake|bread|cake|business|entrepreneur|shop|mudra|loan|startup|venture|funding|finance|retail|commerce|market|industry|manufactur/.test(text);
-  const isResume = /resume|cv|portfolio|bio|biodata|interview|hire|hiring|recruit/.test(text);
-  const isJobs = /job|vacancy|exam|ssc|psc|railway|post|placement|technical service/.test(text);
-  const isCourses = /course|learn|skill|upskill|react|d3|training|study|education|cert/.test(text);
 
   const userTurns = turns.filter(t => t.speaker === 'user' || t.speaker?.toLowerCase() === 'candidate');
   const assistantTurns = turns.filter(t => t.speaker === 'arohi' || t.speaker?.toLowerCase() === 'arohi ai' || t.speaker === 'assistant');
@@ -5056,98 +5079,53 @@ function runSmartOfflineAnalysis(turns: any[]) {
   const userTexts = userTurns.map(t => t.text.trim()).filter(Boolean);
   const assistantTexts = assistantTurns.map(t => t.text.trim()).filter(Boolean);
 
+  const fullText = turns.map(t => t.text.toLowerCase()).join(' ');
+
+  const isBusiness = /business|shop|startup|loan|funding|finance|market|industry|manufactur|commercial/.test(fullText);
+  const isResume = /resume|cv|portfolio|biodata/.test(fullText);
+  const isJobs = /job|vacancy|exam|recruitment|placement|interview/.test(fullText);
+  const isCourses = /course|learn|skill|upskill|training|study|education|cert/.test(fullText);
+
   let summary = "";
   if (userTexts.length > 0 && assistantTexts.length > 0) {
-    const primaryQuery = userTexts[0];
-    const primaryResponse = assistantTexts[0];
-    
-    const cleanQuery = primaryQuery.length > 120 ? primaryQuery.substring(0, 117) + "..." : primaryQuery;
-    const cleanResponse = primaryResponse.length > 150 ? primaryResponse.substring(0, 147) + "..." : primaryResponse;
-    
-    summary = `The candidate discussed: "${cleanQuery}". AROHI provided personalized guidance, recommending: "${cleanResponse}".`;
+    const userQuery = userTexts.join(" | ");
+    const cleanQuery = userQuery.length > 140 ? userQuery.substring(0, 137) + "..." : userQuery;
+    summary = `The user inquired about: "${cleanQuery}". AROHI AI provided live guidance and strategic insights during the session.`;
   } else if (userTexts.length > 0) {
-    const cleanQuery = userTexts[0].length > 180 ? userTexts[0].substring(0, 177) + "..." : userTexts[0];
-    summary = `The voice session captured the candidate's query: "${cleanQuery}". AROHI analyzed this input to frame tailored development opportunities.`;
+    const userQuery = userTexts.join(" | ");
+    const cleanQuery = userQuery.length > 160 ? userQuery.substring(0, 157) + "..." : userQuery;
+    summary = `The voice session addressed the user's inquiry: "${cleanQuery}".`;
   } else if (assistantTexts.length > 0) {
-    const cleanResponse = assistantTexts[0].length > 180 ? assistantTexts[0].substring(0, 177) + "..." : assistantTexts[0];
-    summary = `AROHI provided consultation guidance: "${cleanResponse}", outlining technical and developmental milestones.`;
+    const cleanResponse = assistantTexts[0].length > 160 ? assistantTexts[0].substring(0, 157) + "..." : assistantTexts[0];
+    summary = `AROHI provided consultation guidance during the call: "${cleanResponse}".`;
   } else {
-    summary = "The candidate and AROHI engaged in a voice consultation. Discussion points centered on matching qualifications against active vacancies, identifying upskilling opportunities, or exploring state-sponsored schemes.";
+    summary = "Voice consultation completed with AROHI AI.";
   }
 
-  let priorities: string[] = [];
-  let completedTasks: string[] = [];
-
-  if (isBricks) {
-    priorities = [
-      "PLANT INFRASTRUCTURE: Finalize machinery procurement specs for automatic/semi-automatic brick presses.",
-      "FINANCING PLAN: Structure the 10 Lakhs budget, dividing 60% for machinery and 40% for working capital.",
-      "MSME INCENTIVES: Apply for an Udyam MSME certificate to claim credit linkages and power tariff subsidies."
-    ];
-    completedTasks = [
-      "Fly Ash Bricks Factory Setup Outline Created",
-      "Capital Expenditure Allocations Mapped (10 Lakhs budget)",
-      "MSME Subsidies Eligibility Verified"
-    ];
-  } else if (isBusiness) {
-    const bizMatch = text.match(/(bakery|shop|venture|startup|retail|commerce)/);
-    const bizName = bizMatch ? bizMatch[1] : "commercial venture";
-    priorities = [
-      `BUSINESS MODELLING: Finalize the commercial product line, pricing framework, and equipment procurement list for your ${bizName}.`,
-      "FINANCE: Prepare draft business proposals and check eligibility for the PM Mudra Loan Scheme.",
-      "COMPLIANCE: Check licensing guidelines (FSSAI/Municipal) and regional trading registrations."
-    ];
-    completedTasks = [
-      `Business Model Outline Generated for ${bizName}`,
-      "Mudra Loan Scheme (PMMY) Eligibility Checklist Verified",
-      "Sourcing & Commercial Setup Priorities Mapped"
-    ];
-  } else if (isResume && !isJobs) {
-    priorities = [
-      "RESUME EXPORT: Review and download the personalized professional resume generated in this session.",
-      "PORTFOLIO: Collate live project links highlighting key engineering outputs and interactive features.",
-      "PREPARATION: Go through mock interviews with Arohi's career sandbox to practice core answers."
-    ];
-    completedTasks = [
-      "Candidate Professional Resume Drafted",
-      "Technical Competencies (React 19, TypeScript) Formatted for Export"
-    ];
+  const priorities: string[] = [];
+  if (userTexts.length > 0) {
+    priorities.push(`Review the specific guidance and recommendations shared during the call.`);
+    priorities.push(`Execute the immediate milestones discussed with AROHI.`);
+    priorities.push(`Continue the conversation in chat or schedule a follow-up voice call to dive deeper.`);
   } else {
-    const techKeywords = ["react", "software", "developer", "coding", "technical", "web", "d3", "programming", "python", "java", "sql", "engineering"];
-    const hasTech = techKeywords.some(kw => text.includes(kw));
+    priorities.push("Ask any follow-up questions in chat to continue the conversation.");
+    priorities.push("Explore related tools and resources on Arohi AI.");
+  }
 
-    if (hasTech) {
-      priorities = [
-        "DEVELOPER PORTFOLIO: Compile high-fidelity responsive projects demonstrating core technical competencies.",
-        "SKILLS ADVANCEMENT: Upskill in modern frameworks such as React 19, TypeScript, and state architectures.",
-        "PLACEMENT STRATEGY: Target state technical vacancies and corporate software development opportunities."
-      ];
-      completedTasks = [
-        "Analyzed software development career alignment",
-        "Configured personalized upskilling benchmarks",
-        "Matched target technical vacancy tracks"
-      ];
-    } else {
-      priorities = [
-        "CAREER STRATEGY: Consult AROHI periodically to refine your professional or entrepreneurial strategy.",
-        "DEVELOPMENT: Focus on learning practical, high-demand industry skills that fit your desired track.",
-        "COMPLIANCE: Research state-sponsored developmental programs and career support provisions."
-      ];
-      completedTasks = [
-        "Completed professional skill diagnostic",
-        "AROHI Real-Time voice consultation logged",
-        "Career development checklist updated"
-      ];
-    }
+  const completedTasks: string[] = [
+    "Voice consultation completed with AROHI AI"
+  ];
+  if (userTexts.length > 0) {
+    completedTasks.push(`Discussed user queries on session topics`);
   }
 
   return {
     summary,
-    priorities,
+    priorities: priorities.slice(0, 3),
     completedTasks,
     isCareerRelated: !isBusiness,
     topics: {
-      business: isBusiness || turns.length === 0,
+      business: isBusiness,
       resume: isResume,
       jobs: isJobs,
       courses: isCourses
