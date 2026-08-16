@@ -49,6 +49,7 @@ import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
 import { useAuth } from '../context/AuthContext';
 import ArohiAvatar from './ArohiAvatar';
+import HeaderNotifications from './HeaderNotifications';
 
 interface WelcomeLandingProps {
   onEnter: () => void;
@@ -69,6 +70,11 @@ interface WelcomeLandingProps {
   remainingSeconds?: number;
   onUpgradeClick?: () => void;
   onOpen3DLearning?: (topicId?: string) => void;
+  subscriptionEndDate?: number;
+  subscriptionPlanName?: string;
+  onRenewSubscription?: () => void;
+  onSetSubscriptionEndDate?: (newTimestamp: number) => void;
+  currency?: 'INR' | 'USD';
 }
 
 export default function WelcomeLanding({ 
@@ -89,7 +95,12 @@ export default function WelcomeLanding({
   remainingMinutes = 0,
   remainingSeconds = 0,
   onUpgradeClick,
-  onOpen3DLearning
+  onOpen3DLearning,
+  subscriptionEndDate,
+  subscriptionPlanName = 'Starter Plan (₹399/mo)',
+  onRenewSubscription,
+  onSetSubscriptionEndDate,
+  currency = 'INR'
 }: WelcomeLandingProps) {
   const { user, userData } = useAuth();
   
@@ -863,21 +874,31 @@ export default function WelcomeLanding({
               {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
 
-            {/* Notification Bell with Red Dot */}
-            <button 
-              onClick={() => {
-                if (onQuickChat) onQuickChat("What are the latest updates and announcements from Arohi AI?");
+            {/* Notification Bell & 7-Day Pre-Expiry Alert Dropdown Center */}
+            <HeaderNotifications 
+              hasActiveSubscription={hasActiveSubscription}
+              subscriptionEndDate={subscriptionEndDate || (Date.now() + (6 * 24 * 60 * 60 * 1000) + (18 * 60 * 60 * 1000))}
+              subscriptionPlanName={subscriptionPlanName}
+              onRenewSubscription={() => {
+                if (onUpgradeClick) {
+                  onUpgradeClick();
+                } else if (onRenewSubscription) {
+                  onRenewSubscription();
+                } else {
+                  setActiveTab('pricing');
+                  onEnter();
+                }
               }}
-              className={`relative p-1.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer ${
-                isDarkMode 
-                  ? 'bg-[#131728] border-slate-800 text-slate-200 hover:bg-[#1a2038]' 
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
-              }`}
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#070814]"></span>
-            </button>
+              onSetSubscriptionEndDate={onSetSubscriptionEndDate}
+              isDarkMode={isDarkMode}
+              onOpenAuth={onOpenAuth}
+              onNavigateTab={(tab) => {
+                setActiveTab(tab);
+                onEnter();
+              }}
+              user={user}
+              currency={currency}
+            />
           </div>
 
         </div>
@@ -1307,8 +1328,12 @@ export default function WelcomeLanding({
 
           <button
             onClick={() => {
-              setActiveTab('pricing');
-              onEnter();
+              if (onUpgradeClick) {
+                onUpgradeClick();
+              } else {
+                setActiveTab('pricing');
+                onEnter();
+              }
             }}
             className="relative z-10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:from-amber-300 hover:to-yellow-200 text-xs sm:text-sm font-black tracking-tight shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
           >

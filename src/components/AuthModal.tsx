@@ -27,9 +27,11 @@ import { LottieSuccessAnimation } from './LottieSuccess';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding';
+  upgradePrompt?: string | null;
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upgradePrompt }: AuthModalProps) {
   const { 
     signIn, 
     signUp, 
@@ -42,7 +44,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     updateUserProfile
   } = useAuth();
 
-  const [activeMode, setActiveMode] = useState<'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding'>('signin');
+  const [activeMode, setActiveMode] = useState<'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding'>(initialMode);
+
+  useEffect(() => {
+    if (isOpen && initialMode) {
+      setActiveMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
   const [role, setRole] = useState<'candidate' | 'recruiter'>('candidate');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -488,6 +496,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <p className="text-xs text-slate-300 max-w-[320px] mx-auto leading-normal">
             Sign in securely to save your progress, bookmark courses, track job application statuses, and unlock all interactive dashboards.
           </p>
+
+          {upgradePrompt && (
+            <div className="mt-3 p-3 bg-gradient-to-r from-amber-500/20 via-purple-900/40 to-fuchsia-900/30 border border-amber-400/50 rounded-2xl text-left flex items-start gap-2.5 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+              <p className="text-[11px] sm:text-xs font-bold text-amber-200 leading-snug">
+                {upgradePrompt}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Mode-specific content */}

@@ -613,6 +613,29 @@ export default function App() {
     return {};
   });
 
+  // 30-Day Subscription Expiry & 7-Day Advance Alert Notification System
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<number>(() => {
+    const saved = getStorageItem('arohi_subscription_end_date');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    // Default to 6.75 days remaining (triggers the prominent 7-day alert under notification badge)
+    const now = Date.now();
+    const defaultEnd = now + (6 * 24 * 60 * 60 * 1000) + (18 * 60 * 60 * 1000);
+    setStorageItem('arohi_subscription_end_date', defaultEnd.toString());
+    return defaultEnd;
+  });
+
+  const handleSetSubscriptionEndDate = (newTimestamp: number) => {
+    setSubscriptionEndDate(newTimestamp);
+    setStorageItem('arohi_subscription_end_date', newTimestamp.toString());
+  };
+
+  const activePlanDetail = Object.values(subscriptionDetails)[0];
+  const activeSubscriptionPlanName = activePlanDetail?.tierName || (currency === 'USD' ? 'Starter Plan ($5/mo)' : 'Starter Plan (₹399/mo)');
+
   const [tokenUsage, setTokenUsage] = useState<Record<string, number>>(() => {
     const saved = getStorageItem('arohi_token_usage');
     if (saved) {
@@ -690,6 +713,92 @@ export default function App() {
     buttonText?: string;
     badgeText?: string;
   } | null>(null);
+
+  // Pending Upgrade after Auth State (for visitors without signup clicking upgrade)
+  const [pendingUpgradeAfterAuth, setPendingUpgradeAfterAuth] = useState<{
+    pathId?: string;
+    planIndex?: number;
+    tierName?: string;
+    price?: number;
+    autoLaunchCheckout?: boolean;
+  } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('arohi_pending_upgrade');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [authUpgradePrompt, setAuthUpgradePrompt] = useState<string | null>(null);
+  const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup'>('signup');
+
+  // Triggered when unauthenticated user or logged-in user clicks Upgrade
+  const handleInitiateUpgrade = (planIndex = 0, autoLaunchCheckout = true) => {
+    const activeTiers = getPricingTiers(currency);
+    const chosenTier = activeTiers[planIndex] || activeTiers[0];
+    const sym = currency === 'USD' ? '$' : '₹';
+    const title = `${chosenTier.name} Subscription`;
+    const priceText = `${sym}${chosenTier.price}/mo`;
+
+    setSelectedModalPlan(planIndex);
+
+    if (!user) {
+      // User is visiting without signup: Ask for login / signup first, then make payment
+      const intent = {
+        pathId: 'path1',
+        planIndex,
+        tierName: chosenTier.name,
+        price: chosenTier.price,
+        autoLaunchCheckout
+      };
+      setPendingUpgradeAfterAuth(intent);
+      try {
+        sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
+      } catch (e) {}
+
+      setAuthInitialMode('signup');
+      setAuthUpgradePrompt(`🎁 Sign in or Create an account to activate your ${chosenTier.name} (${sym}${chosenTier.price}/mo) with 100% Cashback & complete your payment!`);
+      setIsAuthModalOpen(true);
+    } else {
+      // User is logged in: directly open checkout modal
+      setCheckoutPath({
+        id: 'path1',
+        title: title,
+        price: priceText
+      });
+    }
+  };
+
+  // When user successfully signs in/up, automatically resume checkout if pendingUpgradeAfterAuth is present
+  useEffect(() => {
+    if (user && pendingUpgradeAfterAuth) {
+      const intent = { ...pendingUpgradeAfterAuth };
+      setPendingUpgradeAfterAuth(null);
+      setAuthUpgradePrompt(null);
+      try {
+        sessionStorage.removeItem('arohi_pending_upgrade');
+      } catch (e) {}
+
+      const planIdx = intent.planIndex ?? 0;
+      setSelectedModalPlan(planIdx);
+      const activeTiers = getPricingTiers(currency);
+      const chosenTier = activeTiers[planIdx] || activeTiers[0];
+      const sym = currency === 'USD' ? '$' : '₹';
+      const title = `${chosenTier.name} Subscription`;
+      const priceText = `${sym}${chosenTier.price}/mo`;
+
+      // Close AuthModal
+      setIsAuthModalOpen(false);
+
+      // Open checkout modal so the authenticated user can complete payment
+      setCheckoutPath({
+        id: intent.pathId || 'path1',
+        title: title,
+        price: priceText
+      });
+    }
+  }, [user, pendingUpgradeAfterAuth, currency]);
 
   // --- AROHI COINS WALLET & REFERRAL CODE SYSTEM ---
   const [arohiCoinBalance, setArohiCoinBalance] = useState<number>(() => {
@@ -858,11 +967,15 @@ export default function App() {
     // Update detailed description
     const updatedDetails = { ...subscriptionDetails };
     if (isSubscribed) {
+      const newEndDate = Date.now() + THIRTY_DAYS_MS;
+      setSubscriptionEndDate(newEndDate);
+      setStorageItem('arohi_subscription_end_date', newEndDate.toString());
+
       if (pendingSubscriptionDetail) {
         updatedDetails[pathId] = pendingSubscriptionDetail;
       } else {
         // Fallback default starter tier
-        updatedDetails[pathId] = { tierName: 'Starter Plan', price: 399, margin: 199.5 };
+        updatedDetails[pathId] = { tierName: planName || 'Starter Plan', price: 399, margin: 199.5 };
       }
       
       const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
@@ -1707,7 +1820,25 @@ export default function App() {
             onNavigateTab={(tab) => setActiveTab(tab)}
             onOpenCheckout={(path, detail) => {
               setPendingSubscriptionDetail(detail);
-              setCheckoutPath(path);
+              if (!user) {
+                const numericPrice = Number(path.price.replace(/[^0-9]/g, '')) || 399;
+                const intent = {
+                  pathId: path.id,
+                  planIndex: 0,
+                  tierName: path.title,
+                  price: numericPrice,
+                  autoLaunchCheckout: true
+                };
+                setPendingUpgradeAfterAuth(intent);
+                try {
+                  sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
+                } catch (e) {}
+                setAuthInitialMode('signup');
+                setAuthUpgradePrompt(`🎁 Sign in or create an account to activate your ${path.title} (${path.price}) & complete payment!`);
+                setIsAuthModalOpen(true);
+              } else {
+                setCheckoutPath(path);
+              }
             }}
             onOpenAuth={() => setIsAuthModalOpen(true)}
           />
@@ -1929,12 +2060,15 @@ export default function App() {
         remainingMinutes={remainingMinutes}
         remainingSeconds={remainingSeconds}
         onUpgradeClick={() => {
-          setCheckoutPath({
-            id: 'path1',
-            title: 'Starter Plan - Minimum ₹399 Subscription',
-            price: '₹399/mo'
-          });
+          handleInitiateUpgrade(0, true);
         }}
+        subscriptionEndDate={subscriptionEndDate}
+        subscriptionPlanName={activeSubscriptionPlanName}
+        onRenewSubscription={() => {
+          handleInitiateUpgrade(0, true);
+        }}
+        onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
+        currency={currency}
         onOpen3DLearning={(topicId) => {
           if (topicId) setGlobal3DTopic(topicId);
           setIsGlobal3DLearningOpen(true);
@@ -2838,12 +2972,15 @@ export default function App() {
           remainingMinutes={remainingMinutes}
           remainingSeconds={remainingSeconds}
           onUpgradeClick={() => {
-            setCheckoutPath({
-              id: 'path1',
-              title: 'Starter Plan - Minimum ₹399 Subscription',
-              price: '₹399/mo'
-            });
+            handleInitiateUpgrade(0, true);
           }}
+          subscriptionEndDate={subscriptionEndDate}
+          subscriptionPlanName={activeSubscriptionPlanName}
+          onRenewSubscription={() => {
+            handleInitiateUpgrade(0, true);
+          }}
+          onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
+          currency={currency}
           onOpen3DLearning={(topicId) => {
             if (topicId) setGlobal3DTopic(topicId);
             setIsGlobal3DLearningOpen(true);
@@ -3101,6 +3238,24 @@ export default function App() {
                   const finalPayable = Math.max(0, chosenTier.price - coinsToRedeem);
                   const priceText = coinsToRedeem > 0 ? `${sym}${finalPayable} (${sym}${coinsToRedeem} Off via Coins)` : `${sym}${chosenTier.price}`;
                   
+                  if (!user) {
+                    const intent = {
+                      pathId: 'path1',
+                      planIndex: selectedModalPlan,
+                      tierName: chosenTier.name,
+                      price: chosenTier.price,
+                      autoLaunchCheckout: true
+                    };
+                    setPendingUpgradeAfterAuth(intent);
+                    try {
+                      sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
+                    } catch (e) {}
+                    setAuthInitialMode('signup');
+                    setAuthUpgradePrompt(`🔐 Please sign in or create an account to link and complete your ${title} payment (${sym}${finalPayable}).`);
+                    setIsAuthModalOpen(true);
+                    return;
+                  }
+
                   const dynamicEmail = user?.email || customerEmailInput.trim() || 'customer@arohiai.com';
                   setCheckoutPath({
                     id: 'path1',
@@ -3192,7 +3347,12 @@ export default function App() {
       {/* Security Auth Modal overlay */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthUpgradePrompt(null);
+        }}
+        initialMode={authInitialMode}
+        upgradePrompt={authUpgradePrompt}
       />
 
       {/* Social Share Modal overlay */}
@@ -3402,11 +3562,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                setCheckoutPath({
-                  id: 'path1',
-                  title: 'Starter Plan - Minimum ₹399 Subscription',
-                  price: '₹399/mo'
-                });
+                handleInitiateUpgrade(0, true);
               }}
               className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
             >
@@ -3782,11 +3938,30 @@ export default function App() {
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
                   const effectiveEmail = (customerEmailInput.trim() || user?.email || '').trim();
+                  const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
+
+                  if (!user) {
+                    const intent = {
+                      pathId: checkoutPath.id,
+                      planIndex: selectedModalPlan,
+                      tierName: checkoutPath.title,
+                      price: numericPrice,
+                      autoLaunchCheckout: true
+                    };
+                    setPendingUpgradeAfterAuth(intent);
+                    try {
+                      sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
+                    } catch (e) {}
+                    setAuthInitialMode('signup');
+                    setAuthUpgradePrompt(`🔐 Please sign in or create an account to link and complete your ${checkoutPath.title} payment (${checkoutPath.price}).`);
+                    setIsAuthModalOpen(true);
+                    return;
+                  }
+
                   if (!effectiveEmail) {
                     alert('Please enter your email address to proceed with Razorpay checkout.');
                     return;
                   }
-                  const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
                   setIsProcessingRazorpay(true);
                   try {
                     await openRazorpayCheckout({
