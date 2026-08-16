@@ -877,7 +877,7 @@ export default function WelcomeLanding({
             {/* Notification Bell & 7-Day Pre-Expiry Alert Dropdown Center */}
             <HeaderNotifications 
               hasActiveSubscription={hasActiveSubscription}
-              subscriptionEndDate={subscriptionEndDate || (Date.now() + (6 * 24 * 60 * 60 * 1000) + (18 * 60 * 60 * 1000))}
+              subscriptionEndDate={subscriptionEndDate}
               subscriptionPlanName={subscriptionPlanName}
               onRenewSubscription={() => {
                 if (onUpgradeClick) {

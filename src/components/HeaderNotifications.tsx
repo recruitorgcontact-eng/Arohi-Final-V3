@@ -90,28 +90,31 @@ export default function HeaderNotifications({
     };
   }, [isOpen]);
 
-  // Calculate subscription remaining time
-  const msRemaining = subscriptionEndDate - currentTime;
-  const isExpired = msRemaining <= 0;
-  const daysRemaining = Math.max(0, Math.floor(msRemaining / (1000 * 60 * 60 * 24)));
-  const hoursRemaining = Math.max(0, Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
-  const minutesRemaining = Math.max(0, Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60)));
+  // Calculate subscription remaining time strictly based on active subscription status
+  const isSubscribed = hasActiveSubscription && subscriptionEndDate > 0;
+  const isExpired = isSubscribed && subscriptionEndDate <= currentTime;
+  const msRemaining = isSubscribed ? Math.max(0, subscriptionEndDate - currentTime) : 0;
+  const daysRemaining = isSubscribed ? Math.max(0, Math.floor((subscriptionEndDate - currentTime) / (1000 * 60 * 60 * 24))) : 0;
+  const hoursRemaining = isSubscribed ? Math.max(0, Math.floor(((subscriptionEndDate - currentTime) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) : 0;
+  const minutesRemaining = isSubscribed ? Math.max(0, Math.floor(((subscriptionEndDate - currentTime) % (1000 * 60 * 60)) / (1000 * 60))) : 0;
 
-  // Alert condition: active subscription ending within 7 days (daysRemaining <= 7)
-  const is7DaysAlertActive = (hasActiveSubscription || true) && (daysRemaining <= 7);
+  // Alert condition: ONLY active subscribers who are within 7 days of expiry and not yet expired
+  const is7DaysAlertActive = isSubscribed && !isExpired && (daysRemaining <= 7);
+  const isExpiredAlertActive = isSubscribed && isExpired;
+  const isActiveGoodStanding = isSubscribed && !isExpired && (daysRemaining > 7);
 
   // Format expiry date nicely
-  const expiryDateFormatted = new Date(subscriptionEndDate).toLocaleDateString('en-US', {
+  const expiryDateFormatted = subscriptionEndDate > 0 ? new Date(subscriptionEndDate).toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  });
+  }) : 'N/A';
 
-  const expiryTimeFormatted = new Date(subscriptionEndDate).toLocaleTimeString('en-US', {
+  const expiryTimeFormatted = subscriptionEndDate > 0 ? new Date(subscriptionEndDate).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
-  });
+  }) : 'N/A';
 
   const markAsRead = (id: string) => {
     const updated = { ...readNotifications, [id]: true };
@@ -135,7 +138,7 @@ export default function HeaderNotifications({
     } catch (e) {}
   };
 
-  const unreadCount = (is7DaysAlertActive && !readNotifications['sub_expiry_alert'] ? 1 : 0) +
+  const unreadCount = ((is7DaysAlertActive || isExpiredAlertActive) && !readNotifications['sub_expiry_alert'] ? 1 : 0) +
     (!readNotifications['cashback_offer'] ? 1 : 0) +
     (!readNotifications['multilingual_launch'] ? 1 : 0);
 
@@ -164,15 +167,27 @@ export default function HeaderNotifications({
             ? 'bg-[#131728] border-slate-800 text-slate-200 hover:bg-[#1a2038] hover:border-purple-500/40'
             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs hover:border-purple-300'
         }`}
-        title={is7DaysAlertActive ? `⚠️ Subscription Ending in ${daysRemaining} days! Click for details.` : 'Notifications & Alerts'}
+        title={
+          is7DaysAlertActive
+            ? `⚠️ Subscription Ending in ${daysRemaining} days! Click to review renewal options.`
+            : isExpiredAlertActive
+            ? '🚨 Subscription expired! Click to renew.'
+            : isActiveGoodStanding
+            ? `✨ Active Subscription (${daysRemaining} days remaining)`
+            : 'Notifications & Ecosystem Updates'
+        }
       >
-        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${is7DaysAlertActive ? 'text-amber-400 animate-[wiggle_1s_ease-in-out_infinite]' : ''}`} />
+        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${is7DaysAlertActive ? 'text-amber-400 animate-[wiggle_1s_ease-in-out_infinite]' : isExpiredAlertActive ? 'text-rose-400 animate-pulse' : ''}`} />
         
-        {/* Animated Alert Badge on the Bell */}
+        {/* Animated Alert Badge on the Bell: ONLY when actually in 7-day warning or expired */}
         {is7DaysAlertActive ? (
           <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-[9px] leading-none shadow-md shadow-rose-500/40 border border-white dark:border-[#070814] animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
             <span>{daysRemaining}d</span>
+          </span>
+        ) : isExpiredAlertActive ? (
+          <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-black text-[9px] leading-none shadow-md shadow-rose-600/40 border border-white dark:border-[#070814] animate-pulse">
+            <span>0d</span>
           </span>
         ) : unreadCount > 0 ? (
           <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#070814] animate-pulse"></span>
@@ -287,14 +302,12 @@ export default function HeaderNotifications({
             {/* Main Notifications Scroll Area */}
             <div className="max-h-[380px] sm:max-h-[420px] overflow-y-auto p-3 space-y-3 custom-scrollbar">
 
-              {/* 1. PRIMARY HIGHLIGHT: 7-DAY SUBSCRIPTION EXPIRY ALERT CARD */}
-              {(activeFilter === 'all' || activeFilter === 'subscription') && (
+              {/* 1A. PRIMARY HIGHLIGHT: 7-DAY SUBSCRIPTION EXPIRY WARNING (Only when active & <= 7 days) */}
+              {(activeFilter === 'all' || activeFilter === 'subscription') && is7DaysAlertActive && (
                 <div 
                   id="subscription-expiry-alert-card"
                   className={`rounded-2xl p-4 border transition-all relative overflow-hidden text-left shadow-lg ${
-                    isExpired 
-                      ? 'bg-gradient-to-br from-rose-950/80 via-[#260a16] to-[#15040d] border-rose-500/80 shadow-rose-950/40'
-                      : daysRemaining <= 3 
+                    daysRemaining <= 3 
                       ? 'bg-gradient-to-br from-rose-950/70 via-[#28131d] to-[#170c29] border-rose-500/70 shadow-rose-950/30'
                       : 'bg-gradient-to-br from-amber-950/60 via-[#24172f] to-[#140c26] border-amber-400/70 shadow-amber-950/30'
                   }`}
@@ -305,7 +318,7 @@ export default function HeaderNotifications({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className={`p-2 rounded-xl flex items-center justify-center shrink-0 border ${
-                        isExpired || daysRemaining <= 3 
+                        daysRemaining <= 3 
                           ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse' 
                           : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                       }`}>
@@ -313,18 +326,14 @@ export default function HeaderNotifications({
                       </div>
                       <div>
                         <span className={`text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md inline-block ${
-                          isExpired 
-                            ? 'bg-rose-500 text-white' 
-                            : daysRemaining <= 3
+                          daysRemaining <= 3
                             ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50'
                             : 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
                         }`}>
-                          {isExpired ? '🚨 SUBSCRIPTION EXPIRED' : '⚠️ SERVICE INTERRUPTION WARNING'}
+                          ⚠️ SERVICE INTERRUPTION WARNING
                         </span>
                         <h4 className="font-extrabold text-sm text-white mt-1 leading-tight">
-                          {isExpired
-                            ? 'Immediate Action: Subscription Has Ended'
-                            : `7-Day Advance Notice: Renews Soon`}
+                          7-Day Advance Notice: Renews Soon
                         </h4>
                       </div>
                     </div>
@@ -332,14 +341,12 @@ export default function HeaderNotifications({
                     {/* Expiry Badge */}
                     <div className="text-right shrink-0">
                       <span className={`inline-flex items-center gap-1 font-mono font-black text-xs px-2.5 py-1 rounded-full border ${
-                        isExpired 
-                          ? 'bg-rose-500 text-white border-rose-400' 
-                          : daysRemaining <= 3
+                        daysRemaining <= 3
                           ? 'bg-rose-500/20 text-rose-200 border-rose-500/40'
                           : 'bg-amber-400/20 text-amber-200 border-amber-400/50'
                       }`}>
                         <Clock className="w-3.5 h-3.5" />
-                        {isExpired ? '0d 0h Left' : `${daysRemaining}d ${hoursRemaining}h Left`}
+                        {daysRemaining}d {hoursRemaining}h Left
                       </span>
                     </div>
                   </div>
@@ -395,6 +402,149 @@ export default function HeaderNotifications({
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* 1B. EXPIRED SUBSCRIPTION CARD (Only when subscription was active and reached 0) */}
+              {(activeFilter === 'all' || activeFilter === 'subscription') && isExpiredAlertActive && (
+                <div 
+                  id="subscription-expired-alert-card"
+                  className="rounded-2xl p-4 border bg-gradient-to-br from-rose-950/80 via-[#260a16] to-[#15040d] border-rose-500/80 shadow-rose-950/40 text-left shadow-lg"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md inline-block bg-rose-500 text-white">
+                          🚨 SUBSCRIPTION EXPIRED
+                        </span>
+                        <h4 className="font-extrabold text-sm text-white mt-1 leading-tight">
+                          Immediate Action: Plan Has Ended
+                        </h4>
+                      </div>
+                    </div>
+                    <span className="font-mono font-black text-xs px-2.5 py-1 rounded-full bg-rose-500 text-white">
+                      0d Left
+                    </span>
+                  </div>
+
+                  <div className="mt-3 text-xs text-slate-200 space-y-1">
+                    <p className="leading-relaxed">
+                      Your subscription ended on <strong className="text-white">{expiryDateFormatted}</strong>. Reactivate now to resume unlimited AI queries, live voice tools, and resume parsing.
+                    </p>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false);
+                        onRenewSubscription();
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-white font-black text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Zap className="w-4 h-4 fill-current" />
+                      <span>Reactivate Subscription Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 1C. HEALTHY ACTIVE SUBSCRIPTION CARD (When active and > 7 days left) */}
+              {(activeFilter === 'all' || activeFilter === 'subscription') && isActiveGoodStanding && (
+                <div 
+                  id="subscription-healthy-card"
+                  className="rounded-2xl p-4 border bg-gradient-to-br from-emerald-950/40 via-[#111e24] to-[#0d1622] border-emerald-500/40 text-left shadow-md space-y-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          Active &amp; Protected
+                        </span>
+                        <h4 className="font-extrabold text-sm text-white mt-1 leading-tight">
+                          {subscriptionPlanName}
+                        </h4>
+                      </div>
+                    </div>
+                    <span className="text-right text-[11px] font-mono text-emerald-300 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                      {daysRemaining} Days Left
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Your membership is active through <strong className="text-white">{expiryDateFormatted}</strong>. You have unrestricted access to all multimodal AI models, 150+ regional voice engines, and career tools.
+                  </p>
+
+                  <div className="pt-1 flex items-center justify-between border-t border-emerald-500/20 text-[11px]">
+                    <span className="text-slate-400">Next Renewal: {expiryDateFormatted}</span>
+                    {onNavigateTab && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          onNavigateTab('pricing');
+                        }}
+                        className="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer"
+                      >
+                        Manage Plan →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 1D. NON-SUBSCRIBED / DISCOVERY CARD (When user has no active subscription) */}
+              {(activeFilter === 'all' || activeFilter === 'subscription') && !isSubscribed && (
+                <div 
+                  id="subscription-discovery-card"
+                  className="rounded-2xl p-4 border bg-gradient-to-br from-purple-950/40 via-[#180f2d] to-[#0e0a1f] border-purple-500/30 text-left shadow-md space-y-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        <Sparkles className="w-5 h-5 text-purple-300" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md inline-block bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                          PRO MEMBERSHIP
+                        </span>
+                        <h4 className="font-extrabold text-sm text-white mt-1 leading-tight">
+                          Upgrade to Arohi AI Pro
+                        </h4>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-mono text-amber-300 font-black bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-full">
+                      {currency === 'USD' ? '$5/mo' : '₹399/mo'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Unlock unrestricted access to Arohi Multimodal LLM, 150+ language voice synthesis, resume builders, and verified job postings with 100% Coins Cashback.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (onNavigateTab) {
+                        onNavigateTab('pricing');
+                      } else {
+                        onRenewSubscription();
+                      }
+                    }}
+                    className="w-full py-2 px-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <span>View Subscription Plans</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 

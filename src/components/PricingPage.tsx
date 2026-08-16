@@ -124,8 +124,8 @@ export default function PricingPage({
 
         <p className="text-sm md:text-base text-slate-700 dark:text-slate-300 font-bold leading-relaxed">
           {activeCurrency === 'USD' 
-            ? 'Global AI Access: Unlimited AI Chat, High-Speed Token Credits, Live Voice Calls, ATS Scans & Business Intelligence across 150+ Countries.' 
-            : 'Unlock Unlimited AI Chat, High-Speed AI Token Credits, Live Voice Calls, ATS Resume Scoring, and Career Intelligence across India.'}
+            ? 'Global AI Access: Unlimited AI Chat, High-Speed Token Credits, Live Voice Calls & Advanced Multimodal Intelligence across 150+ Countries.' 
+            : 'Unlock Unlimited AI Chat, High-Speed AI Token Credits, Live Voice Calls, and Advanced Multimodal Intelligence across India.'}
         </p>
 
         {/* 🌐 CURRENCY SELECTOR SWITCHER PILL */}
@@ -344,31 +344,6 @@ export default function PricingPage({
                     <span className="text-amber-200">{tier.aiCallsText}</span>
                   </div>
                 </div>
-
-                {/* Specific Tier Limits Highlights */}
-                <div className="space-y-2 pt-1">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block">
-                    Included Tier Perks:
-                  </span>
-                  <div className="space-y-2 text-[11px] font-bold text-slate-100">
-                    <div className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-100"><strong className="text-white">ATS Scans:</strong> {tier.limits.path1.atsScans}</span>
-                    </div>
-                    <div className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-100"><strong className="text-white">Mock Interviews:</strong> {tier.limits.path1.mockInterviews}</span>
-                    </div>
-                    <div className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-100"><strong className="text-white">Skill Courses:</strong> {tier.limits.path2.activeCourses}</span>
-                    </div>
-                    <div className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-100"><strong className="text-white">Business Filings:</strong> {tier.limits.path3.msmeFilings}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Action Subscribe Button */}
@@ -405,7 +380,7 @@ export default function PricingPage({
               Full Tier Feature Comparison
             </h3>
             <p className="text-xs text-slate-200 font-medium mt-1">
-              Compare exact AI Tokens, Calls, ATS Scans, and Course limits across all 5 pricing tiers.
+              Compare exact AI Tokens, Live Voice Calls, and Cashback rewards across all 5 pricing tiers.
             </p>
           </div>
           <div className="bg-emerald-950 border border-emerald-500/50 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-300 flex items-center gap-1.5">
@@ -418,12 +393,12 @@ export default function PricingPage({
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-purple-900/60 text-purple-300 font-black uppercase text-[10px] tracking-wider">
-                <th className="py-3 px-4 min-w-[180px]">Feature / Perk</th>
-                <th className="py-3 px-3 text-center">Starter (₹399)</th>
-                <th className="py-3 px-3 text-center text-amber-300">Professional (₹699)</th>
-                <th className="py-3 px-3 text-center">Growth (₹1,699)</th>
-                <th className="py-3 px-3 text-center">Executive (₹3,999)</th>
-                <th className="py-3 px-3 text-center text-emerald-300">Ultimate (₹4,999)</th>
+                <th className="py-3 px-4 min-w-[180px]">Feature / Allocation</th>
+                <th className="py-3 px-3 text-center">Starter ({symbol}{currentTiers[0]?.price})</th>
+                <th className="py-3 px-3 text-center text-amber-300">Professional ({symbol}{currentTiers[1]?.price})</th>
+                <th className="py-3 px-3 text-center">Growth ({symbol}{currentTiers[2]?.price})</th>
+                <th className="py-3 px-3 text-center">Executive ({symbol}{currentTiers[3]?.price})</th>
+                <th className="py-3 px-3 text-center text-emerald-300">Ultimate ({symbol}{currentTiers[4]?.price})</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-900/30 font-medium text-slate-200">
@@ -466,54 +441,30 @@ export default function PricingPage({
                 <td className="py-3 px-3 text-center font-bold text-emerald-300">80 Hours/mo</td>
               </tr>
 
-              {/* ATS Resume Scans */}
+              {/* 100% Cashback Coins */}
               <tr>
-                <td className="py-3 px-4 font-bold text-slate-300">ATS Resume Scans</td>
-                <td className="py-3 px-3 text-center">5 / mo</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">15 / mo</td>
-                <td className="py-3 px-3 text-center">50 / mo</td>
-                <td className="py-3 px-3 text-center">150 / mo</td>
-                <td className="py-3 px-3 text-center font-black text-emerald-300">Unlimited</td>
+                <td className="py-3 px-4 font-bold text-amber-300 flex items-center gap-1.5">
+                  <span className="text-sm">🪙</span>
+                  <span>100% Cashback Coins</span>
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-amber-200">{symbol}{currentTiers[0]?.price} Coins</td>
+                <td className="py-3 px-3 text-center font-bold text-amber-300">{symbol}{currentTiers[1]?.price} Coins</td>
+                <td className="py-3 px-3 text-center font-bold text-amber-200">{symbol}{currentTiers[2]?.price} Coins</td>
+                <td className="py-3 px-3 text-center font-bold text-amber-200">{symbol}{currentTiers[3]?.price} Coins</td>
+                <td className="py-3 px-3 text-center font-bold text-emerald-300">{symbol}{currentTiers[4]?.price} Coins</td>
               </tr>
 
-              {/* Mock Interviews */}
+              {/* Priority Processing */}
               <tr>
-                <td className="py-3 px-4 font-bold text-slate-300">Live Mock Interviews</td>
-                <td className="py-3 px-3 text-center">2 / mo</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">8 / mo</td>
-                <td className="py-3 px-3 text-center">25 / mo</td>
-                <td className="py-3 px-3 text-center">75 / mo</td>
-                <td className="py-3 px-3 text-center font-black text-emerald-300">Unlimited</td>
-              </tr>
-
-              {/* Skill Courses */}
-              <tr>
-                <td className="py-3 px-4 font-bold text-slate-300">Skill Course Enrollments</td>
-                <td className="py-3 px-3 text-center">1 Active</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">3 Active</td>
-                <td className="py-3 px-3 text-center">10 Active</td>
-                <td className="py-3 px-3 text-center">30 Active</td>
-                <td className="py-3 px-3 text-center font-black text-emerald-300">Unlimited</td>
-              </tr>
-
-              {/* MSME Business Filings */}
-              <tr>
-                <td className="py-3 px-4 font-bold text-slate-300">MSME Filings & Mudra</td>
-                <td className="py-3 px-3 text-center">2 / mo</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">6 / mo</td>
-                <td className="py-3 px-3 text-center">20 / mo</td>
-                <td className="py-3 px-3 text-center">60 / mo</td>
-                <td className="py-3 px-3 text-center font-black text-emerald-300">Unlimited</td>
-              </tr>
-
-              {/* NCERT School Support */}
-              <tr>
-                <td className="py-3 px-4 font-bold text-slate-300">Class 1-10 Downloads</td>
-                <td className="py-3 px-3 text-center">10 / mo</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">30 / mo</td>
-                <td className="py-3 px-3 text-center">100 / mo</td>
-                <td className="py-3 px-3 text-center">300 / mo</td>
-                <td className="py-3 px-3 text-center font-black text-emerald-300">Unlimited</td>
+                <td className="py-3 px-4 font-bold text-purple-300 flex items-center gap-1.5">
+                  <Crown className="w-4 h-4 text-purple-400" />
+                  <span>Processing Priority</span>
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-slate-300">Standard Fast</td>
+                <td className="py-3 px-3 text-center font-bold text-amber-300">High Priority</td>
+                <td className="py-3 px-3 text-center font-bold text-purple-200">Ultra Priority</td>
+                <td className="py-3 px-3 text-center font-bold text-purple-200">Dedicated VIP</td>
+                <td className="py-3 px-3 text-center font-bold text-emerald-300">Real-time VIP</td>
               </tr>
             </tbody>
           </table>

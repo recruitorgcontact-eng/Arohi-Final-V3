@@ -109,37 +109,6 @@ export default function TierSelectorGrid({
                       <span className="tracking-tight text-emerald-100">{tier.unlimitedChatText}</span>
                     </div>
                   </div>
-
-                  <span className="text-[8px] text-slate-300 font-bold uppercase tracking-wider block">Path Specific Perks:</span>
-                  <div className="space-y-1.5 text-[10px] text-slate-100 font-bold">
-                    {pathId === 'path1' && (
-                      <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.atsScans}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mockInterviews}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.jobMatches}</span></div>
-                      </>
-                    )}
-                    {pathId === 'path2' && (
-                      <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.activeCourses}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mentorHours}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.certificates}</span></div>
-                      </>
-                    )}
-                    {pathId === 'path3' && (
-                      <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.msmeFilings}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.mudraChecks}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.startupReports}</span></div>
-                      </>
-                    )}
-                    {pathId === 'path4' && (
-                      <>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.chapterDownloads}</span></div>
-                        <div className="flex items-center gap-1.5"><Check className="w-3 h-3 text-purple-400 shrink-0" /> <span className="truncate text-slate-100">{tierLimits.aiQueries}</span></div>
-                      </>
-                    )}
-                  </div>
                 </div>
               </div>
 

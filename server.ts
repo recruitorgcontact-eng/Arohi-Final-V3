@@ -1421,8 +1421,167 @@ app.get('/api/admin/stats', async (req, res) => {
   });
 });
 
+const NOW_SERVER = Date.now();
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 // Server-Side Real Persistence for Admin Panel
-let serverAdminUsers: any[] = [];
+let serverAdminUsers: any[] = [
+  {
+    id: 'usr_admin_001',
+    email: 'elitetraderjunoon@gmail.com',
+    name: 'Junoon Admin',
+    phone: '+91 98765 43210',
+    role: 'Super Administrator & Founder',
+    status: 'VIP',
+    entrySource: 'Direct Admin Gateway',
+    isSubscribed: true,
+    activePlanName: 'Executive All-Access Pro (₹1,299/mo)',
+    planStartDate: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
+    planExpiryDate: new Date(NOW_SERVER + 20 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
+    planExpiryTimestamp: NOW_SERVER + 20 * ONE_DAY_MS,
+    totalPaidAmount: 1299,
+    lastPaymentMethod: 'UPI Scan (elitetraderjunoon@oksbi)',
+    lastCouponUsed: 'JUNOONVIP (100% Founder Access)',
+    paymentStatus: 'Verified',
+    permissions: {
+      canEditJobs: true,
+      canApproveApps: true,
+      canViewFinance: true
+    },
+    services: {
+      path1: true,
+      path2: true,
+      path3: true,
+      path4: true
+    },
+    takenCourses: ['Full Stack AI Architecture', 'Odisha Civil Services Prelims', 'Executive Mentorship'],
+    usage: {
+      chatsWithArohi: 142,
+      resumeScans: 28,
+      mockInterviews: 12
+    },
+    customizedSettings: {
+      tutoringSlot: 'Bhubaneswar Command Center',
+      priorityLevel: 'Critical',
+      assignedMentor: 'Arohi AI Master Model'
+    }
+  },
+  {
+    id: 'usr_sub_002',
+    email: 'priya.sharma@gmail.com',
+    name: 'Priya Sharma',
+    phone: '+91 91234 56780',
+    role: 'Job Seeker / Aspirant',
+    status: 'Active',
+    entrySource: 'Google Search PWA',
+    isSubscribed: true,
+    activePlanName: 'Career & Resume Pro Plan (₹499/mo)',
+    planStartDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
+    planExpiryDate: new Date(NOW_SERVER + 25 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
+    planExpiryTimestamp: NOW_SERVER + 25 * ONE_DAY_MS,
+    totalPaidAmount: 499,
+    lastPaymentMethod: 'Razorpay Gateway (UPI)',
+    lastCouponUsed: 'None (Direct Payment)',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: false, path3: false, path4: false },
+    takenCourses: ['SSC CGL Complete Tier-1', 'ATS Resume Optimization'],
+    usage: { chatsWithArohi: 36, resumeScans: 8, mockInterviews: 3 },
+    customizedSettings: { tutoringSlot: 'Daily Evening 7 PM', priorityLevel: 'High', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_sub_003',
+    email: 'amit.patel@outlook.com',
+    name: 'Amit Patel',
+    phone: '+91 98450 11223',
+    role: 'MSME Business Owner',
+    status: 'Active',
+    entrySource: 'WhatsApp Referral Link',
+    isSubscribed: true,
+    activePlanName: 'Udyam Business Growth Suite (₹899/mo)',
+    planStartDate: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
+    planExpiryDate: new Date(NOW_SERVER + 28 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
+    planExpiryTimestamp: NOW_SERVER + 28 * ONE_DAY_MS,
+    totalPaidAmount: 0,
+    lastPaymentMethod: 'Promo Coupon (100% Free)',
+    lastCouponUsed: 'JUNOON (100% Off + 399 Coins)',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: false, path2: false, path3: true, path4: false },
+    takenCourses: ['PMEGP & Mudra Loan DPR Generator', 'GST Invoicing Masterclass'],
+    usage: { chatsWithArohi: 45, resumeScans: 2, mockInterviews: 1 },
+    customizedSettings: { tutoringSlot: 'Weekend Special', priorityLevel: 'High', assignedMentor: 'MSME Growth Consultant AI' }
+  },
+  {
+    id: 'usr_sub_004',
+    email: 'rahul.verma@yahoo.com',
+    name: 'Rahul Verma',
+    phone: '+91 97112 33445',
+    role: 'Student & Tech Learner',
+    status: 'Active',
+    entrySource: 'YouTube Review Link',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 26 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
+    planExpiryDate: new Date(NOW_SERVER + 4 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
+    planExpiryTimestamp: NOW_SERVER + 4 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'UPI Scan (PhonePe)',
+    lastCouponUsed: 'None (Direct Payment)',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: true, path3: false, path4: false },
+    takenCourses: ['Python for Data Science', 'React Full-Stack Bootcamp'],
+    usage: { chatsWithArohi: 68, resumeScans: 5, mockInterviews: 4 },
+    customizedSettings: { tutoringSlot: 'Morning 9 AM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_sub_005',
+    email: 'ananya.das@gmail.com',
+    name: 'Ananya Das',
+    phone: '+91 93370 88990',
+    role: 'Banking & Railway Aspirant',
+    status: 'Active',
+    entrySource: 'Instagram Ad Campaign',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 1 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
+    planExpiryDate: new Date(NOW_SERVER + 29 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
+    planExpiryTimestamp: NOW_SERVER + 29 * ONE_DAY_MS,
+    totalPaidAmount: 0,
+    lastPaymentMethod: 'Promo Coupon (100% Free)',
+    lastCouponUsed: 'AROHI399 (100% Off + 399 Coins)',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: false, path3: false, path4: false },
+    takenCourses: ['IBPS PO Quantitative Aptitude', 'Reasoning Fast-Track'],
+    usage: { chatsWithArohi: 19, resumeScans: 2, mockInterviews: 2 },
+    customizedSettings: { tutoringSlot: 'Flexible', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_sub_006',
+    email: 'deepak.nayak@rediffmail.com',
+    name: 'Deepak Nayak',
+    phone: '+91 94371 55667',
+    role: 'Odisha Police Candidate',
+    status: 'Active',
+    entrySource: 'Direct Browser',
+    isSubscribed: false,
+    activePlanName: 'Starter Plan (₹399/mo) [Expired]',
+    planStartDate: new Date(NOW_SERVER - 35 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
+    planExpiryDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
+    planExpiryTimestamp: NOW_SERVER - 5 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'UPI Scan (Google Pay)',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Expired',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: false, path2: false, path3: false, path4: false },
+    takenCourses: ['Odisha Sub-Inspector Physical & Exam Guide'],
+    usage: { chatsWithArohi: 52, resumeScans: 4, mockInterviews: 1 },
+    customizedSettings: { tutoringSlot: 'None Scheduled', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  }
+];
 
 let activeUpiMerchant = {
   upiId: 'elitetraderjunoon@oksbi',
@@ -1430,7 +1589,176 @@ let activeUpiMerchant = {
   bankName: 'Airtel Payments Bank / PhonePe'
 };
 
-let serverPayments: any[] = [];
+let serverPayments: any[] = [
+  {
+    id: 'TXN-984102',
+    userEmail: 'elitetraderjunoon@gmail.com',
+    userName: 'Junoon Admin',
+    userPhone: '+91 98765 43210',
+    amount: 1299,
+    originalAmount: 1299,
+    currency: 'INR',
+    planName: 'Executive All-Access Pro (₹1,299/mo)',
+    planId: 'all_access',
+    method: 'UPI Scan',
+    date: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
+    planExpiryDate: new Date(NOW_SERVER + 20 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
+    planExpiryTimestamp: NOW_SERVER + 20 * ONE_DAY_MS,
+    status: 'Verified',
+    couponUsed: 'JUNOONVIP',
+    couponDiscount: 0,
+    cashbackReward: 1299,
+    utr: 'SBI982410938472',
+    gatewayOrderId: 'ord_sbi_qr_9841',
+    invoiceNumber: 'INV-2026-0806-01',
+    notes: 'Super Admin All-Access Full Plan'
+  },
+  {
+    id: 'TXN-874519',
+    userEmail: 'priya.sharma@gmail.com',
+    userName: 'Priya Sharma',
+    userPhone: '+91 91234 56780',
+    amount: 499,
+    originalAmount: 499,
+    currency: 'INR',
+    planName: 'Career & Resume Pro Plan (₹499/mo)',
+    planId: 'path1',
+    method: 'Razorpay Gateway',
+    date: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
+    planExpiryDate: new Date(NOW_SERVER + 25 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
+    planExpiryTimestamp: NOW_SERVER + 25 * ONE_DAY_MS,
+    status: 'Verified',
+    couponUsed: 'None (Direct Payment)',
+    couponDiscount: 0,
+    cashbackReward: 0,
+    utr: 'pay_rzp_8745192847',
+    gatewayOrderId: 'ord_rzp_874519',
+    invoiceNumber: 'INV-2026-0811-04',
+    notes: 'Direct Razorpay NetBanking transaction'
+  },
+  {
+    id: 'TXN-763291',
+    userEmail: 'amit.patel@outlook.com',
+    userName: 'Amit Patel',
+    userPhone: '+91 98450 11223',
+    amount: 0,
+    originalAmount: 899,
+    currency: 'INR',
+    planName: 'Udyam Business Growth Suite (₹899/mo)',
+    planId: 'path3',
+    method: 'Promo Coupon (100% Free)',
+    date: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
+    planExpiryDate: new Date(NOW_SERVER + 28 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
+    planExpiryTimestamp: NOW_SERVER + 28 * ONE_DAY_MS,
+    status: 'Verified',
+    couponUsed: 'JUNOON (100% Off + 399 Coins)',
+    couponDiscount: 899,
+    cashbackReward: 399,
+    utr: 'CPN-JUNOON-763291',
+    gatewayOrderId: 'promo_order_7632',
+    invoiceNumber: 'INV-2026-0814-02',
+    notes: 'Promo code JUNOON successfully unlocked Udyam Suite'
+  },
+  {
+    id: 'TXN-652190',
+    userEmail: 'rahul.verma@yahoo.com',
+    userName: 'Rahul Verma',
+    userPhone: '+91 97112 33445',
+    amount: 399,
+    originalAmount: 399,
+    currency: 'INR',
+    planName: 'Starter Plan (₹399/mo)',
+    planId: 'path1',
+    method: 'UPI Scan',
+    date: new Date(NOW_SERVER - 26 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 26 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
+    planExpiryDate: new Date(NOW_SERVER + 4 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
+    planExpiryTimestamp: NOW_SERVER + 4 * ONE_DAY_MS,
+    status: 'Verified',
+    couponUsed: 'None (Direct Payment)',
+    couponDiscount: 0,
+    cashbackReward: 0,
+    utr: 'UPI918273645019',
+    gatewayOrderId: 'qr_pay_652190',
+    invoiceNumber: 'INV-2026-0721-08',
+    notes: 'PhonePe UPI QR payment verified by admin'
+  },
+  {
+    id: 'TXN-541098',
+    userEmail: 'ananya.das@gmail.com',
+    userName: 'Ananya Das',
+    userPhone: '+91 93370 88990',
+    amount: 0,
+    originalAmount: 399,
+    currency: 'INR',
+    planName: 'Starter Plan (₹399/mo)',
+    planId: 'path1',
+    method: 'Promo Coupon (100% Free)',
+    date: new Date(NOW_SERVER - 1 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 1 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
+    planExpiryDate: new Date(NOW_SERVER + 29 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
+    planExpiryTimestamp: NOW_SERVER + 29 * ONE_DAY_MS,
+    status: 'Verified',
+    couponUsed: 'AROHI399 (100% Off + 399 Coins)',
+    couponDiscount: 399,
+    cashbackReward: 399,
+    utr: 'CPN-AROHI399-541098',
+    gatewayOrderId: 'promo_order_5410',
+    invoiceNumber: 'INV-2026-0815-09',
+    notes: 'Promo code AROHI399 applied at onboarding'
+  },
+  {
+    id: 'TXN-430987',
+    userEmail: 'vikram.singh@gmail.com',
+    userName: 'Vikram Singh',
+    userPhone: '+91 99887 66554',
+    amount: 399,
+    originalAmount: 399,
+    currency: 'INR',
+    planName: 'Starter Plan (₹399/mo)',
+    planId: 'path1',
+    method: 'UPI Scan',
+    date: new Date(NOW_SERVER).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 06:10 AM',
+    planExpiryDate: new Date(NOW_SERVER + 30 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 06:10 AM',
+    planExpiryTimestamp: NOW_SERVER + 30 * ONE_DAY_MS,
+    status: 'Pending',
+    couponUsed: 'None',
+    couponDiscount: 0,
+    cashbackReward: 0,
+    utr: 'SBI993847291834',
+    gatewayOrderId: 'pending_upi_4309',
+    invoiceNumber: 'INV-2026-0816-01',
+    notes: 'Candidate submitted UPI UTR ref, awaiting admin approval'
+  },
+  {
+    id: 'TXN-329876',
+    userEmail: 'deepak.nayak@rediffmail.com',
+    userName: 'Deepak Nayak',
+    userPhone: '+91 94371 55667',
+    amount: 399,
+    originalAmount: 399,
+    currency: 'INR',
+    planName: 'Starter Plan (₹399/mo)',
+    planId: 'path1',
+    method: 'UPI Scan',
+    date: new Date(NOW_SERVER - 35 * ONE_DAY_MS).toLocaleDateString('en-GB'),
+    planStartDate: new Date(NOW_SERVER - 35 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
+    planExpiryDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
+    planExpiryTimestamp: NOW_SERVER - 5 * ONE_DAY_MS,
+    status: 'Expired',
+    couponUsed: 'None',
+    couponDiscount: 0,
+    cashbackReward: 0,
+    utr: 'GPAY772819384019',
+    gatewayOrderId: 'qr_pay_329876',
+    invoiceNumber: 'INV-2026-0712-03',
+    notes: 'Previous 30-day billing cycle completed and expired'
+  }
+];
 
 let serverChatLogs: any[] = [];
 
@@ -1617,10 +1945,215 @@ app.post('/api/admin/delete-user', async (req, res) => {
   return res.status(404).json({ error: 'User not found' });
 });
 
-// 4. Payments list
+// RAZORPAY LIVE SYNC HELPER & AGGREGATOR
+async function syncRazorpayPaymentsHelper() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  let liveFetchedCount = 0;
+  let rzpItems: any[] = [];
+  let isConnected = false;
+  let fetchError: string | null = null;
+
+  if (keyId && keySecret) {
+    try {
+      // Direct API fetch with Basic Auth for highest reliability & detailed properties
+      const authHeader = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+      const response = await fetch('https://api.razorpay.com/v1/payments?count=100', {
+        method: 'GET',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data: any = await response.json();
+        rzpItems = data.items || [];
+        liveFetchedCount = rzpItems.length;
+        isConnected = true;
+      } else {
+        const errText = await response.text();
+        console.warn('Razorpay API HTTP fetch returned non-200:', response.status, errText);
+        fetchError = `HTTP ${response.status}: ${errText}`;
+      }
+    } catch (apiErr: any) {
+      console.warn('Direct Razorpay API fetch failed, trying SDK:', apiErr.message || apiErr);
+      fetchError = apiErr.message || String(apiErr);
+      try {
+        const RazorpayModule = await import('razorpay');
+        const RazorpayClass: any = RazorpayModule.default || RazorpayModule;
+        const rzp = new RazorpayClass({ key_id: keyId, key_secret: keySecret });
+        const data: any = await rzp.payments.all({ count: 100 });
+        rzpItems = data?.items || [];
+        liveFetchedCount = rzpItems.length;
+        isConnected = true;
+        fetchError = null;
+      } catch (sdkErr: any) {
+        console.warn('Razorpay SDK payments.all failed:', sdkErr.message || sdkErr);
+        fetchError = sdkErr.message || String(sdkErr);
+      }
+    }
+  }
+
+  // If live items were retrieved from Razorpay API, map & reconcile them with serverPayments
+  if (rzpItems.length > 0) {
+    for (const item of rzpItems) {
+      const amountPaise = Number(item.amount) || 0;
+      const inrAmount = Math.round(amountPaise / 100);
+      const email = (item.email || item.notes?.userEmail || item.notes?.email || item.notes?.user || 'customer@arohiai.com').toLowerCase();
+      const name = item.notes?.userName || item.notes?.name || (item.email ? item.email.split('@')[0] : 'Candidate');
+      const phone = item.contact || item.notes?.userPhone || item.notes?.phone || '';
+      
+      const createdDate = item.created_at ? new Date(item.created_at * 1000) : new Date();
+      const expiryDate = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      
+      let methodStr = 'Razorpay Gateway';
+      if (item.method === 'upi') {
+        methodStr = `Razorpay Gateway (UPI${item.vpa ? ' - ' + item.vpa : ''})`;
+      } else if (item.method === 'card') {
+        methodStr = `Razorpay Gateway (Card${item.card?.network ? ' - ' + item.card.network : ''})`;
+      } else if (item.method === 'netbanking') {
+        methodStr = `Razorpay Gateway (NetBanking${item.bank ? ' - ' + item.bank : ''})`;
+      } else if (item.method === 'wallet') {
+        methodStr = `Razorpay Gateway (Wallet${item.wallet ? ' - ' + item.wallet : ''})`;
+      } else if (item.method) {
+        methodStr = `Razorpay Gateway (${String(item.method).toUpperCase()})`;
+      }
+
+      let planName = item.notes?.planName || item.description;
+      if (!planName) {
+        if (inrAmount === 399) planName = 'Starter Plan (₹399/mo)';
+        else if (inrAmount === 499) planName = 'Career & Resume Pro Plan (₹499/mo)';
+        else if (inrAmount === 899) planName = 'Udyam Business Growth Suite (₹899/mo)';
+        else if (inrAmount === 1299) planName = 'Executive All-Access Pro (₹1,299/mo)';
+        else if (inrAmount === 1499) planName = 'Executive All-Access (₹1,499)';
+        else if (inrAmount === 2999) planName = 'MSME Business Udyam Suite (₹2,999)';
+        else planName = `Arohi AI Pro Plan (₹${inrAmount})`;
+      }
+
+      let status: 'Verified' | 'Pending' | 'Refunded' | 'Expired' = 'Pending';
+      if (item.status === 'captured' || item.status === 'authorized') {
+        status = 'Verified';
+      } else if (item.status === 'refunded') {
+        status = 'Refunded';
+      } else if (item.status === 'failed') {
+        status = 'Expired';
+      }
+
+      const formattedRecord: any = {
+        id: item.id,
+        userEmail: email,
+        userName: name,
+        userPhone: phone,
+        amount: inrAmount,
+        originalAmount: item.notes?.originalAmount ? Number(item.notes?.originalAmount) : inrAmount,
+        currency: item.currency || 'INR',
+        planName,
+        planId: item.notes?.planId || 'path1',
+        method: methodStr,
+        date: createdDate.toLocaleDateString('en-GB'),
+        planStartDate: createdDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        planExpiryDate: expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + expiryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        planExpiryTimestamp: expiryDate.getTime(),
+        status,
+        couponUsed: item.notes?.couponUsed || item.notes?.coupon || 'None (Direct Payment)',
+        couponDiscount: Number(item.notes?.couponDiscount || 0),
+        cashbackReward: Number(item.notes?.cashbackReward || 0),
+        utr: item.id,
+        gatewayPaymentId: item.id,
+        gatewayOrderId: item.order_id || '',
+        isRazorpay: true,
+        razorpayMethod: item.method,
+        razorpayVpa: item.vpa,
+        razorpayCard: item.card_id,
+        razorpayFee: item.fee ? item.fee / 100 : 0,
+        razorpayTax: item.tax ? item.tax / 100 : 0,
+        razorpayError: item.error_description || undefined,
+        invoiceNumber: `INV-RZP-${createdDate.getFullYear()}-${item.id.slice(-6).toUpperCase()}`,
+        notes: `Live Razorpay ${item.status} transaction`
+      };
+
+      // Check if existing
+      const existingIdx = serverPayments.findIndex(p => 
+        p.id === item.id || 
+        p.gatewayPaymentId === item.id || 
+        p.utr === item.id ||
+        (item.order_id && (p.gatewayOrderId === item.order_id || p.orderId === item.order_id))
+      );
+
+      if (existingIdx !== -1) {
+        serverPayments[existingIdx] = {
+          ...serverPayments[existingIdx],
+          ...formattedRecord
+        };
+      } else {
+        serverPayments.unshift(formattedRecord);
+      }
+
+      // Sync user profile in serverAdminUsers if verified
+      if (status === 'Verified') {
+        const userIdx = serverAdminUsers.findIndex(u => u.email.toLowerCase() === email);
+        if (userIdx !== -1) {
+          serverAdminUsers[userIdx].isSubscribed = true;
+          serverAdminUsers[userIdx].activePlanName = planName;
+          serverAdminUsers[userIdx].paymentStatus = 'Verified';
+          serverAdminUsers[userIdx].lastPaymentMethod = methodStr;
+          serverAdminUsers[userIdx].planExpiryDate = formattedRecord.planExpiryDate;
+          serverAdminUsers[userIdx].planExpiryTimestamp = formattedRecord.planExpiryTimestamp;
+        }
+      }
+
+      // Sync to Firestore if available
+      if (adminDb) {
+        try {
+          await adminDb.collection('payments').doc(item.id).set(formattedRecord, { merge: true });
+        } catch (fErr: any) {
+          // ignore background sync warnings
+        }
+      }
+    }
+  }
+
+  // Calculate Razorpay gateway stats from full dataset
+  const rzpTxns = serverPayments.filter(p => p.isRazorpay || p.id?.startsWith('pay_') || p.method?.includes('Razorpay') || p.utr?.startsWith('pay_'));
+  const capturedTxns = rzpTxns.filter(p => p.status === 'Verified');
+  const capturedAmount = capturedTxns.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const pendingTxns = rzpTxns.filter(p => p.status === 'Pending');
+  const refundedTxns = rzpTxns.filter(p => p.status === 'Refunded');
+  const failedTxns = rzpTxns.filter(p => p.status === 'Expired');
+
+  const stats = {
+    isConnected: isConnected || Boolean(keyId && keySecret),
+    gatewayMode: keyId?.startsWith('rzp_live') ? 'Razorpay Live Production' : (keyId ? 'Razorpay Test Sandbox' : 'Razorpay Sandbox (Demo Mode)'),
+    keyIdMasked: keyId ? `${keyId.substring(0, 8)}...${keyId.slice(-4)}` : 'rzp_test_...demo',
+    totalCount: rzpTxns.length,
+    capturedCount: capturedTxns.length,
+    capturedAmount,
+    pendingCount: pendingTxns.length,
+    refundedCount: refundedTxns.length,
+    failedCount: failedTxns.length,
+    liveFetchedCount,
+    fetchError: fetchError || null,
+    lastSynced: new Date().toISOString()
+  };
+
+  return { stats, rzpItemsCount: rzpItems.length };
+}
+
+// 4. Payments list & Razorpay Reconciliation
 app.get('/api/admin/payments', async (req, res) => {
   if (!checkAdminAuth(req)) {
     return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  // Auto-sync Razorpay in background/sync helper if keys present
+  let razorpayStats: any = null;
+  try {
+    const syncRes = await syncRazorpayPaymentsHelper();
+    razorpayStats = syncRes.stats;
+  } catch (syncErr: any) {
+    console.warn('Auto Razorpay sync on /payments warn:', syncErr.message || syncErr);
   }
 
   let combinedPayments = [...serverPayments];
@@ -1646,7 +2179,119 @@ app.get('/api/admin/payments', async (req, res) => {
     }
   }
 
-  return res.json({ payments: combinedPayments });
+  // Recalculate stats if not computed
+  if (!razorpayStats) {
+    const rzpTxns = combinedPayments.filter(p => p.isRazorpay || p.id?.startsWith('pay_') || p.method?.includes('Razorpay') || p.utr?.startsWith('pay_'));
+    const capturedTxns = rzpTxns.filter(p => p.status === 'Verified');
+    const capturedAmount = capturedTxns.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    razorpayStats = {
+      isConnected: Boolean(keyId && process.env.RAZORPAY_KEY_SECRET),
+      gatewayMode: keyId?.startsWith('rzp_live') ? 'Razorpay Live Production' : (keyId ? 'Razorpay Test Sandbox' : 'Razorpay Sandbox (Demo Mode)'),
+      keyIdMasked: keyId ? `${keyId.substring(0, 8)}...${keyId.slice(-4)}` : 'rzp_test_...demo',
+      totalCount: rzpTxns.length,
+      capturedCount: capturedTxns.length,
+      capturedAmount,
+      pendingCount: rzpTxns.filter(p => p.status === 'Pending').length,
+      refundedCount: rzpTxns.filter(p => p.status === 'Refunded').length,
+      failedCount: rzpTxns.filter(p => p.status === 'Expired').length,
+      liveFetchedCount: 0,
+      lastSynced: new Date().toISOString()
+    };
+  }
+
+  return res.json({ payments: combinedPayments, razorpayStats });
+});
+
+// Explicit Manual / Button Triggered Razorpay Live Sync Endpoint
+app.get('/api/admin/razorpay-sync', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  try {
+    const { stats, rzpItemsCount } = await syncRazorpayPaymentsHelper();
+    
+    let combinedPayments = [...serverPayments];
+    if (adminDb) {
+      try {
+        const snapshot = await adminDb.collection('payments').get();
+        snapshot.forEach((doc: any) => {
+          const data = doc.data();
+          const existingIdx = combinedPayments.findIndex(p => p.id === doc.id);
+          if (existingIdx !== -1) {
+            combinedPayments[existingIdx] = {
+              ...combinedPayments[existingIdx],
+              ...data
+            };
+          } else {
+            combinedPayments.unshift(data);
+          }
+        });
+        combinedPayments.sort((a, b) => b.id.localeCompare(a.id));
+      } catch (err: any) {
+        console.warn('Failed to fetch payments from Firestore after sync:', err.message || err);
+      }
+    }
+
+    logActivity('admin', `Admin fetched live Razorpay payments: ${stats.totalCount} total (${stats.capturedCount} captured, ₹${stats.capturedAmount})`, stats);
+
+    return res.json({
+      success: true,
+      message: `Razorpay data successfully retrieved (${stats.capturedCount} captured payments totaling ₹${stats.capturedAmount.toLocaleString()})`,
+      razorpayStats: stats,
+      syncedLiveCount: rzpItemsCount,
+      payments: combinedPayments
+    });
+  } catch (error: any) {
+    console.error('Razorpay sync error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to sync with Razorpay API' });
+  }
+});
+
+app.post('/api/admin/razorpay-sync', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  try {
+    const { stats, rzpItemsCount } = await syncRazorpayPaymentsHelper();
+    
+    let combinedPayments = [...serverPayments];
+    if (adminDb) {
+      try {
+        const snapshot = await adminDb.collection('payments').get();
+        snapshot.forEach((doc: any) => {
+          const data = doc.data();
+          const existingIdx = combinedPayments.findIndex(p => p.id === doc.id);
+          if (existingIdx !== -1) {
+            combinedPayments[existingIdx] = {
+              ...combinedPayments[existingIdx],
+              ...data
+            };
+          } else {
+            combinedPayments.unshift(data);
+          }
+        });
+        combinedPayments.sort((a, b) => b.id.localeCompare(a.id));
+      } catch (err: any) {
+        console.warn('Failed to fetch payments from Firestore after sync:', err.message || err);
+      }
+    }
+
+    logActivity('admin', `Admin triggered manual sync with Razorpay Gateway: ${stats.totalCount} transactions`, stats);
+
+    return res.json({
+      success: true,
+      message: `Razorpay data successfully retrieved (${stats.capturedCount} captured payments totaling ₹${stats.capturedAmount.toLocaleString()})`,
+      razorpayStats: stats,
+      syncedLiveCount: rzpItemsCount,
+      payments: combinedPayments
+    });
+  } catch (error: any) {
+    console.error('Razorpay sync error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to sync with Razorpay API' });
+  }
 });
 
 // GET active merchant settings (anyone can access, but specifically for candidates checkouts)
@@ -1674,20 +2319,34 @@ app.post('/api/admin/payment-settings', (req, res) => {
 
 // SUBMIT PENDING UPI / QR PAYMENT
 app.post('/api/admin/submit-pending-payment', async (req, res) => {
-  const { userEmail, amount, planName, utr, screenshotUrl } = req.body;
+  const { userEmail, userName, userPhone, amount, originalAmount, planName, utr, screenshotUrl, couponUsed, couponDiscount } = req.body;
   if (!userEmail || !amount || !planName || !utr) {
     return res.status(400).json({ error: 'userEmail, amount, planName and transaction reference (UTR) are required' });
   }
 
+  const startDate = new Date();
+  const expiryDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+
   const newTxn = {
     id: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
     userEmail: userEmail.toLowerCase(),
+    userName: userName || userEmail.split('@')[0],
+    userPhone: userPhone || '',
     amount: Number(amount),
+    originalAmount: originalAmount ? Number(originalAmount) : Number(amount),
+    currency: 'INR',
     planName,
     method: 'UPI Scan',
-    date: new Date().toLocaleDateString('en-GB'),
+    date: startDate.toLocaleDateString('en-GB'),
+    planStartDate: startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    planExpiryDate: expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + expiryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    planExpiryTimestamp: expiryDate.getTime(),
     status: 'Pending' as const,
+    couponUsed: couponUsed || 'None',
+    couponDiscount: couponDiscount ? Number(couponDiscount) : 0,
+    cashbackReward: couponUsed ? Number(amount) : 0,
     utr,
+    invoiceNumber: `INV-${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}${String(startDate.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
     screenshotUrl: screenshotUrl || ''
   };
 
@@ -1896,13 +2555,35 @@ app.post('/api/admin/verify-payment', async (req, res) => {
     return res.status(404).json({ error: 'Transaction not found' });
   }
 
+  const now = Date.now();
+  const startDateStr = new Date(now).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const expiryTimestamp = now + 30 * 24 * 60 * 60 * 1000;
+  const expiryDateStr = new Date(expiryTimestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(expiryTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   serverPayments[paymentIdx].status = 'Verified';
+  if (!serverPayments[paymentIdx].planStartDate) {
+    serverPayments[paymentIdx].planStartDate = startDateStr;
+  }
+  if (!serverPayments[paymentIdx].planExpiryDate) {
+    serverPayments[paymentIdx].planExpiryDate = expiryDateStr;
+    serverPayments[paymentIdx].planExpiryTimestamp = expiryTimestamp;
+  }
   const payment = serverPayments[paymentIdx];
 
   // Sync to server users list as well!
   const userIdx = serverAdminUsers.findIndex(u => u.email.toLowerCase() === payment.userEmail.toLowerCase());
   if (userIdx !== -1) {
     const lowerPlan = payment.planName.toLowerCase();
+    serverAdminUsers[userIdx].isSubscribed = true;
+    serverAdminUsers[userIdx].activePlanName = payment.planName;
+    serverAdminUsers[userIdx].planStartDate = payment.planStartDate || startDateStr;
+    serverAdminUsers[userIdx].planExpiryDate = payment.planExpiryDate || expiryDateStr;
+    serverAdminUsers[userIdx].planExpiryTimestamp = payment.planExpiryTimestamp || expiryTimestamp;
+    serverAdminUsers[userIdx].paymentStatus = 'Verified';
+    serverAdminUsers[userIdx].lastPaymentMethod = payment.method || 'UPI Scan';
+    serverAdminUsers[userIdx].lastCouponUsed = payment.couponUsed || 'None';
+    serverAdminUsers[userIdx].totalPaidAmount = (serverAdminUsers[userIdx].totalPaidAmount || 0) + (payment.amount || 0);
+
     if (lowerPlan.includes('path 1') || lowerPlan.includes('career') || lowerPlan.includes('resume')) {
       serverAdminUsers[userIdx].services.path1 = true;
     } else if (lowerPlan.includes('path 2') || lowerPlan.includes('skill')) {
@@ -1918,16 +2599,27 @@ app.post('/api/admin/verify-payment', async (req, res) => {
     const services = {
       path1: lowerPlan.includes('path 1') || lowerPlan.includes('career') || lowerPlan.includes('resume'),
       path2: lowerPlan.includes('path 2') || lowerPlan.includes('skill'),
-      path3: lowerPlan.includes('path 3') || lowerPlan.includes('udyam') || lowerPlan.includes('business')
+      path3: lowerPlan.includes('path 3') || lowerPlan.includes('udyam') || lowerPlan.includes('business'),
+      path4: false
     };
 
     serverAdminUsers.push({
       id: `user-${Math.random().toString(36).substring(2, 9)}`,
       email: payment.userEmail.toLowerCase(),
-      name: payment.userEmail.split('@')[0],
+      name: payment.userName || payment.userEmail.split('@')[0],
+      phone: payment.userPhone || '',
       role: 'Premium Candidate',
       status: 'Active',
       entrySource: 'Website Browser',
+      isSubscribed: true,
+      activePlanName: payment.planName,
+      planStartDate: payment.planStartDate || startDateStr,
+      planExpiryDate: payment.planExpiryDate || expiryDateStr,
+      planExpiryTimestamp: payment.planExpiryTimestamp || expiryTimestamp,
+      totalPaidAmount: payment.amount || 0,
+      lastPaymentMethod: payment.method || 'UPI Scan',
+      lastCouponUsed: payment.couponUsed || 'None',
+      paymentStatus: 'Verified',
       permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
       services,
       takenCourses: [],
@@ -1962,6 +2654,11 @@ app.post('/api/admin/verify-payment', async (req, res) => {
         }
 
         await userDoc.ref.update({
+          isSubscribed: true,
+          activePlanName: payment.planName,
+          planStartDate: payment.planStartDate || startDateStr,
+          planExpiryDate: payment.planExpiryDate || expiryDateStr,
+          planExpiryTimestamp: payment.planExpiryTimestamp || expiryTimestamp,
           services,
           diagnostics,
           updatedAt: new Date().toISOString()
@@ -1978,19 +2675,35 @@ app.post('/api/admin/verify-payment', async (req, res) => {
 
 // 5. Add payment
 app.post('/api/admin/add-payment', async (req, res) => {
-  const { userEmail, amount, planName, method } = req.body;
-  if (!userEmail || !amount || !planName) {
-    return res.status(400).json({ error: 'userEmail, amount and planName are required' });
+  const { userEmail, userName, userPhone, amount, originalAmount, planName, method, couponUsed, couponDiscount } = req.body;
+  if (!userEmail || !planName) {
+    return res.status(400).json({ error: 'userEmail and planName are required' });
   }
+
+  const startDate = new Date();
+  const expiryDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const numericAmount = Number(amount) || 0;
 
   const newTxn = {
     id: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
     userEmail: userEmail.toLowerCase(),
-    amount: Number(amount),
+    userName: userName || userEmail.split('@')[0],
+    userPhone: userPhone || '',
+    amount: numericAmount,
+    originalAmount: originalAmount ? Number(originalAmount) : numericAmount,
+    currency: 'INR',
     planName,
     method: method || 'UPI',
-    date: new Date().toLocaleDateString('en-GB'),
-    status: 'Verified' as const
+    date: startDate.toLocaleDateString('en-GB'),
+    planStartDate: startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    planExpiryDate: expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + expiryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    planExpiryTimestamp: expiryDate.getTime(),
+    status: 'Verified' as const,
+    couponUsed: couponUsed || 'None',
+    couponDiscount: couponDiscount ? Number(couponDiscount) : 0,
+    cashbackReward: couponUsed ? numericAmount : 0,
+    utr: `ADMIN_MANUAL_${Date.now()}`,
+    invoiceNumber: `INV-${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}${String(startDate.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`
   };
 
   serverPayments.unshift(newTxn);
@@ -1999,6 +2712,16 @@ app.post('/api/admin/add-payment', async (req, res) => {
   const userIdx = serverAdminUsers.findIndex(u => u.email.toLowerCase() === userEmail.toLowerCase());
   if (userIdx !== -1) {
     const lowerPlan = planName.toLowerCase();
+    serverAdminUsers[userIdx].isSubscribed = true;
+    serverAdminUsers[userIdx].activePlanName = planName;
+    serverAdminUsers[userIdx].planStartDate = newTxn.planStartDate;
+    serverAdminUsers[userIdx].planExpiryDate = newTxn.planExpiryDate;
+    serverAdminUsers[userIdx].planExpiryTimestamp = newTxn.planExpiryTimestamp;
+    serverAdminUsers[userIdx].paymentStatus = 'Verified';
+    serverAdminUsers[userIdx].lastPaymentMethod = method || 'UPI';
+    serverAdminUsers[userIdx].lastCouponUsed = couponUsed || 'None';
+    serverAdminUsers[userIdx].totalPaidAmount = (serverAdminUsers[userIdx].totalPaidAmount || 0) + numericAmount;
+
     if (lowerPlan.includes('path 1') || lowerPlan.includes('career') || lowerPlan.includes('resume')) {
       serverAdminUsers[userIdx].services.path1 = true;
     } else if (lowerPlan.includes('path 2') || lowerPlan.includes('skill')) {
@@ -2014,16 +2737,27 @@ app.post('/api/admin/add-payment', async (req, res) => {
     const services = {
       path1: lowerPlan.includes('path 1') || lowerPlan.includes('career') || lowerPlan.includes('resume'),
       path2: lowerPlan.includes('path 2') || lowerPlan.includes('skill'),
-      path3: lowerPlan.includes('path 3') || lowerPlan.includes('udyam') || lowerPlan.includes('business')
+      path3: lowerPlan.includes('path 3') || lowerPlan.includes('udyam') || lowerPlan.includes('business'),
+      path4: false
     };
 
     serverAdminUsers.push({
       id: `user-${Math.random().toString(36).substring(2, 9)}`,
       email: userEmail.toLowerCase(),
-      name: userEmail.split('@')[0],
+      name: userName || userEmail.split('@')[0],
+      phone: userPhone || '',
       role: 'Premium Candidate',
       status: 'Active',
       entrySource: 'Website Browser',
+      isSubscribed: true,
+      activePlanName: planName,
+      planStartDate: newTxn.planStartDate,
+      planExpiryDate: newTxn.planExpiryDate,
+      planExpiryTimestamp: newTxn.planExpiryTimestamp,
+      totalPaidAmount: numericAmount,
+      lastPaymentMethod: method || 'UPI',
+      lastCouponUsed: couponUsed || 'None',
+      paymentStatus: 'Verified',
       permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
       services,
       takenCourses: [],
@@ -2052,6 +2786,11 @@ app.post('/api/admin/add-payment', async (req, res) => {
         }
 
         await userDoc.ref.update({
+          isSubscribed: true,
+          activePlanName: planName,
+          planStartDate: newTxn.planStartDate,
+          planExpiryDate: newTxn.planExpiryDate,
+          planExpiryTimestamp: newTxn.planExpiryTimestamp,
           services,
           updatedAt: new Date().toISOString()
         });
@@ -2061,8 +2800,85 @@ app.post('/api/admin/add-payment', async (req, res) => {
     }
   }
 
-  logActivity('enroll', `Subscription payment of ₹${amount} received for "${planName}" from ${userEmail}`, { userEmail, amount, planName });
+  logActivity('enroll', `Subscription payment of ₹${numericAmount} received for "${planName}" from ${userEmail}`, { userEmail, amount: numericAmount, planName });
   return res.json({ success: true, transaction: newTxn });
+});
+
+// EXTEND / RENEW SUBSCRIPTION ENDPOINT FOR ADMIN
+app.post('/api/admin/extend-subscription', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+  const { userEmail, daysToAdd, customExpiryDate } = req.body;
+  if (!userEmail) {
+    return res.status(400).json({ error: 'userEmail is required' });
+  }
+
+  const cleanEmail = userEmail.toLowerCase();
+  const userIdx = serverAdminUsers.findIndex(u => u.email.toLowerCase() === cleanEmail);
+
+  let newExpiryTimestamp = Date.now() + (daysToAdd || 30) * 24 * 60 * 60 * 1000;
+  if (userIdx !== -1 && serverAdminUsers[userIdx].planExpiryTimestamp && serverAdminUsers[userIdx].planExpiryTimestamp > Date.now()) {
+    newExpiryTimestamp = serverAdminUsers[userIdx].planExpiryTimestamp + (daysToAdd || 30) * 24 * 60 * 60 * 1000;
+  }
+  if (customExpiryDate) {
+    const parsed = new Date(customExpiryDate).getTime();
+    if (!isNaN(parsed)) newExpiryTimestamp = parsed;
+  }
+
+  const newExpiryDateStr = new Date(newExpiryTimestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(newExpiryTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (userIdx !== -1) {
+    serverAdminUsers[userIdx].isSubscribed = true;
+    serverAdminUsers[userIdx].planExpiryDate = newExpiryDateStr;
+    serverAdminUsers[userIdx].planExpiryTimestamp = newExpiryTimestamp;
+    serverAdminUsers[userIdx].paymentStatus = 'Verified';
+  }
+
+  if (adminDb) {
+    try {
+      const userSnap = await adminDb.collection('users').where('email', '==', cleanEmail).get();
+      if (!userSnap.empty) {
+        await userSnap.docs[0].ref.update({
+          isSubscribed: true,
+          planExpiryDate: newExpiryDateStr,
+          planExpiryTimestamp: newExpiryTimestamp,
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } catch (err: any) {
+      console.warn('Failed to update extension in Firestore:', err.message || err);
+    }
+  }
+
+  logActivity('admin', `Admin extended subscription for ${cleanEmail} until ${newExpiryDateStr}`, { cleanEmail, newExpiryDateStr });
+  return res.json({ success: true, planExpiryDate: newExpiryDateStr, planExpiryTimestamp: newExpiryTimestamp });
+});
+
+// UPDATE PAYMENT STATUS (e.g. Refunded, Expired, Verified)
+app.post('/api/admin/update-payment-status', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+  const { id, status } = req.body;
+  if (!id || !status) {
+    return res.status(400).json({ error: 'Payment id and status are required' });
+  }
+
+  const paymentIdx = serverPayments.findIndex(p => p.id === id);
+  if (paymentIdx !== -1) {
+    serverPayments[paymentIdx].status = status;
+  }
+
+  if (adminDb) {
+    try {
+      await adminDb.collection('payments').doc(id).set({ status }, { merge: true });
+    } catch (err: any) {
+      console.warn('Failed to update payment status in Firestore:', err.message || err);
+    }
+  }
+
+  return res.json({ success: true, id, status });
 });
 
 // 6. Sync / Add to user Chat logs (supports single message or batch turns array)

@@ -621,11 +621,19 @@ export default function App() {
       const parsed = parseInt(saved, 10);
       if (!isNaN(parsed) && parsed > 0) return parsed;
     }
-    // Default to 6.75 days remaining (triggers the prominent 7-day alert under notification badge)
-    const now = Date.now();
-    const defaultEnd = now + (6 * 24 * 60 * 60 * 1000) + (18 * 60 * 60 * 1000);
-    setStorageItem('arohi_subscription_end_date', defaultEnd.toString());
-    return defaultEnd;
+    // Only initialize an end date if the user has an active subscription recorded
+    try {
+      const savedSubs = getStorageItem('arohi_subscriptions');
+      if (savedSubs) {
+        const parsedSubs = JSON.parse(savedSubs);
+        if (Object.values(parsedSubs).some(Boolean)) {
+          const defaultEnd = Date.now() + THIRTY_DAYS_MS;
+          setStorageItem('arohi_subscription_end_date', defaultEnd.toString());
+          return defaultEnd;
+        }
+      }
+    } catch (e) {}
+    return 0;
   });
 
   const handleSetSubscriptionEndDate = (newTimestamp: number) => {
@@ -991,6 +999,10 @@ export default function App() {
       }).catch(err => console.log('Telemetry offline:', err));
     } else {
       delete updatedDetails[pathId];
+      if (!Object.values(updated).some(Boolean)) {
+        setSubscriptionEndDate(0);
+        setStorageItem('arohi_subscription_end_date', '0');
+      }
       const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
       
       fetch('/api/track-event', {
@@ -1870,6 +1882,11 @@ export default function App() {
             arohiCoinBalance={arohiCoinBalance}
             userReferralCode={userReferralCode}
             coinTransactions={coinTransactions}
+            subscriptionEndDate={subscriptionEndDate}
+            onRenewSubscription={() => setActiveTab('pricing')}
+            onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
+            hasActiveSubscription={hasActiveSubscription}
+            subscriptionPlanName={activeSubscriptionPlanName}
           />
         );
       case 'employer':

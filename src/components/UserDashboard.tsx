@@ -5,7 +5,7 @@ import {
   ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, Crown,
   Download, RefreshCw, Trophy, Calendar, Check, Play, GraduationCap, Map, Clock, Share2,
   Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu,
-  Coins, Copy, Gift, Tag
+  Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { initialCourses } from '../data/coursesData';
@@ -36,6 +36,11 @@ interface UserDashboardProps {
   arohiCoinBalance?: number;
   userReferralCode?: string;
   coinTransactions?: Array<{ id: string; type: 'earned_cashback' | 'referrer_bonus' | 'redeemed_discount'; amount: number; description: string; date: string }>;
+  subscriptionEndDate?: number;
+  onRenewSubscription?: () => void;
+  onSetSubscriptionEndDate?: (newTimestamp: number) => void;
+  hasActiveSubscription?: boolean;
+  subscriptionPlanName?: string;
 }
 
 export default function UserDashboard({ 
@@ -60,7 +65,12 @@ export default function UserDashboard({
   onClearWarningHistory,
   arohiCoinBalance = 0,
   userReferralCode = 'AROHI-JUNOON',
-  coinTransactions = []
+  coinTransactions = [],
+  subscriptionEndDate = 0,
+  onRenewSubscription,
+  onSetSubscriptionEndDate,
+  hasActiveSubscription = false,
+  subscriptionPlanName = 'Starter Plan (₹399/mo)'
 }: UserDashboardProps) {
   
   const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
@@ -689,6 +699,57 @@ export default function UserDashboard({
 
   const hasAnyActive = Object.values(subscriptions || {}).some(Boolean);
 
+  // Live real-time clock for continuous second-by-second countdown accuracy
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Determine effective subscription end date and active status
+  const isPlanActive = Boolean(hasActiveSubscription || hasAnyActive);
+  const effectiveEndDate = (subscriptionEndDate && subscriptionEndDate > 0)
+    ? subscriptionEndDate
+    : (hasAnyActive ? (currentTime + 30 * 24 * 60 * 60 * 1000) : 0);
+
+  const isSubscribed = isPlanActive && effectiveEndDate > 0;
+  const isExpired = isSubscribed && effectiveEndDate <= currentTime;
+  const msRemaining = isSubscribed ? Math.max(0, effectiveEndDate - currentTime) : 0;
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24));
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000);
+
+  // Calculate percentage of 30-day billing cycle elapsed
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const cycleElapsedMs = Math.max(0, THIRTY_DAYS_MS - msRemaining);
+  const cyclePercentage = Math.min(100, Math.max(0, Math.round((cycleElapsedMs / THIRTY_DAYS_MS) * 100)));
+
+  // Format expiry dates and times clearly
+  const formattedEndDate = effectiveEndDate > 0 ? new Date(effectiveEndDate).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }) : 'N/A';
+
+  const formattedEndTime = effectiveEndDate > 0 ? new Date(effectiveEndDate).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }) : '';
+
+  const activePathsList = Object.entries(subscriptions || {})
+    .filter(([_, active]) => active)
+    .map(([pathKey]) => {
+      const details = PATH_DETAILS[pathKey as keyof typeof PATH_DETAILS];
+      return details ? details.title : pathKey.toUpperCase();
+    });
+
+  const resolvedPlanName = subscriptionPlanName || (Object.values(subscriptionDetails)[0]?.tierName) || (activePathsList.length > 0 ? activePathsList.join(' + ') : 'Pro Membership (₹399/mo)');
+
   return (
     <div className="space-y-6">
       
@@ -916,6 +977,238 @@ export default function UserDashboard({
         </div>
       </div>
 
+      {/* 🌟 PROMINENT ACTIVE SUBSCRIPTION & BILLING PERIOD TRACKER (When active plan is detected) */}
+      {isSubscribed && (
+        <div 
+          id="user-dashboard-billing-period-card"
+          className={`rounded-[2rem] p-6 text-left relative overflow-hidden shadow-2xl border transition-all ${
+            isExpired 
+              ? 'bg-gradient-to-br from-rose-950/80 via-[#240a16] to-[#12050e] border-rose-500/80 shadow-rose-950/40 text-white'
+              : daysRemaining <= 7 
+              ? 'bg-gradient-to-br from-[#241324] via-[#1e102f] to-[#100a20] border-amber-400/80 shadow-amber-950/40 text-white'
+              : 'bg-gradient-to-br from-[#131131] via-[#16173a] to-[#0c1024] border-purple-500/40 shadow-purple-950/30 text-white'
+          }`}
+        >
+          {/* Decorative background glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-purple-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="relative z-10 space-y-5">
+            {/* Top Row: Plan Identification & Status Badges */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  isExpired 
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
+                    : daysRemaining <= 7 
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 animate-[wiggle_1s_ease-in-out_infinite]'
+                    : 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white border-purple-400/40 shadow-lg shadow-purple-500/30'
+                }`}>
+                  {isExpired ? <ShieldAlert className="w-6 h-6" /> : <Crown className="w-6 h-6" />}
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                      isExpired 
+                        ? 'bg-rose-500 text-white border-rose-400' 
+                        : daysRemaining <= 7 
+                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40' 
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                    }`}>
+                      {isExpired ? '🚨 SUBSCRIPTION EXPIRED' : daysRemaining <= 7 ? '⚠️ RENEWS WITHIN 7 DAYS' : '✨ ACTIVE & PROTECTED'}
+                    </span>
+                    <span className="text-[10px] font-black text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded-md">
+                      100% Coins Cashback Enabled
+                    </span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-white mt-1 flex items-center gap-2">
+                    <span>{resolvedPlanName}</span>
+                  </h3>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onRenewSubscription) {
+                      onRenewSubscription();
+                    } else if (onNavigateTab) {
+                      onNavigateTab('pricing');
+                    } else {
+                      const el = document.getElementById('monthly-subscriptions-anchor');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-95 border border-purple-400/30"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  <span>{isExpired ? 'Reactivate Plan' : 'Extend / Renew Plan'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Key Metrics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {/* Metric 1: Exact Subscription End Date */}
+              <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-1.5 backdrop-blur-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                    Subscription End Date
+                  </span>
+                  <span className="text-[9px] font-bold text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+                    Valid Till
+                  </span>
+                </div>
+                <div className="text-base sm:text-lg font-black text-white tracking-tight">
+                  {formattedEndDate}
+                </div>
+                <p className="text-[11px] text-slate-300 font-semibold font-mono flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  {formattedEndTime} (Local Time)
+                </p>
+              </div>
+
+              {/* Metric 2: Live Remaining Period Countdown */}
+              <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-1.5 backdrop-blur-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Timer className="w-3.5 h-3.5 text-amber-400" />
+                    Remaining Period
+                  </span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                    isExpired 
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                      : daysRemaining <= 7 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}>
+                    {isExpired ? 'Ended' : `${daysRemaining} Days Left`}
+                  </span>
+                </div>
+                <div className="text-base sm:text-lg font-black font-mono tracking-tight text-amber-300">
+                  {isExpired ? '0d 0h 0m 0s' : `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`}
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  {isExpired ? 'Service paused — renew to restore' : 'Real-time billing countdown active'}
+                </p>
+              </div>
+
+              {/* Metric 3: Plan Privileges & Speed */}
+              <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-1.5 backdrop-blur-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    Assistance Level
+                  </span>
+                  <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    Unrestricted
+                  </span>
+                </div>
+                <div className="text-base sm:text-lg font-black text-emerald-300">
+                  Multi-Engine AI Active
+                </div>
+                <p className="text-[11px] text-slate-300 font-medium">
+                  150+ regional voice calling &amp; resume tools unlocked
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar for Billing Cycle */}
+            <div className="space-y-2 bg-black/20 p-3.5 rounded-2xl border border-white/5">
+              <div className="flex justify-between items-center text-[11px] font-bold">
+                <span className="text-slate-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Monthly Billing Cycle Progression ({cyclePercentage}% Elapsed)
+                </span>
+                <span className="text-purple-300 font-mono">
+                  {daysRemaining} of 30 Days Remaining
+                </span>
+              </div>
+              <div className="w-full bg-[#1b143d] h-2.5 rounded-full overflow-hidden border border-[#30246a]">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isExpired 
+                      ? 'bg-rose-500' 
+                      : daysRemaining <= 7 
+                      ? 'bg-gradient-to-r from-amber-500 to-rose-500' 
+                      : 'bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400'
+                  }`}
+                  style={{ width: `${Math.min(100, Math.max(5, cyclePercentage))}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 font-semibold">
+                <span>Current Cycle Active</span>
+                <span>Next Expiration: {formattedEndDate}</span>
+              </div>
+            </div>
+
+            {/* 7-Day Pre-Expiry Advance Notice Callout */}
+            {!isExpired && daysRemaining <= 7 && (
+              <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+                  <span className="font-bold">
+                    Advance Notice: Your plan ends in {daysRemaining} days on {formattedEndDate}. Renew now to avoid any interruption in live AI call quotas and verified employer matching.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onRenewSubscription) {
+                      onRenewSubscription();
+                    } else if (onNavigateTab) {
+                      onNavigateTab('pricing');
+                    }
+                  }}
+                  className="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] uppercase rounded-lg shrink-0 cursor-pointer shadow"
+                >
+                  Renew Now →
+                </button>
+              </div>
+            )}
+
+            {/* Dev sandbox simulator helpers */}
+            {showSandboxControls && onSetSubscriptionEndDate && (
+              <div className="pt-2 border-t border-white/5 flex flex-wrap items-center gap-2 text-[10px]">
+                <span className="text-slate-400 font-bold uppercase">Dev Billing Simulator:</span>
+                <button
+                  type="button"
+                  onClick={() => onSetSubscriptionEndDate(Date.now() + 30 * 24 * 60 * 60 * 1000)}
+                  className="px-2.5 py-1 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-lg border border-purple-500/30 cursor-pointer"
+                >
+                  Set 30 Days (Full Cycle)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSetSubscriptionEndDate(Date.now() + (6 * 24 * 60 * 60 * 1000) + (18 * 60 * 60 * 1000))}
+                  className="px-2.5 py-1 bg-amber-900/60 hover:bg-amber-800 text-amber-200 rounded-lg border border-amber-500/30 cursor-pointer"
+                >
+                  Set 7 Days (Trigger Alert)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSetSubscriptionEndDate(Date.now() + (2 * 24 * 60 * 60 * 1000))}
+                  className="px-2.5 py-1 bg-orange-900/60 hover:bg-orange-800 text-orange-200 rounded-lg border border-orange-500/30 cursor-pointer"
+                >
+                  Set 2 Days (Urgent Alert)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSetSubscriptionEndDate(Date.now() - 1000)}
+                  className="px-2.5 py-1 bg-rose-900/60 hover:bg-rose-800 text-rose-200 rounded-lg border border-rose-500/30 cursor-pointer"
+                >
+                  Set Expired (0 Days)
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* DASHBOARD SECTION NAVIGATION BAR */}
       <div className="bg-[#120e2e] border-2 border-[#31226e] p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-2xl">
         {[
@@ -967,9 +1260,20 @@ export default function UserDashboard({
           <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Active Paths Subscriptions</span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-black text-white">{Object.values(subscriptions || {}).filter(Boolean).length}</span>
-            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Unlocked</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              isSubscribed ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-slate-400 bg-slate-800 border-slate-700'
+            }`}>
+              {isSubscribed ? 'Unlocked' : 'Free Tier'}
+            </span>
           </div>
-          <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Continuous assistance plan</p>
+          {isSubscribed ? (
+            <p className="text-[10px] text-emerald-300 font-bold mt-1.5 leading-tight flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-emerald-400" />
+              Valid till {new Date(effectiveEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({daysRemaining}d left)
+            </p>
+          ) : (
+            <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Continuous assistance plan</p>
+          )}
         </div>
 
         <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
@@ -1309,25 +1613,41 @@ export default function UserDashboard({
         />
 
         {/* PROGRESS BLOCK FOR ACTIVE SUBSCRIPTIONS */}
-        {hasAnyActive ? (
-          <div className="bg-[#17123a] border border-[#302470] p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-left space-y-1">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#a855f7] block font-mono">Growth Tracker Index</span>
-              <h4 className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                <span>📈 Progress Status: Priority Processing Active</span>
-                <span className="bg-[#10b981]/20 text-[#10b981] text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">Premium Access Enabled</span>
+        {isSubscribed ? (
+          <div className="bg-[#17123a] border border-[#302470] p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-left space-y-1.5 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#a855f7] block font-mono">Billing &amp; Growth Tracker Index</span>
+                <span className="bg-[#10b981]/20 text-[#10b981] text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border border-emerald-500/30">
+                  {isExpired ? 'Expired' : `${daysRemaining} Days Remaining`}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-extrabold text-white flex flex-wrap items-center gap-2">
+                <span>📈 Plan: {resolvedPlanName}</span>
+                <span className="text-[10px] text-purple-300 font-normal">
+                  (Expires: <strong className="text-white">{formattedEndDate}</strong> at {formattedEndTime})
+                </span>
               </h4>
-              <p className="text-[10px] text-slate-400 leading-snug">
-                Your resume analysis and job requests are priority routed. Full 24/7 AROHI Live AI workspace limits are completely lifted.
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Your resume matching, job queries, and 150+ language voice calling are priority routed with unlocked multi-engine AI limits.
               </p>
             </div>
-            <div className="w-full sm:w-48 text-right space-y-1.5">
+            <div className="w-full md:w-56 text-right space-y-1.5 shrink-0 bg-black/20 p-3 rounded-xl border border-white/5">
               <div className="flex justify-between text-[10px] font-bold text-slate-300">
-                <span>Billing Cycle Completion</span>
-                <span>85%</span>
+                <span>Cycle Elapsed</span>
+                <span className="text-purple-300 font-mono">{cyclePercentage}%</span>
               </div>
               <div className="w-full bg-[#2a1d52] h-2 rounded-full overflow-hidden border border-[#3b2b73]">
-                <div className="bg-gradient-to-r from-[#a855f7] to-[#10b981] h-full" style={{ width: '85%' }}></div>
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isExpired ? 'bg-rose-500' : daysRemaining <= 7 ? 'bg-amber-400' : 'bg-gradient-to-r from-[#a855f7] to-[#10b981]'
+                  }`} 
+                  style={{ width: `${Math.min(100, Math.max(5, cyclePercentage))}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[9px] text-slate-400 font-medium">
+                <span>{daysRemaining}d {hoursRemaining}h remaining</span>
+                <span>Ends: {formattedEndDate}</span>
               </div>
             </div>
           </div>
