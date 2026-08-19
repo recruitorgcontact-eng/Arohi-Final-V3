@@ -1327,6 +1327,35 @@ app.post('/api/auth/update-activities', async (req, res) => {
   }
 });
 
+app.post('/api/auth/update-subscription', async (req, res) => {
+  const { uid, isSubscribed, subscriptionPlanName, subscriptionEndDate, subscriptions, subscriptionDetails, paymentMethod, paymentId } = req.body;
+  try {
+    if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const endDate = subscriptionEndDate || (now + thirtyDays);
+    const planName = subscriptionPlanName || 'Starter Plan (₹399/mo)';
+    const subs = subscriptions || { path1: true, path2: false, path3: false, path4: false };
+    const details = subscriptionDetails || { path1: { tierName: planName, price: 399, margin: 199.5 } };
+    
+    await safeUserDb.update(uid, {
+      isSubscribed: Boolean(isSubscribed),
+      subscriptionPlanName: planName,
+      subscriptionEndDate: endDate,
+      subscriptions: subs,
+      subscriptionDetails: details,
+      subscribedAt: now,
+      paymentMethod: paymentMethod || 'Razorpay / UPI',
+      paymentId: paymentId || `pay_${now}`,
+      updatedAt: new Date().toISOString()
+    });
+    const updatedSnap = await safeUserDb.get(uid);
+    res.json({ success: true, userData: updatedSnap.data() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/me', async (req, res) => {
   const { uid, entrySource } = req.body;
   try {
@@ -1775,55 +1804,97 @@ app.get('/api/admin/users', async (req, res) => {
   }
 
   let combinedUsers = [...serverAdminUsers];
+
+  const mapUserData = (docId: string, data: any) => {
+    const email = data.email || data.profile?.email;
+    if (!email) return null;
+
+    const isPaid = Boolean(
+      data.isSubscribed || 
+      (data.subscriptionEndDate && Number(data.subscriptionEndDate) > Date.now()) ||
+      (data.planExpiryTimestamp && data.planExpiryTimestamp > Date.now()) ||
+      email.toLowerCase() === 'elitetraderjunoon@gmail.com'
+    );
+
+    const chatsCount = (data.arohiChats || []).reduce((acc: number, c: any) => acc + (c.messages?.length || 0), 0);
+    const voiceCount = (data.arohiCalls || []).length;
+
+    return {
+      id: data.uid || docId,
+      email: email.toLowerCase(),
+      name: data.displayName || data.profile?.name || data.name || email.split('@')[0],
+      phone: data.phone || data.profile?.phone || data.userPhone || '',
+      role: email.toLowerCase() === 'elitetraderjunoon@gmail.com' 
+        ? 'Super Administrator & Founder' 
+        : data.role === 'recruiter' 
+        ? 'Business Owner/Recruiter' 
+        : isPaid 
+        ? 'Paid Subscriber' 
+        : 'Candidate / Aspirant',
+      status: email.toLowerCase() === 'elitetraderjunoon@gmail.com' 
+        ? 'VIP' 
+        : isPaid 
+        ? 'Active' 
+        : (data.status || 'Active'),
+      isSubscribed: isPaid,
+      activePlanName: data.subscriptionPlanName || data.planName || (isPaid ? 'Starter Plan (₹399/mo)' : 'Free Trial'),
+      planStartDate: data.subscriptionStartDate || data.planStartDate || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      planExpiryDate: data.planExpiryDate || (data.subscriptionEndDate ? new Date(Number(data.subscriptionEndDate)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '30 Days from Start'),
+      planExpiryTimestamp: data.planExpiryTimestamp || (data.subscriptionEndDate ? Number(data.subscriptionEndDate) : Date.now() + 30 * 24 * 60 * 60 * 1000),
+      paymentStatus: isPaid ? 'Verified' : (data.paymentStatus || 'Free Tier'),
+      entrySource: data.entrySource || 'Web Portal Registration',
+      joinedDate: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Joined',
+      permissions: data.permissions || {
+        canEditJobs: data.role === 'recruiter' || email.toLowerCase() === 'elitetraderjunoon@gmail.com',
+        canApproveApps: data.role === 'recruiter' || email.toLowerCase() === 'elitetraderjunoon@gmail.com',
+        canViewFinance: email.toLowerCase() === 'elitetraderjunoon@gmail.com'
+      },
+      services: data.services || {
+        path1: isPaid || (data.enrolledCourses && data.enrolledCourses.length > 0) || (data.profile?.activeGoal && data.profile.activeGoal.includes('Career')) || false,
+        path2: isPaid || (data.completedModules ? Object.keys(data.completedModules).length > 0 : false),
+        path3: isPaid || (data.profile?.activeGoal && data.profile.activeGoal.includes('Mudra')) || false,
+        path4: isPaid || false
+      },
+      takenCourses: data.enrolledCourses || [],
+      usage: {
+        chatsWithArohi: chatsCount,
+        voiceCallsCount: voiceCount,
+        resumeScans: data.diagnostics?.atsScore ? 1 : 0,
+        mockInterviews: data.diagnostics?.interviewScore ? 1 : 0
+      },
+      customizedSettings: data.customizedSettings || {
+        tutoringSlot: data.profile?.location || 'New Delhi, India',
+        priorityLevel: email.toLowerCase() === 'elitetraderjunoon@gmail.com' ? 'Critical' : isPaid ? 'High' : 'Standard',
+        assignedMentor: 'Arohi AI Master'
+      }
+    };
+  };
+
+  // 1. Scan inMemoryUsers
+  inMemoryUsers.forEach((data: any, uid: string) => {
+    const mapped = mapUserData(uid, data);
+    if (!mapped) return;
+    const existingIdx = combinedUsers.findIndex(u => u.email.toLowerCase() === mapped.email.toLowerCase());
+    if (existingIdx !== -1) {
+      combinedUsers[existingIdx] = { ...combinedUsers[existingIdx], ...mapped };
+    } else {
+      combinedUsers.push(mapped as any);
+    }
+  });
+
+  // 2. Scan Firestore users collection
   if (adminDb) {
     try {
       const snapshot = await adminDb.collection('users').get();
       snapshot.forEach((doc: any) => {
         const data = doc.data();
-        const email = data.email || data.profile?.email;
-        if (!email) return;
-
-        // Check if this user already exists to avoid duplicates
-        const existingIdx = combinedUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
-
-        const mappedUser = {
-          id: data.uid || doc.id,
-          email: email,
-          name: data.displayName || data.profile?.name || email.split('@')[0],
-          role: data.role === 'recruiter' ? 'Business Owner/Recruiter' : 'Premium Candidate',
-          status: data.status || 'Active',
-          entrySource: data.entrySource || 'Website Browser',
-          permissions: data.permissions || {
-            canEditJobs: data.role === 'recruiter' || email === 'elitetraderjunoon@gmail.com',
-            canApproveApps: data.role === 'recruiter' || email === 'elitetraderjunoon@gmail.com',
-            canViewFinance: email === 'elitetraderjunoon@gmail.com'
-          },
-          services: data.services || {
-            path1: (data.enrolledCourses && data.enrolledCourses.length > 0) || (data.profile?.activeGoal && data.profile.activeGoal.includes('Career')) || false,
-            path2: data.completedModules ? Object.keys(data.completedModules).length > 0 : false,
-            path3: (data.profile?.activeGoal && data.profile.activeGoal.includes('Mudra')) || false,
-            path4: false
-          },
-          takenCourses: data.enrolledCourses || [],
-          usage: data.usage || {
-            chatsWithArohi: data.arohiChats?.reduce((acc: number, c: any) => acc + (c.messages?.length || 0), 0) || 0,
-            resumeScans: data.diagnostics?.atsScore ? 1 : 0,
-            mockInterviews: data.diagnostics?.interviewScore ? 1 : 0
-          },
-          customizedSettings: data.customizedSettings || {
-            tutoringSlot: data.profile?.location || 'Not scheduled',
-            priorityLevel: email === 'elitetraderjunoon@gmail.com' ? 'Critical' : 'Standard',
-            assignedMentor: 'Automated AI Guide'
-          }
-        };
-
+        const mapped = mapUserData(doc.id, data);
+        if (!mapped) return;
+        const existingIdx = combinedUsers.findIndex(u => u.email.toLowerCase() === mapped.email.toLowerCase());
         if (existingIdx !== -1) {
-          combinedUsers[existingIdx] = {
-            ...combinedUsers[existingIdx],
-            ...mappedUser
-          };
+          combinedUsers[existingIdx] = { ...combinedUsers[existingIdx], ...mapped };
         } else {
-          combinedUsers.push(mappedUser);
+          combinedUsers.push(mapped as any);
         }
       });
     } catch (err: any) {
@@ -5265,6 +5336,110 @@ app.get('/api/live-news', async (req, res) => {
   }
 });
 
+// Resilient Live Voice Turn Endpoint for Voice Call UI
+app.post('/api/live-voice-turn', async (req, res) => {
+  const { prompt, history = [], language = 'en', uid } = req.body;
+  try {
+    const userPrompt = (prompt || '').trim();
+    if (!userPrompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    let dynamicInstruction = `You are AROHI, an empathetic, highly intelligent AI companion and Opportunity Guide on Arohi AI.
+You are currently on a direct, real-time live voice call with the user.
+Your voice is warm, natural, respectful, and energetic.
+Keep your spoken replies conversational, direct, and concise (typically 2-4 sentences for voice dialogue, avoiding bulleted lists or raw markdown formatting like asterisks and headers unless specifically asked for a structured breakdown).
+Never use robotic meta-commentary like "As an AI model" or "According to my database". Speak naturally as Arohi.`;
+
+    if (uid) {
+      try {
+        const userSnap = await safeUserDb.get(uid);
+        if (userSnap.exists) {
+          const userData = userSnap.data();
+          const displayName = userData.displayName || '';
+          if (displayName) {
+            dynamicInstruction += `\nYou are speaking with ${displayName}. Address them naturally when appropriate.`;
+          }
+        }
+      } catch (e) {}
+    }
+
+    const languageNames: Record<string, string> = {
+      hi: 'HINDI (हिंदी)',
+      or: 'ODIA (ଓଡ଼ିଆ)',
+      bn: 'BENGALI (বাংলা)',
+      te: 'TELUGU (తెలుగు)',
+      mr: 'MARATHI (मराठी)',
+      ta: 'TAMIL (தமிழ்)',
+      gu: 'GUJARATI (ગુજરાતી)',
+      ur: 'URDU (اردو)',
+      kn: 'KANNADA (ಕನ್ನಡ)',
+      ml: 'MALAYALAM (മലയാളം)',
+      pa: 'PUNJABI (ਪੰਜਾਬੀ)',
+      as: 'ASSAMESE (অসমীয়া)'
+    };
+
+    if (language && languageNames[language]) {
+      dynamicInstruction += `\nSpoken conversation language: ${languageNames[language]}. Respond naturally in this language.`;
+    }
+
+    const formattedContents: any[] = [];
+    if (Array.isArray(history)) {
+      history.slice(-6).forEach((turn: any) => {
+        if (turn.speaker === 'user' && turn.text) {
+          formattedContents.push({ role: 'user', parts: [{ text: turn.text }] });
+        } else if ((turn.speaker === 'arohi' || turn.speaker === 'assistant') && turn.text) {
+          formattedContents.push({ role: 'model', parts: [{ text: turn.text }] });
+        }
+      });
+    }
+
+    formattedContents.push({ role: 'user', parts: [{ text: userPrompt }] });
+
+    let responseText = '';
+    if (aiClient) {
+      try {
+        const response = await generateContentWithFallback(aiClient, {
+          contents: formattedContents,
+          config: {
+            systemInstruction: dynamicInstruction,
+            temperature: 0.7,
+            maxOutputTokens: 600,
+          }
+        });
+        responseText = response?.text || response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } catch (genErr) {
+        console.warn('Gemini generateContent in live-voice-turn error:', genErr);
+      }
+    }
+
+    if (!responseText || !responseText.trim()) {
+      responseText = getArohiFallbackResponse(userPrompt);
+    }
+
+    const cleanReply = responseText
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/[*#`_~]/g, '')
+      .trim();
+
+    return res.json({
+      success: true,
+      speaker: 'arohi',
+      transcript: cleanReply,
+      rawText: responseText
+    });
+  } catch (error: any) {
+    console.error('Error in /api/live-voice-turn:', error);
+    const fallback = getArohiFallbackResponse(req.body?.prompt || 'Hello Arohi');
+    return res.json({
+      success: true,
+      speaker: 'arohi',
+      transcript: fallback,
+      rawText: fallback
+    });
+  }
+});
+
 // AI Image Generation & Editing Endpoints (Create & Edit Images feature)
 app.post('/api/generate-image', async (req, res) => {
   try {
@@ -8566,6 +8741,302 @@ ${userPrompt.trim()} involves key concepts, practical principles, and real-world
 If you would like a deeper explanation, step-by-step breakdown, code snippets, or specific guidance regarding **${cleanTopic || userPrompt.trim()}**, please let me know and I will be glad to assist you!`;
 }
 
+// ==========================================
+// AROHI AI ALL-INDIA MOCK TESTS & CBT EXAM API
+// ==========================================
+app.post('/api/mocktests/ai-generate', async (req, res) => {
+  try {
+    const { topic, examCategory, difficulty = 'medium', questionCount = 10, language = 'English', targetExam } = req.body;
+    
+    if (!topic && !targetExam) {
+      return res.status(400).json({ error: 'Topic or target exam is required.' });
+    }
+
+    const examTitle = targetExam || topic;
+    const prompt = `You are Arohi AI, India's leading competitive exam master and test builder.
+Generate an authentic, high-quality Computer-Based Test (CBT) mock exam paper with exactly ${questionCount} multiple-choice questions.
+
+EXAM CRITERIA:
+- Target Exam / Topic: "${examTitle}"
+- Exam Category: "${examCategory || 'Competitive Exams'}"
+- Difficulty Level: "${difficulty}" (Easy, Medium, Hard)
+- Language: "${language}" (English, Hindi, Odia, or bilingual)
+- Syllabus & Style: Conform accurately to the authentic pattern of this exam (e.g., if Nursing / OSSSC / AIIMS NORCET, focus on Medical-Surgical Nursing, Pharmacology, Nursing Fundamentals, Anatomy/Physiology, Community Health, Midwifery, General Awareness; if SSC/UPSC, follow their respective formats).
+
+OUTPUT FORMAT:
+You MUST respond with valid JSON ONLY (no markdown formatting, no code fences, no extra text outside the JSON).
+JSON Schema:
+{
+  "title": "${examTitle} CBT Mock Practice Test",
+  "category": "${examCategory || 'All-India Mock Exams'}",
+  "difficulty": "${difficulty}",
+  "totalTimeMinutes": ${Math.max(10, Math.round(questionCount * 1.2))},
+  "positiveMarks": 1,
+  "negativeMarks": 0.25,
+  "instructions": [
+    "Each question carries 1 mark. Incorrect answers incur a penalty of 0.25 marks.",
+    "Do not refresh or navigate away from the CBT screen while taking the test.",
+    "Review your answers before final submission."
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Question text here...",
+      "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+      "correctOptionIndex": 0,
+      "explanation": "Detailed step-by-step rationale explaining why Option A is correct and why other options are wrong.",
+      "subject": "Core Subject Name",
+      "topic": "Specific Topic Name"
+    }
+  ]
+}`;
+
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    let generatedData = null;
+
+    if (aiClient) {
+      for (const modelName of modelsToTry) {
+        try {
+          const response = await aiClient.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              temperature: 0.3,
+            }
+          });
+          const rawText = response.text || '';
+          const cleanedText = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          generatedData = JSON.parse(cleanedText);
+          if (generatedData && Array.isArray(generatedData.questions) && generatedData.questions.length > 0) {
+            break;
+          }
+        } catch (genErr: any) {
+          console.warn(`[MockTest AI Gen] Model ${modelName} failed, trying next:`, genErr?.message);
+        }
+      }
+    }
+
+    if (!generatedData || !Array.isArray(generatedData.questions) || generatedData.questions.length === 0) {
+      // Fallback generator for Nursing / general exams if AI is unreachable
+      const sampleTopic = topic || targetExam || 'Nursing & General Aptitude';
+      generatedData = {
+        title: `${sampleTopic} AI Practice Exam (Curated)`,
+        category: examCategory || 'Competitive Exams',
+        difficulty: difficulty,
+        totalTimeMinutes: Math.max(10, Math.round(questionCount * 1.2)),
+        positiveMarks: 1,
+        negativeMarks: 0.25,
+        instructions: [
+          "Each question carries 1 mark with 0.25 negative marks for incorrect answers.",
+          "Curated based on latest previous year question patterns.",
+          "Complete within the allocated time limit."
+        ],
+        questions: [
+          {
+            id: "q1",
+            question: `In the context of ${sampleTopic}, which of the following represents the primary standard clinical protocol or foundational guideline?`,
+            options: [
+              "Immediate systematic triage and ABC assessment (Airway, Breathing, Circulation)",
+              "Delayed documentation after 24 hours of patient observation",
+              "Unsupervised administration of high-alert medications",
+              "Secondary assessment bypassing initial vital sign baseline"
+            ],
+            correctOptionIndex: 0,
+            explanation: "In standard clinical and healthcare examination guidelines, initial emergency management and patient care always prioritize rapid ABC (Airway, Breathing, Circulation) evaluation.",
+            subject: sampleTopic,
+            topic: "Fundamentals & Clinical Protocols"
+          },
+          {
+            id: "q2",
+            question: "Which of the following electrolyte imbalances is most commonly associated with cardiac arrhythmias and inverted T-waves on an ECG?",
+            options: [
+              "Hypernatremia",
+              "Hypokalemia",
+              "Hypercalcemia",
+              "Hypophosphatemia"
+            ],
+            correctOptionIndex: 1,
+            explanation: "Hypokalemia (low potassium level < 3.5 mEq/L) characteristically causes flattened or inverted T waves, prominent U waves, and increased risk of ventricular arrhythmias.",
+            subject: "Medical-Surgical / Physiology",
+            topic: "Fluid & Electrolyte Balance"
+          },
+          {
+            id: "q3",
+            question: "Under the Universal Immunization Programme (UIP) in India, which vaccine is administered at birth via the intradermal route?",
+            options: [
+              "Hepatitis B (Intramuscular)",
+              "BCG (Bacillus Calmette-Guérin)",
+              "Oral Polio Vaccine (OPV)",
+              "Rotavirus Vaccine"
+            ],
+            correctOptionIndex: 1,
+            explanation: "BCG vaccine is given at birth (or up to 1 year of age) via intradermal injection over the left upper arm at a dose of 0.05 ml (at birth) or 0.1 ml (after 4 weeks).",
+            subject: "Community Health & Midwifery",
+            topic: "National Immunization Schedule"
+          },
+          {
+            id: "q4",
+            question: "Which standard formula is used to calculate pediatric medication dosage based on a child's age in years?",
+            options: [
+              "Young's Rule: (Age in Years / [Age + 12]) × Adult Dose",
+              "Clark's Rule: (Weight in lbs / 150) × Adult Dose",
+              "Fried's Rule: (Age in Months / 150) × Adult Dose",
+              "Parkland Formula: 4ml × kg × % BSA"
+            ],
+            correctOptionIndex: 0,
+            explanation: "Young's rule calculates pediatric dosage as: Pediatric dose = [Age / (Age + 12)] × Adult dose for children over 1 year of age.",
+            subject: "Pharmacology & Calculations",
+            topic: "Drug Dosage Calculations"
+          },
+          {
+            id: "q5",
+            question: "What is the recommended compression-to-ventilation ratio for adult cardiopulmonary resuscitation (CPR) by a single rescuer according to AHA guidelines?",
+            options: [
+              "15:2",
+              "30:2",
+              "50:2",
+              "10:1"
+            ],
+            correctOptionIndex: 1,
+            explanation: "AHA and standard resuscitation guidelines mandate a 30:2 compression-to-ventilation ratio for adult CPR, compressing at 100-120 beats per minute to a depth of 2-2.4 inches (5-6 cm).",
+            subject: "Emergency Nursing & Life Support",
+            topic: "Basic Life Support (BLS)"
+          }
+        ]
+      };
+    }
+
+    res.json({
+      success: true,
+      exam: generatedData
+    });
+  } catch (error: any) {
+    console.error('Error generating AI mock test:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate custom exam.' });
+  }
+});
+
+app.post('/api/mocktests/ai-analysis', async (req, res) => {
+  try {
+    const { testTitle, category, score, totalQuestions, correctCount, incorrectCount, skippedCount, accuracy, timeSpentSeconds, weakTopics = [], strongTopics = [] } = req.body;
+
+    const prompt = `You are Arohi AI, India's #1 AI Mentor & Exam Strategist.
+Provide a high-impact diagnostic assessment and personalized 14-day action plan for a candidate who just completed this CBT Mock Exam:
+
+EXAM PERFORMANCE METRICS:
+- Exam Title: ${testTitle} (${category})
+- Score: ${score}
+- Total Questions: ${totalQuestions}
+- Correct Answers: ${correctCount}
+- Incorrect Answers: ${incorrectCount}
+- Skipped: ${skippedCount}
+- Accuracy: ${accuracy}%
+- Time Spent: ${Math.round(timeSpentSeconds / 60)} minutes
+- Weak Topics Identified: ${weakTopics.join(', ') || 'General Concept Application'}
+- Strong Topics: ${strongTopics.join(', ') || 'Core Fundamentals'}
+
+Please generate a structured, empathetic, and strategic AI Diagnostic Report in valid JSON format:
+{
+  "overallVerdict": "A 2-sentence motivating summary of their readiness and rank projection",
+  "projectedPercentile": "e.g., 88.5th Percentile",
+  "readinessRating": "e.g., 78% Exam Ready",
+  "rootCauseAnalysis": [
+    "Clear insight 1 explaining where marks were lost (e.g. negative marking trap, time pressure, formula recall)",
+    "Clear insight 2"
+  ],
+  "highPriorityRevisionPlan": [
+    {
+      "topic": "Topic Name",
+      "action": "Specific textbook / revision technique",
+      "estimatedMarksGain": "+4 to 6 Marks"
+    }
+  ],
+  "fourteenDayRoadmap": [
+    {
+      "dayRange": "Days 1-4",
+      "focus": "Topic area & drills",
+      "dailyHours": 3
+    },
+    {
+      "dayRange": "Days 5-9",
+      "focus": "Sectional tests & speed optimization",
+      "dailyHours": 3.5
+    },
+    {
+      "dayRange": "Days 10-14",
+      "focus": "Full-length CBT mock drills & error diary review",
+      "dailyHours": 4
+    }
+  ],
+  "arohiProTips": [
+    "Practical time management tip during CBT exam",
+    "How to eliminate 50-50 options safely",
+    "Mental calm and accuracy drill"
+  ]
+}`;
+
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    let analysisData = null;
+
+    if (aiClient) {
+      for (const modelName of modelsToTry) {
+        try {
+          const response = await aiClient.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              temperature: 0.3,
+            }
+          });
+          const rawText = response.text || '';
+          const cleanedText = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          analysisData = JSON.parse(cleanedText);
+          if (analysisData && analysisData.overallVerdict) {
+            break;
+          }
+        } catch (aiErr: any) {
+          console.warn(`[MockTest AI Analysis] Model ${modelName} failed:`, aiErr?.message);
+        }
+      }
+    }
+
+    if (!analysisData || !analysisData.overallVerdict) {
+      analysisData = {
+        overallVerdict: `You demonstrated strong conceptual grasp with ${accuracy}% accuracy in ${testTitle}. With targeted practice on negative marks reduction, you can easily bridge into the top rank bracket.`,
+        projectedPercentile: `${Math.min(99, Math.max(45, Math.round(accuracy * 0.95 + 10)))}th Percentile`,
+        readinessRating: `${Math.min(95, Math.max(40, Math.round(accuracy * 0.9)))}% Ready`,
+        rootCauseAnalysis: [
+          `Negative marking reduced your net score by ${(incorrectCount * 0.25).toFixed(2)} marks. Practice eliminating 2 options before attempting borderline questions.`,
+          `Average time per question was ${(timeSpentSeconds / Math.max(1, totalQuestions)).toFixed(1)}s, which is within the target CBT benchmark.`
+        ],
+        highPriorityRevisionPlan: weakTopics.slice(0, 3).map((topic: string) => ({
+          topic,
+          action: "Review previous 5 years' PYQs and high-frequency formula/guideline summaries.",
+          estimatedMarksGain: "+3 to 5 Marks"
+        })),
+        fourteenDayRoadmap: [
+          { dayRange: "Days 1-4", focus: "PYQ Deep-Dive in weaker topics & flashcard drills", dailyHours: 3 },
+          { dayRange: "Days 5-9", focus: "Topic-wise speed tests and eliminating negative guesses", dailyHours: 3.5 },
+          { dayRange: "Days 10-14", focus: "2 Full-length timed CBT mock tests under simulated exam hall pressure", dailyHours: 4 }
+        ],
+        arohiProTips: [
+          "Follow the 3-Pass Rule in CBT: Pass 1 (Sure answers in 30 mins), Pass 2 (50-50 elimination in 40 mins), Pass 3 (Review marked for review).",
+          "Never guess blindly when negative marking is 0.25; only attempt if you can eliminate at least two options.",
+          "Keep an error logbook: note down every mistake immediately after each mock test."
+        ]
+      };
+    }
+
+    res.json({
+      success: true,
+      analysis: analysisData
+    });
+  } catch (err: any) {
+    console.error('Error generating AI exam analysis:', err);
+    res.status(500).json({ error: err.message || 'Failed to analyze exam result.' });
+  }
+});
+
 // Dynamic Sitemap generator for SEO crawler exposure all over India
 app.get('/sitemap.xml', (req, res) => {
   const currentDate = new Date().toISOString().split('T')[0];
@@ -9271,9 +9742,6 @@ async function startServer() {
         "\n- TONE & DELIVERY: Speak with clean warmth, professional enthusiasm, and clear articulation. Speak naturally and directly to the user. Do NOT use repetitive forced filler greetings like 'Namaste ji!', 'Namaskar ji!', or 'Haan ji!'." +
         "\n- For standard casual conversational Q&A, keep responses clear, warm, and conversational (2-4 sentences)." +
         "\n- STRICT NON-STOP STORYTELLING & SPEECH MANDATE: You are granted EXPLICIT SPECIAL PERMISSION to recite and narrate long stories and speeches during voice calls! When the user asks you to give a speech for students/startups, address an auditorium, tell a story, or recite 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' (in Odia, Hindi, English, or ANY language), ONCE A STORY HAS BEEN INITIATED, ALL 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR 'Are you listening?' PROMPTS ARE STRICTLY DISABLED AND FORBIDDEN! YOU MUST NARRATE THE ENTIRE STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE UNBROKEN STREAM WITHOUT EVER STOPPING TO ASK 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR ANY OTHER CONTINUATION OR PRESENCE QUESTION! Recite the complete unabridged narrative from beginning to end in full scale without stopping midway. Take whatever time is needed (10, 12, 15+ minutes or as long as it takes). NEVER ask 'Are you still there?' or 'Should I continue?'. ONLY pause if the user actively interrupts or speaks into their microphone!" +
-        "\n- IMPORTANT GREETING MANDATE: You MUST begin this voice call immediately with the following exact, word-for-word welcoming note:" +
-        "\n  \"Welcome to Arohi AI. I am Arohi, your AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?\"" +
-        "\n- Do NOT ask 'do you have any questions for business or career or jobs?' as your opening statement. Start exactly with the mandated welcoming note above." +
         "\n\n=== DYNAMIC INSTANT LANGUAGE ADAPTATION & SPEECH MIRRORING MANDATE ===" +
         "\n- ABSOLUTE MULTILINGUAL RECOGNITION: Arohi automatically detects and supports 150+ languages (Odia/ଓଡ଼ିଆ, Hindi/हिंदी, English, Bengali, Telugu, Tamil, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, etc.)." +
         "\n- IF THE USER SPEAKS OR SENDS A PROMPT IN ODIA (e.g., ଓଡ଼ିଆ script or spoken Odia like 'mote business karibaku achhi', 'kemiti achha', 'mu odisha ru', 'state schemes bisayare kuha', 'kan karibi', 'namaskar'), YOU MUST IMMEDIATELY SWITCH AND RESPOND ENTIRELY IN SWEET, NATURAL SPOKEN ODIA (ଓଡ଼ିଆ)!" +
@@ -9388,14 +9856,6 @@ async function startServer() {
                         finished = true;
                         console.log(`Gemini Live session stable on model: ${liveModel}`);
                         resolve(tempSession);
-
-                        // Send initial mandated welcome greeting transcript to client immediately (only for interactive voice call, not read aloud)
-                        if (!isReadAloud && clientWs.readyState === WebSocket.OPEN) {
-                          try {
-                            const greetingText = "Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME, organization, or enterprise—I am here to guide you in 150+ languages with voice calls. How can I empower you and fuel your journey today?";
-                            clientWs.send(JSON.stringify({ transcript: greetingText, speaker: 'arohi' }));
-                          } catch (e) {}
-                        }
                       }
                     }, 400); // Wait 400ms to ensure the connection is stable and not immediately closed by validation
                   },
@@ -9471,7 +9931,7 @@ async function startServer() {
                       }
                     }
 
-                    // 5. Check modelTurn in serverContent
+                    // 5. Check modelTurn in serverContent (text parts)
                     if (!transcriptText && message.serverContent?.modelTurn?.parts) {
                       for (const part of message.serverContent.modelTurn.parts) {
                         if (part.text) {
@@ -9493,6 +9953,13 @@ async function startServer() {
                     if (transcriptText && clientWs.readyState === WebSocket.OPEN) {
                       try {
                         clientWs.send(JSON.stringify({ transcript: transcriptText, speaker: transcriptSpeaker }));
+                      } catch (e) {}
+                    }
+
+                    // 7. Check if turnComplete
+                    if (message.serverContent?.turnComplete && clientWs.readyState === WebSocket.OPEN) {
+                      try {
+                        clientWs.send(JSON.stringify({ turnComplete: true }));
                       } catch (e) {}
                     }
                   },
@@ -9582,13 +10049,6 @@ async function startServer() {
       if (!session) {
         console.warn("Gemini Live bidi stream unavailable. Activating Arohi Resilient Voice Fallback Engine...");
         logWsEvent('gemini_live_fallback_active', { voice: selectedVoice });
-
-        if (clientWs.readyState === WebSocket.OPEN) {
-          try {
-            const fallbackGreeting = "Welcome to Arohi AI. I am Arohi, your AI Opportunity & Growth Guide. Voice call connected. How can I guide and empower your journey today?";
-            clientWs.send(JSON.stringify({ transcript: fallbackGreeting, speaker: 'arohi' }));
-          } catch (e) {}
-        }
       }
 
       clientWs.on("message", async (data) => {

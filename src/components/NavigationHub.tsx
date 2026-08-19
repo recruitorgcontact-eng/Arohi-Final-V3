@@ -56,6 +56,7 @@ const navigationCategories = [
   {
     title: 'Skills & Education',
     items: [
+      { id: 'mocktests', label: 'All-India Mock Tests & CBT Exams', icon: Award, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', badge: 'Class 1-12 & Govt/Nursing' },
       { id: 'blogs', label: 'Trending SEO Blogs (100+)', icon: BookOpen, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'New SEO' },
       { id: 'courses', label: 'Skills & Certification', icon: BookOpen, color: 'text-violet-400 bg-violet-500/10 border-violet-500/20' },
       { id: 'syllabus', label: 'School Syllabus (1-10)', icon: GraduationCap, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'Odia/CBSE' },

@@ -29,9 +29,11 @@ export interface AdminUser {
   takenCourses: string[];
   usage: {
     chatsWithArohi: number;
+    voiceCallsCount?: number;
     resumeScans: number;
     mockInterviews: number;
   };
+  joinedDate?: string;
   customizedSettings: {
     tutoringSlot: string;
     priorityLevel: 'Standard' | 'High' | 'Critical';

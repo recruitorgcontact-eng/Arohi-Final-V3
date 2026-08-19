@@ -169,6 +169,17 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
       tabId: 'schemes'
     },
     {
+      id: 'mocktests',
+      title: 'All-India Mock Tests & CBT Exam Portal',
+      category: 'EXAMS & CBT SIMULATOR',
+      catFilter: 'LEARNING',
+      description: 'Practice real exam simulations with exact timing, negative marking, All-India Leaderboard, and AI diagnostic reports for Class 1-12, Nursing, SSC, UPSC, and NEET.',
+      icon: Award,
+      color: 'from-rose-500 via-purple-600 to-indigo-600',
+      badge: 'ALL-INDIA CBT',
+      tabId: 'mocktests'
+    },
+    {
       id: 'syllabus',
       title: 'School Syllabus Portal (Class 1-10)',
       category: 'ACADEMICS',

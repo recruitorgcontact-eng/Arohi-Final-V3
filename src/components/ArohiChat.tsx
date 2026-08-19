@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
+import InChatMessageQuiz from './mocktests/InChatMessageQuiz';
 
 interface Message {
   id: string;
@@ -3712,6 +3713,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
                   {parsed.mcpData && (
                     <McpApprovalCard payload={parsed.mcpData} isDarkMode={isDarkMode} />
+                  )}
+
+                  {msg.role === 'assistant' && !msg.isStreaming && parsed.cleanedContent && (
+                    <InChatMessageQuiz
+                      content={parsed.cleanedContent}
+                      isDarkMode={isDarkMode}
+                      onLaunchFullCbt={() => {
+                        if (onNavigateTab) onNavigateTab('mocktests');
+                      }}
+                    />
                   )}
                 </div>
 

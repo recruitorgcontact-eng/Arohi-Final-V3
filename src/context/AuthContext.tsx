@@ -68,6 +68,14 @@ export interface UserData {
   earnedCertificates: string[];
   savedItems: Array<{ id: string; title: string; type: string; desc: string }>;
   applications: Application[];
+  isSubscribed?: boolean;
+  subscriptionPlanName?: string;
+  subscriptionEndDate?: number;
+  subscriptions?: Record<string, boolean>;
+  subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
+  subscribedAt?: number;
+  paymentMethod?: string;
+  paymentId?: string;
   arohiChats?: Array<{
     id: string;
     title: string;
@@ -307,6 +315,15 @@ interface AuthContextType {
     description: string;
     timestamp: string;
   }>) => Promise<void>;
+  updateUserSubscription: (subData: {
+    isSubscribed: boolean;
+    subscriptionPlanName?: string;
+    subscriptionEndDate?: number;
+    subscriptions?: Record<string, boolean>;
+    subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
+    paymentMethod?: string;
+    paymentId?: string;
+  }) => Promise<void>;
   signInWithBiometrics: (email: string) => Promise<void>;
 }
 
@@ -483,6 +500,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.arohiChats && data.arohiChats.length > 0) {
         try {
           localStorage.setItem(`arohi_saved_chats_${uid}`, JSON.stringify(data.arohiChats));
+        } catch (e) {}
+      }
+      // Resilient subscription sync: If user profile in Firestore has active subscription, sync to localStorage immediately
+      if (data && (data.isSubscribed || (data.subscriptionEndDate && data.subscriptionEndDate > Date.now()))) {
+        try {
+          const now = Date.now();
+          const endDate = (data.subscriptionEndDate && data.subscriptionEndDate > now)
+            ? data.subscriptionEndDate
+            : now + (30 * 24 * 60 * 60 * 1000);
+          const subs = data.subscriptions || { path1: true, path2: false, path3: false, path4: false };
+          localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
+          localStorage.setItem('arohi_subscription_end_date', endDate.toString());
+          if (data.subscriptionDetails) {
+            localStorage.setItem('arohi_subscription_details', JSON.stringify(data.subscriptionDetails));
+          }
         } catch (e) {}
       }
       return data;
@@ -1358,6 +1390,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserSubscription = async (subData: {
+    isSubscribed: boolean;
+    subscriptionPlanName?: string;
+    subscriptionEndDate?: number;
+    subscriptions?: Record<string, boolean>;
+    subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
+    paymentMethod?: string;
+    paymentId?: string;
+  }) => {
+    if (!user) return;
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const endDate = subData.subscriptionEndDate || (now + thirtyDays);
+    const planName = subData.subscriptionPlanName || 'Starter Plan (₹399/mo)';
+    const subs = subData.subscriptions || { path1: true, path2: false, path3: false, path4: false };
+    const details = subData.subscriptionDetails || { path1: { tierName: planName, price: 399, margin: 199.5 } };
+    
+    const subPayload = {
+      isSubscribed: Boolean(subData.isSubscribed),
+      subscriptionPlanName: planName,
+      subscriptionEndDate: endDate,
+      subscriptions: subs,
+      subscriptionDetails: details,
+      subscribedAt: now,
+      paymentMethod: subData.paymentMethod || 'Razorpay / UPI',
+      paymentId: subData.paymentId || `pay_${now}`,
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedUserData = userData ? { ...userData, ...subPayload } : null;
+
+    if (updatedUserData) {
+      setUserData(updatedUserData);
+      localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
+    }
+
+    try {
+      localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
+      localStorage.setItem('arohi_subscription_end_date', endDate.toString());
+      localStorage.setItem('arohi_subscription_details', JSON.stringify(details));
+    } catch (e) {}
+
+    // Layer 1: Server-side API
+    try {
+      const response = await fetch('/api/auth/update-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, ...subPayload })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.userData) {
+          setUserData(data.userData);
+          localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side subscription update failed, attempting direct client-side Firestore SDK:", err);
+    }
+
+    // Layer 2: Client-side Firestore SDK fallback
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, subPayload);
+    } catch (err) {
+      console.warn("Both server-side and client-side Firestore subscription updates failed. Changes saved locally.", err);
+    }
+  };
+
   const refreshPersonalizationMemory = async (): Promise<UserPersonalizationMemory | null> => {
     if (!user) return null;
     try {
@@ -1396,7 +1498,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateArohiChats,
       updateArohiCalls,
       updateDiagnostics,
-      updateActivities
+      updateActivities,
+      updateUserSubscription
     }}>
       {children}
     </AuthContext.Provider>

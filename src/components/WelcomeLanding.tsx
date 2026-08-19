@@ -839,12 +839,13 @@ export default function WelcomeLanding({
             </p>
           </div>
 
-          {/* Right: Very Tiny Sign Up / Sign In Button, Theme Toggle, & Bell Buttons */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Right: Sign Up / Sign In Button, Theme Toggle, & Bell Buttons */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             
-            {/* Very Tiny Sign Up / Sign In Button */}
+            {/* Sign Up / Account Button */}
             <button
               type="button"
+              id="welcome-header-auth-btn"
               onClick={() => {
                 if (onOpenAuth) {
                   onOpenAuth();
@@ -852,12 +853,12 @@ export default function WelcomeLanding({
                   setActiveTab('profile');
                 }
               }}
-              className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-[9px] sm:text-[10px] leading-none shadow-xs shadow-purple-600/30 flex items-center gap-1 transition-all active:scale-95 cursor-pointer border border-purple-300/40 shrink-0 tracking-tight"
+              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black text-[10px] sm:text-xs leading-none shadow-xs shadow-purple-600/30 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer border border-purple-300/40 shrink-0 tracking-tight"
               title={user ? 'Account / Profile' : 'Sign Up / Sign In'}
             >
-              <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-100 shrink-0" />
+              <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-100 shrink-0" />
               <span className="whitespace-nowrap font-bold">
-                {user ? (currentUserName.length > 7 ? `${currentUserName.slice(0, 7)}..` : currentUserName) : 'Sign Up / Sign In'}
+                {user ? (currentUserName.length > 10 ? `${currentUserName.slice(0, 10)}..` : currentUserName) : 'Sign Up / Sign In'}
               </span>
             </button>
 
@@ -1308,39 +1309,75 @@ export default function WelcomeLanding({
           </div>
         </div>
 
-        {/* 5. Arohi AI Premium Upgrade Banner */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#210936] via-[#3a0a52] to-[#6b0d59] text-white shadow-xl border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          {/* Crown Watermark */}
-          <Crown className="absolute right-12 bottom-[-15px] sm:right-24 sm:bottom-[-20px] w-28 sm:w-40 h-28 sm:h-40 text-purple-400/15 pointer-events-none" />
+        {/* 5. Arohi AI Membership / Upgrade Banner */}
+        {hasActiveSubscription ? (
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#0a2315] via-[#0d331e] to-[#124528] text-white shadow-xl border border-emerald-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            {/* Crown Watermark */}
+            <Crown className="absolute right-12 bottom-[-15px] sm:right-24 sm:bottom-[-20px] w-28 sm:w-40 h-28 sm:h-40 text-emerald-400/15 pointer-events-none" />
 
-          <div className="relative z-10 space-y-1 text-left min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h4 className="text-sm sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">Arohi AI Premium</h4>
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 fill-amber-300 shrink-0" />
-              <span className="bg-amber-500/30 text-amber-300 border border-amber-400/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">
-                🎁 100% Cashback Offer
-              </span>
+            <div className="relative z-10 space-y-1 text-left min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h4 className="text-sm sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">{subscriptionPlanName}</h4>
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 fill-emerald-300 shrink-0" />
+                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Active &amp; Protected
+                </span>
+              </div>
+              <p className="text-[10px] sm:text-xs text-emerald-100/90 font-medium leading-snug">
+                Your subscription is active for 30 days. Enjoy full access to all LLM &amp; LMM capabilities, multimodal agents, and career tools.
+              </p>
             </div>
-            <p className="text-[10px] sm:text-xs text-purple-200/90 font-medium leading-snug">
-              Get <strong>100% Cashback in Arohi Coins</strong> on 1st month payment + earn <strong>5% referral rewards</strong>!
-            </p>
-          </div>
 
-          <button
-            onClick={() => {
-              if (onUpgradeClick) {
-                onUpgradeClick();
-              } else {
+            <button
+              type="button"
+              id="welcome-manage-membership-btn"
+              onClick={() => {
                 setActiveTab('pricing');
                 onEnter();
-              }
-            }}
-            className="relative z-10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:from-amber-300 hover:to-yellow-200 text-xs sm:text-sm font-black tracking-tight shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
-          >
-            <span>Upgrade with 100% Cashback</span>
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950" />
-          </button>
-        </div>
+              }}
+              className="relative z-10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-300 text-slate-950 hover:from-emerald-300 hover:to-teal-200 text-xs sm:text-sm font-black tracking-tight shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            >
+              <span>Manage Membership</span>
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-r from-[#210936] via-[#3a0a52] to-[#6b0d59] text-white shadow-xl border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            {/* Crown Watermark */}
+            <Crown className="absolute right-12 bottom-[-15px] sm:right-24 sm:bottom-[-20px] w-28 sm:w-40 h-28 sm:h-40 text-purple-400/15 pointer-events-none" />
+
+            <div className="relative z-10 space-y-1 text-left min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h4 className="text-sm sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">Arohi AI Premium</h4>
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 fill-amber-300 shrink-0" />
+                <span className="bg-amber-500/30 text-amber-300 border border-amber-400/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">
+                  🎁 100% Cashback Offer
+                </span>
+              </div>
+              <p className="text-[10px] sm:text-xs text-purple-200/90 font-medium leading-snug">
+                Get <strong>100% Cashback in Arohi Coins</strong> on 1st month payment + earn <strong>5% referral rewards</strong>!
+              </p>
+            </div>
+
+            <button
+              type="button"
+              id="welcome-upgrade-bottom-btn"
+              onClick={() => {
+                if (onUpgradeClick) {
+                  onUpgradeClick();
+                } else {
+                  setActiveTab('pricing');
+                  onEnter();
+                }
+              }}
+              className="relative z-10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:from-amber-300 hover:to-yellow-200 text-xs sm:text-sm font-black tracking-tight shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            >
+              <span>Upgrade with 100% Cashback</span>
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950" />
+            </button>
+          </div>
+        )}
 
       </main>
 

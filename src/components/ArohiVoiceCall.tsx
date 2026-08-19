@@ -1,6 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PhoneOff, Mic, MicOff, Radio, AlertCircle, X, MessageSquare, Maximize2, Minimize2, Copy, Check, Sparkles, User, Bot, Volume2, Bookmark, History, Download, Trash2, Save, Send, ThumbsUp, ThumbsDown, MoreHorizontal, MoreVertical, Video, VideoOff, Upload, Cast, Menu } from 'lucide-react';
-import ArohiAvatar from './ArohiAvatar';
+import { 
+  PhoneOff, 
+  Phone, 
+  Mic, 
+  MicOff, 
+  Radio, 
+  AlertCircle, 
+  X, 
+  MessageSquare, 
+  Pause, 
+  Play, 
+  Sliders, 
+  Keyboard, 
+  Send, 
+  Sparkles, 
+  Volume2, 
+  History, 
+  Copy, 
+  Check, 
+  ChevronDown, 
+  Settings, 
+  Bookmark, 
+  Trash2,
+  Globe
+} from 'lucide-react';
 import { formatDuration, SpeechTurn } from '../lib/pdfGenerator';
 
 interface SavedSnapshot {
@@ -44,23 +67,16 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const lastVolumeUpdateRef = useRef<number>(0);
   const [currentSpeech, setCurrentSpeech] = useState('');
   const [textInput, setTextInput] = useState('');
+  const [showKeyboardDrawer, setShowKeyboardDrawer] = useState(false);
+  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
 
-  const DEFAULT_GREETING = "Welcome to Arohi AI. I am Arohi, your AI Opportunity Guide. Whether you are a student, teacher, doctor, scientist, government aspirant, parent, entrepreneur, or running an MSME — I am right here for you in Odia (ଓଡ଼ିଆ), Hindi (हिंदी), English, and 150+ languages with live voice calls. How can I empower you and fuel your journey today?";
-
-  const [turns, setTurns] = useState<SpeechTurn[]>(() => [
-    {
-      speaker: 'arohi',
-      text: DEFAULT_GREETING,
-      timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
+  const [turns, setTurns] = useState<SpeechTurn[]>([]);
 
   const [liveUserSpeech, setLiveUserSpeech] = useState('');
-  const [isExpandedTranscript, setIsExpandedTranscript] = useState(false);
   const [copiedTranscript, setCopiedTranscript] = useState(false);
-  const [responseFeedback, setResponseFeedback] = useState<'liked' | 'disliked' | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [copiedResponseText, setCopiedResponseText] = useState(false);
+  const [copiedSnapshotId, setCopiedSnapshotId] = useState<string | null>(null);
+  const [toastNotification, setToastNotification] = useState<string | null>(null);
 
   // Temporary Session History state
   const [savedSnapshots, setSavedSnapshots] = useState<SavedSnapshot[]>(() => {
@@ -71,16 +87,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       return [];
     }
   });
-  const [showSessionHistory, setShowSessionHistory] = useState(false);
-  const [copiedSnapshotId, setCopiedSnapshotId] = useState<string | null>(null);
-  const [toastNotification, setToastNotification] = useState<string | null>(null);
-
-  // Sync savedSnapshots to sessionStorage
-  useEffect(() => {
-    try {
-      sessionStorage.setItem('arohi_session_history', JSON.stringify(savedSnapshots));
-    } catch (e) {}
-  }, [savedSnapshots]);
 
   // Audio nodes and context refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -91,6 +97,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const speechRecognitionRef = useRef<any>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Precise scheduling variables for gapless playback
   const nextStartTimeRef = useRef<number>(0);
@@ -99,6 +106,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const isNormalCloseRef = useRef<boolean>(false);
   const statusRef = useRef<string>(status);
   const hasReceivedAudioStreamRef = useRef<boolean>(false);
+  const liveTypingTimerRef = useRef<any>(null);
 
   // Sync status to ref
   useEffect(() => {
@@ -148,9 +156,10 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         recognition.continuous = true;
         recognition.interimResults = true;
         
-        // Match chosen language
+        // Match chosen language with fallback to english or hindi
         const langMap: Record<string, string> = {
           hi: 'hi-IN',
+          en: 'en-IN',
           or: 'or-IN',
           bn: 'bn-IN',
           te: 'te-IN',
@@ -160,10 +169,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           kn: 'kn-IN',
           ml: 'ml-IN',
           pa: 'pa-IN',
-          ur: 'ur-IN',
-          en: 'en-IN'
+          ur: 'ur-IN'
         };
-        const targetLangCode = activeLanguage === 'auto' ? (language === 'or' ? 'or-IN' : 'hi-IN') : (langMap[activeLanguage] || langMap[language] || 'or-IN');
+        const targetLangCode = (activeLanguage && activeLanguage !== 'auto') 
+          ? (langMap[activeLanguage] || 'en-IN') 
+          : (language && language !== 'auto' ? (langMap[language] || 'en-IN') : 'en-IN');
         recognition.lang = targetLangCode;
 
         let silenceTimer: any = null;
@@ -199,58 +209,63 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
           if (silenceTimer) clearTimeout(silenceTimer);
 
-          const commitUserTurn = (text: string) => {
+          const commitUserTurn = async (text: string) => {
             if (!text || !text.trim()) return;
 
-            // Reset audio stream received flag for new turn so browser TTS speaks if model PCM audio is absent
+            // Reset audio stream received flag for new turn
             hasReceivedAudioStreamRef.current = false;
+            setLiveUserSpeech('');
+
+            const userTurn: SpeechTurn = {
+              speaker: 'user',
+              text: text,
+              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            setTurns(prev => [...prev, userTurn]);
 
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               try {
                 wsRef.current.send(JSON.stringify({ text: text }));
               } catch (e) {
-                console.error('Error sending transcribed text prompt over WebSocket:', e);
+                console.warn('Error sending transcribed text prompt over WebSocket:', e);
+              }
+            } else {
+              // Resilient Voice API Turn Fallback
+              try {
+                const response = await fetch('/api/live-voice-turn', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    prompt: text,
+                    history: turns,
+                    language: activeLanguage || language || 'en',
+                    uid
+                  })
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.transcript && isMounted) {
+                    const replyText = data.transcript;
+                    setStatus('speaking');
+                    speakWithBrowserTTS(replyText);
+                  }
+                }
+              } catch (turnErr) {
+                console.warn('Live voice turn fetch fallback notice:', turnErr);
               }
             }
-            setTurns(prev => {
-              const last = prev[prev.length - 1];
-              if (last && last.speaker === 'user') {
-                if (last.text === text || last.text.endsWith(text)) return prev;
-                if (text.startsWith(last.text)) {
-                  return [
-                    ...prev.slice(0, -1),
-                    { speaker: 'user', text: text, timestamp: last.timestamp }
-                  ];
-                }
-                const updated = (last.text + ' ' + text).replace(/\s+/g, ' ').trim();
-                return [
-                  ...prev.slice(0, -1),
-                  { speaker: 'user', text: updated, timestamp: last.timestamp }
-                ];
-              } else {
-                return [
-                  ...prev,
-                  {
-                    speaker: 'user',
-                    text: text,
-                    timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                  }
-                ];
-              }
-            });
           };
 
           if (finalTranscript.trim()) {
             commitUserTurn(finalTranscript.trim());
-            setLiveUserSpeech('');
           } else {
-            // Auto-commit interim transcript if user pauses speaking for 750ms
+            // Trigger turn completion after short silence
             silenceTimer = setTimeout(() => {
               if (isMounted && activeText) {
                 commitUserTurn(activeText);
-                setLiveUserSpeech('');
               }
-            }, 750);
+            }, 900);
           }
         };
 
@@ -286,7 +301,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     };
   }, [activeLanguage, language]);
 
-  // Auto-scroll transcript log to bottom smoothly
+  // Auto-scroll transcript container to keep newest dialogue in view
   useEffect(() => {
     const scrollToBottom = () => {
       if (transcriptEndRef.current) {
@@ -298,25 +313,24 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     };
 
     scrollToBottom();
-    const timeoutId = setTimeout(scrollToBottom, 50);
-
+    const timeoutId = setTimeout(scrollToBottom, 60);
     return () => clearTimeout(timeoutId);
-  }, [turns, currentSpeech, liveUserSpeech, isExpandedTranscript, status]);
-
-  const handleCopyTranscript = () => {
-    if (turns.length === 0) return;
-    const fullText = turns.map(t => `[${t.timestamp}] ${t.speaker === 'user' ? 'You' : 'Arohi'}: ${t.text}`).join('\n\n');
-    navigator.clipboard.writeText(fullText);
-    setCopiedTranscript(true);
-    setTimeout(() => setCopiedTranscript(false), 2000);
-  };
+  }, [turns, currentSpeech, liveUserSpeech, status]);
 
   const showToast = (msg: string) => {
     setToastNotification(msg);
     setTimeout(() => setToastNotification(null), 2500);
   };
 
-  // Save current conversation transcript snapshot
+  const handleCopyTranscript = () => {
+    if (turns.length === 0) return;
+    const fullText = turns.map(t => `[${t.timestamp}] ${t.speaker === 'user' ? 'You' : 'Arohi'}: ${t.text}`).join('\n\n');
+    navigator.clipboard.writeText(fullText);
+    setCopiedTranscript(true);
+    showToast('Transcript copied to clipboard');
+    setTimeout(() => setCopiedTranscript(false), 2000);
+  };
+
   const handleSaveSessionSnapshot = () => {
     if (turns.length === 0) {
       showToast('No speech transcript to save yet');
@@ -334,21 +348,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
     setSavedSnapshots(prev => [newSnapshot, ...prev]);
     showToast('Saved snapshot to Session History!');
-  };
-
-  // Save individual turn
-  const handleSaveTurnSnippet = (turn: SpeechTurn) => {
-    const snippetText = `[${turn.timestamp}] ${turn.speaker === 'user' ? 'You' : 'Arohi'}: ${turn.text}`;
-    const newSnapshot: SavedSnapshot = {
-      id: 'turn-' + Date.now() + '-' + Math.random().toString(36).substring(2, 5),
-      timestamp: turn.timestamp,
-      title: `${turn.speaker === 'user' ? 'User Note' : 'Arohi Response'}`,
-      text: snippetText,
-      turnsCount: 1
-    };
-
-    setSavedSnapshots(prev => [newSnapshot, ...prev]);
-    showToast(`Saved ${turn.speaker === 'user' ? 'your note' : "Arohi's response"} to history`);
   };
 
   const handleDeleteSnapshot = (id: string) => {
@@ -449,53 +448,58 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
       }
-
-      const numSamples = bytes.length / 2;
-      const float32Data = new Float32Array(numSamples);
-      const dataView = new DataView(bytes.buffer);
-
-      for (let i = 0; i < numSamples; i++) {
-        const pcm16 = dataView.getInt16(i * 2, true);
-        float32Data[i] = pcm16 / 32768;
+      const pcm16 = new Int16Array(bytes.buffer);
+      const float32 = new Float32Array(pcm16.length);
+      for (let i = 0; i < pcm16.length; i++) {
+        float32[i] = pcm16[i] / 32768.0;
       }
 
-      const audioBuffer = ctx.createBuffer(1, numSamples, 24000);
-      audioBuffer.getChannelData(0).set(float32Data);
+      const audioBuffer = ctx.createBuffer(1, float32.length, 24000);
+      audioBuffer.getChannelData(0).set(float32);
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(ctx.destination);
 
       const currentTime = ctx.currentTime;
-      let startTime = nextStartTimeRef.current;
-
-      if (startTime < currentTime) {
-        startTime = currentTime + 0.05;
-      }
-
+      const startTime = Math.max(currentTime, nextStartTimeRef.current);
       source.start(startTime);
-      audioQueueRef.current.push(source);
-
       nextStartTimeRef.current = startTime + audioBuffer.duration;
-      setStatus('speaking');
 
-      const durationMs = audioBuffer.duration * 1000;
-      setTimeout(() => {
-        if (ctx.currentTime >= nextStartTimeRef.current - 0.05) {
-          setStatus(isMutedRef.current ? 'muted' : 'listening');
+      audioQueueRef.current.push(source);
+      source.onended = () => {
+        audioQueueRef.current = audioQueueRef.current.filter(s => s !== source);
+        if (audioQueueRef.current.length === 0 && !isMutedRef.current) {
+          setStatus('listening');
+          setCurrentSpeech(fullText => {
+            const cleanedText = (fullText || '').trim();
+            if (cleanedText) {
+              setTurns(prev => {
+                const last = prev[prev.length - 1];
+                if (last && last.speaker === 'arohi' && (last.text === cleanedText || last.text.includes(cleanedText))) {
+                  return prev;
+                }
+                return [
+                  ...prev,
+                  {
+                    speaker: 'arohi',
+                    text: cleanedText,
+                    timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                  }
+                ];
+              });
+            }
+            return '';
+          });
         }
-      }, durationMs);
-
-    } catch (err) {
-      console.error('Error decoding/playing model audio chunk:', err);
+      };
+    } catch (e) {
+      console.error('Error decoding audio chunk:', e);
     }
   };
 
-  // Active utterance ref to prevent Chrome/Android garbage collection stopping speech
-  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // Robust Browser TTS Helper that resumes SpeechSynthesis & handles voice selection
-  const speakTextWithBrowserTTS = (text: string) => {
+  // Browser TTS Fallback with Indian Regional Voice Optimization
+  const speakWithBrowserTTS = (text: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
       if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
@@ -512,7 +516,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       if (!cleanText) return;
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
-      activeUtteranceRef.current = utterance; // Retain reference to prevent premature GC
+      activeUtteranceRef.current = utterance;
 
       const langMap: Record<string, string> = {
         hi: 'hi-IN',
@@ -528,38 +532,28 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         ur: 'ur-IN',
         en: 'en-IN'
       };
-      // Automatic Language Script Detection from Response Text
+
       let detectedLangTag = 'en-IN';
       if (/[\u0B00-\u0B7F]/.test(cleanText)) {
-        detectedLangTag = 'or-IN'; // Odia script
+        detectedLangTag = 'or-IN';
       } else if (/[\u0980-\u09FF]/.test(cleanText)) {
-        detectedLangTag = 'bn-IN'; // Bengali script
+        detectedLangTag = 'bn-IN';
       } else if (/[\u0900-\u097F]/.test(cleanText)) {
-        detectedLangTag = 'hi-IN'; // Devanagari script (Hindi/Marathi)
+        detectedLangTag = 'hi-IN';
       } else if (/[\u0C00-\u0C7F]/.test(cleanText)) {
-        detectedLangTag = 'te-IN'; // Telugu script
+        detectedLangTag = 'te-IN';
       } else if (/[\u0B80-\u0BFF]/.test(cleanText)) {
-        detectedLangTag = 'ta-IN'; // Tamil script
+        detectedLangTag = 'ta-IN';
       } else if (/[\u0A80-\u0AFF]/.test(cleanText)) {
-        detectedLangTag = 'gu-IN'; // Gujarati script
+        detectedLangTag = 'gu-IN';
       } else if (/[\u0C80-\u0CFF]/.test(cleanText)) {
-        detectedLangTag = 'kn-IN'; // Kannada script
+        detectedLangTag = 'kn-IN';
       } else if (/[\u0D00-\u0D7F]/.test(cleanText)) {
-        detectedLangTag = 'ml-IN'; // Malayalam script
+        detectedLangTag = 'ml-IN';
       } else if (/[\u0A00-\u0A7F]/.test(cleanText)) {
-        detectedLangTag = 'pa-IN'; // Punjabi script
+        detectedLangTag = 'pa-IN';
       } else if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(cleanText)) {
-        detectedLangTag = 'ur-IN'; // Urdu / Arabic
-      } else if (/[\u3040-\u309F\u30A0-\u30FF]/.test(cleanText)) {
-        detectedLangTag = 'ja-JP'; // Japanese Hiragana/Katakana
-      } else if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(cleanText)) {
-        detectedLangTag = 'zh-CN'; // Chinese CJK
-      } else if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(cleanText)) {
-        detectedLangTag = 'ko-KR'; // Korean Hangul
-      } else if (/[\u0400-\u04FF]/.test(cleanText)) {
-        detectedLangTag = 'ru-RU'; // Cyrillic / Russian
-      } else if (/[\u0E00-\u0E7F]/.test(cleanText)) {
-        detectedLangTag = 'th-TH'; // Thai script
+        detectedLangTag = 'ur-IN';
       } else if (langMap[activeLanguage]) {
         detectedLangTag = langMap[activeLanguage];
       } else if (langMap[language]) {
@@ -568,15 +562,14 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
       utterance.lang = detectedLangTag;
       utterance.rate = 1.0;
-      utterance.pitch = 1.35; // Soft warm feminine pitch
+      utterance.pitch = 1.35;
 
       const setVoiceAndSpeak = () => {
         try {
           const voices = window.speechSynthesis.getVoices();
           if (voices && voices.length > 0) {
-            const shortLang = detectedLangTag.split('-')[0].toLowerCase(); // e.g. 'or', 'hi', 'bn'
+            const shortLang = detectedLangTag.split('-')[0].toLowerCase();
 
-            // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
             const strictlyFemaleVoices = voices.filter(v => {
               const nameLower = v.name.toLowerCase();
               const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
@@ -598,17 +591,72 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
             }
           }
 
+          let typingTimer: any = null;
+
           utterance.onstart = () => {
             setStatus('speaking');
+            setCurrentSpeech('');
+            
+            // Progressive word/character typer fallback to ensure real-time typed words appear even on mobile browsers where onboundary is intermittent
+            const words = cleanText.split(' ');
+            let wordIdx = 0;
+            const estimatedWordDuration = (cleanText.length > 0 ? (cleanText.length * 55) / words.length : 200);
+            const intervalMs = Math.max(120, Math.min(320, estimatedWordDuration));
+
+            typingTimer = setInterval(() => {
+              wordIdx++;
+              if (wordIdx <= words.length) {
+                const currentSlice = words.slice(0, wordIdx).join(' ');
+                setCurrentSpeech(currentSlice);
+              } else {
+                clearInterval(typingTimer);
+              }
+            }, intervalMs);
           };
+
+          utterance.onboundary = (event: any) => {
+            if (event.name === 'word') {
+              if (typingTimer) {
+                clearInterval(typingTimer);
+                typingTimer = null;
+              }
+              const charIndex = typeof event.charIndex === 'number' ? event.charIndex : 0;
+              const charLength = typeof event.charLength === 'number' && event.charLength > 0 ? event.charLength : (cleanText.indexOf(' ', charIndex) > -1 ? cleanText.indexOf(' ', charIndex) - charIndex : cleanText.length - charIndex);
+              const spokenSlice = cleanText.slice(0, charIndex + charLength).trim();
+              if (spokenSlice) {
+                setCurrentSpeech(spokenSlice);
+              }
+            }
+          };
+
           utterance.onend = () => {
+            if (typingTimer) clearInterval(typingTimer);
             setStatus(isMutedRef.current ? 'muted' : 'listening');
             activeUtteranceRef.current = null;
+            setCurrentSpeech('');
+            setTurns(prev => [
+              ...prev,
+              {
+                speaker: 'arohi',
+                text: cleanText,
+                timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+              }
+            ]);
           };
           utterance.onerror = (e) => {
+            if (typingTimer) clearInterval(typingTimer);
             console.warn('SpeechSynthesis error:', e);
             setStatus(isMutedRef.current ? 'muted' : 'listening');
             activeUtteranceRef.current = null;
+            setCurrentSpeech('');
+            setTurns(prev => [
+              ...prev,
+              {
+                speaker: 'arohi',
+                text: cleanText,
+                timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+              }
+            ]);
           };
 
           window.speechSynthesis.speak(utterance);
@@ -617,7 +665,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         }
       };
 
-      // Ensure voices are loaded on Chrome/Safari before triggering speak
       if (window.speechSynthesis.getVoices().length === 0) {
         window.speechSynthesis.onvoiceschanged = () => {
           setVoiceAndSpeak();
@@ -633,6 +680,10 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   };
 
   const stopAllPlayback = () => {
+    if (liveTypingTimerRef.current) {
+      clearInterval(liveTypingTimerRef.current);
+      liveTypingTimerRef.current = null;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -648,30 +699,51 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   };
 
   // Handle manual user text prompt inside voice call
-  const handleSendTextPrompt = () => {
+  const handleSendTextPrompt = async () => {
     if (!textInput.trim()) return;
     const msg = textInput.trim();
 
-    // Reset audio stream received flag for new turn
     hasReceivedAudioStreamRef.current = false;
 
-    // Append to turns as user speaker
     const newTurn: SpeechTurn = {
       speaker: 'user',
       text: msg,
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
     setTurns(prev => [...prev, newTurn]);
+    setTextInput('');
+    setShowKeyboardDrawer(false);
 
-    // Send via WebSocket if open
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       try {
         wsRef.current.send(JSON.stringify({ text: msg }));
       } catch (e) {
-        console.error('Error sending text prompt over WebSocket:', e);
+        console.warn('Notice sending text prompt over WebSocket:', e);
+      }
+    } else {
+      try {
+        setStatus('speaking');
+        const response = await fetch('/api/live-voice-turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: msg,
+            history: turns,
+            language: activeLanguage || language,
+            uid
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.transcript) {
+            const replyText = data.transcript;
+            speakWithBrowserTTS(replyText);
+          }
+        }
+      } catch (e) {
+        console.warn('Voice turn error:', e);
       }
     }
-    setTextInput('');
   };
 
   const handleManualResume = () => {
@@ -697,188 +769,176 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log('Voice call WebSocket connected successfully.');
-          reconnectAttemptsRef.current = 0;
           if (active) {
-            setStatus(isMutedRef.current ? 'muted' : 'listening');
+            setStatus('listening');
+            reconnectAttemptsRef.current = 0;
           }
         };
 
-        ws.onmessage = (event) => {
+        ws.onmessage = async (event) => {
           if (!active) return;
           try {
             const data = JSON.parse(event.data);
-            if (data.error) {
-              if (reconnectAttemptsRef.current < 2) {
-                reconnectAttemptsRef.current += 1;
-                console.log(`Live voice error encountered. Auto-reconnecting attempt ${reconnectAttemptsRef.current}/2...`);
-                setStatus('connecting');
-                showToast(`Reconnecting live voice link...`);
-                setTimeout(() => {
-                  if (active && !isNormalCloseRef.current) {
-                    setSessionKey(k => k + 1);
-                  }
-                }, 1200);
-              } else {
-                setErrorMessage(data.error);
-                setStatus('error');
-              }
-              return;
-            }
-            if (data.audio) {
+
+            // Raw PCM Audio Stream
+            if (data.audio || (data.type === 'audio' && data.data)) {
               hasReceivedAudioStreamRef.current = true;
-              playAudioChunk(data.audio);
-            }
-            if (data.interrupted) {
-              stopAllPlayback();
-              setStatus(isMutedRef.current ? 'muted' : 'listening');
-            }
+              setStatus('speaking');
+              playAudioChunk(data.audio || data.data);
+            } 
+            // Spoken transcript chunk from server
+            else if (data.transcript || data.text || (data.type === 'text' && data.data)) {
+              const textChunk = data.transcript || data.text || data.data;
+              const speaker = data.speaker || 'arohi';
 
-            // Real-Time Transcript Streaming Handler
-            if (data.transcript) {
-              const text = data.transcript.trim();
-              if (text) {
-                setCurrentSpeech(text);
+              if (speaker === 'arohi') {
+                const cleaned = textChunk.replace(/[*#`_~]/g, '');
+                if (cleaned) {
+                  setStatus('speaking');
+                  // Live type streaming text on active screen
+                  setCurrentSpeech(prev => {
+                    if (!prev) return cleaned.trimStart();
+                    // If server sends full accumulated string or diff chunk
+                    if (cleaned.startsWith(prev)) return cleaned;
+                    if (prev.endsWith(' ') || cleaned.startsWith(' ')) {
+                      return prev + cleaned;
+                    }
+                    return prev + ' ' + cleaned;
+                  });
 
-                const currentSpeaker = data.speaker || 'arohi';
-                if (currentSpeaker === 'arohi') {
-                  if (!hasReceivedAudioStreamRef.current || outputAudioCtxRef.current?.state === 'suspended') {
-                    speakTextWithBrowserTTS(text);
+                  // If server didn't provide raw PCM audio stream, trigger regional browser TTS
+                  if (!hasReceivedAudioStreamRef.current) {
+                    speakWithBrowserTTS(cleaned);
                   }
                 }
-
-                setTurns(prev => {
-                  const last = prev[prev.length - 1];
-                  const currentSpeaker = data.speaker || 'arohi';
-                  
-                  if (last && last.speaker === currentSpeaker) {
-                    if (last.text === text || last.text.endsWith(text)) return prev;
-
-                    if (text.startsWith(last.text)) {
-                      return [
-                        ...prev.slice(0, -1),
-                        { speaker: currentSpeaker, text: text, timestamp: last.timestamp }
-                      ];
+              } else if (speaker === 'user') {
+                const userCleaned = textChunk.replace(/[*#`_~]/g, '').trim();
+                if (userCleaned) {
+                  setTurns(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.speaker === 'user' && (last.text.includes(userCleaned) || userCleaned.includes(last.text))) {
+                      return prev;
                     }
-
-                    if (last.text.startsWith(text)) return prev;
-
-                    const updatedText = (last.text + " " + text).replace(/\s+/g, " ").trim();
-                    return [
-                      ...prev.slice(0, -1),
-                      { 
-                        speaker: currentSpeaker, 
-                        text: updatedText,
-                        timestamp: last.timestamp 
-                      }
-                    ];
-                  } else {
                     return [
                       ...prev,
                       {
-                        speaker: currentSpeaker,
-                        text: text,
+                        speaker: 'user',
+                        text: userCleaned,
                         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
                       }
                     ];
-                  }
-                });
+                  });
+                }
               }
+            } 
+            // Interruption Notice
+            else if (data.interrupted) {
+              stopAllPlayback();
+              setStatus(isMutedRef.current ? 'muted' : 'listening');
+              setCurrentSpeech('');
             }
-          } catch (err) {
-            console.error('Error parsing WebSocket message:', err);
+            // Turn Completion - commit current speech to turns history and clear streaming banner
+            else if (data.turnComplete || data.type === 'turnComplete') {
+              setCurrentSpeech(fullText => {
+                const cleanedText = (fullText || '').trim();
+                if (cleanedText) {
+                  setTurns(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.speaker === 'arohi' && (last.text === cleanedText || last.text.includes(cleanedText))) {
+                      return prev;
+                    }
+                    return [
+                      ...prev,
+                      {
+                        speaker: 'arohi',
+                        text: cleanedText,
+                        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                      }
+                    ];
+                  });
+
+                  if (!hasReceivedAudioStreamRef.current && cleanedText) {
+                    speakWithBrowserTTS(cleanedText);
+                  }
+                }
+                return '';
+              });
+            } else if (data.type === 'error' || data.error) {
+              console.warn('Voice WebSocket notice:', data.message || data.error);
+            }
+          } catch (e) {
+            console.warn('Error parsing WebSocket message:', e);
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.warn('Voice WebSocket status notice (active with resilient voice pipeline):', err);
+          if (active && statusRef.current === 'connecting') {
+            setStatus('listening');
           }
         };
 
         ws.onclose = (event) => {
-          if (active) {
-            if (isNormalCloseRef.current || event.code === 1000 || event.code === 1001 || event.code === 1005) {
-              if (status !== 'error') {
-                setStatus('ended');
+          if (!active || isNormalCloseRef.current) return;
+
+          if (reconnectAttemptsRef.current < 2) {
+            reconnectAttemptsRef.current += 1;
+            const backoffMs = 1500;
+            setTimeout(() => {
+              if (active && !isNormalCloseRef.current) {
+                setSessionKey(k => k + 1);
               }
-            } else {
-              if (reconnectAttemptsRef.current < 2) {
-                reconnectAttemptsRef.current += 1;
-                console.log(`Live voice link closed (${event.reason || 'Code ' + event.code}). Auto-reconnecting attempt ${reconnectAttemptsRef.current}/2...`);
-                setStatus('connecting');
-                showToast(`Reconnecting voice link...`);
-                setTimeout(() => {
-                  if (active && !isNormalCloseRef.current) {
-                    setSessionKey(k => k + 1);
-                  }
-                }, 1200);
-              } else {
-                const reasonMsg = event.reason ? `: ${event.reason}` : '';
-                setErrorMessage(`The live voice stream reached its continuous limit or experienced a network reset (${reasonMsg || 'Quota or Session Timeout'}). Tap 'Resume Call' to continue speaking!`);
-                setStatus('error');
-              }
-            }
+            }, backoffMs);
+          } else {
+            // Keep call connected and active in resilient voice mode
+            setStatus('listening');
           }
         };
 
-        // Microphones and Audio Context setup
+        // Microphone & Web Audio Input Setup
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             channelCount: 1,
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true,
+            autoGainControl: true
           }
         });
         micStreamRef.current = stream;
 
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        let inputCtx: AudioContext;
-        try {
-          inputCtx = new AudioContextClass({ sampleRate: 16000 });
-        } catch (e) {
-          inputCtx = new AudioContextClass();
-        }
+        const inputCtx = new AudioContextClass();
         inputAudioCtxRef.current = inputCtx;
 
-        let outputCtx: AudioContext;
-        try {
-          outputCtx = new AudioContextClass({ sampleRate: 24000 });
-        } catch (e) {
-          outputCtx = new AudioContextClass();
-        }
+        const outputCtx = new AudioContextClass({ sampleRate: 24000 });
         outputAudioCtxRef.current = outputCtx;
 
-        if (inputCtx.state === 'suspended') {
-          inputCtx.resume().catch(() => {});
-        }
-        if (outputCtx.state === 'suspended') {
-          outputCtx.resume().catch(() => {});
-        }
-
         const source = inputCtx.createMediaStreamSource(stream);
-        const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-        scriptProcessorRef.current = processor;
+        const scriptProcessor = inputCtx.createScriptProcessor(2048, 1, 1);
+        scriptProcessorRef.current = scriptProcessor;
 
-        source.connect(processor);
-        processor.connect(inputCtx.destination);
+        source.connect(scriptProcessor);
+        scriptProcessor.connect(inputCtx.destination);
 
-        processor.onaudioprocess = (e) => {
+        scriptProcessor.onaudioprocess = (e) => {
           if (!active || isMutedRef.current || ws.readyState !== WebSocket.OPEN) return;
-          
+
           const float32Data = e.inputBuffer.getChannelData(0);
-          
+
           let sum = 0;
           for (let i = 0; i < float32Data.length; i++) {
             sum += float32Data[i] * float32Data[i];
           }
           const rms = Math.sqrt(sum / float32Data.length);
-          const rawVol = Math.min(100, Math.floor(rms * 450));
+          const rawVol = Math.min(100, Math.round(rms * 400));
 
-          // Smooth volume and throttle React state updates to 100ms to eliminate visual flickering
-          smoothedVolumeRef.current = Math.round(smoothedVolumeRef.current * 0.65 + rawVol * 0.35);
+          smoothedVolumeRef.current = smoothedVolumeRef.current * 0.7 + rawVol * 0.3;
           const now = Date.now();
-          if (now - lastVolumeUpdateRef.current > 100) {
+          if (now - lastVolumeUpdateRef.current > 60) {
+            setUserVolume(Math.round(smoothedVolumeRef.current));
             lastVolumeUpdateRef.current = now;
-            setUserVolume(smoothedVolumeRef.current);
           }
 
-          // Instant Client-side Barge-In: If user speaks into mic (vol > 16) while Arohi is playing audio, stop audio playback immediately so Arohi listens
           if (rawVol > 16 && (audioQueueRef.current.length > 0 || statusRef.current === 'speaking')) {
             stopAllPlayback();
             setStatus(isMutedRef.current ? 'muted' : 'listening');
@@ -967,295 +1027,216 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     return null;
   }
 
-  const latestArohiTurn = [...turns].reverse().find(t => t.speaker === 'arohi');
-  const latestUserTurn = [...turns].reverse().find(t => t.speaker === 'user');
+  // Determine active speaking states for real-time background color orchestration
+  const isArohiSpeaking = status === 'speaking' || Boolean(currentSpeech && currentSpeech.trim().length > 0);
+  const isUserSpeaking = status === 'listening' && (userVolume > 5 || Boolean(liveUserSpeech && liveUserSpeech.trim().length > 0));
+  const isConnecting = status === 'connecting';
+  const isMutedState = status === 'muted' || isMuted;
 
-  // Real-time sentiment analysis from live speech and recent conversation turns
-  const activeSpeechText = (liveUserSpeech || latestUserTurn?.text || latestArohiTurn?.text || '').toLowerCase();
-  
-  const detectSentiment = (text: string) => {
-    if (!text) return 'neutral';
-    if (/\b(great|awesome|excel|good|love|thank|happy|excited|super|wow|perfect|yes|nice|fantastic|bright|boost)\b/i.test(text)) {
-      return 'positive';
-    }
-    if (/\b(how|what|why|when|where|can|could|help|explain|tell|suggest|guide|show|\?)\b/i.test(text)) {
-      return 'curious';
-    }
-    if (/\b(urgent|important|problem|error|fail|issue|stuck|worry|hard|difficult)\b/i.test(text)) {
-      return 'focused';
-    }
-    return 'neutral';
-  };
-
-  const detectedSentiment = detectSentiment(activeSpeechText);
-
-  // Compute dynamic background theme classes based on volume level and sentiment
-  const getThemeBackgroundClasses = () => {
-    if (status === 'speaking') {
-      if (detectedSentiment === 'positive') {
-        return 'bg-gradient-to-b from-[#18082a] via-[#240b3c] to-[#0d0417]';
-      }
-      if (detectedSentiment === 'curious') {
-        return 'bg-gradient-to-b from-[#0b0c2a] via-[#141740] to-[#050618]';
-      }
-      return 'bg-gradient-to-b from-[#160628] via-[#200838] to-[#090216]';
-    }
-
-    if (status === 'listening') {
-      if (userVolume > 30) {
-        return 'bg-gradient-to-b from-[#03291d] via-[#063b2a] to-[#02130e]';
-      }
-      if (userVolume > 12) {
-        return 'bg-gradient-to-b from-[#042228] via-[#07323b] to-[#021216]';
-      }
-      if (detectedSentiment === 'positive') {
-        return 'bg-gradient-to-b from-[#1a1205] via-[#261a07] to-[#0c0802]';
-      }
-      return 'bg-gradient-to-b from-[#0a0818] via-[#110e28] to-[#05040e]';
-    }
-
-    return 'bg-[#04030a]';
-  };
-
-  // Compute dynamic ambient aura gradient
-  const getAmbientAuraClasses = () => {
-    if (status === 'speaking') {
-      if (detectedSentiment === 'positive') {
-        return 'bg-gradient-to-r from-fuchsia-600 via-amber-500 to-purple-600 scale-125 opacity-30';
-      }
-      if (detectedSentiment === 'curious') {
-        return 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 scale-120 opacity-30';
-      }
-      return 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 scale-125 opacity-25';
-    }
-
-    if (status === 'listening') {
-      if (userVolume > 30) {
-        return 'bg-gradient-to-r from-emerald-400 via-lime-400 to-teal-500 scale-135 opacity-40';
-      }
-      if (userVolume > 12) {
-        return 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 scale-115 opacity-30';
-      }
-      return 'bg-gradient-to-r from-purple-900 via-indigo-900 to-cyan-950 scale-100 opacity-20';
-    }
-
-    return 'bg-gradient-to-r from-purple-950 via-indigo-950 to-black opacity-15';
-  };
+  // Get conversation turns for the primary screen (all turns so user and Arohi entries appear below intro)
+  const visibleTurns = turns;
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#070514] text-white flex flex-col justify-between p-3 sm:p-6 font-sans select-none overflow-hidden transition-colors duration-700 ${getThemeBackgroundClasses()}`}>
+    <div className="fixed inset-0 z-[9999] bg-[#06060c] text-white flex flex-col justify-between p-4 sm:p-6 font-sans select-none overflow-hidden transition-colors duration-1000">
       
-      {/* Dynamic Atmospheric Ambient Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Primary Ambient Aura */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] transition-all duration-700 ${getAmbientAuraClasses()}`} />
+      {/* ========================================================================= */}
+      {/* 1. HYPNOTIC COLOR FLOW ORB BACKGROUND WITH REAL-TIME COLOR CHANGES */}
+      {/* ========================================================================= */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
         
-        {/* Volume Level Reactive Secondary Pulse Ring */}
+        {/* Layer 1: Ambient Full-Screen Reactive Radial Gradient */}
         <div 
-          className="absolute top-1/2 left-1/2 w-[380px] h-[380px] sm:w-[480px] sm:h-[480px] rounded-full blur-[100px] transition-transform duration-300 ease-out pointer-events-none"
+          className="absolute inset-0 transition-all duration-1000 ease-out"
           style={{
-            backgroundColor: status === 'speaking' 
-              ? 'rgba(217, 70, 239, 0.15)' 
-              : userVolume > 10 
-              ? 'rgba(16, 185, 129, 0.22)' 
-              : 'rgba(99, 102, 241, 0.08)',
-            transform: `translate(-50%, -50%) scale(${1 + Math.min(0.25, userVolume / 100)})`
+            background: isArohiSpeaking
+              ? 'radial-gradient(ellipse at 50% 50%, rgba(168,85,247,0.32) 0%, rgba(236,72,153,0.22) 35%, rgba(6,182,212,0.15) 60%, rgba(6,6,12,0.98) 90%)'
+              : isUserSpeaking
+              ? 'radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.34) 0%, rgba(6,182,212,0.24) 35%, rgba(245,158,11,0.15) 60%, rgba(6,6,12,0.98) 90%)'
+              : isConnecting
+              ? 'radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.25) 0%, rgba(124,58,237,0.18) 40%, rgba(6,6,12,0.98) 85%)'
+              : isMutedState
+              ? 'radial-gradient(ellipse at 50% 50%, rgba(225,29,72,0.2) 0%, rgba(15,23,42,0.4) 40%, rgba(6,6,12,0.98) 85%)'
+              : 'radial-gradient(ellipse at 50% 50%, rgba(37,99,235,0.22) 0%, rgba(79,70,229,0.15) 40%, rgba(14,165,233,0.08) 65%, rgba(6,6,12,0.98) 85%)'
+          }}
+        />
+
+        {/* Layer 2: Floating Top-Left Aurora Atmosphere Cloud */}
+        <div 
+          className="absolute -top-20 -left-20 w-[260px] sm:w-[380px] h-[260px] sm:h-[380px] rounded-full blur-[90px] sm:blur-[120px] transition-all duration-1000 ease-out animate-voice-fluid pointer-events-none"
+          style={{
+            background: isArohiSpeaking
+              ? 'radial-gradient(circle, rgba(236,72,153,0.6) 0%, rgba(147,51,234,0.4) 50%, transparent 80%)'
+              : isUserSpeaking
+              ? 'radial-gradient(circle, rgba(16,185,129,0.6) 0%, rgba(6,182,212,0.45) 50%, transparent 80%)'
+              : 'radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(99,102,241,0.25) 50%, transparent 80%)',
+            opacity: isArohiSpeaking || isUserSpeaking ? 0.9 : 0.45
+          }}
+        />
+
+        {/* Layer 3: Floating Bottom-Right Aurora Atmosphere Cloud */}
+        <div 
+          className="absolute -bottom-20 -right-20 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] rounded-full blur-[90px] sm:blur-[120px] transition-all duration-1000 ease-out animate-voice-spin-reverse pointer-events-none"
+          style={{
+            background: isArohiSpeaking
+              ? 'radial-gradient(circle, rgba(6,182,212,0.65) 0%, rgba(217,70,239,0.45) 50%, transparent 80%)'
+              : isUserSpeaking
+              ? 'radial-gradient(circle, rgba(245,158,11,0.55) 0%, rgba(16,185,129,0.45) 50%, transparent 80%)'
+              : 'radial-gradient(circle, rgba(14,165,233,0.35) 0%, rgba(79,70,229,0.25) 50%, transparent 80%)',
+            opacity: isArohiSpeaking || isUserSpeaking ? 0.9 : 0.45
+          }}
+        />
+
+        {/* Layer 4: Voice-Reactive Concentric Soundwave Ripple Rings */}
+        {(isArohiSpeaking || isUserSpeaking) && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+            {/* Ripple 1 */}
+            <div 
+              className={`absolute w-[240px] sm:w-[320px] h-[240px] sm:h-[320px] rounded-full border border-dashed transition-colors duration-700 animate-voice-ripple-1 ${
+                isArohiSpeaking 
+                  ? 'border-fuchsia-400/40 shadow-[0_0_40px_rgba(217,70,239,0.35)]' 
+                  : 'border-emerald-400/50 shadow-[0_0_40px_rgba(16,185,129,0.4)]'
+              }`}
+            />
+            {/* Ripple 2 */}
+            <div 
+              className={`absolute w-[240px] sm:w-[320px] h-[240px] sm:h-[320px] rounded-full border transition-colors duration-700 animate-voice-ripple-2 ${
+                isArohiSpeaking 
+                  ? 'border-cyan-400/35 shadow-[0_0_50px_rgba(6,182,212,0.3)]' 
+                  : 'border-teal-400/45 shadow-[0_0_50px_rgba(20,184,166,0.35)]'
+              }`}
+            />
+            {/* Ripple 3 */}
+            <div 
+              className={`absolute w-[240px] sm:w-[320px] h-[240px] sm:h-[320px] rounded-full border border-dotted transition-colors duration-700 animate-voice-ripple-3 ${
+                isArohiSpeaking 
+                  ? 'border-purple-400/30 shadow-[0_0_60px_rgba(168,85,247,0.25)]' 
+                  : 'border-amber-400/40 shadow-[0_0_60px_rgba(245,158,11,0.3)]'
+              }`}
+            />
+          </div>
+        )}
+
+        {/* Layer 5: Dynamic Hypnotic Core Orb (Vivid Color Shift & Swirl) */}
+        <div 
+          className={`relative w-[300px] h-[300px] sm:w-[420px] sm:h-[420px] rounded-full blur-[75px] sm:blur-[105px] transition-all duration-700 ease-out ${
+            isArohiSpeaking
+              ? 'scale-115 opacity-90 animate-voice-spin-fast'
+              : isUserSpeaking
+              ? 'opacity-90 animate-voice-spin'
+              : 'scale-95 opacity-60 animate-voice-spin'
+          }`}
+          style={{
+            transform: isUserSpeaking ? `scale(${1.05 + Math.min(0.35, userVolume / 70)})` : undefined,
+            background: isArohiSpeaking
+              ? 'radial-gradient(circle, rgba(236,72,153,0.98) 0%, rgba(168,85,247,0.9) 25%, rgba(6,182,212,0.85) 50%, rgba(99,102,241,0.6) 75%, rgba(6,6,12,0) 90%)'
+              : isUserSpeaking
+              ? 'radial-gradient(circle, rgba(52,211,153,0.98) 0%, rgba(20,184,166,0.9) 25%, rgba(6,182,212,0.85) 50%, rgba(245,158,11,0.65) 75%, rgba(6,6,12,0) 90%)'
+              : isConnecting
+              ? 'radial-gradient(circle, rgba(251,191,36,0.9) 0%, rgba(245,158,11,0.8) 30%, rgba(147,51,234,0.6) 65%, rgba(6,6,12,0) 85%)'
+              : isMutedState
+              ? 'radial-gradient(circle, rgba(244,63,94,0.75) 0%, rgba(159,18,57,0.6) 35%, rgba(51,65,85,0.5) 65%, rgba(6,6,12,0) 85%)'
+              : 'radial-gradient(circle, rgba(59,130,246,0.85) 0%, rgba(14,165,233,0.75) 35%, rgba(79,70,229,0.55) 65%, rgba(6,6,12,0) 85%)'
+          }}
+        />
+
+        {/* Layer 6: Secondary Harmonic Counter-Swirling Flow Orb */}
+        <div 
+          className="absolute w-[240px] h-[240px] sm:w-[340px] sm:h-[340px] rounded-full blur-[65px] sm:blur-[85px] pointer-events-none transition-all duration-700 ease-out animate-voice-spin-reverse"
+          style={{
+            opacity: isArohiSpeaking ? 0.85 : isUserSpeaking ? 0.8 : 0.5,
+            transform: `scale(${1 + (isUserSpeaking ? Math.min(0.25, userVolume / 90) : isArohiSpeaking ? 0.12 : 0)}) rotate(${duration * 15}deg)`,
+            background: isArohiSpeaking
+              ? 'radial-gradient(circle at 35% 35%, rgba(56,189,248,0.9) 0%, rgba(217,70,239,0.75) 45%, rgba(251,113,133,0.5) 75%, transparent 90%)'
+              : isUserSpeaking
+              ? 'radial-gradient(circle at 65% 35%, rgba(16,185,129,0.92) 0%, rgba(14,165,233,0.75) 45%, rgba(250,204,21,0.55) 75%, transparent 90%)'
+              : 'radial-gradient(circle, rgba(96,165,250,0.75) 0%, rgba(147,51,234,0.45) 50%, transparent 80%)'
+          }}
+        />
+
+        {/* Layer 7: Center Sound Energy Core Glow */}
+        <div 
+          className={`absolute w-[120px] sm:w-[160px] h-[120px] sm:h-[160px] rounded-full blur-[40px] sm:blur-[50px] transition-all duration-500 pointer-events-none ${
+            isArohiSpeaking 
+              ? 'bg-fuchsia-300/80 scale-125' 
+              : isUserSpeaking 
+              ? 'bg-emerald-300/85 scale-120' 
+              : 'bg-cyan-400/50 scale-100'
+          }`}
+          style={{
+            transform: isUserSpeaking ? `scale(${1 + Math.min(0.4, userVolume / 60)})` : undefined
           }}
         />
       </div>
 
-      {/* TOP HEADER BAR */}
-      <header className="relative z-20 flex items-center justify-between w-full max-w-2xl mx-auto pt-1 sm:pt-2 px-2">
-        {/* Left Menu & Live Indicator */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowSessionHistory(!showSessionHistory)}
-            className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-all cursor-pointer"
-            title="Session History"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-            <span className="font-extrabold text-sm tracking-wide text-white">Arohi Live</span>
-          </div>
-        </div>
-
-        {/* Center Call Timer */}
-        <div className="flex items-center gap-1.5 bg-slate-900/90 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-mono font-bold text-emerald-300 shadow-lg">
-          <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+      {/* ========================================================================= */}
+      {/* 2. TOP HEADER BAR: AROHI TITLE, SUBTITLE & CALL TIMER */}
+      {/* ========================================================================= */}
+      <header className="relative z-20 flex flex-col items-center justify-center w-full max-w-md mx-auto pt-2 sm:pt-4 px-4 text-center">
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+          <span>Arohi</span>
+        </h1>
+        <p className="text-[11px] sm:text-xs text-slate-400 font-medium tracking-tight mt-0.5">
+          In call with Arohi by Arohi Xaldra 7.0
+        </p>
+        
+        {/* Call Timer directly below the subtitle */}
+        <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/[0.06] border border-white/10 backdrop-blur-md text-xs sm:text-sm font-mono font-medium text-slate-200 tracking-wider shadow-inner">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span>{formatDuration(duration)}</span>
-        </div>
-
-        {/* Right Action Icons (Cast, Options, Close) */}
-        <div className="flex items-center gap-2">
-          <button 
-            className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-all cursor-pointer"
-            title="Screen Cast"
-          >
-            <Cast className="w-5 h-5" />
-          </button>
-
-          <button 
-            onClick={() => setShowSessionHistory(!showSessionHistory)}
-            className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-all cursor-pointer"
-            title="Options"
-          >
-            <MoreVertical className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={handleEndCall}
-            className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-all cursor-pointer"
-            title="Close call"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
       </header>
 
-
-
-      {/* MAIN FUTURISTIC ORB & WAVEFORM VISUALIZER DISPLAY AREA */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto my-2 px-3 sm:px-6 select-none">
+      {/* ========================================================================= */}
+      {/* 3. CENTER CONVERSATIONAL FLOW (TYPED LIVE TEXT ON SCREEN) */}
+      {/* ========================================================================= */}
+      <main className="relative z-10 flex-1 flex flex-col justify-center w-full max-w-lg mx-auto px-4 sm:px-6 my-auto select-text overflow-hidden">
         
-        {/* CENTER CONCENTRIC GLOWING ORB */}
-        <div className="relative flex items-center justify-center my-4 sm:my-6">
-          {/* Outer Pulsing Glow Aura */}
-          <div className={`absolute w-64 h-64 sm:w-80 sm:h-80 rounded-full blur-3xl transition-all duration-500 ${
-            status === 'speaking'
-              ? 'bg-fuchsia-600/30 scale-110 animate-pulse'
-              : status === 'listening' && userVolume > 5
-              ? 'bg-emerald-500/30 scale-105'
-              : 'bg-purple-600/20'
-          }`} />
-
-          {/* Outer Outer Concentric Orbit Ring */}
-          <div className={`w-52 h-52 sm:w-64 sm:h-64 rounded-full border border-purple-500/20 flex items-center justify-center transition-transform duration-700 ${
-            status === 'speaking' ? 'scale-105 border-fuchsia-500/40' : status === 'listening' && userVolume > 5 ? 'border-emerald-400/40' : ''
-          }`}>
-            {/* Middle Concentric Orbit Ring */}
-            <div className={`w-40 h-40 sm:w-48 sm:h-48 rounded-full border border-indigo-400/30 flex items-center justify-center transition-all duration-300 ${
-              status === 'speaking' ? 'border-purple-400/60 shadow-[0_0_25px_rgba(217,70,239,0.3)]' : status === 'listening' && userVolume > 5 ? 'border-emerald-300/60 shadow-[0_0_25px_rgba(16,185,129,0.3)]' : ''
-            }`}>
-              {/* Inner Glowing Core Badge */}
-              <div className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#0d0824] border-2 flex items-center justify-center relative shadow-2xl transition-all duration-300 ${
-                status === 'speaking'
-                  ? 'border-fuchsia-400 shadow-[0_0_40px_rgba(217,70,239,0.6)] scale-105'
-                  : status === 'listening' && userVolume > 5
-                  ? 'border-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.6)] scale-105'
-                  : 'border-cyan-400/60 shadow-[0_0_30px_rgba(168,85,247,0.4)]'
-              }`}>
-                
-                {/* Orbital dots around core */}
-                <div className="absolute inset-0 rounded-full border border-dashed border-cyan-400/30 animate-spin" style={{ animationDuration: '20s' }} />
-                
-                {/* Center "A" Branding Logo Badge */}
-                <div className="relative flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white font-black text-2xl shadow-inner border border-white/30">
-                    A
-                  </div>
-                </div>
-
-                {/* Live Pulse Indicator dot inside orb */}
-                <div className={`absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full border-2 border-[#0d0824] ${
-                  status === 'speaking' ? 'bg-fuchsia-400 animate-ping' : status === 'listening' && userVolume > 5 ? 'bg-emerald-400 animate-ping' : 'bg-cyan-400'
-                }`} />
-              </div>
+        {/* Scrollable Conversation Stream Overlay */}
+        <div 
+          ref={transcriptContainerRef}
+          className="w-full max-h-[50vh] overflow-y-auto space-y-4 sm:space-y-6 no-scrollbar py-4"
+        >
+          {visibleTurns.map((turn, idx) => (
+            <div 
+              key={idx} 
+              className={`transition-all duration-300 ${
+                turn.speaker === 'user' ? 'text-left' : 'text-left'
+              }`}
+            >
+              {turn.speaker === 'arohi' ? (
+                /* Arohi Response: Crisp High-Contrast Bold White Typography */
+                <p className="text-white text-base sm:text-xl md:text-2xl font-bold leading-relaxed tracking-tight select-text">
+                  {turn.text}
+                </p>
+              ) : (
+                /* User Speech: Soft Dimmed Slate/Silver Typography */
+                <p className="text-slate-400 text-sm sm:text-base md:text-lg font-medium leading-normal select-text">
+                  {turn.text}
+                </p>
+              )}
             </div>
-          </div>
-        </div>
+          ))}
 
-        {/* DYNAMIC WAVEFORM VISUALIZER CONTAINER CARD */}
-        <div className="w-full max-w-sm sm:max-w-md bg-[#0a0718]/90 border border-purple-500/25 rounded-3xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(124,58,237,0.2)] backdrop-blur-2xl flex flex-col items-center my-3 relative overflow-hidden">
-          
-          {/* Top Ambient Glow Line inside Card */}
-          <div className={`absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r transition-all duration-300 ${
-            status === 'speaking'
-              ? 'from-fuchsia-500 via-purple-400 to-pink-500 opacity-100'
-              : status === 'listening' && userVolume > 5
-              ? 'from-emerald-400 via-teal-300 to-cyan-400 opacity-100'
-              : 'from-cyan-500/40 via-purple-500/40 to-indigo-500/40 opacity-50'
-          }`} />
+          {/* Real-time Streaming of Arohi's text if currently streaming */}
+          {currentSpeech && (
+            <div className="text-left animate-in fade-in duration-150">
+              <p className="text-white text-base sm:text-xl md:text-2xl font-bold leading-relaxed tracking-tight select-text">
+                {currentSpeech}
+                <span className="inline-block w-2 h-4 bg-cyan-400 ml-1.5 animate-pulse" />
+              </p>
+            </div>
+          )}
 
-          {/* 28 Dynamic Waveform Bars */}
-          <div className="flex items-center justify-center gap-1.5 h-16 w-full px-2 my-1">
-            {[...Array(28)].map((_, i) => {
-              const centerFactor = 1 - Math.abs(i - 13.5) / 14;
-              let height = 8;
-              let colorClass = 'bg-slate-700';
+          {/* Real-time Speech-to-Text of User speaking */}
+          {liveUserSpeech && (
+            <div className="text-left animate-in fade-in duration-150">
+              <p className="text-slate-400 text-sm sm:text-base md:text-lg font-medium leading-normal italic select-text">
+                {liveUserSpeech}...
+              </p>
+            </div>
+          )}
 
-              if (status === 'speaking') {
-                const phase = Math.sin((i * 0.6) + (Date.now() / 80)) * 0.5 + 0.5;
-                height = 10 + (phase * 42 * centerFactor);
-                colorClass = 'bg-gradient-to-t from-fuchsia-500 via-purple-400 to-pink-300 shadow-[0_0_10px_rgba(236,72,153,0.7)]';
-              } else if (status === 'listening') {
-                if (userVolume > 5) {
-                  const vf = Math.min(1, userVolume / 50);
-                  const wave = Math.sin((i * 0.5) + (Date.now() / 100)) * 0.4 + 0.6;
-                  height = Math.max(8, Math.min(48, (vf * 40 * centerFactor * wave) + 8));
-                  colorClass = 'bg-gradient-to-t from-emerald-500 via-teal-300 to-cyan-200 shadow-[0_0_10px_rgba(16,185,129,0.8)]';
-                } else {
-                  const idleWave = Math.sin((i * 0.4) + (Date.now() / 250)) * 0.5 + 0.5;
-                  height = 8 + (idleWave * 10 * centerFactor);
-                  colorClass = 'bg-gradient-to-t from-indigo-500/70 to-cyan-400/80';
-                }
-              }
-
-              return (
-                <div
-                  key={i}
-                  style={{ height: `${height}px` }}
-                  className={`w-1 sm:w-1.5 rounded-full transition-all duration-75 ${colorClass}`}
-                />
-              );
-            })}
-          </div>
-
-          {/* Dynamic Status Text & Audio Detection Percentage */}
-          <div className="mt-2 text-center space-y-1">
-            {status === 'speaking' ? (
-              <div className="animate-in fade-in duration-200">
-                <p className="text-sm font-extrabold text-fuchsia-300 flex items-center justify-center gap-1.5 tracking-wide">
-                  <Sparkles className="w-4 h-4 text-fuchsia-400 animate-pulse" />
-                  <span>AROHI is Speaking...</span>
-                </p>
-                <p className="text-[11px] text-slate-400 font-medium">Listening to live voice output</p>
-              </div>
-            ) : status === 'listening' ? (
-              <div className="animate-in fade-in duration-200">
-                {userVolume > 5 ? (
-                  <div>
-                    <p className="text-sm font-extrabold text-emerald-400 flex items-center justify-center gap-1.5 tracking-wide">
-                      <Mic className="w-4 h-4 text-emerald-400 animate-bounce" />
-                      <span>Listening to Your Voice...</span>
-                    </p>
-                    <p className="text-[11px] text-emerald-300/90 font-mono font-semibold">
-                      Audio Detection: {Math.min(100, Math.round((userVolume / 50) * 100))}%
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-sm font-bold text-cyan-300 flex items-center justify-center gap-1.5 tracking-wide">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
-                      <span>Listening... Speak Anytime</span>
-                    </p>
-                    <p className="text-[11px] text-slate-400 font-medium">Ready for your voice input</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm font-bold text-amber-300 animate-pulse">
-                  Connecting to Arohi Live...
-                </p>
-              </div>
-            )}
-
-
-          </div>
-
+          <div ref={transcriptEndRef} />
         </div>
 
         {/* Call Status Alert if Error */}
@@ -1278,159 +1259,296 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         )}
       </main>
 
-      {/* BOTTOM GEMINI LIVE AUDIO VISUALIZER & DOCK CONTROLS */}
-      <footer className="relative z-20 w-full max-w-2xl mx-auto flex flex-col items-center gap-3 pb-2 pt-1">
+      {/* ========================================================================= */}
+      {/* 4. BOTTOM STATUS BADGE & CALL ACTION CONTROLS (KIMI STYLE) */}
+      {/* ========================================================================= */}
+      <footer className="relative z-20 w-full max-w-md mx-auto flex flex-col items-center gap-4 sm:gap-5 pb-2 sm:pb-4">
         
-        {/* Gemini Live Control Dock with Ambient Audio Capsule */}
-        <div className="flex items-center justify-between w-full px-2 sm:px-4">
+        {/* Status Indicator Line (e.g. "Arohi is thinking" with 7 step dots) */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-300">
+            {isArohiSpeaking 
+              ? <span className="text-fuchsia-300 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]">Arohi is speaking...</span> 
+              : isUserSpeaking 
+              ? <span className="text-emerald-300 font-bold drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">Listening to you...</span> 
+              : isConnecting
+              ? <span className="text-amber-300 font-bold">Connecting to Arohi...</span>
+              : isMutedState
+              ? <span className="text-slate-400">Call Paused / Muted</span>
+              : <span className="text-cyan-200">Arohi is listening...</span>}
+          </p>
+
+          {/* 7 Pulsating Step Dots (Kimi Visual Signature) */}
+          <div className="flex items-center gap-2">
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+              const isPulsing = (isArohiSpeaking || isUserSpeaking || status === 'listening' || status === 'connecting');
+              return (
+                <span
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    isArohiSpeaking
+                      ? 'bg-fuchsia-400 shadow-[0_0_6px_rgba(217,70,239,0.8)]'
+                      : isUserSpeaking
+                      ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]'
+                      : 'bg-cyan-400/70'
+                  }`}
+                  style={{
+                    opacity: isPulsing ? 0.35 + (Math.sin((duration * 4) + i * 0.8) * 0.45 + 0.45) * 0.65 : 0.4,
+                    transform: isPulsing ? `scale(${1 + Math.sin((duration * 4) + i * 0.8) * 0.3})` : 'scale(1)'
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Circular Action Buttons Dock: Pause / Resume & End Call */}
+        <div className="flex items-center justify-center gap-10 sm:gap-14 w-full px-6">
           
-          {/* Camera / Video Button */}
-          <button
-            onClick={() => setIsCameraActive(!isCameraActive)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-lg active:scale-95 ${
-              isCameraActive
-                ? 'bg-violet-600 border-violet-500 text-white'
-                : 'bg-[#18181b] border-white/10 text-slate-300 hover:bg-[#27272a] hover:text-white'
-            }`}
-            title="Toggle Camera"
-          >
-            {isCameraActive ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5 text-slate-400" />}
-          </button>
-
-          {/* Upload / Share Image Button */}
-          <button
-            className="w-12 h-12 rounded-full bg-[#18181b] border border-white/10 text-slate-300 hover:bg-[#27272a] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-95"
-            title="Attach file/image"
-          >
-            <Upload className="w-5 h-5" />
-          </button>
-
-          {/* Central Glowing Gemini Ambient Audio Visualizer Capsule */}
-          <div className="flex-1 max-w-[160px] sm:max-w-[200px] h-12 bg-[#0d0d12] border border-[#2e264f] rounded-full flex items-center justify-center px-4 relative overflow-hidden shadow-xl mx-2">
-            
-            {/* Ambient Bottom Pulse Glow Line */}
-            <div className={`absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-violet-500 via-cyan-400 to-fuchsia-500 transition-opacity duration-300 ${
-              status === 'speaking' ? 'opacity-100 animate-pulse' : 'opacity-50'
-            }`} />
-
-            {/* Dynamic Waveform Bars */}
-            <div className="flex items-center gap-1 h-6 w-full justify-center">
-              {[...Array(14)].map((_, i) => {
-                const centerMult = 1 - Math.abs(i - 6.5) / 7;
-                let h = 6;
-                let bg = 'bg-slate-600';
-
-                if (status === 'speaking') {
-                  const phase = Math.sin((i * 0.7) + (Date.now() / 90)) * 0.5 + 0.5;
-                  h = 8 + (phase * 22 * centerMult);
-                  bg = 'bg-gradient-to-t from-violet-400 via-cyan-300 to-white';
-                } else if (status === 'listening') {
-                  if (userVolume > 3) {
-                    const vf = Math.min(1, userVolume / 50);
-                    h = Math.max(6, Math.min(24, (vf * 20 * centerMult) + 6));
-                    bg = 'bg-gradient-to-t from-emerald-400 via-cyan-300 to-white';
-                  } else {
-                    h = 6 + Math.sin((i * 0.5) + (Date.now() / 200)) * 4;
-                    bg = 'bg-cyan-500/60';
-                  }
-                }
-
-                return (
-                  <div
-                    key={i}
-                    style={{ height: `${h}px` }}
-                    className={`w-1 rounded-full transition-all duration-75 ${bg}`}
-                  />
-                );
-              })}
-            </div>
+          {/* Pause / Resume Button */}
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={toggleMute}
+              disabled={status === 'connecting' || status === 'error'}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-xl ${
+                isMuted
+                  ? 'bg-amber-600/80 border border-amber-500 text-white hover:bg-amber-500'
+                  : 'bg-white/10 hover:bg-white/15 border border-white/10 text-white backdrop-blur-md'
+              }`}
+              title={isMuted ? 'Resume Call' : 'Pause Call'}
+            >
+              {isMuted ? (
+                <Play className="w-6 h-6 fill-current translate-x-0.5 text-white" />
+              ) : (
+                <Pause className="w-6 h-6 text-white" />
+              )}
+            </button>
+            <span className="text-xs text-slate-400 font-medium">
+              {isMuted ? 'Resume' : 'Pause'}
+            </span>
           </div>
 
-          {/* Mute / Microphone Button */}
-          <button
-            onClick={toggleMute}
-            disabled={status === 'connecting' || status === 'error'}
-            className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-lg active:scale-95 ${
-              isMuted
-                ? 'bg-rose-600 border-rose-500 text-white'
-                : 'bg-[#18181b] border-white/10 text-slate-300 hover:bg-[#27272a] hover:text-white'
-            }`}
-            title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
-          >
-            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
+          {/* End Call Button (Red Circle) */}
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={handleEndCall}
+              className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-lg shadow-rose-950/60"
+              title="End Call"
+            >
+              <PhoneOff className="w-6 h-6 text-white" />
+            </button>
+            <span className="text-xs text-slate-400 font-medium">End</span>
+          </div>
 
-          {/* End Call / Close Button */}
-          <button
-            onClick={handleEndCall}
-            className="w-12 h-12 bg-[#27272a] hover:bg-red-600 text-slate-300 hover:text-white rounded-full flex items-center justify-center transition-all border border-white/10 cursor-pointer active:scale-95 shadow-lg"
-            title="End Call"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
+
+        {/* Tap to Show Keyboard Trigger Link */}
+        <button
+          onClick={() => setShowKeyboardDrawer(true)}
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer pt-1"
+        >
+          <Keyboard className="w-4 h-4 text-slate-400" />
+          <span>Tap to show keyboard</span>
+        </button>
+
       </footer>
 
-      {/* Floating Toast Notification */}
-      {toastNotification && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-violet-500/50 text-slate-100 text-xs font-semibold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 animate-in fade-in duration-200">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span>{toastNotification}</span>
-        </div>
-      )}
-
-      {/* Session History Drawer */}
-      {showSessionHistory && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-slate-950 border-l border-white/10 h-full flex flex-col shadow-2xl">
-            <div className="p-4 bg-slate-900 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Temporary Session History</h3>
-              </div>
+      {/* ========================================================================= */}
+      {/* 5. KEYBOARD DRAWER MODAL (TYPE PROMPTS TO AROHI) */}
+      {/* ========================================================================= */}
+      {showKeyboardDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
+          <div className="w-full max-w-lg mx-auto bg-[#101018] border-t border-white/10 p-4 rounded-t-3xl shadow-2xl space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
+              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
+                Type to Arohi during call
+              </span>
               <button
-                onClick={() => setShowSessionHistory(false)}
-                className="p-1 text-slate-400 hover:text-white transition-all cursor-pointer"
+                onClick={() => setShowKeyboardDrawer(false)}
+                className="p-1 hover:text-white rounded cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar text-xs">
-              {savedSnapshots.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 my-auto">
-                  <Bookmark className="w-8 h-8 mb-2 opacity-40" />
-                  <p>No saved snippets yet</p>
-                </div>
-              ) : (
-                savedSnapshots.map((item) => (
-                  <div key={item.id} className="bg-slate-900 border border-white/10 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center justify-between text-[10px] text-slate-400">
-                      <span className="font-bold text-violet-300">{item.title}</span>
-                      <span>{item.timestamp}</span>
-                    </div>
-                    <div className="bg-slate-950 p-2 rounded border border-white/5 text-slate-200 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                      {item.text}
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleCopySnapshotText(item.text, item.id)}
-                        className="text-[10px] text-cyan-400 hover:underline cursor-pointer"
-                      >
-                        {copiedSnapshotId === item.id ? 'Copied!' : 'Copy'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSnapshot(item.id)}
-                        className="text-[10px] text-rose-400 hover:underline cursor-pointer"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendTextPrompt()}
+                placeholder="Ask or tell Arohi anything..."
+                autoFocus
+                className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+              />
+              <button
+                onClick={handleSendTextPrompt}
+                disabled={!textInput.trim()}
+                className="p-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 text-white rounded-xl cursor-pointer shadow-md"
+              >
+                <Send className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. SETTINGS & LANGUAGE DRAWER */}
+      {/* ========================================================================= */}
+      {showSettingsDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex justify-end animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-[#0e0e17] border-l border-white/10 h-full flex flex-col shadow-2xl p-5 space-y-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">Call & Voice Settings</h3>
+              </div>
+              <button
+                onClick={() => setShowSettingsDrawer(false)}
+                className="p-1 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Language Selector */}
+            <div className="space-y-2 text-left">
+              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-cyan-400" /> Regional Voice Language
+              </label>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  { code: 'or', label: 'ଓଡ଼ିଆ (Odia)' },
+                  { code: 'hi', label: 'हिंदी (Hindi)' },
+                  { code: 'en', label: 'English (India)' },
+                  { code: 'bn', label: 'বাংলা (Bengali)' },
+                  { code: 'te', label: 'తెలుగు (Telugu)' },
+                  { code: 'ta', label: 'தமிழ் (Tamil)' },
+                  { code: 'mr', label: 'मराठी (Marathi)' },
+                  { code: 'gu', label: 'ગુજરાતી (Gujarati)' },
+                  { code: 'kn', label: 'ಕನ್ನಡ (Kannada)' },
+                  { code: 'ml', label: 'മലയാളം (Malayalam)' }
+                ].map((item) => (
+                  <button
+                    key={item.code}
+                    onClick={() => {
+                      setActiveLanguage(item.code);
+                      showToast(`Switched language to ${item.label}`);
+                      setShowSettingsDrawer(false);
+                      setSessionKey(k => k + 1);
+                    }}
+                    className={`p-2 rounded-xl text-left font-medium border transition-all cursor-pointer ${
+                      activeLanguage === item.code
+                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300'
+                        : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Call Telemetry Card */}
+            <div className="bg-white/5 border border-white/10 p-3.5 rounded-2xl text-left space-y-2 text-xs">
+              <div className="flex justify-between text-slate-400">
+                <span>Call Duration:</span>
+                <span className="font-mono text-cyan-300 font-bold">{formatDuration(duration)}</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Voice Persona:</span>
+                <span className="font-mono text-white">Zypher (Arohi Regional)</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Model Engine:</span>
+                <span className="font-mono text-emerald-400 font-bold">Arohi Xaldra 7.0 Live</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Transcript Turns:</span>
+                <span className="font-mono text-slate-200">{turns.length} turns</span>
+              </div>
+            </div>
+
+            {/* Copy Transcript Button */}
+            <button
+              onClick={handleCopyTranscript}
+              className="w-full bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2"
+            >
+              {copiedTranscript ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              <span>{copiedTranscript ? 'Copied Transcript!' : 'Copy Full Transcript'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 7. FULL TRANSCRIPT & HISTORY DRAWER */}
+      {/* ========================================================================= */}
+      {showSessionHistory && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-[#0c0c14] border-l border-white/10 h-full flex flex-col shadow-2xl">
+            <div className="p-4 bg-[#12121c] border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">Full Call Transcript</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSaveSessionSnapshot}
+                  className="text-xs bg-cyan-950/90 border border-cyan-500/50 text-cyan-300 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-cyan-900"
+                >
+                  Save Snapshot
+                </button>
+                <button
+                  onClick={() => setShowSessionHistory(false)}
+                  className="p-1 text-slate-400 hover:text-white transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar text-xs text-left">
+              {turns.map((turn, i) => (
+                <div 
+                  key={i} 
+                  className={`p-3 rounded-xl border ${
+                    turn.speaker === 'user' 
+                      ? 'bg-blue-950/30 border-blue-800/40 text-slate-200' 
+                      : 'bg-white/5 border-white/10 text-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                    <span className="font-bold text-cyan-400">
+                      {turn.speaker === 'user' ? 'You' : 'Arohi'}
+                    </span>
+                    <span>{turn.timestamp}</span>
+                  </div>
+                  <p className="leading-relaxed whitespace-pre-wrap">{turn.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-white/10 bg-[#10101a]">
+              <button
+                onClick={handleCopyTranscript}
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"
+              >
+                {copiedTranscript ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedTranscript ? 'Copied to Clipboard!' : 'Copy Entire Conversation'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification */}
+      {toastNotification && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-cyan-500/50 text-slate-100 text-xs font-semibold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 animate-in fade-in duration-200">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          <span>{toastNotification}</span>
         </div>
       )}
 

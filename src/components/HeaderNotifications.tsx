@@ -45,14 +45,27 @@ export default function HeaderNotifications({
 }: HeaderNotificationsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'subscription' | 'announcements'>('all');
+  const userStorageKey = user?.uid ? `arohi_read_notifications_${user.uid}` : 'arohi_read_notifications_guest';
   const [readNotifications, setReadNotifications] = useState<Record<string, boolean>>(() => {
     try {
-      const saved = localStorage.getItem('arohi_read_notifications');
+      const key = user?.uid ? `arohi_read_notifications_${user.uid}` : 'arohi_read_notifications_guest';
+      const saved = localStorage.getItem(key);
       return saved ? JSON.parse(saved) : {};
     } catch (e) {
       return {};
     }
   });
+
+  // Re-sync read notifications when user changes
+  useEffect(() => {
+    try {
+      const key = user?.uid ? `arohi_read_notifications_${user.uid}` : 'arohi_read_notifications_guest';
+      const saved = localStorage.getItem(key);
+      setReadNotifications(saved ? JSON.parse(saved) : {});
+    } catch (e) {
+      setReadNotifications({});
+    }
+  }, [user?.uid]);
 
   const [showSimulateBar, setShowSimulateBar] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -120,7 +133,7 @@ export default function HeaderNotifications({
     const updated = { ...readNotifications, [id]: true };
     setReadNotifications(updated);
     try {
-      localStorage.setItem('arohi_read_notifications', JSON.stringify(updated));
+      localStorage.setItem(userStorageKey, JSON.stringify(updated));
     } catch (e) {}
   };
 
@@ -134,7 +147,7 @@ export default function HeaderNotifications({
     };
     setReadNotifications(updated);
     try {
-      localStorage.setItem('arohi_read_notifications', JSON.stringify(updated));
+      localStorage.setItem(userStorageKey, JSON.stringify(updated));
     } catch (e) {}
   };
 

@@ -41,6 +41,7 @@ import BottomNavBar from './components/BottomNavBar';
 import ArohiLandingPage from './components/ArohiLandingPage';
 import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
+import MockTestsHub from './components/mocktests/MockTestsHub';
 import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
@@ -80,7 +81,7 @@ const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 // INITIAL_REVIEWS and Review interface are imported from ./data/reviewsData
 
 export default function App() {
-  const { user, userData, updateApplications } = useAuth();
+  const { user, userData, updateApplications, updateUserSubscription } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
@@ -105,7 +106,15 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory'];
+
+  const [selectedMockTestSlug, setSelectedMockTestSlug] = useState<string>(() => {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if ((pathParts[0] === 'mocktests' || pathParts[0] === 'mocktest') && pathParts[1]) {
+      return pathParts[1];
+    }
+    return '';
+  });
 
   const [selectedAudienceSlug, setSelectedAudienceSlug] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -589,30 +598,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const hasActiveSubscription = Object.values(subscriptions || {}).some(Boolean);
-  const timeElapsed = currentTime - trialStartTime;
-  const isTrialActive = timeElapsed < TWO_DAYS_MS;
-  const isTrialExpired = !isTrialActive && !hasActiveSubscription;
-
-  const remainingMs = Math.max(0, TWO_DAYS_MS - timeElapsed);
-  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-  const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-
-  const [selectedModalPlan, setSelectedModalPlan] = useState<number>(0);
-
-  const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
-    const saved = getStorageItem('arohi_subscription_details');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // Fallback
-      }
-    }
-    return {};
-  });
-
   // 30-Day Subscription Expiry & 7-Day Advance Alert Notification System
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<number>(() => {
@@ -634,6 +619,63 @@ export default function App() {
       }
     } catch (e) {}
     return 0;
+  });
+
+  // Sync user's real Firestore subscription to local state on login / user profile update
+  useEffect(() => {
+    if (userData) {
+      const now = Date.now();
+      const userSubscribed = Boolean(
+        userData.isSubscribed ||
+        (userData.subscriptionEndDate && userData.subscriptionEndDate > now)
+      );
+
+      if (userSubscribed) {
+        const endDate = (userData.subscriptionEndDate && userData.subscriptionEndDate > now)
+          ? userData.subscriptionEndDate
+          : now + THIRTY_DAYS_MS;
+        const subs = userData.subscriptions || { path1: true, path2: false, path3: false, path4: false };
+        
+        setSubscriptions(subs);
+        setSubscriptionEndDate(endDate);
+        setStorageItem('arohi_subscriptions', JSON.stringify(subs));
+        setStorageItem('arohi_subscription_end_date', endDate.toString());
+        
+        if (userData.subscriptionDetails && Object.keys(userData.subscriptionDetails).length > 0) {
+          setSubscriptionDetails(userData.subscriptionDetails);
+          setStorageItem('arohi_subscription_details', JSON.stringify(userData.subscriptionDetails));
+        }
+      }
+    }
+  }, [userData]);
+
+  const isSubscriptionDateValid = subscriptionEndDate > currentTime;
+  const isFirestoreSubscribed = Boolean(
+    userData?.isSubscribed || 
+    (userData?.subscriptionEndDate && userData.subscriptionEndDate > currentTime)
+  );
+  const hasActiveSubscription = isSubscriptionDateValid || Object.values(subscriptions || {}).some(Boolean) || isFirestoreSubscribed;
+  const timeElapsed = currentTime - trialStartTime;
+  const isTrialActive = timeElapsed < TWO_DAYS_MS;
+  const isTrialExpired = !isTrialActive && !hasActiveSubscription;
+
+  const remainingMs = Math.max(0, TWO_DAYS_MS - timeElapsed);
+  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+  const [selectedModalPlan, setSelectedModalPlan] = useState<number>(0);
+
+  const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
+    const saved = getStorageItem('arohi_subscription_details');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    return {};
   });
 
   const handleSetSubscriptionEndDate = (newTimestamp: number) => {
@@ -987,6 +1029,19 @@ export default function App() {
       }
       
       const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
+      
+      // Update persistent user subscription in database
+      if (updateUserSubscription) {
+        updateUserSubscription({
+          isSubscribed: true,
+          subscriptionPlanName: updatedDetails[pathId]?.tierName || planName || 'Starter Plan (₹399/mo)',
+          subscriptionEndDate: newEndDate,
+          subscriptions: updated,
+          subscriptionDetails: updatedDetails,
+          paymentMethod: paymentMethod || 'Web Gateway'
+        }).catch(err => console.warn('Database subscription update notice:', err));
+      }
+
       // Trace this subscription event
       fetch('/api/track-event', {
         method: 'POST',
@@ -1005,6 +1060,17 @@ export default function App() {
       }
       const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
       
+      if (updateUserSubscription) {
+        updateUserSubscription({
+          isSubscribed: Object.values(updated).some(Boolean),
+          subscriptionPlanName: '',
+          subscriptionEndDate: Object.values(updated).some(Boolean) ? subscriptionEndDate : 0,
+          subscriptions: updated,
+          subscriptionDetails: updatedDetails,
+          paymentMethod: 'Cancelled'
+        }).catch(err => console.warn('Database subscription update notice:', err));
+      }
+
       fetch('/api/track-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2012,6 +2078,26 @@ export default function App() {
               window.history.pushState(null, '', `/audience/${slug}`);
             }}
             onOpenDirectory={() => setIsRegionModalOpen(true)}
+          />
+        );
+      }
+      case 'mocktests':
+      case 'mocktest': {
+        return (
+          <MockTestsHub
+            isDarkMode={isDarkMode}
+            initialTestSlug={selectedMockTestSlug}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              setHasEntered(true);
+            }}
+            onOpenChatWithPrompt={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
           />
         );
       }
