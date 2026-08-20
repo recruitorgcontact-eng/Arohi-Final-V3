@@ -50,6 +50,7 @@ import GlobalSEODirectory from './components/GlobalSEODirectory';
 import GeoLocationBanner from './components/GeoLocationBanner';
 import BackgroundScrollEffects from './components/BackgroundScrollEffects';
 import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PATH_DETAILS, getTokenLimitForPrice, detectUserCurrency, getPricingTiers } from './data/pricingData';
+import { computeSubscriptionState, isValidCouponCode, persistSubscriptionActivation, isLifetimeVipEmail, TWO_DAYS_MS, THIRTY_DAYS_MS } from './utils/subscriptionEngine';
 import TokenWarningToastContainer from './components/TokenWarningToastContainer';
 import { openRazorpayCheckout } from './lib/razorpay';
 
@@ -83,7 +84,22 @@ const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 export default function App() {
   const { user, userData, updateApplications, updateUserSubscription } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [hasEntered, setHasEntered] = useState(false);
+  const [hasEntered, setHasEntered] = useState(() => {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (hash === '#mocktests' || hash === '#mocktest' || (hash.length > 1 && hash !== '#home')) return true;
+    if (search.includes('mocktests') || search.includes('mocktest') || search.includes('test=')) return true;
+    const pathParts = path.split('/').filter(Boolean);
+    if (pathParts.length > 0) {
+      if (pathParts[0] === 'mocktests' || pathParts[0] === 'mocktest') return true;
+      if (pathParts[0] === 'audience' || pathParts[0] === 'solution' || pathParts[0] === 'solutions' || pathParts[0] === 'directory') return true;
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'].includes(pathParts[0])) {
+        return true;
+      }
+    }
+    return false;
+  });
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isGlobal3DLearningOpen, setIsGlobal3DLearningOpen] = useState(false);
   const [global3DTopic, setGlobal3DTopic] = useState('human_heart');
@@ -332,8 +348,30 @@ export default function App() {
       setActiveTab('home');
     };
 
+    const handleHashAndCustomNav = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (hash && (VALID_TABS.includes(hash) || hash === 'mocktests' || hash === 'mocktest')) {
+        setActiveTab(hash === 'mocktest' ? 'mocktests' : hash);
+        setHasEntered(true);
+      }
+    };
+
+    const handleCustomNavEvent = (e: any) => {
+      const targetTab = e.detail;
+      if (targetTab && (VALID_TABS.includes(targetTab) || targetTab === 'mocktests' || targetTab === 'mocktest')) {
+        setActiveTab(targetTab === 'mocktest' ? 'mocktests' : targetTab);
+        setHasEntered(true);
+      }
+    };
+
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handleHashAndCustomNav);
+    window.addEventListener('arohi_navigate_tab', handleCustomNavEvent);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleHashAndCustomNav);
+      window.removeEventListener('arohi_navigate_tab', handleCustomNavEvent);
+    };
   }, []);
 
   useEffect(() => {
@@ -636,35 +674,28 @@ export default function App() {
           : now + THIRTY_DAYS_MS;
         const subs = userData.subscriptions || { path1: true, path2: false, path3: false, path4: false };
         
-        setSubscriptions(subs);
-        setSubscriptionEndDate(endDate);
-        setStorageItem('arohi_subscriptions', JSON.stringify(subs));
-        setStorageItem('arohi_subscription_end_date', endDate.toString());
+        setSubscriptions(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(subs)) return prev;
+          setStorageItem('arohi_subscriptions', JSON.stringify(subs));
+          return subs;
+        });
+
+        setSubscriptionEndDate(prev => {
+          if (prev === endDate) return prev;
+          setStorageItem('arohi_subscription_end_date', endDate.toString());
+          return endDate;
+        });
         
         if (userData.subscriptionDetails && Object.keys(userData.subscriptionDetails).length > 0) {
-          setSubscriptionDetails(userData.subscriptionDetails);
-          setStorageItem('arohi_subscription_details', JSON.stringify(userData.subscriptionDetails));
+          setSubscriptionDetails(prev => {
+            if (JSON.stringify(prev) === JSON.stringify(userData.subscriptionDetails)) return prev;
+            setStorageItem('arohi_subscription_details', JSON.stringify(userData.subscriptionDetails));
+            return userData.subscriptionDetails || prev;
+          });
         }
       }
     }
-  }, [userData]);
-
-  const isSubscriptionDateValid = subscriptionEndDate > currentTime;
-  const isFirestoreSubscribed = Boolean(
-    userData?.isSubscribed || 
-    (userData?.subscriptionEndDate && userData.subscriptionEndDate > currentTime)
-  );
-  const hasActiveSubscription = isSubscriptionDateValid || Object.values(subscriptions || {}).some(Boolean) || isFirestoreSubscribed;
-  const timeElapsed = currentTime - trialStartTime;
-  const isTrialActive = timeElapsed < TWO_DAYS_MS;
-  const isTrialExpired = !isTrialActive && !hasActiveSubscription;
-
-  const remainingMs = Math.max(0, TWO_DAYS_MS - timeElapsed);
-  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-  const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-
-  const [selectedModalPlan, setSelectedModalPlan] = useState<number>(0);
+  }, [userData?.isSubscribed, userData?.subscriptionEndDate, userData?.subscriptions, userData?.subscriptionDetails]);
 
   const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
     const saved = getStorageItem('arohi_subscription_details');
@@ -677,6 +708,28 @@ export default function App() {
     }
     return {};
   });
+
+  const subscriptionStatus = computeSubscriptionState({
+    email: user?.email,
+    userData,
+    subscriptions,
+    subscriptionEndDate,
+    subscriptionPlanName: Object.values(subscriptionDetails)[0]?.tierName,
+    appliedCoupon: getStorageItem('arohi_applied_coupon'),
+    trialStartTime,
+    currentTime
+  });
+
+  const hasActiveSubscription = subscriptionStatus.isSubscribed;
+  const isTrialActive = subscriptionStatus.isTrialActive;
+  const isTrialExpired = subscriptionStatus.isTrialExpired;
+
+  const remainingMs = subscriptionStatus.trialMsRemaining;
+  const remainingHours = subscriptionStatus.trialHoursRemaining;
+  const remainingMinutes = subscriptionStatus.trialMinutesRemaining;
+  const remainingSeconds = subscriptionStatus.trialSecondsRemaining;
+
+  const [selectedModalPlan, setSelectedModalPlan] = useState<number>(0);
 
   const handleSetSubscriptionEndDate = (newTimestamp: number) => {
     setSubscriptionEndDate(newTimestamp);
@@ -943,11 +996,18 @@ export default function App() {
 
     setTimeout(() => {
       setIsApplyingCoupon(false);
-      // Valid Coupon Codes: JUNOON, JUNOON399, AROHI399, PRO399, or any AROHI- referral code
-      if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399' || cleanCode.startsWith('AROHI-')) {
+      // Valid Coupon Codes verified via centralized subscriptionEngine
+      if (isValidCouponCode(cleanCode)) {
         const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
         
-        // Instantly subscribe and activate plan
+        // Atomically persist and subscribe
+        persistSubscriptionActivation({
+          planName: chosenTier.name,
+          price: chosenTier.price,
+          couponCode: cleanCode,
+          paymentMethod: `Coupon Code ${cleanCode}`
+        });
+
         handleSubscribe('path1', chosenTier.name, `Coupon Code ${cleanCode}`);
         setStorageItem('arohi_applied_coupon', cleanCode);
 

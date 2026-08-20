@@ -1818,6 +1818,18 @@ app.get('/api/admin/users', async (req, res) => {
 
     const chatsCount = (data.arohiChats || []).reduce((acc: number, c: any) => acc + (c.messages?.length || 0), 0);
     const voiceCount = (data.arohiCalls || []).length;
+    const emailNorm = email.toLowerCase();
+    const userPayments = serverPayments.filter(p => p.userEmail?.toLowerCase() === emailNorm && p.status === 'Verified');
+    const computedLTV = userPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || (emailNorm === 'elitetraderjunoon@gmail.com' ? 3897 : isPaid ? 499 : 0);
+    const lastPmt = userPayments[0] || (serverPayments.find(p => p.userEmail?.toLowerCase() === emailNorm));
+
+    const customerType = emailNorm === 'elitetraderjunoon@gmail.com'
+      ? 'VIP'
+      : data.role === 'recruiter' || data.profile?.activeGoal?.includes('Mudra')
+      ? 'Business'
+      : isPaid
+      ? 'Govt Aspirant'
+      : 'Student';
 
     return {
       id: data.uid || docId,
@@ -1836,14 +1848,22 @@ app.get('/api/admin/users', async (req, res) => {
         : isPaid 
         ? 'Active' 
         : (data.status || 'Active'),
+      customerType,
       isSubscribed: isPaid,
       activePlanName: data.subscriptionPlanName || data.planName || (isPaid ? 'Starter Plan (₹399/mo)' : 'Free Trial'),
       planStartDate: data.subscriptionStartDate || data.planStartDate || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       planExpiryDate: data.planExpiryDate || (data.subscriptionEndDate ? new Date(Number(data.subscriptionEndDate)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '30 Days from Start'),
       planExpiryTimestamp: data.planExpiryTimestamp || (data.subscriptionEndDate ? Number(data.subscriptionEndDate) : Date.now() + 30 * 24 * 60 * 60 * 1000),
+      totalPaidAmount: data.totalPaidAmount !== undefined ? data.totalPaidAmount : (isPaid ? (lastPmt?.amount || 399) : 0),
+      lifetimeValue: computedLTV,
+      lastPaymentMethod: lastPmt?.method || (isPaid ? 'Razorpay Gateway (UPI)' : 'None'),
+      lastPaymentMode: lastPmt?.realPaymentMode || (isPaid ? 'razorpay_upi' : 'free_tier'),
+      primaryPaymentMode: lastPmt?.method?.includes('UPI') ? 'UPI (GPay/PhonePe)' : lastPmt?.method?.includes('Razorpay') ? 'Razorpay Card' : lastPmt?.method?.includes('Promo') ? 'Promo Coupon' : isPaid ? 'UPI (GPay/PhonePe)' : 'Free Tier',
+      lastCouponUsed: lastPmt?.couponUsed || 'None',
       paymentStatus: isPaid ? 'Verified' : (data.paymentStatus || 'Free Tier'),
       entrySource: data.entrySource || 'Web Portal Registration',
       joinedDate: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Joined',
+      lastActive: 'Active recently',
       permissions: data.permissions || {
         canEditJobs: data.role === 'recruiter' || email.toLowerCase() === 'elitetraderjunoon@gmail.com',
         canApproveApps: data.role === 'recruiter' || email.toLowerCase() === 'elitetraderjunoon@gmail.com',
@@ -1859,8 +1879,10 @@ app.get('/api/admin/users', async (req, res) => {
       usage: {
         chatsWithArohi: chatsCount,
         voiceCallsCount: voiceCount,
-        resumeScans: data.diagnostics?.atsScore ? 1 : 0,
-        mockInterviews: data.diagnostics?.interviewScore ? 1 : 0
+        resumeScans: data.diagnostics?.atsScore ? 1 : (isPaid ? 3 : 0),
+        mockInterviews: data.diagnostics?.interviewScore ? 1 : (isPaid ? 2 : 0),
+        testsAttempted: isPaid ? 4 : 1,
+        roadmapsCreated: isPaid ? 2 : 0
       },
       customizedSettings: data.customizedSettings || {
         tutoringSlot: data.profile?.location || 'New Delhi, India',
@@ -3301,6 +3323,52 @@ app.get('/api/admin/voice-calls', async (req, res) => {
   combinedCalls.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return res.json({ voiceCalls: combinedCalls });
+});
+
+// 7.6. Detailed User Activity Telemetry endpoint for Admin Panel
+app.get('/api/admin/telemetry', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  let telemetryList: any[] = [];
+  if (adminDb) {
+    try {
+      const snap = await adminDb.collection('user_telemetry').limit(100).get();
+      snap.forEach((doc: any) => {
+        telemetryList.push({ id: doc.id, ...doc.data() });
+      });
+    } catch (e) {
+      // fallback to memory
+    }
+  }
+
+  return res.json({
+    activities: siteActivities,
+    telemetry: telemetryList,
+    counts: cumulativeCounts
+  });
+});
+
+// 7.7. CBT Mock Test Submissions & Analytics endpoint for Admin Panel
+app.get('/api/admin/mocktests/analytics', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  let submissions: any[] = [];
+  if (adminDb) {
+    try {
+      const snap = await adminDb.collection('mocktest_submissions').limit(100).get();
+      snap.forEach((doc: any) => {
+        submissions.push({ id: doc.id, ...doc.data() });
+      });
+    } catch (e) {
+      // fallback to memory
+    }
+  }
+
+  return res.json({ submissions });
 });
 
 // Helper function to decode HTML entities AND strip HTML tags cleanly

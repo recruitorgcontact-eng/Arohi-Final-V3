@@ -25,8 +25,13 @@ import {
 } from 'recharts';
 import { Posting, Application, CategoryType, VacancyDetail } from '../types';
 import { 
-  INITIAL_ADMIN_USERS, INITIAL_PAYMENTS, INITIAL_CHAT_LOGS, AdminUser, PaymentTransaction, ArohiChatLog 
+  INITIAL_ADMIN_USERS, INITIAL_PAYMENTS, INITIAL_CHAT_LOGS, INITIAL_USER_TELEMETRY, INITIAL_MOCKTEST_SUBMISSIONS,
+  AdminUser, PaymentTransaction, ArohiChatLog, UserActivityTelemetry, MockTestSubmissionRecord 
 } from '../data/adminMockData';
+import UserActivityTelemetryViewer from './admin/UserActivityTelemetryViewer';
+import CbtMockTestAnalyticsHub from './admin/CbtMockTestAnalyticsHub';
+import UserDetailsDrawer from './admin/UserDetailsDrawer';
+import TaxInvoiceModal from './admin/TaxInvoiceModal';
 
 interface AdminPanelProps {
   postings: Posting[];
@@ -147,7 +152,18 @@ export default function AdminPanel({
   const [upiUpdateSuccess, setUpiUpdateSuccess] = useState(false);
 
   // UI state variables
-  const [activeSubTab, setActiveSubTab] = useState<'telemetry' | 'users' | 'finance' | 'chats' | 'voice' | 'postings' | 'creator' | 'analytics' | 'seo'>('telemetry');
+  const [activeSubTab, setActiveSubTab] = useState<'telemetry' | 'users' | 'finance' | 'cbt_tests' | 'chats' | 'voice' | 'postings' | 'creator' | 'analytics' | 'seo'>('telemetry');
+  const [userTelemetryLogs, setUserTelemetryLogs] = useState<UserActivityTelemetry[]>(() => {
+    const saved = localStorage.getItem('recruit_admin_telemetry_logs');
+    return saved ? JSON.parse(saved) : INITIAL_USER_TELEMETRY;
+  });
+  const [mockTestSubmissions, setMockTestSubmissions] = useState<MockTestSubmissionRecord[]>(() => {
+    const saved = localStorage.getItem('recruit_admin_mocktest_submissions');
+    return saved ? JSON.parse(saved) : INITIAL_MOCKTEST_SUBMISSIONS;
+  });
+  const [selectedUserForDrawer, setSelectedUserForDrawer] = useState<AdminUser | null>(null);
+  const [selectedTaxInvoiceTxn, setSelectedTaxInvoiceTxn] = useState<PaymentTransaction | null>(null);
+  const [userSegmentFilter, setUserSegmentFilter] = useState<'all' | 'paid' | 'coupons' | 'expiring' | 'free'>('all');
   const [isScanningSeo, setIsScanningSeo] = useState(false);
   const [seoData, setSeoData] = useState<any>(null);
   const [telemetryLogs, setTelemetryLogs] = useState<any[]>([]);
@@ -290,9 +306,103 @@ export default function AdminPanel({
           })));
         }
       }
+
+      // 5. Fetch Granular User Input Telemetry
+      const responseTelemetry = await fetch('/api/admin/telemetry', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      if (responseTelemetry.ok) {
+        const data = await responseTelemetry.json();
+        if (data.telemetry && data.telemetry.length > 0) {
+          setUserTelemetryLogs(data.telemetry);
+          localStorage.setItem('recruit_admin_telemetry_logs', JSON.stringify(data.telemetry));
+        }
+      }
+
+      // 6. Fetch CBT Mock Test Submissions & Exam Analytics
+      const responseMockTests = await fetch('/api/admin/mocktests/analytics', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      if (responseMockTests.ok) {
+        const data = await responseMockTests.json();
+        if (data.submissions && data.submissions.length > 0) {
+          setMockTestSubmissions(data.submissions);
+          localStorage.setItem('recruit_admin_mocktest_submissions', JSON.stringify(data.submissions));
+        }
+      }
     } catch (err) {
       console.error('Failed to sync administrative data from live backend server:', err);
     }
+  };
+
+  // Drawer handlers
+  const handleDrawerUpdateStatus = (userId: string, status: 'Active' | 'Suspended' | 'VIP') => {
+    setAdminUsers(prev => {
+      const next = prev.map(u => u.id === userId ? { ...u, status } : u);
+      localStorage.setItem('recruit_admin_users', JSON.stringify(next));
+      const target = next.find(u => u.id === userId);
+      if (target) {
+        syncUserToServer(target);
+        setSelectedUserForDrawer(target);
+      }
+      return next;
+    });
+  };
+
+  const handleDrawerToggleService = (userId: string, serviceKey: 'path1' | 'path2' | 'path3' | 'path4') => {
+    setAdminUsers(prev => {
+      const next = prev.map(u => u.id === userId ? {
+        ...u,
+        services: { ...u.services, [serviceKey]: !u.services[serviceKey] }
+      } : u);
+      localStorage.setItem('recruit_admin_users', JSON.stringify(next));
+      const target = next.find(u => u.id === userId);
+      if (target) {
+        syncUserToServer(target);
+        setSelectedUserForDrawer(target);
+      }
+      return next;
+    });
+  };
+
+  const handleDrawerTogglePermission = (userId: string, permKey: 'canEditJobs' | 'canApproveApps' | 'canViewFinance') => {
+    setAdminUsers(prev => {
+      const next = prev.map(u => u.id === userId ? {
+        ...u,
+        permissions: { ...u.permissions, [permKey]: !u.permissions[permKey] }
+      } : u);
+      localStorage.setItem('recruit_admin_users', JSON.stringify(next));
+      const target = next.find(u => u.id === userId);
+      if (target) {
+        syncUserToServer(target);
+        setSelectedUserForDrawer(target);
+      }
+      return next;
+    });
+  };
+
+  const handleDrawerExtendPlan = (userId: string, days: number) => {
+    const targetUser = adminUsers.find(u => u.id === userId);
+    if (!targetUser) return;
+    const currentExp = targetUser.planExpiryTimestamp || (Date.now() + 30 * 86400000);
+    const newExpTimestamp = Math.max(Date.now(), currentExp) + days * 86400000;
+    const newExpDateStr = new Date(newExpTimestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    setAdminUsers(prev => {
+      const next: AdminUser[] = prev.map(u => u.id === userId ? {
+        ...u,
+        planExpiryTimestamp: newExpTimestamp,
+        planExpiryDate: newExpDateStr,
+        status: 'Active' as const
+      } : u);
+      localStorage.setItem('recruit_admin_users', JSON.stringify(next));
+      const updated = next.find(u => u.id === userId);
+      if (updated) {
+        syncUserToServer(updated);
+        setSelectedUserForDrawer(updated);
+      }
+      return next;
+    });
   };
 
   // Sync state changes back to server
@@ -961,14 +1071,73 @@ export default function AdminPanel({
     setActiveSubTab('postings');
   };
 
-  // Filtered users for search queries
-  const filteredUsers = adminUsers.filter(u => 
-    u.name.toLowerCase().includes(searchUserQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchUserQuery.toLowerCase()) ||
-    u.role.toLowerCase().includes(searchUserQuery.toLowerCase()) ||
-    (u.activePlanName && u.activePlanName.toLowerCase().includes(searchUserQuery.toLowerCase())) ||
-    (u.lastCouponUsed && u.lastCouponUsed.toLowerCase().includes(searchUserQuery.toLowerCase()))
-  );
+  // Filtered users for search queries and customer segment filter
+  const filteredUsers = adminUsers.filter(u => {
+    // 1. Segment filter
+    if (userSegmentFilter === 'paid') {
+      const ltv = u.lifetimeValue ?? u.totalPaidAmount ?? 0;
+      if (ltv <= 0 && !u.isSubscribed) return false;
+    } else if (userSegmentFilter === 'coupons') {
+      if (!u.lastCouponUsed || u.lastCouponUsed === 'None') return false;
+    } else if (userSegmentFilter === 'expiring') {
+      if (!u.planExpiryTimestamp) return false;
+      const daysLeft = Math.ceil((u.planExpiryTimestamp - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysLeft < 0 || daysLeft > 7) return false;
+    } else if (userSegmentFilter === 'free') {
+      const ltv = u.lifetimeValue ?? u.totalPaidAmount ?? 0;
+      if (ltv > 0 || u.isSubscribed) return false;
+    }
+
+    // 2. Search query filter
+    if (searchUserQuery.trim()) {
+      const q = searchUserQuery.toLowerCase();
+      const matchName = u.name.toLowerCase().includes(q);
+      const matchEmail = u.email.toLowerCase().includes(q);
+      const matchRole = u.role.toLowerCase().includes(q);
+      const matchPlan = u.activePlanName && u.activePlanName.toLowerCase().includes(q);
+      const matchCoupon = u.lastCouponUsed && u.lastCouponUsed.toLowerCase().includes(q);
+      const matchCustomerType = u.customerType && u.customerType.toLowerCase().includes(q);
+      const matchMode = (u.lastPaymentMode && u.lastPaymentMode.toLowerCase().includes(q)) || (u.primaryPaymentMode && u.primaryPaymentMode.toLowerCase().includes(q));
+      return matchName || matchEmail || matchRole || matchPlan || matchCoupon || matchCustomerType || matchMode;
+    }
+
+    return true;
+  });
+
+  // Export Finance Ledger to CSV
+  const handleExportFinanceCSV = () => {
+    const headers = ['Txn ID', 'Customer Name', 'Email', 'Phone', 'Customer Type', 'Plan Name', 'Real Payment Mode', 'Amount Paid (INR)', 'List Price (INR)', 'Coupon Used', 'Coupon Discount (INR)', 'UTR / Gateway Ref', 'Plan Start Date', 'Plan Expiry Date', 'Status'];
+    const rows = filteredPayments.map(p => {
+      const matchingUser = adminUsers.find(u => u.email.toLowerCase() === p.userEmail.toLowerCase());
+      const custType = matchingUser?.customerType || (p.amount > 1000 ? 'Business Enterprise' : 'Govt Aspirant');
+      return [
+        `"${p.id}"`,
+        `"${(p.userName || p.userEmail.split('@')[0]).replace(/"/g, '""')}"`,
+        `"${p.userEmail}"`,
+        `"${p.userPhone || ''}"`,
+        `"${custType}"`,
+        `"${p.planName.replace(/"/g, '""')}"`,
+        `"${p.realModeLabel || p.method}"`,
+        p.amount,
+        p.originalAmount || p.amount,
+        `"${p.couponUsed || 'None'}"`,
+        p.couponDiscount || 0,
+        `"${p.utr || p.gatewayOrderId || ''}"`,
+        `"${p.planStartDate || p.date}"`,
+        `"${p.planExpiryDate || ''}"`,
+        `"${p.status}"`
+      ];
+    });
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `arohi_cash_flow_ledger_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Financial statistics
   const totalMRR = payments.filter(p => p.status === 'Verified').reduce((acc, p) => acc + p.amount, 0);
@@ -1428,6 +1597,18 @@ export default function AdminPanel({
           >
             <Coins className="w-4 h-4 text-emerald-400" />
             <span>Cash Flow Ledger</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('cbt_tests')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'cbt_tests' 
+                ? 'bg-purple-950/40 text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(124,58,237,0.15)]' 
+                : 'text-slate-300 hover:bg-[#110d29]'
+            }`}
+          >
+            <Award className="w-4 h-4 text-amber-400" />
+            <span>CBT Mock Tests & Analytics</span>
           </button>
 
           <button
@@ -1946,100 +2127,205 @@ export default function AdminPanel({
 
             </div>
           </div>
+
+          {/* Granular User Activity, Prompts & Action Telemetry Engine */}
+          <div className="pt-2">
+            <UserActivityTelemetryViewer
+              telemetryLogs={userTelemetryLogs}
+              onSelectUserEmail={(email) => {
+                if (!email) return;
+                const u = adminUsers.find(acc => acc.email.toLowerCase() === email.toLowerCase());
+                if (u) setSelectedUserForDrawer(u);
+              }}
+            />
+          </div>
         </div>
         )}
 
         {/* TAB 2: USERS DIRECTORY & INTERVENTIONS */}
         {activeSubTab === 'users' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             
-            {/* Left side: Users table */}
-            <div className="lg:col-span-2 backdrop-blur-xl bg-[#090715]/70 border border-[#2b1b54]/80 rounded-3xl overflow-hidden shadow-xl h-[530px] flex flex-col justify-between">
-              <div>
-                <div className="p-4 bg-[#120d2c]/65 border-b border-[#2b1b54] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-300">Registered Accounts & Interventions Directory</h3>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Custom coaching slots, taken courses, active plans, permissions</p>
-                  </div>
-                  
-                  {/* Search query input */}
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="Search accounts..."
-                      value={searchUserQuery}
-                      onChange={(e) => setSearchUserQuery(e?.target?.value ?? "")}
-                      className="bg-[#19133a]/90 border border-[#3b277a] rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-slate-500 font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs font-semibold">
-                    <thead>
-                      <tr className="bg-slate-900/65 text-slate-400 border-b border-[#221644] uppercase tracking-wider text-[9px] font-black">
-                        <th className="py-3 px-4">Aspirant Profile</th>
-                        <th className="py-3 px-4">Role Classification</th>
-                        <th className="py-3 px-4">Access Source</th>
-                        <th className="py-3 px-4">Plan Subscriptions</th>
-                        <th className="py-3 px-4 text-center">Status</th>
-                        <th className="py-3 px-4 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#221644]">
-                      {filteredUsers.map((user) => (
-                        <tr key={user.id} className="hover:bg-purple-950/10 transition-colors">
-                          <td className="py-3 px-4">
-                            <div className="font-black text-white">{user.name}</div>
-                            <div className="text-[10px] text-slate-400 mt-0.5 font-mono">{user.email}</div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-slate-200">{user.role}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 bg-cyan-950/25 text-cyan-300 border border-cyan-500/20 rounded-lg inline-block whitespace-nowrap">
-                              {user.entrySource || 'Website Browser'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex flex-wrap gap-1">
-                              {user.services.path1 && <span className="bg-blue-500/10 text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-blue-500/20">PATH 1</span>}
-                              {user.services.path2 && <span className="bg-purple-500/10 text-purple-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-purple-500/20">PATH 2</span>}
-                              {user.services.path3 && <span className="bg-emerald-500/10 text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-500/20">PATH 3</span>}
-                              {user.services.path4 && <span className="bg-indigo-500/10 text-indigo-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-indigo-500/20">PATH 4</span>}
-                              {!user.services.path1 && !user.services.path2 && !user.services.path3 && !user.services.path4 && <span className="text-slate-500 text-[8px]">None</span>}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                              user.status === 'VIP' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25' :
-                              user.status === 'Suspended' ? 'bg-red-500/15 text-red-400 border border-red-500/25' :
-                              'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25'
-                            }`}>
-                              {user.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <button
-                              onClick={() => setSelectedUser(user)}
-                              className="bg-[#1d143c] hover:bg-[#341d6e] border border-[#3d2780] text-purple-300 hover:text-white px-2.5 py-1 rounded-xl text-[10px] font-extrabold cursor-pointer transition-all"
-                            >
-                              Edit Settings
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            {/* Top Quick Segment Filter Bar */}
+            <div className="bg-[#090715]/75 border border-[#2b1b54]/80 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: `All Aspirants (${adminUsers.length})` },
+                  { id: 'paid', label: `💎 Paid & Business (${adminUsers.filter(u => (u.lifetimeValue ?? u.totalPaidAmount ?? 0) > 0 || u.isSubscribed).length})` },
+                  { id: 'coupons', label: `🎟️ Coupon Subsidized (${adminUsers.filter(u => u.lastCouponUsed && u.lastCouponUsed !== 'None').length})` },
+                  { id: 'expiring', label: `⏳ Expiring Soon (< 7d)` },
+                  { id: 'free', label: `🆓 Free Tier (${adminUsers.filter(u => (u.lifetimeValue ?? u.totalPaidAmount ?? 0) <= 0 && !u.isSubscribed).length})` }
+                ].map((seg) => (
+                  <button
+                    key={seg.id}
+                    onClick={() => setUserSegmentFilter(seg.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      userSegmentFilter === seg.id
+                        ? 'bg-purple-900/60 text-purple-200 border border-purple-500/50 shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-[#130d2e]'
+                    }`}
+                  >
+                    {seg.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="p-3 bg-slate-950/40 border-t border-[#221644] text-[10px] text-slate-500 font-mono flex justify-between">
-                <span>SECURED BIOMETRIC ENCRYPTION KEY STABLE</span>
-                <span>{filteredUsers.length} MEMBERS TRACKED</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-slate-400">
+                  Showing <strong className="text-white">{filteredUsers.length}</strong> of {adminUsers.length}
+                </span>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left side: Users table */}
+              <div className="lg:col-span-2 backdrop-blur-xl bg-[#090715]/70 border border-[#2b1b54]/80 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between min-h-[560px]">
+                <div>
+                  <div className="p-4 bg-[#120d2c]/65 border-b border-[#2b1b54] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-300">Registered Accounts & Interventions Directory</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Custom coaching slots, taken courses, real paid modes, CBT stats</p>
+                    </div>
+                    
+                    {/* Search query input */}
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search name, email, plan, coupon, mode..."
+                        value={searchUserQuery}
+                        onChange={(e) => setSearchUserQuery(e?.target?.value ?? "")}
+                        className="bg-[#19133a]/90 border border-[#3b277a] rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-slate-500 font-semibold w-full sm:w-64"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs font-semibold">
+                      <thead>
+                        <tr className="bg-slate-900/65 text-slate-400 border-b border-[#221644] uppercase tracking-wider text-[9px] font-black">
+                          <th className="py-3 px-3.5">Aspirant Profile</th>
+                          <th className="py-3 px-3">Type & Source</th>
+                          <th className="py-3 px-3 text-center">LTV & Real Mode</th>
+                          <th className="py-3 px-3">Active Subscription</th>
+                          <th className="py-3 px-3 text-center">Status</th>
+                          <th className="py-3 px-3 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#221644]">
+                        {filteredUsers.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-slate-500 italic text-xs">
+                              No aspirant accounts found matching query or segment.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredUsers.map((user) => {
+                            const ltv = user.lifetimeValue ?? user.totalPaidAmount ?? 0;
+                            const isPaid = ltv > 0 || user.isSubscribed;
+                            const custType = user.customerType || (ltv > 1000 ? 'Business Enterprise' : isPaid ? 'Govt Aspirant' : 'Free Tier Candidate');
+                            const paymentMode = user.lastPaymentMode || user.primaryPaymentMode || (isPaid ? 'Razorpay Gateway' : 'None');
+
+                            return (
+                              <tr key={user.id} className="hover:bg-purple-950/10 transition-colors group">
+                                <td className="py-3 px-3.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="font-black text-white text-xs">{user.name}</div>
+                                    {isPaid && (
+                                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[8px] font-black px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
+                                        PRO
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{user.email}</div>
+                                  {user.phone && (
+                                    <div className="text-[9px] text-cyan-400 font-mono flex items-center gap-1">
+                                      <Phone className="w-2.5 h-2.5" /> {user.phone}
+                                    </div>
+                                  )}
+                                </td>
+
+                                <td className="py-3 px-3">
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg border block w-max ${
+                                    custType === 'Business Enterprise' ? 'bg-indigo-950/60 text-indigo-300 border-indigo-500/30' :
+                                    custType === 'Govt Aspirant' ? 'bg-purple-950/60 text-purple-300 border-purple-500/30' :
+                                    'bg-slate-900/60 text-slate-400 border-slate-700/30'
+                                  }`}>
+                                    {custType}
+                                  </span>
+                                  <span className="text-[9px] text-slate-500 font-mono block mt-1">
+                                    {user.entrySource || 'Website Browser'}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-3 text-center">
+                                  <div className="font-mono font-black text-xs text-emerald-400">
+                                    ₹{ltv.toLocaleString()}
+                                  </div>
+                                  <span className="text-[9px] font-mono text-slate-400 bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800/60 inline-block mt-0.5 whitespace-nowrap">
+                                    {paymentMode}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-3">
+                                  <div className="font-bold text-slate-200 text-xs">
+                                    {user.activePlanName || (user.isSubscribed ? 'Active Plan' : 'Free Access')}
+                                  </div>
+                                  {user.planExpiryDate && (
+                                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+                                      Exp: {user.planExpiryDate}
+                                    </div>
+                                  )}
+                                  {user.lastCouponUsed && user.lastCouponUsed !== 'None' && (
+                                    <span className="text-[8px] text-pink-400 font-mono bg-pink-950/40 px-1 rounded border border-pink-500/20 inline-block mt-0.5">
+                                      🎟️ {user.lastCouponUsed}
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className="py-3 px-3 text-center">
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase inline-block ${
+                                    user.status === 'VIP' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25' :
+                                    user.status === 'Suspended' ? 'bg-red-500/15 text-red-400 border border-red-500/25' :
+                                    'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25'
+                                  }`}>
+                                    {user.status}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-3 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      onClick={() => setSelectedUserForDrawer(user)}
+                                      className="bg-purple-600 hover:bg-purple-500 text-white border border-purple-400/40 px-2.5 py-1 rounded-xl text-[10px] font-extrabold cursor-pointer transition-all shadow-sm flex items-center gap-1"
+                                      title="Open Deep User Details & Real Payment Ledger"
+                                    >
+                                      <Eye className="w-3 h-3" /> Inspect
+                                    </button>
+
+                                    <button
+                                      onClick={() => setSelectedUser(user)}
+                                      className="bg-[#1d143c] hover:bg-[#341d6e] border border-[#3d2780] text-purple-300 hover:text-white px-2 py-1 rounded-xl text-[10px] font-extrabold cursor-pointer transition-all"
+                                      title="Edit service permissions and custom mentor"
+                                    >
+                                      <Settings className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-950/40 border-t border-[#221644] text-[10px] text-slate-500 font-mono flex justify-between">
+                  <span>SECURED BIOMETRIC ENCRYPTION KEY STABLE</span>
+                  <span>{filteredUsers.length} MEMBERS TRACKED</span>
+                </div>
+              </div>
 
             {/* Right side settings panel */}
             <div className="backdrop-blur-xl bg-[#090715]/70 border border-[#2b1b54]/80 p-5 rounded-3xl shadow-xl text-left">
@@ -2218,6 +2504,7 @@ export default function AdminPanel({
             </div>
 
           </div>
+        </div>
         )}
 
         {/* TAB 3: SUBSCRIPTIONS, PAYMENTS & COUPON LEDGER HUB */}
@@ -2376,6 +2663,13 @@ export default function AdminPanel({
                         title="Reload latest from server and sync Razorpay"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 ${isSyncingRazorpay ? 'animate-spin' : ''}`} /> Refresh
+                      </button>
+                      <button
+                        onClick={handleExportFinanceCSV}
+                        className="bg-[#101c36] hover:bg-[#182b52] border border-cyan-500/40 text-cyan-300 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+                        title="Download complete audited financial transactions ledger as CSV"
+                      >
+                        <Download className="w-3.5 h-3.5 text-cyan-400" /> Export CSV
                       </button>
                     </div>
                   </div>
@@ -2963,6 +3257,19 @@ export default function AdminPanel({
 
             </div>
 
+          </div>
+        )}
+
+        {/* TAB 3.5: CBT MOCK TESTS & EXAM ANALYTICS */}
+        {activeSubTab === 'cbt_tests' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <CbtMockTestAnalyticsHub
+              submissions={mockTestSubmissions}
+              onSelectUserEmail={(email) => {
+                const u = adminUsers.find(acc => acc.email.toLowerCase() === email.toLowerCase());
+                if (u) setSelectedUserForDrawer(u);
+              }}
+            />
           </div>
         )}
 
@@ -4859,6 +5166,26 @@ export default function AdminPanel({
 
           </div>
         </div>
+      )}
+
+      {/* 4. Enterprise User Details Deep-Drill Drawer */}
+      <UserDetailsDrawer
+        user={selectedUserForDrawer}
+        payments={payments}
+        telemetryLogs={userTelemetryLogs}
+        onClose={() => setSelectedUserForDrawer(null)}
+        onUpdateStatus={handleDrawerUpdateStatus}
+        onToggleService={handleDrawerToggleService}
+        onTogglePermission={handleDrawerTogglePermission}
+        onExtendPlan={handleDrawerExtendPlan}
+      />
+
+      {/* 5. Enterprise Tax Invoice Modal */}
+      {selectedTaxInvoiceTxn && (
+        <TaxInvoiceModal
+          transaction={selectedTaxInvoiceTxn}
+          onClose={() => setSelectedTaxInvoiceTxn(null)}
+        />
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import {
   Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { computeSubscriptionState } from '../utils/subscriptionEngine';
 import { initialCourses } from '../data/coursesData';
 import { isBiometricSupported, registerBiometricDevice, authenticateBiometricDevice } from '../lib/webauthn';
 import { PATH_DETAILS, PRICING_TIERS, getTokenLimitForPrice } from '../data/pricingData';
@@ -247,7 +248,6 @@ export default function UserDashboard({
           businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 0
         };
         setDiagnostics(defaultDiagnostics);
-        updateDiagnostics(defaultDiagnostics).catch(err => console.error("Error setting default diagnostics:", err));
       }
 
       if (userData.profile) {
@@ -708,24 +708,29 @@ export default function UserDashboard({
     return () => clearInterval(timer);
   }, []);
 
-  // Determine effective subscription end date and active status
-  const isPlanActive = Boolean(hasActiveSubscription || hasAnyActive);
-  const effectiveEndDate = (subscriptionEndDate && subscriptionEndDate > 0)
-    ? subscriptionEndDate
-    : (hasAnyActive ? (currentTime + 30 * 24 * 60 * 60 * 1000) : 0);
+  // Centralized deterministic subscription status calculation
+  const subState = computeSubscriptionState({
+    email: user?.email,
+    userData,
+    subscriptions,
+    subscriptionEndDate,
+    subscriptionPlanName,
+    currentTime
+  });
 
-  const isSubscribed = isPlanActive && effectiveEndDate > 0;
-  const isExpired = isSubscribed && effectiveEndDate <= currentTime;
-  const msRemaining = isSubscribed ? Math.max(0, effectiveEndDate - currentTime) : 0;
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24));
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000);
+  const isSubscribed = subState.isSubscribed;
+  const isExpired = subState.isExpired;
+  const effectiveEndDate = subState.effectiveEndDate;
+  const msRemaining = subState.msRemaining;
+  const daysRemaining = subState.daysRemaining;
+  const hoursRemaining = subState.hoursRemaining;
+  const minutesRemaining = subState.minutesRemaining;
+  const secondsRemaining = subState.secondsRemaining;
 
   // Calculate percentage of 30-day billing cycle elapsed
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
   const cycleElapsedMs = Math.max(0, THIRTY_DAYS_MS - msRemaining);
-  const cyclePercentage = Math.min(100, Math.max(0, Math.round((cycleElapsedMs / THIRTY_DAYS_MS) * 100)));
+  const cyclePercentage = subState.isLifetimeVip ? 100 : Math.min(100, Math.max(0, Math.round((cycleElapsedMs / THIRTY_DAYS_MS) * 100)));
 
   // Format expiry dates and times clearly
   const formattedEndDate = effectiveEndDate > 0 ? new Date(effectiveEndDate).toLocaleDateString('en-US', {

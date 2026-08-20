@@ -17,6 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { computeSubscriptionState } from '../utils/subscriptionEngine';
 
 interface HeaderNotificationsProps {
   hasActiveSubscription: boolean;
@@ -103,18 +104,26 @@ export default function HeaderNotifications({
     };
   }, [isOpen]);
 
-  // Calculate subscription remaining time strictly based on active subscription status
-  const isSubscribed = hasActiveSubscription && subscriptionEndDate > 0;
-  const isExpired = isSubscribed && subscriptionEndDate <= currentTime;
-  const msRemaining = isSubscribed ? Math.max(0, subscriptionEndDate - currentTime) : 0;
-  const daysRemaining = isSubscribed ? Math.max(0, Math.floor((subscriptionEndDate - currentTime) / (1000 * 60 * 60 * 24))) : 0;
-  const hoursRemaining = isSubscribed ? Math.max(0, Math.floor(((subscriptionEndDate - currentTime) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) : 0;
-  const minutesRemaining = isSubscribed ? Math.max(0, Math.floor(((subscriptionEndDate - currentTime) % (1000 * 60 * 60)) / (1000 * 60))) : 0;
+  // Calculate subscription remaining time strictly based on centralized subscription state
+  const subState = computeSubscriptionState({
+    email: user?.email,
+    subscriptions: hasActiveSubscription ? { path1: true } : {},
+    subscriptionEndDate,
+    subscriptionPlanName,
+    currentTime
+  });
+
+  const isSubscribed = subState.isSubscribed;
+  const isExpired = subState.isExpired;
+  const msRemaining = subState.msRemaining;
+  const daysRemaining = subState.daysRemaining;
+  const hoursRemaining = subState.hoursRemaining;
+  const minutesRemaining = subState.minutesRemaining;
 
   // Alert condition: ONLY active subscribers who are within 7 days of expiry and not yet expired
-  const is7DaysAlertActive = isSubscribed && !isExpired && (daysRemaining <= 7);
-  const isExpiredAlertActive = isSubscribed && isExpired;
-  const isActiveGoodStanding = isSubscribed && !isExpired && (daysRemaining > 7);
+  const is7DaysAlertActive = subState.shouldShowExpiryAlert;
+  const isExpiredAlertActive = isSubscribed && isExpired && !subState.isLifetimeVip;
+  const isActiveGoodStanding = isSubscribed && !isExpired && (daysRemaining > 7 || subState.isLifetimeVip);
 
   // Format expiry date nicely
   const expiryDateFormatted = subscriptionEndDate > 0 ? new Date(subscriptionEndDate).toLocaleDateString('en-US', {

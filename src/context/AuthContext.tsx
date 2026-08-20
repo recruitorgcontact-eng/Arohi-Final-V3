@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Application } from '../types';
+import { isLifetimeVipEmail, persistSubscriptionActivation, LIFETIME_MS } from '../utils/subscriptionEngine';
 import { 
   onAuthStateChanged,
   signInWithEmailAndPassword, 
@@ -502,8 +503,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem(`arohi_saved_chats_${uid}`, JSON.stringify(data.arohiChats));
         } catch (e) {}
       }
-      // Resilient subscription sync: If user profile in Firestore has active subscription, sync to localStorage immediately
-      if (data && (data.isSubscribed || (data.subscriptionEndDate && data.subscriptionEndDate > Date.now()))) {
+      // Resilient VIP & Subscription sync
+      const isVip = isLifetimeVipEmail(data?.email || email);
+      if (isVip) {
+        data.isSubscribed = true;
+        data.subscriptionPlanName = 'Enterprise Lifetime VIP (Permanent Access)';
+        data.subscriptionEndDate = Date.now() + LIFETIME_MS;
+        data.subscriptions = { path1: true, path2: true, path3: true, path4: true };
+        data.paymentMethod = 'Founder VIP Exemption';
+        persistSubscriptionActivation({
+          planName: 'Enterprise Lifetime VIP (Permanent Access)',
+          price: 0,
+          customEndDate: Date.now() + LIFETIME_MS,
+          paymentMethod: 'Founder VIP Exemption'
+        });
+      } else if (data && (data.isSubscribed || (data.subscriptionEndDate && data.subscriptionEndDate > Date.now()))) {
         try {
           const now = Date.now();
           const endDate = (data.subscriptionEndDate && data.subscriptionEndDate > now)
@@ -512,6 +526,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const subs = data.subscriptions || { path1: true, path2: false, path3: false, path4: false };
           localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
           localStorage.setItem('arohi_subscription_end_date', endDate.toString());
+          if (data.subscriptionPlanName) {
+            localStorage.setItem('arohi_subscription_plan_name', data.subscriptionPlanName);
+          }
           if (data.subscriptionDetails) {
             localStorage.setItem('arohi_subscription_details', JSON.stringify(data.subscriptionDetails));
           }
@@ -1426,11 +1443,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
     }
 
-    try {
-      localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
-      localStorage.setItem('arohi_subscription_end_date', endDate.toString());
-      localStorage.setItem('arohi_subscription_details', JSON.stringify(details));
-    } catch (e) {}
+    persistSubscriptionActivation({
+      planName,
+      price: details.path1?.price || 399,
+      paymentMethod: subData.paymentMethod || 'Razorpay / UPI',
+      customEndDate: endDate
+    });
 
     // Layer 1: Server-side API
     try {

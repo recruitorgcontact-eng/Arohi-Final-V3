@@ -5,6 +5,7 @@ import {
   Tag, AlertCircle, RefreshCw, Globe
 } from 'lucide-react';
 import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PricingTier, detectUserCurrency, getPricingTiers } from '../data/pricingData';
+import { isValidCouponCode, persistSubscriptionActivation } from '../utils/subscriptionEngine';
 
 interface PricingPageProps {
   embedMode?: boolean;
@@ -68,8 +69,16 @@ export default function PricingPage({
 
     setTimeout(() => {
       setIsApplyingCoupon(false);
-      if (cleanCode === 'JUNOON' || cleanCode === 'JUNOON399' || cleanCode === 'AROHI399' || cleanCode === 'PRO399') {
+      if (isValidCouponCode(cleanCode)) {
         const starterTier = currentTiers[0];
+        
+        persistSubscriptionActivation({
+          planName: starterTier.name,
+          price: starterTier.price,
+          couponCode: cleanCode,
+          paymentMethod: `Coupon Code ${cleanCode}`
+        });
+
         if (onSubscribe) {
           onSubscribe('path1', starterTier.name, `Coupon Code ${cleanCode}`);
         }

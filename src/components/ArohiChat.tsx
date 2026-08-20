@@ -175,7 +175,7 @@ export async function shareArohiImage(url: string, title = 'Arohi AI Generated I
   }
 }
 
-function renderMarkdown(content: string, isDarkMode = true) {
+function renderMarkdown(content: string, isDarkMode = true, onNavigateTab?: (tab: string) => void) {
   const preprocessed = preprocessMarkdownLinks(content);
 
   // Helper to parse inline styles: [text](url), **bold**, *italic*, `code` and raw URLs
@@ -190,8 +190,29 @@ function renderMarkdown(content: string, isDarkMode = true) {
           const label = linkMatch[1].replace(/\*\*/g, '').trim();
           let href = linkMatch[2].trim();
           const isMail = href.startsWith('mailto:');
-          const isButtonLink = isMail || label.toLowerCase().includes('confirm') || label.toLowerCase().includes('pay') || label.toLowerCase().includes('authorize') || label.toLowerCase().includes('send') || label.toLowerCase().includes('gmail') || label.toLowerCase().includes('open');
+          const isHash = href.startsWith('#');
+          const isButtonLink = isHash || isMail || label.toLowerCase().includes('confirm') || label.toLowerCase().includes('pay') || label.toLowerCase().includes('authorize') || label.toLowerCase().includes('send') || label.toLowerCase().includes('gmail') || label.toLowerCase().includes('open');
           
+          if (isHash) {
+            const tabName = href.replace('#', '').trim();
+            return [
+              <span key={idx} className="inline-flex flex-wrap items-center gap-2 my-1 align-middle">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigateTab) onNavigateTab(tabName);
+                    else window.dispatchEvent(new CustomEvent('arohi_navigate_tab', { detail: tabName }));
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md hover:shadow-purple-500/20 border border-purple-400/40 transition-all active:scale-95 cursor-pointer"
+                >
+                  <Zap className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+                  <span>{label}</span>
+                </button>
+              </span>
+            ];
+          }
+
           if (isButtonLink) {
             const gmailWebUrl = isMail ? getGmailWebUrl(href) : null;
             return [
@@ -1733,6 +1754,12 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   useEffect(() => {
     const currentUserIdKey = user ? user.uid : 'guest';
 
+    // Prevent repeated hydration loops if already hydrated for this user
+    if (hydratedUserRef.current === currentUserIdKey) {
+      return;
+    }
+    hydratedUserRef.current = currentUserIdKey;
+
     if (user) {
       const localCached = getInitialChats(user.uid);
       const remoteChats = (userData?.arohiChats && Array.isArray(userData.arohiChats)) ? userData.arohiChats : [];
@@ -1787,7 +1814,6 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           } catch (e) {}
         }
       }
-      hydratedUserRef.current = currentUserIdKey;
     } else {
       // Guest session hydration
       const cached = getInitialChats();
@@ -1830,9 +1856,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       } else {
         setSavedCalls([]);
       }
-      hydratedUserRef.current = currentUserIdKey;
     }
-  }, [user, userData?.arohiChats]);
+  }, [user?.uid]);
 
   // Fetch and restore the freshest conversation history from Firestore database when starting a session
   useEffect(() => {
@@ -1920,11 +1945,13 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   useEffect(() => {
     if (!activeChatId || messages.length === 0) return;
 
-    const messagesJson = JSON.stringify(messages);
-    if (prevSyncedMessagesJsonRef.current === messagesJson) return;
-    prevSyncedMessagesJsonRef.current = messagesJson;
+    const syncKey = `${activeChatId}::${JSON.stringify(messages)}`;
+    if (prevSyncedMessagesJsonRef.current === syncKey) return;
+    prevSyncedMessagesJsonRef.current = syncKey;
 
     const hasUserMessage = messages.some(m => m && m.role === 'user' && m.content && m.content.trim().length > 0);
+
+    let updatedChatsToPersist: SavedChat[] | null = null;
 
     setSavedChats(prevChats => {
       const chatIndex = prevChats.findIndex(c => c.id === activeChatId);
@@ -1953,10 +1980,9 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         }
       }
 
+      updatedChatsToPersist = updatedChats;
+
       if (user) {
-        if (hasUserMessage || updatedChats.some(c => c.messages.some(m => m.role === 'user'))) {
-          updateArohiChats(updatedChats).catch(e => console.log('Chat update:', e));
-        }
         try {
           localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(updatedChats));
         } catch (e) {}
@@ -1968,7 +1994,12 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
       return updatedChats;
     });
-  }, [messages, activeChatId, user]);
+
+    // Cloud sync outside state updater function
+    if (user && updatedChatsToPersist && (hasUserMessage || (updatedChatsToPersist as SavedChat[]).some(c => c.messages.some(m => m.role === 'user')))) {
+      updateArohiChats(updatedChatsToPersist).catch(e => console.log('Chat update:', e));
+    }
+  }, [messages, activeChatId, user?.uid]);
 
   const deleteChat = (idToDelete: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -3674,7 +3705,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       </div>
                     ) : (
                       <>
-                        {renderMarkdown(parsed.cleanedContent, isDarkMode)}
+                        {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab)}
                         {msg.role === 'assistant' && msg.isStreaming && (
                           <span className="inline-block w-2 h-4 ml-1 bg-amber-400 animate-pulse rounded-xs align-middle" />
                         )}

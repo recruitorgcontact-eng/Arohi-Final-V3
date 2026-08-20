@@ -41,21 +41,24 @@ export const ArohiChatLink: React.FC<ArohiChatLinkProps> = ({ href, label, class
   }
 
   const isMail = cleanHref.startsWith('mailto:');
+  const isHash = cleanHref.startsWith('#');
   
   // Extract domain for badge/display
   let domain = '';
-  try {
-    const urlObj = new URL(cleanHref);
-    domain = urlObj.hostname.replace(/^www\./, '');
-  } catch (e) {
-    domain = cleanHref.replace(/^https?:\/\//, '').split('/')[0].split('?')[0];
+  if (!isHash) {
+    try {
+      const urlObj = new URL(cleanHref);
+      domain = urlObj.hostname.replace(/^www\./, '');
+    } catch (e) {
+      domain = cleanHref.replace(/^https?:\/\//, '').split('/')[0].split('?')[0];
+    }
   }
 
   const isRaw = !label || label === href || label === cleanHref || label.startsWith('http://') || label.startsWith('https://') || label.startsWith('www.');
   
   // Format clean display label for raw URLs vs custom text
   let displayLabel = label || href;
-  if (isRaw) {
+  if (isRaw && !isHash) {
     try {
       const urlObj = new URL(cleanHref);
       const path = urlObj.pathname + urlObj.search;
@@ -63,6 +66,30 @@ export const ArohiChatLink: React.FC<ArohiChatLinkProps> = ({ href, label, class
     } catch (e) {
       displayLabel = domain || href;
     }
+  }
+
+  if (isHash) {
+    const tabName = cleanHref.replace('#', '').trim();
+    return (
+      <a
+        href={cleanHref}
+        onClick={(e) => {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('arohi_navigate_tab', { detail: tabName }));
+          const targetEl = document.getElementById(tabName);
+          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+        }}
+        title={`Navigate to ${displayLabel}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 my-0.5 mx-0.5 rounded-xl font-black text-xs tracking-wider transition-all duration-200 active:scale-95 no-underline cursor-pointer align-middle border ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950/90 hover:from-purple-800 hover:to-indigo-800 text-purple-200 border-purple-400/50 shadow-md'
+            : 'bg-purple-100 hover:bg-purple-200 text-purple-950 border-purple-300 shadow-xs'
+        } ${className}`}
+      >
+        <span className="truncate max-w-[240px] sm:max-w-[420px] leading-tight">{displayLabel}</span>
+        <ExternalLink className="w-3 h-3 text-purple-300 shrink-0" />
+      </a>
+    );
   }
 
   return (
