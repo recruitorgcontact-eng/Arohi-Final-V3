@@ -4,6 +4,7 @@ import {
   Sparkles, Check, ArrowRight, BookOpen, Briefcase, Code, Rocket,
   GraduationCap, Target, Cpu, Settings, ChevronRight, Filter, FileText
 } from 'lucide-react';
+import { getChatDisplayDate } from '../utils/dateUtils';
 
 export interface ArohiProject {
   id: string;
@@ -19,7 +20,9 @@ export interface ArohiProject {
 export interface SavedChatWithProject {
   id: string;
   title: string;
-  date: string;
+  date?: string;
+  createdAt?: number | string;
+  updatedAt?: number | string;
   messages: any[];
   projectId?: string;
 }
@@ -588,7 +591,7 @@ export default function ArohiProjectsModal({
                           <MessageCircle className="w-4 h-4 text-purple-400 shrink-0" />
                           <div className="min-w-0">
                             <h5 className="font-bold text-xs truncate leading-tight text-white">{chat.title}</h5>
-                            <span className="text-[10px] text-slate-400 mt-0.5 block">{chat.date || 'Recent'}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5 block">{getChatDisplayDate(chat)}</span>
                           </div>
                         </div>
 
@@ -710,7 +713,7 @@ export default function ArohiProjectsModal({
                   >
                     <div className="min-w-0 pr-2">
                       <div className="text-xs font-bold truncate text-white">{chat.title}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{chat.date}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{getChatDisplayDate(chat)}</div>
                     </div>
                     <span className="text-[11px] font-bold text-purple-400 bg-purple-500/20 px-2 py-1 rounded-lg shrink-0 flex items-center gap-1">
                       <Plus className="w-3 h-3" /> Move

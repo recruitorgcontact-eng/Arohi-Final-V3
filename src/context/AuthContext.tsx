@@ -17,6 +17,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { authenticateBiometricDevice } from '../lib/webauthn';
+import { getChatDisplayDate, getCallDisplayDate } from '../utils/dateUtils';
 
 export interface User {
   uid: string;
@@ -184,24 +185,26 @@ export function buildPersonalizationMemory(data: UserData): UserPersonalizationM
       summaryStr = `Chat session titled "${chat.title || 'Discussion'}".`;
     }
 
+    const chatDisplayDate = getChatDisplayDate(chat);
     interactionLogs.push({
       id: chat.id || `chat_${Math.random()}`,
       type: 'chat',
       title: chat.title || 'Arohi AI Consultation',
       summary: summaryStr,
-      date: chat.date || 'Recent'
+      date: chatDisplayDate
     });
   });
 
   // Parse voice call logs
   calls.forEach((call) => {
     const durationMin = Math.round((call.duration || 0) / 60);
+    const callDisplayDate = getCallDisplayDate(call);
     interactionLogs.push({
       id: call.id || `call_${Math.random()}`,
       type: 'call',
       title: `Voice Discussion (${durationMin > 0 ? durationMin + 'm' : 'Live'})`,
       summary: call.summaryText || 'Dynamic Arohi AI audio consultation completed.',
-      date: call.date || 'Recent'
+      date: callDisplayDate
     });
   });
 
@@ -243,14 +246,14 @@ export function buildPersonalizationMemory(data: UserData): UserPersonalizationM
     summaryContext += `\n* Past Text Discussions (${chats.length} total sessions):\n`;
     chats.slice(0, 5).forEach((c, idx) => {
       const topMsg = c.messages && c.messages.length > 0 ? c.messages[0].content : '';
-      summaryContext += `  ${idx + 1}. [${c.date || 'Recent'}] Title: "${c.title}" ${topMsg ? `| Initial query: "${topMsg.substring(0, 80)}..."` : ''}\n`;
+      summaryContext += `  ${idx + 1}. [${getChatDisplayDate(c)}] Title: "${c.title}" ${topMsg ? `| Initial query: "${topMsg.substring(0, 80)}..."` : ''}\n`;
     });
   }
 
   if (calls.length > 0) {
     summaryContext += `\n* Past Voice Call Sessions (${calls.length} total calls):\n`;
     calls.slice(0, 4).forEach((call, idx) => {
-      summaryContext += `  ${idx + 1}. [${call.date || 'Recent'}] ${call.summaryText ? call.summaryText.substring(0, 120) : 'Interactive voice call'}\n`;
+      summaryContext += `  ${idx + 1}. [${getCallDisplayDate(call)}] ${call.summaryText ? call.summaryText.substring(0, 120) : 'Interactive voice call'}\n`;
     });
   }
 

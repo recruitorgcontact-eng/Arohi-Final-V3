@@ -26,12 +26,14 @@ import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 import InChatMessageQuiz from './mocktests/InChatMessageQuiz';
+import { getChatDisplayDate, getCallDisplayDate, formatRelativeChatDate, extractChatTimestamp } from '../utils/dateUtils';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  createdAt?: number | string;
   isStreaming?: boolean;
 }
 
@@ -41,10 +43,12 @@ interface ChatHistory {
   date: string;
 }
 
-interface SavedChat {
+export interface SavedChat {
   id: string;
   title: string;
-  date: string;
+  date?: string;
+  createdAt?: number | string;
+  updatedAt?: number | string;
   messages: Message[];
   projectId?: string;
 }
@@ -1553,18 +1557,22 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     // Save and sync the updated chat
     let targetChatId = activeChatId;
     let currentSavedChats = [...savedChats];
+    const now = Date.now();
     if (!targetChatId || currentSavedChats.length === 0) {
-      targetChatId = 'chat-' + Date.now();
+      targetChatId = 'chat-' + now;
       const newChatContainer = {
         id: targetChatId,
         title: userSpokenTurns.length > 0 ? 'Voice Discussion' : 'Voice Session',
+        createdAt: now,
+        updatedAt: now,
         date: 'Today',
         messages: [
           {
             id: 'welcome',
             role: 'assistant' as const,
             content: getWelcomeContent(language),
-            timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            createdAt: now
           },
           newMsg
         ]
@@ -1577,6 +1585,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         if (chat.id === targetChatId) {
           return {
             ...chat,
+            updatedAt: now,
             messages: updatedMessages
           };
         }
@@ -1780,17 +1789,21 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         }
       } else {
         // Brand new user with 0 historical conversations
-        const defaultChatId = 'chat-' + Date.now();
+        const now = Date.now();
+        const defaultChatId = 'chat-' + now;
         const defaultChat: SavedChat = {
           id: defaultChatId,
           title: 'New Conversation',
+          createdAt: now,
+          updatedAt: now,
           date: 'Today',
           messages: [
             {
               id: 'welcome',
               role: 'assistant',
               content: getWelcomeContent(language),
-              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+              createdAt: now
             }
           ]
         };
@@ -1824,17 +1837,21 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           setMessages(cached[0].messages || []);
         }
       } else {
-        const defaultChatId = 'chat-' + Date.now();
+        const now = Date.now();
+        const defaultChatId = 'chat-' + now;
         const defaultChat: SavedChat = {
           id: defaultChatId,
           title: 'New Conversation',
+          createdAt: now,
+          updatedAt: now,
           date: 'Today',
           messages: [
             {
               id: 'welcome',
               role: 'assistant',
               content: getWelcomeContent(language),
-              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+              createdAt: now
             }
           ]
         };
@@ -1958,17 +1975,26 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       let updatedChats: SavedChat[];
 
       const dynamicTitle = getConversationTopicTitle({ messages, title: prevChats[chatIndex]?.title });
+      const now = Date.now();
 
       if (chatIndex === -1) {
         const newChat: SavedChat = {
           id: activeChatId,
           title: dynamicTitle,
+          createdAt: now,
+          updatedAt: now,
           date: 'Today',
           messages
         };
         updatedChats = [newChat, ...prevChats];
       } else {
-        updatedChats = prevChats.map(c => c.id === activeChatId ? { ...c, title: dynamicTitle, messages } : c);
+        updatedChats = prevChats.map(c => c.id === activeChatId ? { 
+          ...c, 
+          title: dynamicTitle, 
+          messages,
+          updatedAt: now,
+          createdAt: c.createdAt || extractChatTimestamp(c) || now
+        } : c);
       }
 
       // Re-order: Move active conversation to top if user sent messages
@@ -2805,10 +2831,13 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       ? (customProjectId || undefined) 
       : (activeProjectId || undefined);
 
-    const newChatId = 'chat-' + Date.now();
+    const now = Date.now();
+    const newChatId = 'chat-' + now;
     const newChat: SavedChat = {
       id: newChatId,
       title: 'New Conversation',
+      createdAt: now,
+      updatedAt: now,
       date: 'Today',
       projectId: targetProjId,
       messages: [
@@ -2816,7 +2845,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           id: 'welcome',
           role: 'assistant',
           content: getWelcomeContent(language),
-          timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+          createdAt: now
         }
       ]
     };
@@ -3341,7 +3371,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       <div className="min-w-0">
                         <div className="truncate text-sm leading-tight">{displayTitle}</div>
                         <div className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-normal flex items-center gap-1.5 mt-0.5`}>
-                          <span>{item.date || 'Recent'}</span>
+                          <span>{getChatDisplayDate(item)}</span>
                           {msgCount > 0 && (
                             <>
                               <span>•</span>
@@ -3402,7 +3432,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               >
                 <div className="truncate flex items-center gap-2">
                   <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span className="truncate">{item.date}</span>
+                  <span className="truncate">{getCallDisplayDate(item)}</span>
                 </div>
                 <Trash2
                   onClick={(e) => deleteCall(item.id, e)}
