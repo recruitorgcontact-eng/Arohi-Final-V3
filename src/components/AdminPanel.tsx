@@ -1,10 +1,13 @@
 import React, { useState, useEffect, FormEvent } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
+import ArohiAvatar from './ArohiAvatar';
 import { 
-  Plus, Trash2, Edit2, Check, X, Users, Briefcase, FileCheck, Landmark, Database, UserCheck, Eye, EyeOff,
-  Lock, ShieldAlert, Sparkles, LogOut, Clock, Activity, ShieldCheck, RefreshCw, BarChart3, MessageSquare, BookOpen, AlertCircle, Play, Coins, Shield, Settings, ChevronRight, Search, HeartPulse, Sparkle,
+  Plus, Trash2, Edit2, Check, X, Users, User, Briefcase, FileCheck, Landmark, Database, UserCheck, Eye, EyeOff,
+  Lock, ShieldAlert, Sparkles, LogOut, Clock, Activity, ShieldCheck, RefreshCw, BarChart3, MessageSquare, BookOpen, AlertCircle, Play, Coins, Shield, Settings, ChevronRight, ChevronLeft, Search, HeartPulse, Sparkle,
   TrendingUp, Percent, Award, Cpu, Megaphone, Sliders, Globe, Tag, Receipt, Calendar, CreditCard, QrCode,
   DollarSign, CheckCircle2, Clock3, AlertTriangle, Copy, FileText, Gift, ArrowUpRight, CheckCircle,
-  ExternalLink, Zap, Phone, Mail, UserPlus, ArrowRight, Filter, Download, HelpCircle
+  ExternalLink, Zap, Phone, Mail, UserPlus, ArrowRight, Filter, Download, HelpCircle, GraduationCap, Rocket, Target
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -40,6 +43,7 @@ interface AdminPanelProps {
   onDeletePosting: (id: string) => void;
   applications: Application[];
   onUpdateAppStatus: (id: string, status: 'Approved' | 'Rejected') => void;
+  onNavigateTab?: (tab: string) => void;
 }
 
 export default function AdminPanel({
@@ -48,8 +52,11 @@ export default function AdminPanel({
   onEditPosting,
   onDeletePosting,
   applications,
-  onUpdateAppStatus
+  onUpdateAppStatus,
+  onNavigateTab
 }: AdminPanelProps) {
+  const { user, userData, signInWithGoogle } = useAuth();
+
   // Authentication & Session state
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     return sessionStorage.getItem('recruit_admin_is_logged_in') === 'true';
@@ -1336,111 +1343,325 @@ export default function AdminPanel({
     ];
   };
 
-  // LOGIN SCREEN
+  // LOGIN SCREEN (Matching User Login Experience with Direct ID/Password Authentication)
   if (!isLoggedIn) {
     return (
-      <div className="bg-[#04020a] text-white min-h-[90vh] flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Apple space grid background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f134510_1px,transparent_1px),linear-gradient(to_bottom,#1f134510_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000"></div>
+      <div 
+        id="arohi-admin-login-screen" 
+        className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 relative overflow-y-auto overflow-x-hidden box-border bg-[#050508]"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 0%, #161724 0%, #090a10 65%, #050508 100%)'
+        }}
+      >
+        {/* Sleek ambient glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-28 left-1/2 -translate-x-1/2 w-96 h-56 bg-gradient-to-b from-sky-500/10 via-indigo-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+        </div>
 
-        <div className="max-w-md w-full relative z-10">
-          {/* Biometric Cybernetic Card Container */}
-          <div className="backdrop-blur-xl bg-[#0a0818]/80 border border-[#2d1b64]/70 p-8 rounded-[2.5rem] shadow-[0_15px_50px_rgba(0,0,0,0.8)] border-t-[#512da8] relative overflow-hidden transition-all duration-300">
-            {/* Ambient edge flare */}
-            <div className="absolute -top-12 -right-12 w-24 h-24 bg-purple-500/30 rounded-full blur-2xl pointer-events-none"></div>
+        {/* Main Luxury Cosmic Card */}
+        <div 
+          className="relative w-full max-w-[430px] bg-[#09090d]/90 backdrop-blur-2xl border border-white/15 rounded-[2rem] p-6 sm:p-7 shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_40px_rgba(255,255,255,0.03)] my-auto mx-auto overflow-hidden text-white z-10"
+        >
+          {/* Ambient top light */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />
 
-            {showAccessGranted ? (
-              // Cyber holographic login transition
-              <div className="py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-                <div className="relative inline-flex items-center justify-center">
-                  <div className="w-24 h-24 rounded-full border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center animate-ping absolute"></div>
-                  <div className="w-20 h-20 rounded-full border-2 border-emerald-400 bg-emerald-950/40 flex items-center justify-center text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)]">
-                    <ShieldCheck className="w-10 h-10" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xs font-black uppercase tracking-[0.25em] text-emerald-400">Identity Confirmed</h3>
-                  <h1 className="text-2xl font-black tracking-tight text-white">Welcome, Commander Junoon</h1>
-                  <p className="text-[10px] text-slate-400 font-mono">ENCRYPTED QUANTUM LINK ESTABLISHED • SECURE CHANNELS OPEN</p>
-                </div>
-                <div className="pt-4 flex justify-center gap-1.5 text-xs text-slate-500 font-mono">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce delay-150"></span>
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce delay-300"></span>
+          {showAccessGranted ? (
+            // Holographic Identity Confirmed Transition
+            <div className="py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+              <div className="relative inline-flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center animate-ping absolute" />
+                <div className="w-20 h-20 rounded-full border-2 border-emerald-400 bg-emerald-950/50 flex items-center justify-center text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                  <ShieldCheck className="w-10 h-10" />
                 </div>
               </div>
-            ) : (
-              // Cyber Login form
-              <div className="space-y-6">
-                <div className="text-center space-y-2.5">
-                  <div className="inline-flex p-3.5 bg-purple-950/40 border border-[#4a2e96]/60 text-purple-400 rounded-2xl shadow-[0_0_20px_rgba(124,58,237,0.2)] mb-1">
-                    <Shield className="w-7 h-7" />
-                  </div>
-                  <h2 className="text-2xl font-black text-white tracking-tight flex items-center justify-center gap-1.5">
-                    Arohi AI <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Control Panel</span>
-                  </h2>
-                  <p className="text-slate-400 text-xs font-semibold max-w-sm mx-auto leading-relaxed">
-                    Access reserved for authenticated commander personnel. Provide secure keys to decrypted databases.
-                  </p>
+              <div className="space-y-2">
+                <h3 className="text-xs font-black uppercase tracking-[0.25em] text-emerald-400">Identity Confirmed</h3>
+                <h1 className="text-2xl font-black tracking-tight text-white">Welcome, Commander</h1>
+                <p className="text-[11px] text-zinc-400 font-mono">SECURE ADMIN CHANNEL ESTABLISHED • ALL SYSTEMS OPERATIONAL</p>
+              </div>
+              <div className="pt-4 flex justify-center gap-1.5 text-xs text-zinc-500 font-mono">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-150" />
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-300" />
+              </div>
+            </div>
+          ) : (
+            // Direct Luxury Admin ID / Password Login View
+            <div className="relative z-10 flex flex-col items-center text-center">
+              
+              {/* 1. Sleek Brand Title */}
+              <div className="relative pt-1 pb-1 flex flex-col items-center">
+                <div className="relative inline-block select-none px-2 text-center">
+                  <span 
+                    className="absolute inset-0 text-3xl sm:text-4xl font-black tracking-tight uppercase blur-lg opacity-25 select-none pointer-events-none text-center bg-gradient-to-r from-white via-sky-200 to-indigo-300 bg-clip-text text-transparent"
+                    aria-hidden="true"
+                  >
+                    AROHI AI
+                  </span>
+
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] uppercase relative z-10 text-center flex items-center justify-center gap-1.5 font-sans">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 drop-shadow-[0_2px_12px_rgba(255,255,255,0.18)]">
+                      AROHI
+                    </span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-fuchsia-400 drop-shadow-[0_0_16px_rgba(99,102,241,0.4)]">
+                      AI
+                    </span>
+                  </h1>
                 </div>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4 pt-2">
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1.5">Commander Identification ID</label>
+                <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.24em] text-zinc-400 uppercase mt-1 flex items-center justify-center gap-1.5 font-sans">
+                  <span className="text-zinc-300">One AI.</span>
+                  <span className="text-zinc-400">Infinite Opportunities.</span>
+                </p>
+              </div>
+
+              {/* 2. Centerpiece: Animated Orbital Constellation with Live Arohi Core */}
+              <div className="relative w-[270px] h-[240px] sm:w-[280px] sm:h-[250px] my-1.5 flex items-center justify-center">
+                
+                {/* Outer Orbital Orbit Trajectory Ring */}
+                <div className="absolute inset-2 sm:inset-3 rounded-full border border-violet-500/20 pointer-events-none" />
+                
+                {/* Rotating Constellation Ring */}
+                <motion.div 
+                  className="absolute inset-2 sm:inset-3 rounded-full border border-dashed border-amber-400/25 pointer-events-none"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 45, ease: 'linear' }}
+                />
+
+                {/* Glowing Particle Halo */}
+                <div className="absolute w-40 h-40 rounded-full bg-gradient-to-tr from-amber-500/20 via-purple-600/30 to-cyan-400/20 blur-xl animate-pulse" />
+
+                {/* Center Core with Arohi Avatar & Admin Badge */}
+                <div className="relative z-10 flex flex-col items-center justify-center">
+                  
+                  {/* Floating "ADMIN CONSOLE ✨" Live Badge */}
+                  <div className="absolute -top-3.5 z-30 bg-gradient-to-r from-[#17103a] via-[#4c1d95] to-[#6327d4] text-white px-2.5 py-0.5 rounded-full border border-[#7c3aed]/80 text-[8px] sm:text-[9px] font-black tracking-wider uppercase shadow-[0_4px_18px_rgba(124,58,237,0.7)] backdrop-blur-md flex items-center gap-1 whitespace-nowrap select-none pointer-events-none animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0" />
+                    <span>ADMIN CONSOLE ✨</span>
+                  </div>
+
+                  {/* Glowing Concentric Outer Rings */}
+                  <div className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full p-0 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border-2 border-amber-400/60 shadow-[0_0_25px_rgba(251,191,36,0.5)] animate-pulse" />
+                    <motion.div 
+                      className="absolute -inset-1.5 rounded-full border border-cyan-400/50"
+                      animate={{ rotate: -360 }}
+                      transition={{ repeat: Infinity, duration: 25, ease: 'linear' }}
+                    />
+                    <div className="absolute inset-1 rounded-full border-2 border-purple-500/70 shadow-[inset_0_0_20px_rgba(168,85,247,0.8)]" />
+                    
+                    {/* Pinging pulse aura */}
+                    <span className="absolute inset-0 rounded-full border-2 border-purple-400/50 animate-ping opacity-50 pointer-events-none" />
+
+                    {/* Core Avatar */}
+                    <div className="relative w-18 h-18 sm:w-22 sm:h-22 rounded-full overflow-hidden bg-[#090714] shadow-[0_0_25px_rgba(124,58,237,0.8)] border border-purple-400/60 flex items-center justify-center">
+                      <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 hover:scale-120" />
+                    </div>
+
+                    {/* Live Online Dot */}
+                    <span className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#00e676] rounded-full border-2 border-[#090714] z-20 shadow-[0_0_10px_#00e676]" />
+                  </div>
+                </div>
+
+                {/* 6 Surrounding Orbiting Spheres */}
+                {/* Learn */}
+                <div className="absolute top-2 left-4 sm:left-6 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #241147 30%, #0f0521 100%)',
+                      border: '1.5px solid rgba(192, 132, 252, 0.7)',
+                      boxShadow: '0 0 15px rgba(192, 132, 252, 0.4)'
+                    }}
+                  >
+                    <GraduationCap className="w-4 h-4 text-purple-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Learn</span>
+                </div>
+
+                {/* Build */}
+                <div className="absolute top-2 right-4 sm:right-6 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #3d2407 30%, #150901 100%)',
+                      border: '1.5px solid rgba(251, 191, 36, 0.7)',
+                      boxShadow: '0 0 15px rgba(251, 191, 36, 0.4)'
+                    }}
+                  >
+                    <Rocket className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Build</span>
+                </div>
+
+                {/* Work */}
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 sm:left-1 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #08283a 30%, #031019 100%)',
+                      border: '1.5px solid rgba(34, 211, 238, 0.7)',
+                      boxShadow: '0 0 15px rgba(34, 211, 238, 0.4)'
+                    }}
+                  >
+                    <Briefcase className="w-4 h-4 text-cyan-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Work</span>
+                </div>
+
+                {/* Connect */}
+                <div className="absolute top-1/2 -translate-y-1/2 right-0 sm:right-1 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #0e1e47 30%, #040a1c 100%)',
+                      border: '1.5px solid rgba(96, 165, 250, 0.7)',
+                      boxShadow: '0 0 15px rgba(96, 165, 250, 0.4)'
+                    }}
+                  >
+                    <Users className="w-4 h-4 text-blue-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Connect</span>
+                </div>
+
+                {/* Grow */}
+                <div className="absolute bottom-1 left-5 sm:left-7 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #380d2b 30%, #150310 100%)',
+                      border: '1.5px solid rgba(244, 114, 182, 0.7)',
+                      boxShadow: '0 0 15px rgba(244, 114, 182, 0.4)'
+                    }}
+                  >
+                    <TrendingUp className="w-4 h-4 text-pink-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Grow</span>
+                </div>
+
+                {/* Achieve */}
+                <div className="absolute bottom-1 right-5 sm:right-7 flex flex-col items-center gap-1 group cursor-default">
+                  <div 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                    style={{
+                      background: 'radial-gradient(circle, #2d0b47 30%, #11031d 100%)',
+                      border: '1.5px solid rgba(168, 85, 247, 0.7)',
+                      boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)'
+                    }}
+                  >
+                    <Target className="w-4 h-4 text-purple-300" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-slate-200">Achieve</span>
+                </div>
+              </div>
+
+              {/* 3. Purpose Statement */}
+              <div className="my-1 space-y-0.5 font-sans">
+                <p className="text-[11px] text-zinc-400 font-medium tracking-wide">
+                  Operations &amp; Control for <span className="text-zinc-200 font-semibold">Learning</span>, <span className="text-zinc-200 font-semibold">Work</span>, <span className="text-zinc-200 font-semibold">Business</span> &amp; <span className="text-zinc-200 font-semibold">Users</span>
+                </p>
+              </div>
+
+              {/* Error Banner if any */}
+              {loginError && (
+                <div className="w-full my-2 p-2.5 bg-red-500/15 border border-red-500/40 rounded-xl text-red-300 text-xs flex items-center gap-2 text-left animate-in fade-in">
+                  <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
+                  <span className="leading-tight flex-1 text-[11px]">{loginError}</span>
+                </div>
+              )}
+
+              {/* 4. Direct Credentials Login Form (Admin ID & Password) */}
+              <form onSubmit={handleLoginSubmit} className="w-full space-y-3 pt-2 text-left">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                    Username or Admin ID
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
                       type="text"
                       required
                       value={loginId}
-                      onChange={(e) => setLoginId(e?.target?.value ?? "")}
+                      onChange={(e) => setLoginId(e.target.value)}
                       placeholder="e.g. admin"
-                      className="w-full bg-[#110d29]/90 border border-[#301c66] rounded-2xl px-4.5 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold"
+                      className="w-full bg-white/[0.05] border border-white/15 focus:border-purple-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-medium"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1.5">Security Password</label>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                    Security Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
                       type="password"
                       required
                       value={loginPassword}
-                      onChange={(e) => setLoginPassword(e?.target?.value ?? "")}
+                      onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="••••••••••••••"
-                      className="w-full bg-[#110d29]/90 border border-[#301c66] rounded-2xl px-4.5 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-semibold font-mono"
+                      className="w-full bg-white/[0.05] border border-white/15 focus:border-purple-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-mono"
                     />
                   </div>
+                </div>
 
-                  {loginError && (
-                    <div className="bg-red-500/10 border border-red-500/30 p-3.5 rounded-xl text-red-400 text-[10px] font-bold flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4 shrink-0" />
-                      <span>{loginError}</span>
-                    </div>
-                  )}
-
-                  <div className="bg-[#120f26]/60 border border-[#2d2159] p-3 rounded-xl text-[9px] text-slate-400 leading-normal font-mono">
-                    <span className="text-yellow-400 font-black">SYSTEM DEFAULTS:</span> User ID is <span className="text-white font-bold">admin</span> / Password is <span className="text-white font-bold">recruit_admin_2026</span>
-                  </div>
-
+                {/* Default Credentials Helper */}
+                <div className="bg-purple-950/20 border border-purple-500/30 p-2.5 rounded-xl text-[10px] text-zinc-300 leading-normal font-mono flex items-center justify-between">
+                  <span>Defaults: <strong className="text-white">admin</strong> / <strong className="text-white">recruit_admin_2026</strong></span>
                   <button
-                    type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider py-4 rounded-2xl shadow-[0_5px_20px_rgba(124,58,237,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                    type="button"
+                    onClick={() => {
+                      setLoginId('admin');
+                      setLoginPassword('recruit_admin_2026');
+                    }}
+                    className="text-purple-400 hover:text-purple-300 text-[10px] font-bold underline cursor-pointer"
                   >
-                    {isLoggingIn ? (
-                      <span className="flex items-center gap-1.5">
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Verifying Credentials...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5" /> Identity Scan Entry
-                      </span>
-                    )}
+                    Auto-Fill
                   </button>
-                </form>
+                </div>
+
+                {/* Submit Unlock Button */}
+                <button
+                  type="submit"
+                  id="admin-login-submit-btn"
+                  disabled={isLoggingIn}
+                  className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-[0_5px_20px_rgba(124,58,237,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 mt-1"
+                >
+                  {isLoggingIn ? (
+                    <span className="flex items-center gap-1.5">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Verifying Credentials...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5" /> Unlock Admin Panel
+                    </span>
+                  )}
+                </button>
+              </form>
+
+              {/* 5. Security Footer */}
+              <div className="mt-4 pt-1 text-[10px] text-zinc-500 leading-relaxed max-w-[320px] font-sans">
+                Arohi AI Admin Console &bull; 256-Bit Encrypted Link &bull; Authorized Personnel Only
               </div>
-            )}
-          </div>
+
+              {/* Quick Link to User Website */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigateTab) {
+                    onNavigateTab('home');
+                  } else {
+                    window.location.href = '/';
+                  }
+                }}
+                className="mt-3 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors font-medium flex items-center justify-center gap-1 cursor-pointer mx-auto py-1 px-3 rounded-lg hover:bg-white/5"
+              >
+                <span>← Return to Main Arohi AI Website</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1475,14 +1696,29 @@ export default function AdminPanel({
             </div>
           </div>
 
-          {/* Time and Logout */}
-          <div className="flex items-center gap-4">
+          {/* Time, View Site, and Logout */}
+          <div className="flex items-center gap-3 flex-wrap justify-end">
             <div className="bg-[#100d28] border border-[#23174b] rounded-2xl px-4 py-2 font-mono text-center shrink-0">
               <span className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Digital Clock (IST)</span>
               <span className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
                 {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
+
+            <button
+              onClick={() => {
+                if (onNavigateTab) {
+                  onNavigateTab('home');
+                } else {
+                  window.location.href = '/';
+                }
+              }}
+              className="bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 text-purple-300 hover:text-white px-3.5 py-2.5 rounded-2xl text-xs font-bold tracking-wider cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+              title="Open User Facing Home Page"
+            >
+              <Globe className="w-4 h-4" />
+              <span>View Website</span>
+            </button>
 
             <button
               onClick={handleLogout}

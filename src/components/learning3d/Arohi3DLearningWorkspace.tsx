@@ -112,10 +112,20 @@ export const Arohi3DLearningWorkspace: React.FC<Arohi3DLearningWorkspaceProps> =
       const setVoiceAndSpeak = () => {
         const voices = window.speechSynthesis.getVoices();
         if (voices && voices.length > 0) {
-          const preferredVoice = voices.find(v => 
-            v.lang.toLowerCase().includes('en') && 
-            /\b(female|woman|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|google)\b/i.test(v.name)
-          ) || voices[0];
+          const strictlyFemaleVoices = voices.filter(v => {
+            const nameLower = v.name.toLowerCase();
+            const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
+                                   /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
+            return !isExplicitMale;
+          });
+          const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
+
+          const preferredVoice = 
+            pool.find(v => v.lang.toLowerCase().includes('en-in') && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+            pool.find(v => v.lang.toLowerCase().includes('en') && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+            pool.find(v => v.lang.toLowerCase().includes('en-in')) ||
+            pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+            pool[0];
           if (preferredVoice) utterance.voice = preferredVoice;
         }
         window.speechSynthesis.speak(utterance);

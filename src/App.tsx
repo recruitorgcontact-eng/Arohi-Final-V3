@@ -85,16 +85,21 @@ export default function App() {
   const { user, userData, updateApplications, updateUserSubscription } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [hasEntered, setHasEntered] = useState(() => {
-    const path = window.location.pathname;
-    const hash = window.location.hash;
-    const search = window.location.search;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/') || hash === '#admin' || search.includes('admin')) {
+      return true;
+    }
     if (hash === '#mocktests' || hash === '#mocktest' || (hash.length > 1 && hash !== '#home')) return true;
     if (search.includes('mocktests') || search.includes('mocktest') || search.includes('test=')) return true;
     const pathParts = path.split('/').filter(Boolean);
     if (pathParts.length > 0) {
-      if (pathParts[0] === 'mocktests' || pathParts[0] === 'mocktest') return true;
-      if (pathParts[0] === 'audience' || pathParts[0] === 'solution' || pathParts[0] === 'solutions' || pathParts[0] === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'].includes(pathParts[0])) {
+      const p0 = pathParts[0];
+      if (p0 === 'admin') return true;
+      if (p0 === 'mocktests' || p0 === 'mocktest') return true;
+      if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'].includes(p0)) {
         return true;
       }
     }
@@ -270,23 +275,28 @@ export default function App() {
   };
 
   const [activeTab, setActiveTab] = useState(() => {
-    const path = window.location.pathname;
-    if (path === '/admin' || window.location.hash === '#admin' || window.location.search.includes('admin')) {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/') || hash === '#admin' || search.includes('admin')) {
       return 'admin';
     }
-    const pathParts = path.split('/').filter(Boolean);
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
     if (pathParts.length > 0) {
-      if (pathParts[0] === 'audience' && pathParts[1]) return 'audience';
-      if (pathParts[0] === 'solution' && pathParts[1]) return 'solutions';
-      if (pathParts[0] === 'solutions' || pathParts[0] === 'directory') return 'solutions';
-      if (pathParts[0] === 'state' || pathParts[0] === 'country') return 'home';
-      if (VALID_LANGUAGES.includes(pathParts[0] as Language)) {
-        const subTab = pathParts[1] || 'home';
+      const p0 = pathParts[0].toLowerCase();
+      if (p0 === 'admin') return 'admin';
+      if (p0 === 'audience' && pathParts[1]) return 'audience';
+      if (p0 === 'solution' && pathParts[1]) return 'solutions';
+      if (p0 === 'solutions' || p0 === 'directory') return 'solutions';
+      if (p0 === 'state' || p0 === 'country') return 'home';
+      if (VALID_LANGUAGES.includes(p0 as Language)) {
+        const subTab = (pathParts[1] || 'home').toLowerCase();
+        if (subTab === 'admin') return 'admin';
         if (subTab === 'solutions' || subTab === 'solution' || subTab === 'directory') return 'solutions';
         if (VALID_TABS.includes(subTab)) return subTab;
         return 'home';
       }
-      if (VALID_TABS.includes(pathParts[0])) return pathParts[0];
+      if (VALID_TABS.includes(p0)) return p0;
     }
     return 'home';
   });
@@ -296,38 +306,55 @@ export default function App() {
   // Dynamic Browser History & URL Router Synchronizer
   useEffect(() => {
     const handlePopState = () => {
+      const rawPath = window.location.pathname.toLowerCase();
+      if (rawPath === '/admin' || rawPath === '/admin/' || rawPath.startsWith('/admin/')) {
+        setActiveTab('admin');
+        setHasEntered(true);
+        return;
+      }
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       if (pathParts.length > 0) {
-        if (pathParts[0] === 'audience' && pathParts[1]) {
+        const p0 = pathParts[0].toLowerCase();
+        if (p0 === 'admin') {
+          setActiveTab('admin');
+          setHasEntered(true);
+          return;
+        }
+        if (p0 === 'audience' && pathParts[1]) {
           setSelectedAudienceSlug(pathParts[1]);
           setActiveTab('audience');
           setHasEntered(true);
           return;
         }
-        if (pathParts[0] === 'solution' && pathParts[1]) {
+        if (p0 === 'solution' && pathParts[1]) {
           setSelectedProblemSlug(pathParts[1]);
           setActiveTab('solutions');
           setHasEntered(true);
           return;
         }
-        if (pathParts[0] === 'solutions' || pathParts[0] === 'directory') {
+        if (p0 === 'solutions' || p0 === 'directory') {
           setActiveTab('solutions');
           setHasEntered(true);
           return;
         }
-        if (pathParts[0] === 'state' && pathParts[1]) {
+        if (p0 === 'state' && pathParts[1]) {
           setSelectedState(pathParts[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
           setActiveTab('home');
           return;
         }
-        if (pathParts[0] === 'country' && pathParts[1]) {
+        if (p0 === 'country' && pathParts[1]) {
           setSelectedCountry(pathParts[1].toUpperCase());
           setActiveTab('home');
           return;
         }
-        if (VALID_LANGUAGES.includes(pathParts[0] as Language)) {
-          setLanguage(pathParts[0] as Language);
-          const subTab = pathParts[1] || 'home';
+        if (VALID_LANGUAGES.includes(p0 as Language)) {
+          setLanguage(p0 as Language);
+          const subTab = (pathParts[1] || 'home').toLowerCase();
+          if (subTab === 'admin') {
+            setActiveTab('admin');
+            setHasEntered(true);
+            return;
+          }
           if (subTab === 'solutions' || subTab === 'solution' || subTab === 'directory') {
             setActiveTab('solutions');
             setHasEntered(true);
@@ -335,13 +362,15 @@ export default function App() {
           }
           if (VALID_TABS.includes(subTab)) {
             setActiveTab(subTab);
+            setHasEntered(true);
           } else {
             setActiveTab('home');
           }
           return;
         }
-        if (VALID_TABS.includes(pathParts[0])) {
-          setActiveTab(pathParts[0]);
+        if (VALID_TABS.includes(p0)) {
+          setActiveTab(p0);
+          setHasEntered(true);
           return;
         }
       }
@@ -349,7 +378,12 @@ export default function App() {
     };
 
     const handleHashAndCustomNav = () => {
-      const hash = window.location.hash.replace('#', '').trim();
+      const hash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (hash === 'admin') {
+        setActiveTab('admin');
+        setHasEntered(true);
+        return;
+      }
       if (hash && (VALID_TABS.includes(hash) || hash === 'mocktests' || hash === 'mocktest')) {
         setActiveTab(hash === 'mocktest' ? 'mocktests' : hash);
         setHasEntered(true);
@@ -358,6 +392,11 @@ export default function App() {
 
     const handleCustomNavEvent = (e: any) => {
       const targetTab = e.detail;
+      if (targetTab === 'admin') {
+        setActiveTab('admin');
+        setHasEntered(true);
+        return;
+      }
       if (targetTab && (VALID_TABS.includes(targetTab) || targetTab === 'mocktests' || targetTab === 'mocktest')) {
         setActiveTab(targetTab === 'mocktest' ? 'mocktests' : targetTab);
         setHasEntered(true);
@@ -377,11 +416,13 @@ export default function App() {
   useEffect(() => {
     const currentPath = window.location.pathname;
     let targetPath = activeTab === 'home' ? '/' : `/${activeTab}`;
-    if (activeTab === 'audience' && selectedAudienceSlug) {
+    if (activeTab === 'admin') {
+      targetPath = '/admin';
+    } else if (activeTab === 'audience' && selectedAudienceSlug) {
       targetPath = `/audience/${selectedAudienceSlug}`;
-    } else if (selectedState) {
+    } else if (selectedState && activeTab === 'home') {
       targetPath = `/state/${selectedState.toLowerCase().replace(/\s+/g, '-')}`;
-    } else if (language !== 'en') {
+    } else if (language !== 'en' && activeTab !== 'admin') {
       targetPath = `/${language}${activeTab === 'home' ? '' : `/${activeTab}`}`;
     }
     if (currentPath !== targetPath && currentPath !== `/index.html`) {
@@ -3103,96 +3144,29 @@ export default function App() {
     );
   };
 
-  if (!hasEntered) {
+  // Standalone Direct Admin Route Portal Render
+  if (activeTab === 'admin') {
     return (
-      <div className={`relative w-full min-h-screen overflow-x-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#070814] text-slate-100 dark' : 'bg-[#f8f9fe] text-slate-900 light'}`}>
-        <BackgroundScrollEffects />
-        <WelcomeLanding 
-          language={language}
-          onLanguageChange={changeLanguage}
-          onEnter={() => {
-            setHasEntered(true);
-          }} 
-          setActiveTab={(tab) => {
+      <div id="arohi-admin-portal-root" className="min-h-screen w-full bg-[#050508] text-white">
+        <SEOHead 
+          activeTab="admin" 
+          selectedState="" 
+          selectedAudienceSlug="" 
+          selectedProblemSlug=""
+          currentLanguage={language} 
+        />
+        <AdminPanel
+          postings={postings}
+          onAddPosting={handleAddPosting}
+          onEditPosting={handleEditPosting}
+          onDeletePosting={handleDeletePosting}
+          applications={applications}
+          onUpdateAppStatus={handleUpdateAppStatus}
+          onNavigateTab={(tab) => {
             setActiveTab(tab);
             setHasEntered(true);
           }}
-          setIsChatOpen={setIsChatOpen}
-          onQuickChat={(prompt) => {
-            setChatInitialPrompt(prompt);
-            setIsChatOpen(true);
-            setIsChatMinimized(false);
-            setHasEntered(true);
-            setActiveTab('arohi');
-          }}
-          onShare={() => handleOpenShare()}
-          isDarkMode={isDarkMode}
-          onToggleTheme={toggleTheme}
-          onOpenAuth={() => setIsAuthModalOpen(true)}
-          hasActiveSubscription={hasActiveSubscription}
-          isTrialActive={isTrialActive}
-          remainingHours={remainingHours}
-          remainingMinutes={remainingMinutes}
-          remainingSeconds={remainingSeconds}
-          onUpgradeClick={() => {
-            handleInitiateUpgrade(0, true);
-          }}
-          subscriptionEndDate={subscriptionEndDate}
-          subscriptionPlanName={activeSubscriptionPlanName}
-          onRenewSubscription={() => {
-            handleInitiateUpgrade(0, true);
-          }}
-          onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
-          currency={currency}
-          onOpen3DLearning={(topicId) => {
-            if (topicId) setGlobal3DTopic(topicId);
-            setIsGlobal3DLearningOpen(true);
-          }}
         />
-
-        {/* Floating Chat Overlay Container */}
-        {isChatOpen && !isChatMinimized && (
-          <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.25)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
-            isDarkMode ? 'bg-[#090714] border-[#a78bfa]/30' : 'bg-white border-purple-200'
-          }`}>
-            <ArohiChat 
-              initialPrompt={chatInitialPrompt}
-              language={language}
-              isDarkMode={isDarkMode}
-              onNavigateTab={(tab) => {
-                setActiveTab(tab);
-                setHasEntered(true);
-                setIsChatOpen(false);
-              }}
-              onMinimize={() => setIsChatMinimized(true)}
-              onClose={() => setIsChatOpen(false)}
-            />
-          </div>
-        )}
-        {/* Persistent Global Bottom Navigation Bar */}
-        {(!isChatOpen || isChatMinimized) && (
-          <BottomNavBar
-            activeTab={activeTab}
-            onTabChange={(tab) => {
-              setActiveTab(tab);
-              setSelectedPosting(null);
-              setHasEntered(true);
-            }}
-            language={language}
-            isDarkMode={isDarkMode}
-            setIsChatOpen={setIsChatOpen}
-            isChatOpen={isChatOpen}
-            isChatMinimized={isChatMinimized}
-            setIsChatMinimized={setIsChatMinimized}
-            onQuickChat={(prompt) => {
-              setChatInitialPrompt(prompt);
-              setIsChatOpen(true);
-              setIsChatMinimized(false);
-              setHasEntered(true);
-              setActiveTab('arohi');
-            }}
-          />
-        )}
       </div>
     );
   }

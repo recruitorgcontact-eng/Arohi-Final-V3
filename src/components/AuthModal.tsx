@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { 
   X, 
@@ -6,23 +7,31 @@ import {
   Lock, 
   User, 
   Sparkles, 
-  ShieldCheck, 
   Loader2, 
   AlertCircle,
   CheckCircle2,
   Phone,
   Smartphone,
   ChevronLeft,
+  ChevronRight,
   Fingerprint,
   Check,
   Tag,
-  RefreshCw
+  RefreshCw,
+  GraduationCap,
+  Rocket,
+  Briefcase,
+  Users,
+  TrendingUp,
+  Target,
+  Bot
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { isBiometricSupported } from '../lib/webauthn';
 import { PRICING_TIERS } from '../data/pricingData';
 import { LottieSuccessAnimation } from './LottieSuccess';
+import ArohiAvatar from './ArohiAvatar';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +39,15 @@ interface AuthModalProps {
   initialMode?: 'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding';
   upgradePrompt?: string | null;
 }
+
+const ORBIT_NODES = [
+  { id: 'learn', label: 'Learn', icon: GraduationCap, color: '#c084fc', border: 'rgba(192, 132, 252, 0.6)', glow: 'rgba(192, 132, 252, 0.4)' },
+  { id: 'build', label: 'Build', icon: Rocket, color: '#fbbf24', border: 'rgba(251, 191, 36, 0.6)', glow: 'rgba(251, 191, 36, 0.4)' },
+  { id: 'work', label: 'Work', icon: Briefcase, color: '#22d3ee', border: 'rgba(34, 211, 238, 0.6)', glow: 'rgba(34, 211, 238, 0.4)' },
+  { id: 'connect', label: 'Connect', icon: Users, color: '#60a5fa', border: 'rgba(96, 165, 250, 0.6)', glow: 'rgba(96, 165, 250, 0.4)' },
+  { id: 'grow', label: 'Grow', icon: TrendingUp, color: '#f472b6', border: 'rgba(244, 114, 182, 0.6)', glow: 'rgba(244, 114, 182, 0.4)' },
+  { id: 'achieve', label: 'Achieve', icon: Target, color: '#a855f7', border: 'rgba(168, 85, 247, 0.6)', glow: 'rgba(168, 85, 247, 0.4)' }
+];
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upgradePrompt }: AuthModalProps) {
   const { 
@@ -44,13 +62,35 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     updateUserProfile
   } = useAuth();
 
-  const [activeMode, setActiveMode] = useState<'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding'>(initialMode);
+  // 'portal' = the luxury hero landing screen matching the reference design
+  // 'email_form' = detailed email / password form (toggle signin/signup)
+  // 'phone' = phone OTP verification
+  // 'forgot' = forgot password
+  // 'onboarding' = mandatory profile setup
+  const [viewState, setViewState] = useState<'portal' | 'email_form' | 'phone' | 'forgot' | 'onboarding'>(
+    initialMode === 'phone' ? 'phone' : initialMode === 'onboarding' ? 'onboarding' : 'portal'
+  );
+
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(
+    initialMode === 'signup' ? 'signup' : 'signin'
+  );
 
   useEffect(() => {
-    if (isOpen && initialMode) {
-      setActiveMode(initialMode);
+    if (isOpen) {
+      if (initialMode === 'phone') {
+        setViewState('phone');
+      } else if (initialMode === 'onboarding') {
+        setViewState('onboarding');
+      } else if (initialMode === 'signup') {
+        setActiveTab('signup');
+        setViewState('portal');
+      } else {
+        setActiveTab('signin');
+        setViewState('portal');
+      }
     }
   }, [isOpen, initialMode]);
+
   const [role, setRole] = useState<'candidate' | 'recruiter'>('candidate');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -86,7 +126,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
           localStorage.setItem('arohi_subscriptions', JSON.stringify({ path1: true }));
         } catch (e) {}
 
-        setAuthCouponSuccess(`🎉 Coupon "${cleanCode}" applied! Starter Plan (₹399/mo) activated free.`);
+        setAuthCouponSuccess(`🎉 Coupon "${cleanCode}" applied! Starter Plan (₹399/mo) activated.`);
         setAuthCouponInput('');
       } else {
         setAuthCouponError('Invalid coupon code. Please check and try again.');
@@ -94,19 +134,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     }, 400);
   };
 
-  const checkProfileCompleteness = (uData: any) => {
-    if (!uData) return true; // Default to incomplete if no user data
-    const phone = uData.profile?.phone || '';
-    const nameVal = uData.profile?.name || uData.displayName || '';
-    
-    const isPhoneDefault = phone === '+91 98765 43210' || phone === '9876543210' || phone === '' || !phone;
-    const isNameDefault = nameVal === 'Honored Guest' || nameVal.trim() === '' || !nameVal;
-    
-    return isPhoneDefault || isNameDefault;
-  };
-
   useEffect(() => {
-    if (activeMode === 'onboarding' && userData) {
+    if (viewState === 'onboarding' && userData) {
       if (!onboardName) {
         if (userData.profile?.name && userData.profile.name !== 'Honored Guest') {
           setOnboardName(userData.profile.name);
@@ -123,13 +152,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         }
       }
     }
-  }, [activeMode, userData, onboardName, onboardPhone]);
+  }, [viewState, userData, onboardName, onboardPhone]);
 
   // Biometric Auth Support States
   const [isBioSupported, setIsBioSupported] = useState(false);
   const [hasEnrolledKey, setHasEnrolledKey] = useState(false);
 
-  // Check biometric support when the modal is active
   useEffect(() => {
     async function checkSupport() {
       const supported = await isBiometricSupported();
@@ -140,7 +168,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     }
   }, [isOpen]);
 
-  // Check if a passkey has been registered for the input email address
   useEffect(() => {
     if (email) {
       const enrolled = !!localStorage.getItem(`recruit_biometric_${email.trim().toLowerCase()}`);
@@ -184,7 +211,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Clear Recaptcha Verifier on unmount or mode change
   useEffect(() => {
     return () => {
       if (recaptchaVerifier) {
@@ -205,7 +231,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     setIsLoading(true);
     try {
       await signInWithGoogle(role);
-      setSuccess(`Successfully authenticated! Welcome back.`);
+      setSuccess(`Successfully authenticated! Welcome to Arohi AI.`);
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -220,12 +246,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
       if (isPopupClosed) {
         console.info('Google Sign-In pop-up was closed by user.');
-        setError('Google Sign-In was cancelled because the pop-up was closed. If pop-ups are blocked in the preview, click "Open in New Tab" at the top-right to sign in easily!');
+        setError('Google Sign-In was cancelled. If pop-ups are blocked, click "Open in New Tab" at the top-right to sign in easily!');
       } else {
         console.error('Google Sign-In error:', err);
         let displayMsg = errMsg || 'An error occurred during Google sign-in.';
         if (errCode === 'auth/popup-blocked' || errMsg.includes('popup-blocked')) {
-          displayMsg = 'Google Sign-In pop-up was blocked by your browser. Please allow pop-ups, or click "Open in New Tab" at the top-right.';
+          displayMsg = 'Google Sign-In pop-up was blocked by your browser. Please allow pop-ups, or click "Open in New Tab" at top-right.';
         }
         setError(displayMsg);
       }
@@ -240,7 +266,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     setIsLoading(true);
     try {
       await signInWithApple(role);
-      setSuccess(`Successfully authenticated! Welcome back.`);
+      setSuccess(`Successfully authenticated! Welcome to Arohi AI.`);
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -255,12 +281,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
       if (isPopupClosed) {
         console.info('Apple Sign-In pop-up was closed by user.');
-        setError('Apple Sign-In was cancelled because the pop-up was closed. If pop-ups are blocked in the preview, click "Open in New Tab" at the top-right to sign in easily!');
+        setError('Apple Sign-In was cancelled. If pop-ups are blocked, click "Open in New Tab" at top-right.');
+      } else if (errCode === 'auth/operation-not-allowed' || errMsg.includes('operation-not-allowed') || errMsg.includes('not enabled')) {
+        console.warn('Apple Sign-In is not enabled on this Firebase project.');
+        setError('Apple Sign-In is not enabled on this Firebase project yet. Please use "Continue with Google" or "Continue with Email" to sign in instantly!');
       } else {
         console.error('Apple Sign-In error:', err);
         let displayMsg = errMsg || 'An error occurred during Apple sign-in.';
         if (errCode === 'auth/popup-blocked' || errMsg.includes('popup-blocked')) {
-          displayMsg = 'Apple Sign-In pop-up was blocked by your browser. Please allow pop-ups, or click "Open in New Tab" at the top-right.';
+          displayMsg = 'Apple Sign-In pop-up was blocked. Please allow pop-ups or use "Open in New Tab".';
         }
         setError(displayMsg);
       }
@@ -289,7 +318,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         }
       }
 
-      // Initialize Recaptcha Verifier
       let verifier = recaptchaVerifier;
       if (!verifier) {
         verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
@@ -309,9 +337,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
       console.error(err);
       let errMsg = err.message || 'Failed to send verification code.';
       if (err.code === 'auth/invalid-phone-number') {
-        errMsg = 'Invalid phone number format. Please check the number and country code.';
+        errMsg = 'Invalid phone number format. Please check the number.';
       } else if (err.code === 'auth/too-many-requests') {
-        errMsg = 'Too many requests. Please try again later or add billing info to Firebase for higher SMS limits.';
+        errMsg = 'Too many requests. Please try again later.';
       }
       setError(errMsg);
       if (recaptchaVerifier) {
@@ -363,7 +391,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     setIsLoading(true);
 
     try {
-      if (activeMode === 'signin') {
+      if (activeTab === 'signin') {
         if (!email || !password) {
           throw new Error('Please fill in all fields.');
         }
@@ -372,7 +400,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         setTimeout(() => {
           onClose();
         }, 1000);
-      } else if (activeMode === 'signup') {
+      } else if (activeTab === 'signup') {
         if (!email || !password || !name) {
           throw new Error('Please fill in all fields.');
         }
@@ -400,19 +428,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         setTimeout(() => {
           onClose();
         }, 1500);
-      } else {
-        if (!email) {
-          throw new Error('Please enter your email address.');
-        }
-        await resetPassword(email);
-        setSuccess('Password reset link sent to your email.');
-        setActiveMode('signin');
       }
     } catch (err: any) {
       console.error(err);
       let errMsg = err.message || 'An unexpected error occurred.';
       if (err.code === 'auth/operation-not-allowed' || errMsg.includes('operation-not-allowed')) {
-        errMsg = 'Email/Password sign-in is not enabled in your Firebase project yet. Please go to your Firebase Console -> Authentication -> Sign-in method, and enable "Email/Password".';
+        errMsg = 'Email/Password sign-in is not enabled yet in Firebase.';
       } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         errMsg = 'Invalid email or password.';
       } else if (err.code === 'auth/email-already-in-use') {
@@ -423,6 +444,27 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         errMsg = 'The password is too weak. Must be at least 6 characters.';
       }
       setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsLoading(true);
+    try {
+      if (!email) {
+        throw new Error('Please enter your email address.');
+      }
+      await resetPassword(email);
+      setSuccess('Password reset link sent to your email.');
+      setTimeout(() => {
+        setViewState('email_form');
+      }, 1800);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset link.');
     } finally {
       setIsLoading(false);
     }
@@ -453,7 +495,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
       setSuccess('Mandatory details updated successfully! Welcome back.');
       setTimeout(() => {
         onClose();
-        setActiveMode('signin');
+        setViewState('portal');
       }, 1500);
     } catch (err: any) {
       console.error(err);
@@ -464,345 +506,364 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-3 sm:p-4 bg-[#04020b]/85 backdrop-blur-md animate-fade-in overflow-y-auto max-w-[100vw] overflow-x-hidden box-border">
-      
-      {/* Central Card Modal */}
-      <div className="relative w-full max-w-md bg-gradient-to-b from-[#140e34] to-[#0a061b] border-2 border-[#3b218f] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 shadow-[0_20px_50px_rgba(124,58,237,0.45)] my-auto mx-auto overflow-hidden box-border max-w-[calc(100vw-1.5rem)]">
-        
-        {/* Invisible Recaptcha Anchor */}
-        <div id="recaptcha-container"></div>
+    <div 
+      id="arohi-luxury-auth-modal" 
+      className="fixed inset-0 z-[250] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-xl animate-fade-in overflow-y-auto max-w-[100vw] overflow-x-hidden box-border"
+    >
+      {/* Invisible Recaptcha Anchor */}
+      <div id="recaptcha-container"></div>
 
-        {/* Decorative background laser glow */}
-        <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      {/* Main Luxury Cosmic Card */}
+      <div 
+        className="relative w-full max-w-[420px] bg-[#09090d] border border-white/15 rounded-[2rem] p-6 sm:p-7 shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_40px_rgba(255,255,255,0.03)] my-auto mx-auto overflow-hidden text-white"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 0%, #161724 0%, #090a10 65%, #050508 100%)'
+        }}
+      >
+        {/* Sleek ambient glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-40 bg-gradient-to-b from-sky-500/10 via-indigo-500/10 to-transparent rounded-full blur-3xl" />
+        </div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-300 hover:text-white bg-slate-900/80 hover:bg-[#1a1140] border border-slate-700 hover:border-purple-500/50 cursor-pointer transition-all active:scale-95 z-10"
+          id="close-arohi-auth-modal-btn"
+          aria-label="Close modal"
+          className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition-all active:scale-95 z-20 backdrop-blur-md"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* Logo and Headings */}
-        <div className="text-center space-y-2 mb-5 pt-1">
-          <div className="inline-flex p-3 bg-gradient-to-tr from-[#7c3aed] to-[#a855f7] rounded-2xl border border-purple-400/40 shadow-[0_0_15px_rgba(124,58,237,0.4)]">
-            <ShieldCheck className="w-6 h-6 text-white" />
+        {/* Global Alert Notification */}
+        {error && (
+          <div className="relative z-10 mb-3 p-3 bg-red-500/15 border border-red-500/40 rounded-xl text-red-200 text-xs flex items-start gap-2 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <span className="font-medium leading-tight flex-1">{error}</span>
           </div>
-          <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight uppercase">
-            Arohi AI Auth Portal
-          </h2>
-          <p className="text-xs text-slate-300 max-w-[320px] mx-auto leading-normal">
-            Sign in securely to save your progress, bookmark courses, track job application statuses, and unlock all interactive dashboards.
-          </p>
+        )}
+        {success && (
+          <div className="relative z-10 mb-3 p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-200 text-xs flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-semibold leading-tight">{success}</span>
+          </div>
+        )}
 
-          {upgradePrompt && (
-            <div className="mt-3 p-3 bg-gradient-to-r from-amber-500/20 via-purple-900/40 to-fuchsia-900/30 border border-amber-400/50 rounded-2xl text-left flex items-start gap-2.5 shadow-lg animate-in fade-in zoom-in-95 duration-200">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
-              <p className="text-[11px] sm:text-xs font-bold text-amber-200 leading-snug">
-                {upgradePrompt}
+        {/* Upgrade / Plan Notice if present */}
+        {upgradePrompt && viewState === 'portal' && (
+          <div className="relative z-10 mb-3 p-2.5 bg-gradient-to-r from-amber-500/20 via-purple-900/40 to-fuchsia-900/30 border border-amber-400/50 rounded-xl flex items-center gap-2 shadow-lg">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
+            <p className="text-[11px] font-bold text-amber-200 leading-tight">
+              {upgradePrompt}
+            </p>
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* VIEW 1: HERO LUXURY PORTAL (Exact Match to User Image) */}
+        {/* ============================================================ */}
+        {viewState === 'portal' && (
+          <div className="relative z-10 flex flex-col items-center text-center">
+            
+            {/* 1. Sleek Apple/Nike Tier Industrial Brand Title */}
+            <div className="relative pt-3 pb-2 flex flex-col items-center">
+              
+              {/* Monolithic Precision AROHI AI Logotype */}
+              <div className="relative inline-block select-none px-2 text-center">
+                {/* Subtle back ambient glow */}
+                <span 
+                  className="absolute inset-0 text-3xl sm:text-4xl font-black tracking-tight uppercase blur-lg opacity-25 select-none pointer-events-none text-center bg-gradient-to-r from-white via-sky-200 to-indigo-300 bg-clip-text text-transparent"
+                  aria-hidden="true"
+                >
+                  AROHI AI
+                </span>
+
+                <h1 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] uppercase relative z-10 text-center flex items-center justify-center gap-1.5 font-sans">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 drop-shadow-[0_2px_12px_rgba(255,255,255,0.18)]">
+                    AROHI
+                  </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-fuchsia-400 drop-shadow-[0_0_16px_rgba(99,102,241,0.4)]">
+                    AI
+                  </span>
+                </h1>
+              </div>
+
+              {/* Minimalist Apple/Nike Precision Slogan */}
+              <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.24em] text-zinc-400 uppercase mt-1.5 flex items-center justify-center gap-1.5 font-sans">
+                <span className="text-zinc-300">One AI.</span>
+                <span className="text-zinc-400">Infinite Opportunities.</span>
               </p>
             </div>
-          )}
-        </div>
 
-        {/* Mode-specific content */}
-        {activeMode === 'onboarding' ? (
-          /* MANDATORY PROFILE ONBOARDING */
-          <div className="space-y-4">
-            <div className="p-4 bg-[#08051a] border border-[#231a4c] rounded-2xl mb-4 text-center">
-              <Sparkles className="w-8 h-8 text-yellow-400 mx-auto mb-2 animate-bounce" />
-              <h3 className="text-sm font-black text-white mb-1 uppercase tracking-wider">
-                Complete Your Profile Setup
-              </h3>
-              <p className="text-xs text-slate-400 leading-normal">
-                Name and Mobile number are mandatory to access the Arohi AI platform dashboards, courses, and job boards.
-              </p>
-            </div>
+            {/* 2. Centerpiece: The Animated Orbital Constellation with Live Arohi AI Core */}
+            <div className="relative w-[280px] h-[270px] sm:w-[310px] sm:h-[295px] my-2 flex items-center justify-center">
+              
+              {/* Outer Orbital Orbit Trajectory Ring */}
+              <div className="absolute inset-2 sm:inset-3 rounded-full border border-violet-500/20 pointer-events-none" />
+              
+              {/* Rotating Constellation Ring with Node Dots */}
+              <motion.div 
+                className="absolute inset-2 sm:inset-3 rounded-full border border-dashed border-amber-400/25 pointer-events-none"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 45, ease: 'linear' }}
+              />
 
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-200 text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span className="font-semibold leading-relaxed">{error}</span>
-              </div>
-            )}
+              {/* Glowing Particle Halo */}
+              <div className="absolute w-44 h-44 rounded-full bg-gradient-to-tr from-amber-500/20 via-purple-600/30 to-cyan-400/20 blur-xl animate-pulse" />
 
-            {success && (
-              <div className="p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-emerald-200 text-xs flex flex-col items-center text-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/10">
-                <LottieSuccessAnimation size={70} loop={false} />
-                <span className="font-bold text-emerald-300 text-xs sm:text-sm leading-relaxed">{success}</span>
-              </div>
-            )}
+              {/* ---------------------------------------------------- */}
+              {/* CENTER LIVE AROHI CORE & ASK AROHI BUBBLE */}
+              {/* ---------------------------------------------------- */}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                
+                {/* Floating "ASK AROHI! ✨" Live Badge */}
+                <div className="absolute -top-3.5 z-30 bg-gradient-to-r from-[#17103a] via-[#4c1d95] to-[#6327d4] text-white px-2.5 py-0.5 rounded-full border border-[#7c3aed]/80 text-[8px] sm:text-[9px] font-black tracking-wider uppercase shadow-[0_4px_18px_rgba(124,58,237,0.7)] backdrop-blur-md flex items-center gap-1 whitespace-nowrap select-none pointer-events-none animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0" />
+                  <span>ASK AROHI! ✨</span>
+                </div>
 
-            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={onboardName}
-                    onChange={(e) => setOnboardName(e?.target?.value ?? "")}
-                    className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
-                    required
+                {/* Main Glowing Avatar Core Container */}
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full p-0 flex items-center justify-center">
+                  
+                  {/* Glowing Concentric Outer Rings */}
+                  <div className="absolute inset-0 rounded-full border-2 border-amber-400/60 shadow-[0_0_25px_rgba(251,191,36,0.5)] animate-pulse" />
+                  <motion.div 
+                    className="absolute -inset-1.5 rounded-full border border-cyan-400/50"
+                    animate={{ rotate: -360 }}
+                    transition={{ repeat: Infinity, duration: 25, ease: 'linear' }}
                   />
+                  <div className="absolute inset-1 rounded-full border-2 border-purple-500/70 shadow-[inset_0_0_20px_rgba(168,85,247,0.8)]" />
+                  
+                  {/* Pinging pulse aura */}
+                  <span className="absolute inset-0 rounded-full border-2 border-purple-400/50 animate-ping opacity-50 pointer-events-none" />
+
+                  {/* Core Arohi Avatar */}
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-[#090714] shadow-[0_0_25px_rgba(124,58,237,0.8)] border border-purple-400/60 flex items-center justify-center">
+                    <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 hover:scale-120" />
+                  </div>
+
+                  {/* Live Active Status Indicator Dot */}
+                  <span className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#00e676] rounded-full border-2 border-[#090714] z-20 shadow-[0_0_10px_#00e676]" />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
-                <div className="relative flex">
-                  <div className="flex items-center justify-center bg-[#070414] border border-[#231a4c] border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
-                    +91
-                  </div>
-                  <div className="relative flex-1">
-                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="tel"
-                      placeholder="9876543210"
-                      value={onboardPhone}
-                      onChange={(e) => setOnboardPhone(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 10))}
-                      className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
-                      required
-                      pattern="[0-9]{10}"
-                    />
-                  </div>
+              {/* ---------------------------------------------------- */}
+              {/* 6 SURROUNDING ORBITING CAPABILITY SPHERES */}
+              {/* ---------------------------------------------------- */}
+              {/* Top-Left: Learn */}
+              <div className="absolute top-2 left-4 sm:left-6 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #241147 30%, #0f0521 100%)',
+                    border: '1.5px solid rgba(192, 132, 252, 0.7)',
+                    boxShadow: '0 0 15px rgba(192, 132, 252, 0.4)'
+                  }}
+                >
+                  <GraduationCap className="w-5 h-5 text-purple-300" />
                 </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Learn</span>
               </div>
 
+              {/* Top-Right: Build */}
+              <div className="absolute top-2 right-4 sm:right-6 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #3d2407 30%, #150901 100%)',
+                    border: '1.5px solid rgba(251, 191, 36, 0.7)',
+                    boxShadow: '0 0 15px rgba(251, 191, 36, 0.4)'
+                  }}
+                >
+                  <Rocket className="w-5 h-5 text-amber-300" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Build</span>
+              </div>
+
+              {/* Middle-Left: Work */}
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 sm:left-1 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #08283a 30%, #031019 100%)',
+                    border: '1.5px solid rgba(34, 211, 238, 0.7)',
+                    boxShadow: '0 0 15px rgba(34, 211, 238, 0.4)'
+                  }}
+                >
+                  <Briefcase className="w-5 h-5 text-cyan-300" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Work</span>
+              </div>
+
+              {/* Middle-Right: Connect */}
+              <div className="absolute top-1/2 -translate-y-1/2 right-0 sm:right-1 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #0e1e47 30%, #040a1c 100%)',
+                    border: '1.5px solid rgba(96, 165, 250, 0.7)',
+                    boxShadow: '0 0 15px rgba(96, 165, 250, 0.4)'
+                  }}
+                >
+                  <Users className="w-5 h-5 text-blue-300" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Connect</span>
+              </div>
+
+              {/* Bottom-Left: Grow */}
+              <div className="absolute bottom-1 left-5 sm:left-7 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #380d2b 30%, #150310 100%)',
+                    border: '1.5px solid rgba(244, 114, 182, 0.7)',
+                    boxShadow: '0 0 15px rgba(244, 114, 182, 0.4)'
+                  }}
+                >
+                  <TrendingUp className="w-5 h-5 text-pink-300" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Grow</span>
+              </div>
+
+              {/* Bottom-Right: Achieve */}
+              <div className="absolute bottom-1 right-5 sm:right-7 flex flex-col items-center gap-1 group cursor-default">
+                <div 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+                  style={{
+                    background: 'radial-gradient(circle, #2d0b47 30%, #11031d 100%)',
+                    border: '1.5px solid rgba(168, 85, 247, 0.7)',
+                    boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)'
+                  }}
+                >
+                  <Target className="w-5 h-5 text-purple-300" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200">Achieve</span>
+              </div>
+            </div>
+
+            {/* 3. Sleek Purpose Statement */}
+            <div className="my-2 space-y-0.5 font-sans">
+              <p className="text-[11px] sm:text-xs text-zinc-400 font-medium tracking-wide">
+                Engineered for <span className="text-zinc-200 font-semibold">Learning</span>, <span className="text-zinc-200 font-semibold">Work</span>, <span className="text-zinc-200 font-semibold">Business</span> &amp; <span className="text-zinc-200 font-semibold">Life</span>
+              </p>
+            </div>
+
+            {/* 4. Industrial Precision Authentication Buttons Stack */}
+            <div className="w-full space-y-2.5 mt-4">
+              
+              {/* Google Button */}
               <button
-                type="submit"
+                type="button"
+                id="luxury-google-auth-btn"
+                onClick={handleGoogleSignIn}
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full relative group overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <span>Save &amp; Enter Dashboard</span>
-                )}
+                <div className="flex items-center justify-between px-5 py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 hover:border-white/30 transition-all shadow-sm">
+                  <div className="flex items-center gap-3.5">
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.57h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" fill="#4285F4" />
+                      <path d="M12,20.62c2.43,0 4.47,-0.8 5.96,-2.18l-3.3,-2.57c-0.9,0.6 -2.08,0.97 -3.3,0.97 -2.34,0 -4.33,-1.58 -5.04,-3.7H2.9v2.66C4.38,18.73 7.97,20.62 12,20.62z" fill="#34A853" />
+                      <path d="M6.96,13.14a5.2,5.2 0 0 1 0,-3.28V7.2H2.9a8.96,8.96 0 0 0 0,7.9l4.06,-3.26z" fill="#FBBC05" />
+                      <path d="M12,5.38c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,2.73 14.43,1.9 12,1.9 7.97,1.9 4.38,3.79 2.9,6.54L6.96,9.8C7.67,7.68 9.66,5.38 12,5.38z" fill="#EA4335" />
+                    </svg>
+                    <span className="text-xs sm:text-sm font-semibold text-white tracking-tight">Continue with Google</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                </div>
               </button>
-            </form>
-          </div>
-        ) : activeMode === 'phone' ? (
-          /* PHONE SIGN-IN FLOW */
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
+
+              {/* Email / Password Button */}
               <button
+                type="button"
+                id="luxury-email-auth-btn"
+                onClick={() => setViewState('email_form')}
+                className="w-full relative group overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between px-5 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all shadow-sm">
+                  <div className="flex items-center gap-3.5">
+                    <Mail className="w-5 h-5 text-zinc-300 shrink-0" />
+                    <span className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-white tracking-tight">Continue with Email</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                </div>
+              </button>
+            </div>
+
+            {/* 5. Legal Footer */}
+            <div className="mt-5 pt-1 text-[10px] text-zinc-400 leading-relaxed max-w-[320px] font-sans">
+              By continuing you agree to our{' '}
+              <span className="text-zinc-300 hover:text-white underline underline-offset-2 cursor-pointer">Terms of Service</span> and{' '}
+              <span className="text-zinc-300 hover:text-white underline underline-offset-2 cursor-pointer">Privacy Policy</span>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* VIEW 2: EMAIL / PASSWORD DETAILED FORM (SIGN IN & SIGN UP) */}
+        {/* ============================================================ */}
+        {viewState === 'email_form' && (
+          <div className="relative z-10 space-y-4">
+            
+            {/* Top Back Navigation */}
+            <div className="flex items-center justify-between pb-1 border-b border-violet-900/40">
+              <button
+                type="button"
                 onClick={() => {
-                  setActiveMode('signin');
-                  setOtpSent(false);
-                  setPhoneNumber('');
-                  setOtp('');
+                  setViewState('portal');
                   setError(null);
                   setSuccess(null);
                 }}
-                className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition-all"
+                className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Back to Email Sign In</span>
+                <ChevronLeft className="w-4 h-4 text-amber-300" />
+                <span>Back to Portal</span>
+              </button>
+
+              <span className="text-xs font-mono font-bold text-amber-300">
+                {activeTab === 'signin' ? 'Email Sign In' : 'New Account'}
+              </span>
+            </div>
+
+            {/* Signin vs Signup Tabs */}
+            <div className="flex bg-[#0a0518] p-1 rounded-xl border border-purple-500/30">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signin');
+                  setError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  activeTab === 'signin'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                SIGN IN
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signup');
+                  setError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  activeTab === 'signup'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                CREATE ACCOUNT
               </button>
             </div>
 
-            <div className="p-4 bg-[#08051a] border border-[#231a4c] rounded-2xl mb-4 text-center">
-              <Smartphone className="w-8 h-8 text-purple-400 mx-auto mb-2 animate-pulse" />
-              <h3 className="text-sm font-bold text-white mb-1">
-                {otpSent ? 'Enter 6-Digit OTP' : 'OTP Verification'}
-              </h3>
-              <p className="text-xs text-slate-400 leading-normal">
-                {otpSent 
-                  ? `Please enter the verification code sent to ${phoneNumber}.` 
-                  : 'Fast, secure phone validation via secure SMS authentication.'}
-              </p>
-            </div>
-
-            {/* OTP Form */}
-            {!otpSent ? (
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Phone Number</label>
-                  <div className="relative flex">
-                    <div className="flex items-center justify-center bg-[#070414] border border-[#231a4c] border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
-                      +91
-                    </div>
-                    <div className="relative flex-1">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                      <input
-                        type="tel"
-                        placeholder="9876543210"
-                        value={phoneNumber.replace(/^\+91/, '')}
-                        onChange={(e) => setPhoneNumber(e?.target?.value ?? "")}
-                        className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
-                        required
-                        pattern="[0-9]{10}"
-                      />
-                    </div>
-                  </div>
-                  <span className="text-[9px] text-slate-500 block">Enter your 10-digit mobile number. Country code +91 will be added automatically.</span>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Sending SMS...</span>
-                    </>
-                  ) : (
-                    <span>Send Verification Code</span>
-                  )}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Verification Code (OTP)</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="text"
-                      placeholder="123456"
-                      value={otp}
-                      onChange={(e) => setOtp(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 6))}
-                      className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 tracking-[0.5em] text-center focus:outline-none focus:border-purple-500 transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying Code...</span>
-                    </>
-                  ) : (
-                    <span>Verify & Sign In</span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtp('');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className="w-full py-2 text-center text-xs text-purple-400 hover:text-purple-300 font-bold transition-all cursor-pointer"
-                >
-                  Change Phone Number
-                </button>
-              </form>
-            )}
-          </div>
-        ) : (
-          /* EMAIL/PASSWORD SIGN IN OR SIGN UP FLOW */
-          <>
-            {/* Tab Selection */}
-            {activeMode !== 'forgot' && (
-              <div className="flex bg-[#070414] p-1 rounded-xl border border-[#231a4c] mb-6">
-                <button
-                  onClick={() => {
-                    setActiveMode('signin');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeMode === 'signin' 
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow' 
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  SIGN IN
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveMode('signup');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeMode === 'signup' 
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow' 
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  CREATE ACCOUNT
-                </button>
-              </div>
-            )}
-
-            {/* Error/Success alerts */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-200 text-xs space-y-2">
-                <div className="flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span className="font-semibold leading-relaxed flex-1">{error}</span>
-                </div>
-                {(error.includes('unauthorized-domain') || error.includes('Authorized Domains') || error.includes('Domain Authorization')) && (
-                  <div className="pt-2 border-t border-red-500/20 text-[11px] text-slate-300 space-y-2">
-                    <p className="font-bold text-amber-300">How to fix for Google/Apple Sign-In on Railway or custom domain:</p>
-                    <ol className="list-decimal pl-4 space-y-1 text-slate-300">
-                      <li>Go to <strong>Firebase Console</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Authorized Domains</strong>.</li>
-                      <li>Click <strong>Add domain</strong> and enter: <code className="bg-purple-950/80 text-purple-300 px-1.5 py-0.5 rounded font-mono border border-purple-800">{typeof window !== 'undefined' ? window.location.hostname : 'your-domain.up.railway.app'}</code></li>
-                      <li>Save changes. Direct client SDK authentication will work instantly!</li>
-                    </ol>
-                    <div className="pt-1.5 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (typeof window !== 'undefined') {
-                            navigator.clipboard.writeText(window.location.hostname);
-                            setSuccess(`Copied "${window.location.hostname}" to clipboard!`);
-                            setTimeout(() => setSuccess(null), 3000);
-                          }
-                        }}
-                        className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-[10px] font-bold rounded-lg border border-purple-500/40 transition-all cursor-pointer"
-                      >
-                        Copy Domain to Clipboard
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setError(null);
-                          setActiveMode('signin');
-                        }}
-                        className="px-2.5 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 text-[10px] font-bold rounded-lg border border-indigo-500/40 transition-all cursor-pointer"
-                      >
-                        Use Email/Password Server Proxy
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-4 p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-emerald-200 text-xs flex flex-col items-center text-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/10">
-                <LottieSuccessAnimation size={70} loop={false} />
-                <span className="font-bold text-emerald-300 text-xs sm:text-sm leading-relaxed">{success}</span>
-              </div>
-            )}
-
-            {/* Active Form */}
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {/* Main Form */}
+            <form onSubmit={handleAuthSubmit} className="space-y-3">
               
-              {/* Full Name field (for Signup only) */}
-              {activeMode === 'signup' && (
+              {/* Full name & Phone on Signup */}
+              {activeTab === 'signup' && (
                 <>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Full Name</label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -810,17 +871,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
                         type="text"
                         placeholder="Enter your name"
                         value={name}
-                        onChange={(e) => setName(e?.target?.value ?? "")}
-                        className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
                     <div className="relative flex">
-                      <div className="flex items-center justify-center bg-[#070414] border border-[#231a4c] border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
+                      <div className="flex items-center justify-center bg-[#0a0518] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
                         +91
                       </div>
                       <div className="relative flex-1">
@@ -829,127 +890,55 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
                           type="tel"
                           placeholder="9876543210"
                           value={signupPhone}
-                          onChange={(e) => setSignupPhone(e?.target?.value ?? "".replace(/\D/g, '').slice(0, 10))}
-                          className="w-full bg-[#070414] border border-[#231a4c] rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
+                          onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
                           required
                           pattern="[0-9]{10}"
                         />
                       </div>
                     </div>
-                    <span className="text-[9px] text-slate-500 block">Enter your 10-digit mobile number for mandatory verification.</span>
                   </div>
 
-                  {/* Choose Subscription Plan Selector */}
-                  <div className="space-y-2 pt-1">
+                  {/* Plan selector preview */}
+                  <div className="space-y-1 pt-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
-                        Select Subscription Plan
-                      </label>
-                      <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                        Includes 2-Day Free Trial
+                      <label className="text-[10px] font-bold text-amber-300 uppercase">Subscription Plan</label>
+                      <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                        2-Day Free Trial
                       </span>
                     </div>
-
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                      {PRICING_TIERS.map((tier) => {
+                    <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                      {PRICING_TIERS.map(tier => {
                         const isSelected = selectedPlanName === tier.name;
                         return (
                           <div
                             key={tier.name}
                             onClick={() => setSelectedPlanName(tier.name)}
-                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                               isSelected
-                                ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border-purple-400 shadow-md text-white'
-                                : 'bg-[#070414] border-[#231a4c] hover:border-purple-500/50 text-slate-300'
+                                ? 'bg-purple-900/40 border-amber-400/80 text-white'
+                                : 'bg-[#0a0518] border-purple-900/50 text-slate-300'
                             }`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                isSelected ? 'border-purple-400 bg-purple-500 text-white' : 'border-slate-600'
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                isSelected ? 'border-amber-400 bg-amber-500 text-black' : 'border-slate-600'
                               }`}>
-                                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                               </div>
-                              <div>
-                                <p className="text-xs font-black leading-none">{tier.name}</p>
-                                <p className="text-[9px] text-slate-400 font-medium mt-0.5">{tier.callHoursText} • {tier.tokenUsageText}</p>
-                              </div>
+                              <span className="text-xs font-bold">{tier.name}</span>
                             </div>
-                            <span className={`text-xs font-black shrink-0 px-2.5 py-1 rounded-lg border ${
-                              tier.price === 399
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                : isSelected
-                                ? 'bg-purple-500/30 text-purple-200 border-purple-400/40'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
-                            }`}>
-                              ₹{tier.price}/mo
-                            </span>
+                            <span className="text-xs font-bold text-amber-300">₹{tier.price}/mo</span>
                           </div>
                         );
                       })}
-                    </div>
-
-                    {/* Coupon / Promo Code Input Space */}
-                    <div className="bg-[#070414] border border-[#231a4c] rounded-xl p-2.5 text-left space-y-1.5 mt-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[9px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                          <Tag className="w-3 h-3 text-amber-400" />
-                          <span>Have a Coupon Code?</span>
-                        </label>
-                        <span className="text-[8px] text-purple-300 font-bold bg-purple-900/40 border border-purple-500/30 px-1 py-0.2 rounded">
-                          PROMO
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="text"
-                          value={authCouponInput}
-                          onChange={(e) => {
-                            setAuthCouponInput(e?.target?.value ?? "");
-                            setAuthCouponError('');
-                            setAuthCouponSuccess('');
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleApplyAuthCoupon();
-                            }
-                          }}
-                          placeholder="Enter Coupon Code"
-                          className="w-full bg-[#0d0921] border border-[#3c2f73] rounded-lg px-2.5 py-1.5 text-[11px] font-mono font-bold text-white uppercase placeholder:text-slate-600 focus:outline-none focus:border-amber-400 tracking-wider"
-                        />
-                        <button
-                          type="button"
-                          disabled={!authCouponInput.trim() || isApplyingAuthCoupon}
-                          onClick={handleApplyAuthCoupon}
-                          className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 disabled:opacity-50 text-white font-black text-[10px] px-2.5 py-1.5 rounded-lg cursor-pointer transition-all shrink-0 border border-amber-400/40 flex items-center gap-1"
-                        >
-                          {isApplyingAuthCoupon ? (
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="w-3 h-3" />
-                          )}
-                          <span>{isApplyingAuthCoupon ? '...' : 'Apply'}</span>
-                        </button>
-                      </div>
-
-                      {authCouponError && (
-                        <p className="text-[9px] font-bold text-rose-400 flex items-center gap-1 mt-0.5">
-                          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> {authCouponError}
-                        </p>
-                      )}
-                      {authCouponSuccess && (
-                        <p className="text-[9px] font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
-                          <CheckCircle2 className="w-2.5 h-2.5 shrink-0" /> {authCouponSuccess}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Email field */}
-              <div className="space-y-1.5">
+              {/* Email */}
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -957,170 +946,279 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
                     type="email"
                     placeholder="name@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e?.target?.value ?? "")}
-                    className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password field */}
-              {activeMode !== 'forgot' && (
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Password</label>
-                    {activeMode === 'signin' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveMode('forgot');
-                          setError(null);
-                          setSuccess(null);
-                        }}
-                        className="text-[10px] font-bold text-purple-400 hover:text-purple-300 transition-all cursor-pointer"
-                      >
-                        Forgot Password?
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e?.target?.value ?? "")}
-                      className="w-full bg-[#070414] border border-[#231a4c] rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-all"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+              {/* Password */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Password</label>
+                  {activeTab === 'signin' && (
+                    <button
+                      type="button"
+                      onClick={() => setViewState('forgot')}
+                      className="text-[10px] font-bold text-purple-400 hover:text-amber-300 transition-colors cursor-pointer"
+                    >
+                      Forgot Password?
+                    </button>
+                  )}
                 </div>
-              )}
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
+                    <span>Authenticating...</span>
                   </>
                 ) : (
-                  <span>
-                    {activeMode === 'signin' && 'Sign In'}
-                    {activeMode === 'signup' && 'Create Account'}
-                    {activeMode === 'forgot' && 'Send Reset Link'}
-                  </span>
+                  <span>{activeTab === 'signin' ? 'Sign In to Arohi' : 'Create My Account'}</span>
                 )}
               </button>
 
-              {/* Biometric login shortcut */}
-              {activeMode === 'signin' && isBioSupported && hasEnrolledKey && (
+              {/* Biometrics */}
+              {activeTab === 'signin' && isBioSupported && hasEnrolledKey && (
                 <button
                   type="button"
                   onClick={handleBiometricLogin}
                   disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-[#a78bfa] bg-[#120a2e] hover:bg-[#1a0e3f] border border-purple-500/30 hover:border-purple-500/60 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-purple-300 bg-[#120a2e] hover:bg-[#1a0e3f] border border-purple-500/30 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Fingerprint className="w-4 h-4 text-purple-400 animate-pulse" />
-                  <span>SIGN IN WITH TOUCH ID / FACE ID</span>
+                  <span>Sign In with Face ID / Touch ID</span>
                 </button>
-              )}
-
-              {/* Back to sign in link for Forgot Password mode */}
-              {activeMode === 'forgot' && (
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveMode('signin');
-                      setError(null);
-                      setSuccess(null);
-                    }}
-                    className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-all cursor-pointer"
-                  >
-                    Back to Sign In
-                  </button>
-                </div>
               )}
             </form>
+          </div>
+        )}
 
-            {/* Divider */}
-            {activeMode !== 'forgot' && (
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-[#231a4c]"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="px-3 bg-[#0c0820] text-[9px] font-black text-slate-500 tracking-widest">OR</span>
-                </div>
-              </div>
-            )}
+        {/* ============================================================ */}
+        {/* VIEW 3: PHONE SIGN-IN / OTP FLOW */}
+        {/* ============================================================ */}
+        {viewState === 'phone' && (
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-violet-900/40">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewState('portal');
+                  setOtpSent(false);
+                  setPhoneNumber('');
+                  setOtp('');
+                  setError(null);
+                }}
+                className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-cyan-400" />
+                <span>Back to Portal</span>
+              </button>
+              <span className="text-xs font-mono font-bold text-cyan-300">Phone Verification</span>
+            </div>
 
-            {/* Auth Provider Selection (Social Sign-in methods stack) */}
-            {activeMode !== 'forgot' && (
-              <div className="space-y-2.5">
-                
-                {/* Google Button */}
+            {!otpSent ? (
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="p-3 bg-[#0a0518] border border-cyan-500/30 rounded-2xl text-center">
+                  <Smartphone className="w-7 h-7 text-cyan-400 mx-auto mb-1.5 animate-pulse" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">SMS OTP Authentication</h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Enter your 10-digit mobile number to receive a secure code.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
+                  <div className="relative flex">
+                    <div className="flex items-center justify-center bg-[#0a0518] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
+                      +91
+                    </div>
+                    <div className="relative flex-1">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                      <input
+                        type="tel"
+                        placeholder="9876543210"
+                        value={phoneNumber.replace(/^\+91/, '')}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 transition-all"
+                        required
+                        pattern="[0-9]{10}"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
+                  type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#100a2d] hover:bg-[#1a1142] text-white font-extrabold text-xs uppercase tracking-widest py-3 px-4 rounded-xl border border-[#2e1c59] hover:border-purple-500/50 cursor-pointer flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] disabled:opacity-50 shadow-md"
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                 >
-                  <svg className="w-4 h-4 shrink-0 bg-white rounded-full p-0.5" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1, 0, 0, 1, 0, 0)">
-                      <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.57h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" fill="#4285F4" />
-                      <path d="M12,20.62c2.43,0 4.47,-0.8 5.96,-2.18l-3.3,-2.57c-0.9,0.6 -2.08,0.97 -3.3,0.97 -2.34,0 -4.33,-1.58 -5.04,-3.7H2.9v2.66C4.38,18.73 7.97,20.62 12,20.62z" fill="#34A853" />
-                      <path d="M6.96,13.14a5.2,5.2 0 0 1 0,-3.28V7.2H2.9a8.96,8.96 0 0 0 0,7.9l4.06,-3.26z" fill="#FBBC05" />
-                      <path d="M12,5.38c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,2.73 14.43,1.9 12,1.9 7.97,1.9 4.38,3.79 2.9,6.54L6.96,9.8C7.67,7.68 9.66,5.38 12,5.38z" fill="#EA4335" />
-                    </g>
-                  </svg>
-                  <span>CONTINUE WITH GOOGLE</span>
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send OTP Code</span>}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="p-3 bg-[#0a0518] border border-cyan-500/30 rounded-2xl text-center">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Enter 6-Digit OTP</h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Code sent to {phoneNumber}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="123456"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full bg-[#0a0518] border border-cyan-500/40 rounded-xl py-2.5 pl-10 pr-4 text-sm font-semibold text-white tracking-[0.4em] text-center focus:outline-none focus:border-cyan-400 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify &amp; Sign In</span>}
                 </button>
 
-                {/* Apple Button */}
-                <button
-                  type="button"
-                  onClick={handleAppleSignIn}
-                  disabled={isLoading}
-                  className="w-full bg-[#100a2d] hover:bg-[#1a1142] text-white font-extrabold text-xs uppercase tracking-widest py-3 px-4 rounded-xl border border-[#2e1c59] hover:border-[#3b218f] cursor-pointer flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] disabled:opacity-50 shadow-md"
-                >
-                  <svg className="w-4 h-4 shrink-0 fill-current text-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z" />
-                  </svg>
-                  <span>CONTINUE WITH APPLE</span>
-                </button>
-
-                {/* Phone Button */}
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveMode('phone');
-                    setError(null);
-                    setSuccess(null);
+                    setOtpSent(false);
+                    setOtp('');
                   }}
-                  disabled={isLoading}
-                  className="w-full bg-[#100a2d] hover:bg-[#1a1142] text-white font-extrabold text-xs uppercase tracking-widest py-3 px-4 rounded-xl border border-[#2e1c59] hover:border-cyan-500/50 cursor-pointer flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] disabled:opacity-50 shadow-md"
+                  className="w-full text-center text-xs text-cyan-400 hover:underline font-semibold cursor-pointer"
                 >
-                  <Phone className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>CONTINUE WITH PHONE</span>
+                  Change Mobile Number
                 </button>
-
-              </div>
+              </form>
             )}
-          </>
+          </div>
         )}
 
-        {/* Footnote information assurance */}
-        <div className="mt-8 pt-4 border-t border-purple-950/80 flex items-center justify-center gap-1.5 text-[8px] font-mono text-slate-500 tracking-wider">
-          <Sparkles className="w-3 h-3 text-cyan-400" />
-          <span>ZERO-TRUST SECURE GOOGLE, PHONE & EMAIL AUTHENTICATION</span>
-        </div>
+        {/* ============================================================ */}
+        {/* VIEW 4: FORGOT PASSWORD */}
+        {/* ============================================================ */}
+        {viewState === 'forgot' && (
+          <form onSubmit={handleForgotSubmit} className="relative z-10 space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-violet-900/40">
+              <button
+                type="button"
+                onClick={() => setViewState('email_form')}
+                className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4 text-amber-300" />
+                <span>Back to Sign In</span>
+              </button>
+              <span className="text-xs font-mono font-bold text-amber-300">Reset Password</span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Enter your registered email address and we will dispatch a secure password reset link to your inbox.
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Reset Link</span>}
+            </button>
+          </form>
+        )}
+
+        {/* ============================================================ */}
+        {/* VIEW 5: MANDATORY ONBOARDING SETUP */}
+        {/* ============================================================ */}
+        {viewState === 'onboarding' && (
+          <form onSubmit={handleOnboardingSubmit} className="relative z-10 space-y-4">
+            <div className="p-3 bg-[#0a0518] border border-amber-400/40 rounded-2xl text-center">
+              <Sparkles className="w-7 h-7 text-amber-300 mx-auto mb-1.5 animate-bounce" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Complete Profile Setup</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Your Name &amp; Mobile number are required to access Arohi AI features.</p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Enter your name"
+                  value={onboardName}
+                  onChange={(e) => setOnboardName(e.target.value)}
+                  className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
+              <div className="relative flex">
+                <div className="flex items-center justify-center bg-[#0a0518] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
+                  +91
+                </div>
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="tel"
+                    placeholder="9876543210"
+                    value={onboardPhone}
+                    onChange={(e) => setOnboardPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                    required
+                    pattern="[0-9]{10}"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Save &amp; Enter Dashboard</span>}
+            </button>
+          </form>
+        )}
 
       </div>
     </div>

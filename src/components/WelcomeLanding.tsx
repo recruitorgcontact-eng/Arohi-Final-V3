@@ -825,15 +825,17 @@ export default function WelcomeLanding({
 
           {/* Center: Logo and Tagline */}
           <div className="flex flex-col items-center justify-center text-center">
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight flex items-center gap-1 font-sans">
-              <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>AROHI</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-pink-500 to-amber-500">
+            <h1 className="text-lg sm:text-2xl font-black tracking-[-0.03em] flex items-center gap-1 font-sans">
+              <span className={isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-300' : 'text-slate-900'}>
+                AROHI
+              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-fuchsia-400">
                 AI
               </span>
             </h1>
-            <p className="block text-[9.5px] sm:text-xs font-semibold tracking-tight leading-none mt-0.5">
-              <span className={isDarkMode ? 'text-slate-300' : 'text-slate-600'}>One AI. </span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 font-bold">
+            <p className="block text-[9px] sm:text-[10.5px] font-semibold tracking-[0.2em] uppercase leading-none mt-0.5 font-sans">
+              <span className={isDarkMode ? 'text-zinc-400' : 'text-slate-500'}>One AI. </span>
+              <span className={isDarkMode ? 'text-zinc-300 font-bold' : 'text-slate-700 font-bold'}>
                 Infinite Opportunities.
               </span>
             </p>
@@ -847,10 +849,15 @@ export default function WelcomeLanding({
               type="button"
               id="welcome-header-auth-btn"
               onClick={() => {
-                if (onOpenAuth) {
-                  onOpenAuth();
-                } else if (setActiveTab) {
-                  setActiveTab('profile');
+                if (user) {
+                  if (setActiveTab) setActiveTab('profile');
+                  if (onEnter) onEnter();
+                } else {
+                  if (onOpenAuth) {
+                    onOpenAuth();
+                  } else if (setActiveTab) {
+                    setActiveTab('profile');
+                  }
                 }
               }}
               className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black text-[10px] sm:text-xs leading-none shadow-xs shadow-purple-600/30 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer border border-purple-300/40 shrink-0 tracking-tight"

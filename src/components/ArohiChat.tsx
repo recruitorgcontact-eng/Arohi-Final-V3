@@ -26,6 +26,7 @@ import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 import InChatMessageQuiz from './mocktests/InChatMessageQuiz';
+import { ArohiThinkingIndicator } from './ArohiThinkingIndicator';
 import { getChatDisplayDate, getCallDisplayDate, formatRelativeChatDate, extractChatTimestamp } from '../utils/dateUtils';
 
 interface Message {
@@ -649,11 +650,13 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
 
-  // Live Voice Audio Refs for Arohi Read Aloud (Streams same Arohi voice as voice call!)
+  // Live Voice Audio Refs for Arohi Read Aloud
   const ttsAudioCtxRef = useRef<AudioContext | null>(null);
   const ttsAudioQueueRef = useRef<AudioBufferSourceNode[]>([]);
   const ttsWsRef = useRef<WebSocket | null>(null);
   const ttsNextStartTimeRef = useRef<number>(0);
+  const ttsKeepAliveTimerRef = useRef<any>(null);
+  const activeUtterancesRef = useRef<SpeechSynthesisUtterance[]>([]);
   // Image Studio States
   const [isImageStudioOpen, setIsImageStudioOpen] = useState(false);
   const [studioPrompt, setStudioPrompt] = useState('');
@@ -1172,13 +1175,30 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       try { ttsAudioCtxRef.current.close(); } catch (e) {}
       ttsAudioCtxRef.current = null;
     }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try { window.speechSynthesis.cancel(); } catch (e) {}
+    if (ttsKeepAliveTimerRef.current) {
+      clearInterval(ttsKeepAliveTimerRef.current);
+      ttsKeepAliveTimerRef.current = null;
     }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try { 
+        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.resume();
+      } catch (e) {}
+    }
+    activeUtterancesRef.current = [];
     setSpeakingMessageId(null);
   };
 
   useEffect(() => {
+    // Pre-warm voices on mount so they are instantly cached
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      } catch (e) {}
+    }
     return () => {
       stopAudioPlayback();
     };
@@ -1192,205 +1212,158 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
     stopAudioPlayback();
 
+    // Clean up text thoroughly for natural speech enunciation
     const cleanText = text
       .replace(/\[.*?\]\(.*?\)/g, '')
-      .replace(/[*#`_~]/g, '')
+      .replace(/```[\s\S]*?```/g, '') // remove code blocks
+      .replace(/`([^`]+)`/g, '$1') // inline code
+      .replace(/[*#_~]/g, '')
       .replace(/<[^>]*>/g, '')
+      .replace(/https?:\/\/\S+/g, '') // remove raw URLs
       .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
     if (!cleanText) return;
 
+    // Immediately toggle speaking state for zero-latency UI response
     setSpeakingMessageId(id);
 
-    // Dynamic script language detection for any language response (Odia, Bengali, Hindi, CJK, etc.)
-    const detectTextLanguage = (txt: string): { langTag: string; langCode: string } => {
-      if (/[\u0B00-\u0B7F]/.test(txt)) return { langTag: 'or-IN', langCode: 'or' }; // Odia script
-      if (/[\u0980-\u09FF]/.test(txt)) return { langTag: 'bn-IN', langCode: 'bn' }; // Bengali script
-      if (/[\u0900-\u097F]/.test(txt)) return { langTag: 'hi-IN', langCode: 'hi' }; // Devanagari script (Hindi/Marathi)
-      if (/[\u0C00-\u0C7F]/.test(txt)) return { langTag: 'te-IN', langCode: 'te' }; // Telugu script
-      if (/[\u0B80-\u0BFF]/.test(txt)) return { langTag: 'ta-IN', langCode: 'ta' }; // Tamil script
-      if (/[\u0A80-\u0AFF]/.test(txt)) return { langTag: 'gu-IN', langCode: 'gu' }; // Gujarati script
-      if (/[\u0C80-\u0CFF]/.test(txt)) return { langTag: 'kn-IN', langCode: 'kn' }; // Kannada script
-      if (/[\u0D00-\u0D7F]/.test(txt)) return { langTag: 'ml-IN', langCode: 'ml' }; // Malayalam script
-      if (/[\u0A00-\u0A7F]/.test(txt)) return { langTag: 'pa-IN', langCode: 'pa' }; // Punjabi script
-      if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(txt)) return { langTag: 'ur-IN', langCode: 'ur' }; // Urdu / Arabic
-      if (/[\u3040-\u309F\u30A0-\u30FF]/.test(txt)) return { langTag: 'ja-JP', langCode: 'ja' }; // Japanese Hiragana/Katakana
-      if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(txt)) return { langTag: 'zh-CN', langCode: 'zh' }; // Chinese CJK
-      if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(txt)) return { langTag: 'ko-KR', langCode: 'ko' }; // Korean Hangul
-      if (/[\u0400-\u04FF]/.test(txt)) return { langTag: 'ru-RU', langCode: 'ru' }; // Cyrillic / Russian
-      if (/[\u0E00-\u0E7F]/.test(txt)) return { langTag: 'th-TH', langCode: 'th' }; // Thai script
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      setSpeakingMessageId(null);
+      return;
+    }
 
-      const langMap: Record<string, string> = {
-        en: 'en-IN', hi: 'hi-IN', or: 'or-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN',
-        mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN',
-        zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE'
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
+      // Dynamic script language detection for authentic regional accents
+      const detectTextLanguage = (txt: string): { langTag: string; langCode: string } => {
+        if (/[\u0B00-\u0B7F]/.test(txt)) return { langTag: 'or-IN', langCode: 'or' }; // Odia
+        if (/[\u0980-\u09FF]/.test(txt)) return { langTag: 'bn-IN', langCode: 'bn' }; // Bengali
+        if (/[\u0900-\u097F]/.test(txt)) return { langTag: 'hi-IN', langCode: 'hi' }; // Devanagari (Hindi/Marathi)
+        if (/[\u0C00-\u0C7F]/.test(txt)) return { langTag: 'te-IN', langCode: 'te' }; // Telugu
+        if (/[\u0B80-\u0BFF]/.test(txt)) return { langTag: 'ta-IN', langCode: 'ta' }; // Tamil
+        if (/[\u0A80-\u0AFF]/.test(txt)) return { langTag: 'gu-IN', langCode: 'gu' }; // Gujarati
+        if (/[\u0C80-\u0CFF]/.test(txt)) return { langTag: 'kn-IN', langCode: 'kn' }; // Kannada
+        if (/[\u0D00-\u0D7F]/.test(txt)) return { langTag: 'ml-IN', langCode: 'ml' }; // Malayalam
+        if (/[\u0A00-\u0A7F]/.test(txt)) return { langTag: 'pa-IN', langCode: 'pa' }; // Punjabi
+        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(txt)) return { langTag: 'ur-IN', langCode: 'ur' }; // Urdu
+        if (/[\u3040-\u309F\u30A0-\u30FF]/.test(txt)) return { langTag: 'ja-JP', langCode: 'ja' }; // Japanese
+        if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(txt)) return { langTag: 'zh-CN', langCode: 'zh' }; // Chinese
+        if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(txt)) return { langTag: 'ko-KR', langCode: 'ko' }; // Korean
+        if (/[\u0400-\u04FF]/.test(txt)) return { langTag: 'ru-RU', langCode: 'ru' }; // Russian
+
+        const langMap: Record<string, string> = {
+          en: 'en-IN', hi: 'hi-IN', or: 'or-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN',
+          mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN',
+          zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE'
+        };
+        const code = language || 'en';
+        return { langTag: langMap[code] || `${code}-IN`, langCode: code };
       };
-      const code = language || 'en';
-      return { langTag: langMap[code] || `${code}-IN`, langCode: code };
-    };
 
-    const detectedLang = detectTextLanguage(cleanText);
+      const detectedLang = detectTextLanguage(cleanText);
 
-    // Browser TTS Fallback helper
-    const fallbackToBrowserTTS = () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.resume();
+      // Split text into natural sentence chunks (avoids the Chrome 15s freeze bug on long responses)
+      const rawChunks = cleanText.match(/[^.!?\n।]+[.!?\n।]+|[^.!?\n।]+$/g) || [cleanText];
+      const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
 
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = detectedLang.langTag;
-        utterance.rate = 1.0;
-        utterance.pitch = 1.35; // Arohi's signature soft warm female pitch
+      // Voice Picker matching Arohi signature voice
+      const findArohiVoice = (voices: SpeechSynthesisVoice[]) => {
+        if (!voices || voices.length === 0) return null;
+        const shortLang = detectedLang.langCode.toLowerCase();
+        const tagLower = detectedLang.langTag.toLowerCase();
 
-        const setVoiceAndSpeak = () => {
-          try {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices && voices.length > 0) {
-              const shortLang = detectedLang.langCode.toLowerCase();
-              const tagLower = detectedLang.langTag.toLowerCase();
+        // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
+        const strictlyFemaleVoices = voices.filter(v => {
+          const nameLower = v.name.toLowerCase();
+          const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
+                                 /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
+          return !isExplicitMale;
+        });
 
-              // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
-              const strictlyFemaleVoices = voices.filter(v => {
-                const nameLower = v.name.toLowerCase();
-                const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
-                                       /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
-                return !isExplicitMale;
-              });
-              const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
+        const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
 
-              const preferredVoice = 
-                pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-                pool.find(v => v.lang.toLowerCase() === tagLower) ||
-                pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-                pool.find(v => v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) ||
-                pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-                pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in'));
+        return (
+          pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+          pool.find(v => v.lang.toLowerCase() === tagLower) ||
+          pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+          pool.find(v => v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) ||
+          pool.find(v => v.lang.toLowerCase().includes('en-in') && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+          pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+          pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
+          pool[0]
+        );
+      };
 
-              if (preferredVoice) {
-                utterance.voice = preferredVoice;
-              }
-            }
+      const startPlayback = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const arohiVoice = findArohiVoice(voices);
 
-            utterance.onend = () => setSpeakingMessageId(null);
-            utterance.onerror = () => setSpeakingMessageId(null);
-
-            setSpeakingMessageId(id);
-            window.speechSynthesis.speak(utterance);
-          } catch (e) {
-            console.error('Error in speakMessage fallback:', e);
-            setSpeakingMessageId(null);
+        // Keep-alive timer so Chrome/Edge doesn't pause playback on long utterances
+        if (ttsKeepAliveTimerRef.current) {
+          clearInterval(ttsKeepAliveTimerRef.current);
+        }
+        ttsKeepAliveTimerRef.current = setInterval(() => {
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
           }
+        }, 10000);
+
+        let currentChunkIndex = 0;
+
+        const speakNextChunk = () => {
+          if (currentChunkIndex >= chunks.length) {
+            stopAudioPlayback();
+            return;
+          }
+
+          const chunkText = chunks[currentChunkIndex];
+          const utterance = new SpeechSynthesisUtterance(chunkText);
+          utterance.lang = detectedLang.langTag;
+          utterance.rate = 1.0;
+          utterance.pitch = 1.35; // Arohi's signature soft warm female pitch
+          if (arohiVoice) {
+            utterance.voice = arohiVoice;
+          }
+
+          utterance.onend = () => {
+            currentChunkIndex++;
+            speakNextChunk();
+          };
+
+          utterance.onerror = (e) => {
+            console.warn('Speech chunk playback error:', e);
+            currentChunkIndex++;
+            if (currentChunkIndex < chunks.length) {
+              speakNextChunk();
+            } else {
+              stopAudioPlayback();
+            }
+          };
+
+          activeUtterancesRef.current = [utterance];
+          window.speechSynthesis.speak(utterance);
         };
 
-        if (window.speechSynthesis.getVoices().length === 0) {
-          window.speechSynthesis.onvoiceschanged = () => {
-            setVoiceAndSpeak();
-            window.speechSynthesis.onvoiceschanged = null;
-          };
-          setTimeout(setVoiceAndSpeak, 100);
-        } else {
-          setTimeout(setVoiceAndSpeak, 30);
-        }
+        speakNextChunk();
+      };
+
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          startPlayback();
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+        setTimeout(startPlayback, 50);
       } else {
-        setSpeakingMessageId(null);
+        startPlayback();
       }
-    };
-
-    // Primary: Connect to Gemini Live Audio stream (same voice as Arohi live voice call!)
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) {
-        fallbackToBrowserTTS();
-        return;
-      }
-
-      const audioCtx = new AudioContextClass();
-      ttsAudioCtxRef.current = audioCtx;
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
-      }
-      ttsNextStartTimeRef.current = audioCtx.currentTime;
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=Zypher&lang=${encodeURIComponent(detectedLang.langCode)}&mode=read_aloud`;
-      
-      const ws = new WebSocket(wsUrl);
-      ttsWsRef.current = ws;
-
-      let hasReceivedAudio = false;
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ text: cleanText }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.audio) {
-            hasReceivedAudio = true;
-            const base64Audio = data.audio;
-            const binary = window.atob(base64Audio);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-              bytes[i] = binary.charCodeAt(i);
-            }
-
-            const numSamples = bytes.length / 2;
-            const float32Data = new Float32Array(numSamples);
-            const dataView = new DataView(bytes.buffer);
-
-            for (let i = 0; i < numSamples; i++) {
-              const pcm16 = dataView.getInt16(i * 2, true);
-              float32Data[i] = pcm16 / 32768;
-            }
-
-            const audioBuffer = audioCtx.createBuffer(1, numSamples, 24000);
-            audioBuffer.getChannelData(0).set(float32Data);
-
-            const source = audioCtx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioCtx.destination);
-
-            const currentTime = audioCtx.currentTime;
-            let startTime = ttsNextStartTimeRef.current;
-
-            if (startTime < currentTime) {
-              startTime = currentTime + 0.05;
-            }
-
-            source.start(startTime);
-            ttsAudioQueueRef.current.push(source);
-
-            ttsNextStartTimeRef.current = startTime + audioBuffer.duration;
-
-            const durationMs = audioBuffer.duration * 1000;
-            setTimeout(() => {
-              if (audioCtx.currentTime >= ttsNextStartTimeRef.current - 0.1) {
-                setSpeakingMessageId(null);
-              }
-            }, durationMs + 300);
-          }
-        } catch (err) {
-          console.error('Error decoding/playing Arohi voice chunk:', err);
-        }
-      };
-
-      ws.onerror = (err) => {
-        console.warn('Arohi live voice WS error, falling back to browser TTS:', err);
-        if (!hasReceivedAudio) {
-          fallbackToBrowserTTS();
-        }
-      };
-
-      ws.onclose = () => {
-        if (!hasReceivedAudio) {
-          fallbackToBrowserTTS();
-        }
-      };
-    } catch (e) {
-      console.error('Failed to initialize Arohi live voice stream:', e);
-      fallbackToBrowserTTS();
+    } catch (err) {
+      console.error('Error starting instant Arohi speech:', err);
+      stopAudioPlayback();
     }
   };
 
@@ -3727,12 +3700,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     msg.role === 'assistant' ? 'font-sans tracking-wide space-y-3' : 'text-white'
                   }`}>
                     {msg.role === 'assistant' && msg.isStreaming && !parsed.cleanedContent ? (
-                      <div className={`flex items-center gap-2.5 text-xs font-semibold ${isDarkMode ? 'text-violet-300' : 'text-purple-700'} py-1`}>
-                        <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin shrink-0">
-                          <Sparkles className="w-2.5 h-2.5" />
-                        </div>
-                        <span className="animate-pulse">AROHI is analyzing and formulating response...</span>
-                      </div>
+                      <ArohiThinkingIndicator isDarkMode={isDarkMode} />
                     ) : (
                       <>
                         {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab)}
@@ -3936,13 +3904,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           })}
 
           {isLoading && !messages.some(m => m.isStreaming) && (
-            <div className={`flex items-center gap-3 max-w-4xl mx-auto w-full py-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md animate-spin">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className={`text-xs sm:text-sm font-semibold ${isDarkMode ? 'text-violet-300' : 'text-purple-700'} animate-pulse`}>
-                AROHI is analyzing and formulating response...
-              </div>
+            <div className="max-w-4xl mx-auto w-full py-2">
+              <ArohiThinkingIndicator isDarkMode={isDarkMode} />
             </div>
           )}
 

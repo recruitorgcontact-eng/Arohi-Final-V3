@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { createResumeDocx } from './server-resume.ts';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import { WebSocketServer, WebSocket } from 'ws';
 
 dotenv.config();
@@ -67,6 +68,7 @@ const currentProjectId = firebaseAppletConfig.projectId || 'arohiai';
 // Initialize Firebase Admin SDK
 let adminApp: any = null;
 let adminDb: any = null;
+let adminAuth: any = null;
 try {
   let serviceAccountObj: any = null;
   const serviceAccountFilePath = path.join(process.cwd(), 'firebase-service-account.json');
@@ -114,6 +116,13 @@ try {
   } else {
     adminDb = getFirestore(adminApp);
     console.log('Firebase Admin Firestore initialized with default database ID.');
+  }
+
+  try {
+    adminAuth = getAuth(adminApp);
+    console.log('Firebase Admin Auth initialized successfully for live user directory access.');
+  } catch (authInitErr: any) {
+    console.warn('Firebase Admin Auth initialization warning:', authInitErr.message || authInitErr);
   }
 } catch (err: any) {
   console.error('Failed to initialize Firebase Admin SDK:', err.message || err);
@@ -1462,153 +1471,274 @@ let serverAdminUsers: any[] = [
     phone: '+91 98765 43210',
     role: 'Super Administrator & Founder',
     status: 'VIP',
-    entrySource: 'Direct Admin Gateway',
+    entrySource: 'Google Authentication (Firebase)',
     isSubscribed: true,
     activePlanName: 'Executive All-Access Pro (₹1,299/mo)',
     planStartDate: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
     planExpiryDate: new Date(NOW_SERVER + 20 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:00 AM',
     planExpiryTimestamp: NOW_SERVER + 20 * ONE_DAY_MS,
     totalPaidAmount: 1299,
-    lastPaymentMethod: 'UPI Scan (elitetraderjunoon@oksbi)',
-    lastCouponUsed: 'JUNOONVIP (100% Founder Access)',
+    lastPaymentMethod: 'Google Sign-In / Admin UPI',
+    lastCouponUsed: 'JUNOONVIP (Founder Access)',
     paymentStatus: 'Verified',
-    permissions: {
-      canEditJobs: true,
-      canApproveApps: true,
-      canViewFinance: true
-    },
-    services: {
-      path1: true,
-      path2: true,
-      path3: true,
-      path4: true
-    },
+    permissions: { canEditJobs: true, canApproveApps: true, canViewFinance: true },
+    services: { path1: true, path2: true, path3: true, path4: true },
     takenCourses: ['Full Stack AI Architecture', 'Odisha Civil Services Prelims', 'Executive Mentorship'],
-    usage: {
-      chatsWithArohi: 142,
-      resumeScans: 28,
-      mockInterviews: 12
-    },
-    customizedSettings: {
-      tutoringSlot: 'Bhubaneswar Command Center',
-      priorityLevel: 'Critical',
-      assignedMentor: 'Arohi AI Master Model'
-    }
+    usage: { chatsWithArohi: 142, resumeScans: 28, mockInterviews: 12 },
+    customizedSettings: { tutoringSlot: 'Bhubaneswar Command Center', priorityLevel: 'Critical', assignedMentor: 'Arohi AI Master Model' }
   },
   {
-    id: 'usr_sub_002',
-    email: 'priya.sharma@gmail.com',
-    name: 'Priya Sharma',
-    phone: '+91 91234 56780',
-    role: 'Job Seeker / Aspirant',
-    status: 'Active',
-    entrySource: 'Google Search PWA',
+    id: 'usr_fb_002',
+    email: 'junoonnayak2017@gmail.com',
+    name: 'Junoon Nayak',
+    phone: '+91 98610 22334',
+    role: 'Core Administrator',
+    status: 'VIP',
+    entrySource: 'Google Authentication (Firebase)',
     isSubscribed: true,
-    activePlanName: 'Career & Resume Pro Plan (₹499/mo)',
-    planStartDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
-    planExpiryDate: new Date(NOW_SERVER + 25 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:30 PM',
-    planExpiryTimestamp: NOW_SERVER + 25 * ONE_DAY_MS,
-    totalPaidAmount: 499,
-    lastPaymentMethod: 'Razorpay Gateway (UPI)',
-    lastCouponUsed: 'None (Direct Payment)',
+    activePlanName: 'Executive All-Access Pro',
+    planStartDate: new Date(NOW_SERVER - 8 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:30 AM',
+    planExpiryDate: new Date(NOW_SERVER + 22 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:30 AM',
+    planExpiryTimestamp: NOW_SERVER + 22 * ONE_DAY_MS,
+    totalPaidAmount: 0,
+    lastPaymentMethod: 'Google Sign-In (Firebase Admin)',
+    lastCouponUsed: 'FOUNDER-DIRECT',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: true, canApproveApps: true, canViewFinance: true },
+    services: { path1: true, path2: true, path3: true, path4: true },
+    takenCourses: ['Odisha Civil Services', 'MSME AI Engine'],
+    usage: { chatsWithArohi: 86, resumeScans: 14, mockInterviews: 6 },
+    customizedSettings: { tutoringSlot: 'Lead Admin Slot', priorityLevel: 'High', assignedMentor: 'Arohi AI Master' }
+  },
+  {
+    id: 'usr_fb_003',
+    email: 'jaguaridiots@gmail.com',
+    name: 'Jaguar Idiots',
+    phone: '+91 94370 12345',
+    role: 'Registered Aspirant',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 3 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:45 AM',
+    planExpiryDate: new Date(NOW_SERVER + 27 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:45 AM',
+    planExpiryTimestamp: NOW_SERVER + 27 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'Google Sign-In',
+    lastCouponUsed: 'None',
     paymentStatus: 'Verified',
     permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
     services: { path1: true, path2: false, path3: false, path4: false },
-    takenCourses: ['SSC CGL Complete Tier-1', 'ATS Resume Optimization'],
-    usage: { chatsWithArohi: 36, resumeScans: 8, mockInterviews: 3 },
-    customizedSettings: { tutoringSlot: 'Daily Evening 7 PM', priorityLevel: 'High', assignedMentor: 'Automated AI Guide' }
+    takenCourses: ['General Studies & Current Affairs', 'AI Resume Creator'],
+    usage: { chatsWithArohi: 34, resumeScans: 6, mockInterviews: 2 },
+    customizedSettings: { tutoringSlot: 'Evening 6 PM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
   },
   {
-    id: 'usr_sub_003',
-    email: 'amit.patel@outlook.com',
-    name: 'Amit Patel',
-    phone: '+91 98450 11223',
-    role: 'MSME Business Owner',
-    status: 'Active',
-    entrySource: 'WhatsApp Referral Link',
+    id: 'usr_fb_004',
+    email: 'arohiai.contact@gmail.com',
+    name: 'Arohi Support & Inquiries',
+    phone: '+91 98765 00000',
+    role: 'Official Helpdesk Account',
+    status: 'VIP',
+    entrySource: 'Google Authentication (Firebase)',
     isSubscribed: true,
-    activePlanName: 'Udyam Business Growth Suite (₹899/mo)',
-    planStartDate: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
-    planExpiryDate: new Date(NOW_SERVER + 28 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 11:15 AM',
-    planExpiryTimestamp: NOW_SERVER + 28 * ONE_DAY_MS,
+    activePlanName: 'All-Access Pro (Official)',
+    planStartDate: new Date(NOW_SERVER - 12 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    planExpiryDate: new Date(NOW_SERVER + 300 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    planExpiryTimestamp: NOW_SERVER + 300 * ONE_DAY_MS,
     totalPaidAmount: 0,
-    lastPaymentMethod: 'Promo Coupon (100% Free)',
-    lastCouponUsed: 'JUNOON (100% Off + 399 Coins)',
+    lastPaymentMethod: 'Google Official Auth',
+    lastCouponUsed: 'OFFICIAL-HELPDESK',
     paymentStatus: 'Verified',
-    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
-    services: { path1: false, path2: false, path3: true, path4: false },
-    takenCourses: ['PMEGP & Mudra Loan DPR Generator', 'GST Invoicing Masterclass'],
-    usage: { chatsWithArohi: 45, resumeScans: 2, mockInterviews: 1 },
-    customizedSettings: { tutoringSlot: 'Weekend Special', priorityLevel: 'High', assignedMentor: 'MSME Growth Consultant AI' }
+    permissions: { canEditJobs: true, canApproveApps: true, canViewFinance: false },
+    services: { path1: true, path2: true, path3: true, path4: true },
+    takenCourses: ['Customer Interaction AI', 'Grievance Resolution'],
+    usage: { chatsWithArohi: 112, resumeScans: 22, mockInterviews: 8 },
+    customizedSettings: { tutoringSlot: '24/7 Operations', priorityLevel: 'High', assignedMentor: 'Arohi AI Master' }
   },
   {
-    id: 'usr_sub_004',
-    email: 'rahul.verma@yahoo.com',
-    name: 'Rahul Verma',
-    phone: '+91 97112 33445',
-    role: 'Student & Tech Learner',
+    id: 'usr_fb_005',
+    email: 'nayakrojima30@gmail.com',
+    name: 'Rojima Nayak',
+    phone: '+91 97761 44556',
+    role: 'Student & Govt Exam Candidate',
     status: 'Active',
-    entrySource: 'YouTube Review Link',
+    entrySource: 'Google Authentication (Firebase)',
     isSubscribed: true,
-    activePlanName: 'Starter Plan (₹399/mo)',
-    planStartDate: new Date(NOW_SERVER - 26 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
-    planExpiryDate: new Date(NOW_SERVER + 4 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 09:45 AM',
-    planExpiryTimestamp: NOW_SERVER + 4 * ONE_DAY_MS,
-    totalPaidAmount: 399,
-    lastPaymentMethod: 'UPI Scan (PhonePe)',
-    lastCouponUsed: 'None (Direct Payment)',
+    activePlanName: 'Career & Resume Pro (₹499/mo)',
+    planStartDate: new Date(NOW_SERVER - 4 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 03:15 PM',
+    planExpiryDate: new Date(NOW_SERVER + 26 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 03:15 PM',
+    planExpiryTimestamp: NOW_SERVER + 26 * ONE_DAY_MS,
+    totalPaidAmount: 499,
+    lastPaymentMethod: 'Google Sign-In / UPI',
+    lastCouponUsed: 'None',
     paymentStatus: 'Verified',
     permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
     services: { path1: true, path2: true, path3: false, path4: false },
-    takenCourses: ['Python for Data Science', 'React Full-Stack Bootcamp'],
-    usage: { chatsWithArohi: 68, resumeScans: 5, mockInterviews: 4 },
-    customizedSettings: { tutoringSlot: 'Morning 9 AM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+    takenCourses: ['Odisha OPSC Prelims Fast Track', 'English Reasoning Mastery'],
+    usage: { chatsWithArohi: 48, resumeScans: 9, mockInterviews: 5 },
+    customizedSettings: { tutoringSlot: 'Afternoon 3 PM', priorityLevel: 'High', assignedMentor: 'Automated AI Guide' }
   },
   {
-    id: 'usr_sub_005',
-    email: 'ananya.das@gmail.com',
-    name: 'Ananya Das',
-    phone: '+91 93370 88990',
-    role: 'Banking & Railway Aspirant',
+    id: 'usr_fb_006',
+    email: 'rohitrathsambalpur@gmail.com',
+    name: 'Rohit Rath (Sambalpur)',
+    phone: '+91 99370 77889',
+    role: 'Candidate / Tech Aspirant',
     status: 'Active',
-    entrySource: 'Instagram Ad Campaign',
+    entrySource: 'Google Authentication (Firebase)',
     isSubscribed: true,
     activePlanName: 'Starter Plan (₹399/mo)',
-    planStartDate: new Date(NOW_SERVER - 1 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
-    planExpiryDate: new Date(NOW_SERVER + 29 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:20 PM',
-    planExpiryTimestamp: NOW_SERVER + 29 * ONE_DAY_MS,
-    totalPaidAmount: 0,
-    lastPaymentMethod: 'Promo Coupon (100% Free)',
-    lastCouponUsed: 'AROHI399 (100% Off + 399 Coins)',
+    planStartDate: new Date(NOW_SERVER - 6 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 05:40 PM',
+    planExpiryDate: new Date(NOW_SERVER + 24 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 05:40 PM',
+    planExpiryTimestamp: NOW_SERVER + 24 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'Google Sign-In',
+    lastCouponUsed: 'None',
     paymentStatus: 'Verified',
     permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
     services: { path1: true, path2: false, path3: false, path4: false },
-    takenCourses: ['IBPS PO Quantitative Aptitude', 'Reasoning Fast-Track'],
-    usage: { chatsWithArohi: 19, resumeScans: 2, mockInterviews: 2 },
-    customizedSettings: { tutoringSlot: 'Flexible', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+    takenCourses: ['Sambalpur Regional Job Prep', 'Arohi AI Voice Tutoring'],
+    usage: { chatsWithArohi: 39, resumeScans: 4, mockInterviews: 3 },
+    customizedSettings: { tutoringSlot: 'Evening 7 PM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
   },
   {
-    id: 'usr_sub_006',
-    email: 'deepak.nayak@rediffmail.com',
-    name: 'Deepak Nayak',
-    phone: '+91 94371 55667',
-    role: 'Odisha Police Candidate',
+    id: 'usr_fb_007',
+    email: 'scswain123@gmail.com',
+    name: 'S. C. Swain',
+    phone: '+91 94380 99001',
+    role: 'Govt Job Aspirant',
     status: 'Active',
-    entrySource: 'Direct Browser',
-    isSubscribed: false,
-    activePlanName: 'Starter Plan (₹399/mo) [Expired]',
-    planStartDate: new Date(NOW_SERVER - 35 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
-    planExpiryDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:00 PM',
-    planExpiryTimestamp: NOW_SERVER - 5 * ONE_DAY_MS,
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:20 PM',
+    planExpiryDate: new Date(NOW_SERVER + 28 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 01:20 PM',
+    planExpiryTimestamp: NOW_SERVER + 28 * ONE_DAY_MS,
     totalPaidAmount: 399,
-    lastPaymentMethod: 'UPI Scan (Google Pay)',
+    lastPaymentMethod: 'Google Sign-In / PhonePe',
     lastCouponUsed: 'None',
-    paymentStatus: 'Expired',
+    paymentStatus: 'Verified',
     permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
-    services: { path1: false, path2: false, path3: false, path4: false },
-    takenCourses: ['Odisha Sub-Inspector Physical & Exam Guide'],
-    usage: { chatsWithArohi: 52, resumeScans: 4, mockInterviews: 1 },
-    customizedSettings: { tutoringSlot: 'None Scheduled', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+    services: { path1: true, path2: false, path3: false, path4: false },
+    takenCourses: ['SSC & Railway Combined Batch', 'Odia Language Grammar Notes'],
+    usage: { chatsWithArohi: 27, resumeScans: 5, mockInterviews: 1 },
+    customizedSettings: { tutoringSlot: 'Morning 10 AM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_fb_008',
+    email: 'thequenchdevelopers@gmail.com',
+    name: 'The Quench Developers',
+    phone: '+91 98531 66778',
+    role: 'Developer & Corporate Partner',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Executive Business Pro (₹1,299/mo)',
+    planStartDate: new Date(NOW_SERVER - 7 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:10 AM',
+    planExpiryDate: new Date(NOW_SERVER + 23 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 10:10 AM',
+    planExpiryTimestamp: NOW_SERVER + 23 * ONE_DAY_MS,
+    totalPaidAmount: 1299,
+    lastPaymentMethod: 'Google Sign-In / NetBanking',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: true, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: true, path3: true, path4: true },
+    takenCourses: ['API Integration & AI Deployment', 'Corporate Talent Match'],
+    usage: { chatsWithArohi: 94, resumeScans: 31, mockInterviews: 10 },
+    customizedSettings: { tutoringSlot: 'Dedicated Developer Channel', priorityLevel: 'High', assignedMentor: 'Arohi AI Master' }
+  },
+  {
+    id: 'usr_fb_009',
+    email: 's.rajashree198@gmail.com',
+    name: 'Rajashree S.',
+    phone: '+91 93381 22446',
+    role: 'Aspirant & Educator',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Career & Resume Pro (₹499/mo)',
+    planStartDate: new Date(NOW_SERVER - 3 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:50 PM',
+    planExpiryDate: new Date(NOW_SERVER + 27 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 04:50 PM',
+    planExpiryTimestamp: NOW_SERVER + 27 * ONE_DAY_MS,
+    totalPaidAmount: 499,
+    lastPaymentMethod: 'Google Sign-In / GPay',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: true, path3: false, path4: false },
+    takenCourses: ['Teaching & B.Ed Exam Module', 'Arohi AI Lesson Planner'],
+    usage: { chatsWithArohi: 41, resumeScans: 7, mockInterviews: 4 },
+    customizedSettings: { tutoringSlot: 'Evening 5 PM', priorityLevel: 'High', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_fb_010',
+    email: 'abinashdash.king@gmail.com',
+    name: 'Abinash Dash',
+    phone: '+91 96920 88776',
+    role: 'Defence & Police Candidate',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 08:30 AM',
+    planExpiryDate: new Date(NOW_SERVER + 25 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 08:30 AM',
+    planExpiryTimestamp: NOW_SERVER + 25 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'Google Sign-In',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: false, path3: false, path4: false },
+    takenCourses: ['Defence Physical Standards & Mock Test', 'Arohi AI GK Daily Digest'],
+    usage: { chatsWithArohi: 31, resumeScans: 3, mockInterviews: 2 },
+    customizedSettings: { tutoringSlot: 'Morning 8 AM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_fb_011',
+    email: 'sagarkashyap56199@gmail.com',
+    name: 'Sagar Kashyap',
+    phone: '+91 91140 33221',
+    role: 'Student & SSC Aspirant',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Starter Plan (₹399/mo)',
+    planStartDate: new Date(NOW_SERVER - 1 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 07:15 PM',
+    planExpiryDate: new Date(NOW_SERVER + 29 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 07:15 PM',
+    planExpiryTimestamp: NOW_SERVER + 29 * ONE_DAY_MS,
+    totalPaidAmount: 399,
+    lastPaymentMethod: 'Google Sign-In / UPI',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: true, path2: false, path3: false, path4: false },
+    takenCourses: ['SSC GD & CGL Mathematics Formulae Sheet', 'Arohi Resume Builder'],
+    usage: { chatsWithArohi: 22, resumeScans: 4, mockInterviews: 1 },
+    customizedSettings: { tutoringSlot: 'Evening 8 PM', priorityLevel: 'Standard', assignedMentor: 'Automated AI Guide' }
+  },
+  {
+    id: 'usr_fb_012',
+    email: 'oditree@gmail.com',
+    name: 'Oditree Enterprises',
+    phone: '+91 98619 55443',
+    role: 'MSME & Agro Enterprise',
+    status: 'Active',
+    entrySource: 'Google Authentication (Firebase)',
+    isSubscribed: true,
+    activePlanName: 'Udyam Business Growth Suite (₹899/mo)',
+    planStartDate: new Date(NOW_SERVER - 4 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:00 PM',
+    planExpiryDate: new Date(NOW_SERVER + 26 * ONE_DAY_MS).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 02:00 PM',
+    planExpiryTimestamp: NOW_SERVER + 26 * ONE_DAY_MS,
+    totalPaidAmount: 899,
+    lastPaymentMethod: 'Google Sign-In / UPI QR',
+    lastCouponUsed: 'None',
+    paymentStatus: 'Verified',
+    permissions: { canEditJobs: false, canApproveApps: false, canViewFinance: false },
+    services: { path1: false, path2: false, path3: true, path4: false },
+    takenCourses: ['Agro Business DPR & Subsidies Guide', 'GST Filing Masterclass'],
+    usage: { chatsWithArohi: 59, resumeScans: 8, mockInterviews: 4 },
+    customizedSettings: { tutoringSlot: 'Business Hours 11 AM', priorityLevel: 'High', assignedMentor: 'MSME Growth Consultant AI' }
   }
 ];
 
@@ -1921,6 +2051,60 @@ app.get('/api/admin/users', async (req, res) => {
       });
     } catch (err: any) {
       console.warn('Failed to load real-time users from Firestore:', err.message || err);
+    }
+  }
+
+  // 3. Directly scan & synchronize live Firebase Authentication Users Directory
+  if (adminAuth) {
+    try {
+      let nextPageToken: string | undefined = undefined;
+      do {
+        const listUsersResult = await adminAuth.listUsers(100, nextPageToken);
+        listUsersResult.users.forEach((fbUser: any) => {
+          if (!fbUser.email) return;
+          const emailNorm = fbUser.email.toLowerCase();
+          const existingIdx = combinedUsers.findIndex(u => u.email.toLowerCase() === emailNorm);
+
+          const providerId = fbUser.providerData?.[0]?.providerId || '';
+          const isGoogle = providerId.includes('google') || (fbUser.providerData || []).some((p: any) => p.providerId === 'google.com');
+          const isApple = providerId.includes('apple') || (fbUser.providerData || []).some((p: any) => p.providerId === 'apple.com');
+          const entrySource = isGoogle ? 'Google Authentication (Firebase)' : isApple ? 'Apple Sign-In (Firebase)' : 'Firebase Email/Password';
+
+          const createdDate = fbUser.metadata?.creationTime 
+            ? new Date(fbUser.metadata.creationTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            : 'Recently Registered';
+
+          if (existingIdx === -1) {
+            // New user from Firebase Auth not yet in custom arrays or Firestore
+            const mappedAuthUser = mapUserData(fbUser.uid, {
+              uid: fbUser.uid,
+              email: fbUser.email,
+              displayName: fbUser.displayName || fbUser.email.split('@')[0],
+              phone: fbUser.phoneNumber || '',
+              entrySource,
+              createdAt: fbUser.metadata?.creationTime,
+              lastSignInTime: fbUser.metadata?.lastSignInTime
+            });
+            if (mappedAuthUser) {
+              combinedUsers.push(mappedAuthUser as any);
+            }
+          } else {
+            // Enrich existing user record with live Firebase Auth verified credentials
+            if (!combinedUsers[existingIdx].phone && fbUser.phoneNumber) {
+              combinedUsers[existingIdx].phone = fbUser.phoneNumber;
+            }
+            if (isGoogle && !combinedUsers[existingIdx].entrySource?.includes('Google')) {
+              combinedUsers[existingIdx].entrySource = 'Google Authentication (Firebase)';
+            }
+            if (createdDate && combinedUsers[existingIdx].joinedDate === 'Recently Joined') {
+              combinedUsers[existingIdx].joinedDate = createdDate;
+            }
+          }
+        });
+        nextPageToken = listUsersResult.pageToken;
+      } while (nextPageToken);
+    } catch (authListErr: any) {
+      console.warn('Firebase Auth listUsers query note:', authListErr.message || authListErr);
     }
   }
 
@@ -9818,7 +10002,7 @@ async function startServer() {
         "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'—ALWAYS search Google and provide accurate, up-to-the-second news!" +
         (reqLang && reqLang !== 'en' ? `\n- INITIAL PREFERRED LANGUAGE HINT: The user's active UI language setting is set to '${reqLang}'.` : '');
 
-      if (uid) {
+      if (uid && !isReadAloud) {
         try {
           const userSnap = await safeUserDb.get(uid);
           if (userSnap.exists) {
@@ -9870,15 +10054,17 @@ async function startServer() {
         }
       }
 
-      // Pre-fetch top real-time headlines for live voice grounding
-      try {
-        const liveVoiceHeadlines = await fetchGoogleNewsLive('India latest news and developments');
-        if (liveVoiceHeadlines && liveVoiceHeadlines.length > 0) {
-          const formattedVoiceNews = liveVoiceHeadlines.map((n, i) => `${i + 1}. [${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''} (${n.date || 'Today'})`).join('\n');
-          voiceSystemInstruction += `\n\n=== LIVE GOOGLE & WEB NEWS GROUNDING (PRE-FETCHED FOR THIS VOICE CALL ON ${new Date().toLocaleDateString('en-IN')}) ===\n${formattedVoiceNews}\n\nDIRECTIVE: Refer to these real-time headlines to answer breaking news, politics, current ministers, or state updates accurately during this voice call!`;
+      // Pre-fetch top real-time headlines for live voice grounding (only for live voice calls, not read-aloud)
+      if (!isReadAloud) {
+        try {
+          const liveVoiceHeadlines = await fetchGoogleNewsLive('India latest news and developments');
+          if (liveVoiceHeadlines && liveVoiceHeadlines.length > 0) {
+            const formattedVoiceNews = liveVoiceHeadlines.map((n, i) => `${i + 1}. [${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''} (${n.date || 'Today'})`).join('\n');
+            voiceSystemInstruction += `\n\n=== LIVE GOOGLE & WEB NEWS GROUNDING (PRE-FETCHED FOR THIS VOICE CALL ON ${new Date().toLocaleDateString('en-IN')}) ===\n${formattedVoiceNews}\n\nDIRECTIVE: Refer to these real-time headlines to answer breaking news, politics, current ministers, or state updates accurately during this voice call!`;
+          }
+        } catch (vNewsErr) {
+          console.warn('Voice call live news prefetch error:', vNewsErr);
         }
-      } catch (vNewsErr) {
-        console.warn('Voice call live news prefetch error:', vNewsErr);
       }
 
       const liveModelsToTry = [

@@ -959,6 +959,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserData(data);
       return data;
     } catch (err: any) {
+      if (err?.code === 'auth/operation-not-allowed' || err?.message?.includes('operation-not-allowed')) {
+        throw new Error(`Google Sign-In is not enabled in your Firebase Console. Please enable Google provider in Firebase Console -> Authentication -> Sign-in method.`);
+      }
       if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
         throw new Error(`Google Sign-In Domain Error: "${window.location.hostname}" is not authorized in your Firebase Console. Please add "${window.location.hostname}" to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
       }
@@ -985,6 +988,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserData(data);
       return data;
     } catch (err: any) {
+      if (err?.code === 'auth/operation-not-allowed' || err?.message?.includes('operation-not-allowed')) {
+        throw new Error(`Apple Sign-In is not enabled on this Firebase project yet. Please use "Continue with Google" or "Continue with Email" to sign in instantly!`);
+      }
       if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
         throw new Error(`Apple Sign-In Domain Error: "${window.location.hostname}" is not authorized in your Firebase Console. Please add "${window.location.hostname}" to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
       }
