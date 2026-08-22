@@ -54,8 +54,8 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const [isMuted, setIsMuted] = useState(false);
   const selectedVoice = 'Zypher'; // Preferred Zypher voice persona for Arohi
   const [activeLanguage, setActiveLanguage] = useState<string>(() => {
-    if (language && language !== 'en') return language;
-    return 'or'; // Default to Odia & Auto-Detect for India's regional warmth
+    if (language && language !== 'auto') return language;
+    return 'en'; // Default to English; Arohi dynamically adapts to whatever language user speaks
   });
   const [sessionKey, setSessionKey] = useState(0);
   const reconnectAttemptsRef = useRef<number>(0);
@@ -98,6 +98,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const activeLanguageRef = useRef<string>(activeLanguage);
+
+  useEffect(() => {
+    activeLanguageRef.current = activeLanguage;
+  }, [activeLanguage]);
 
   // Precise scheduling variables for gapless playback
   const nextStartTimeRef = useRef<number>(0);
@@ -133,7 +138,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     return () => clearInterval(timer);
   }, []);
 
-  // Robust Browser Speech Recognition (Instant STT transcription as user speaks)
+  // Robust Browser Speech Recognition (Instant STT transcription with Zero-Touch Automatic Multilingual Mirroring)
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     let isMounted = true;
@@ -142,6 +147,38 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       console.warn('SpeechRecognition is not supported natively in this browser.');
       return;
     }
+
+    const detectLanguageFromTranscript = (text: string): string | null => {
+      if (!text) return null;
+      if (/[\u0B00-\u0B7F]/.test(text) || /\b(namaskar|kemiti|achha|achhanti|kahantu|katha|kan|karibi|kariba|mote|mate|mora|tame|apana|apananka|apananku|odisha|odia|khusi|lagiba|bhalo|bhala|kie|aji|kali|dhanyabad|suprabhat|subha|sandhya|kichi|sahajya|karantu|kuha)\b/i.test(text)) {
+        return 'or';
+      }
+      if (/[\u0980-\u09FF]/.test(text) || /\b(nomoshkar|namaskar|kemon|achhen|acho|achho|bolun|bolte|ki|bhalo|aami|ami|apni|tumi|bangla|amader|ekhane|kothay|keno|dhanyabad|shubh)\b/i.test(text)) {
+        return 'bn';
+      }
+      if (/[\u0900-\u097F]/.test(text) || /\b(namaste|kaise|kya|batao|bataiye|aap|tum|mujhe|mera|meri|karna|chahiye|shukriya|dhanyawad|suno|kijiye)\b/i.test(text)) {
+        return 'hi';
+      }
+      if (/[\u0C00-\u0C7F]/.test(text) || /\b(namaskaram|ela|unnaru|cheppandi|enti|nenu|meeru|telugu)\b/i.test(text)) {
+        return 'te';
+      }
+      if (/[\u0B80-\u0BFF]/.test(text) || /\b(vanakkam|eppadi|irukkinga|sollunga|enna|naan|neenga|tamil)\b/i.test(text)) {
+        return 'ta';
+      }
+      if (/[\u0A80-\u0AFF]/.test(text) || /\b(kem|cho|tame|aavu|gujarati)\b/i.test(text)) {
+        return 'gu';
+      }
+      if (/[\u0C80-\u0CFF]/.test(text) || /\b(hegiddira|hege|heli|kannada)\b/i.test(text)) {
+        return 'kn';
+      }
+      if (/[\u0D00-\u0D7F]/.test(text) || /\b(namaskaram|engane|undo|parayoo|malayalam)\b/i.test(text)) {
+        return 'ml';
+      }
+      if (/[\u0A00-\u0A7F]/.test(text) || /\b(sat|sri|akal|kiddan|punjabi)\b/i.test(text)) {
+        return 'pa';
+      }
+      return null;
+    };
 
     const startRecognition = () => {
       if (!isMounted || statusRef.current === 'ended' || statusRef.current === 'error') return;
@@ -156,7 +193,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         recognition.continuous = true;
         recognition.interimResults = true;
         
-        // Match chosen language with fallback to english or hindi
+        // Multi-dialect recognition support
         const langMap: Record<string, string> = {
           hi: 'hi-IN',
           en: 'en-IN',
@@ -195,14 +232,27 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           const activeText = (finalTranscript || interimTranscript).trim();
           if (!activeText) return;
 
-          // REAL-TIME BARGE-IN: If user speaks into microphone while AI audio is playing, interrupt AI audio & switch to listening
+          // ZERO-LATENCY INSTANT BARGE-IN: If user begins speaking, cancel AI audio immediately & listen
           if (
-            statusRef.current === 'speaking' || 
+            activeText.length >= 2 &&
+            (statusRef.current === 'speaking' || 
             audioQueueRef.current.length > 0 || 
-            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking)
+            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking))
           ) {
             stopAllPlayback();
             setStatus('listening');
+            setCurrentSpeech('');
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              try {
+                wsRef.current.send(JSON.stringify({ interrupted: true }));
+              } catch (e) {}
+            }
+          }
+
+          // Auto-detect spoken dialect on the fly
+          const autoLang = detectLanguageFromTranscript(activeText);
+          if (autoLang && autoLang !== activeLanguageRef.current) {
+            setActiveLanguage(autoLang);
           }
 
           setLiveUserSpeech(activeText);
@@ -224,9 +274,12 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
             setTurns(prev => [...prev, userTurn]);
 
+            const currentDetectedLang = detectLanguageFromTranscript(text) || activeLanguageRef.current || language || 'en';
+
+            // Forward text tokens simultaneously to WebSocket stream so Gemini receives both acoustic and linguistic tokens
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               try {
-                wsRef.current.send(JSON.stringify({ text: text }));
+                wsRef.current.send(JSON.stringify({ text: text, lang: currentDetectedLang }));
               } catch (e) {
                 console.warn('Error sending transcribed text prompt over WebSocket:', e);
               }
@@ -239,7 +292,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                   body: JSON.stringify({
                     prompt: text,
                     history: turns,
-                    language: activeLanguage || language || 'en',
+                    language: currentDetectedLang,
                     uid
                   })
                 });
@@ -265,7 +318,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               if (isMounted && activeText) {
                 commitUserTurn(activeText);
               }
-            }, 900);
+            }, 850);
           }
         };
 
@@ -444,17 +497,23 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
     try {
       const binary = window.atob(base64Audio);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
         bytes[i] = binary.charCodeAt(i);
       }
-      const pcm16 = new Int16Array(bytes.buffer);
-      const float32 = new Float32Array(pcm16.length);
-      for (let i = 0; i < pcm16.length; i++) {
-        float32[i] = pcm16[i] / 32768.0;
+      
+      const numSamples = Math.floor(len / 2);
+      if (numSamples <= 0) return;
+
+      const float32 = new Float32Array(numSamples);
+      const dataView = new DataView(bytes.buffer, bytes.byteOffset, numSamples * 2);
+      for (let i = 0; i < numSamples; i++) {
+        const pcm16 = dataView.getInt16(i * 2, true);
+        float32[i] = pcm16 / 32768.0;
       }
 
-      const audioBuffer = ctx.createBuffer(1, float32.length, 24000);
+      const audioBuffer = ctx.createBuffer(1, numSamples, 24000);
       audioBuffer.getChannelData(0).set(float32);
 
       const source = ctx.createBufferSource();
@@ -939,9 +998,16 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
             lastVolumeUpdateRef.current = now;
           }
 
-          if (rawVol > 16 && (audioQueueRef.current.length > 0 || statusRef.current === 'speaking')) {
+          // INSTANT AUDIO BARGE-IN: If user speaks into mic while Arohi is speaking or outputting audio, pause/cancel instantly
+          if (rawVol > 18 && (audioQueueRef.current.length > 0 || statusRef.current === 'speaking' || (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking))) {
             stopAllPlayback();
             setStatus(isMutedRef.current ? 'muted' : 'listening');
+            setCurrentSpeech('');
+            if (ws.readyState === WebSocket.OPEN) {
+              try {
+                ws.send(JSON.stringify({ interrupted: true }));
+              } catch (e) {}
+            }
           }
 
           const downsampledData = downsampleBuffer(float32Data, inputCtx.sampleRate || 16000, 16000);
@@ -966,7 +1032,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       active = false;
       cleanup();
     };
-  }, [selectedVoice, activeLanguage, sessionKey]);
+  }, [selectedVoice, sessionKey]);
 
   const cleanup = () => {
     isNormalCloseRef.current = true;
@@ -1420,9 +1486,9 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               </label>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
-                  { code: 'or', label: 'ଓଡ଼ିଆ (Odia)' },
+                  { code: 'en', label: 'English (Default)' },
                   { code: 'hi', label: 'हिंदी (Hindi)' },
-                  { code: 'en', label: 'English (India)' },
+                  { code: 'or', label: 'ଓଡ଼ିଆ (Odia)' },
                   { code: 'bn', label: 'বাংলা (Bengali)' },
                   { code: 'te', label: 'తెలుగు (Telugu)' },
                   { code: 'ta', label: 'தமிழ் (Tamil)' },

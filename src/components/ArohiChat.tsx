@@ -36,6 +36,7 @@ interface Message {
   timestamp: string;
   createdAt?: number | string;
   isStreaming?: boolean;
+  thinkingDuration?: number;
 }
 
 interface ChatHistory {
@@ -1164,13 +1165,21 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
   const stopAudioPlayback = () => {
     if (ttsWsRef.current) {
-      try { ttsWsRef.current.close(); } catch (e) {}
+      try {
+        ttsWsRef.current.onopen = null;
+        ttsWsRef.current.onmessage = null;
+        ttsWsRef.current.onerror = null;
+        ttsWsRef.current.onclose = null;
+        ttsWsRef.current.close();
+      } catch (e) {}
       ttsWsRef.current = null;
     }
     ttsAudioQueueRef.current.forEach(source => {
       try { source.stop(); } catch (e) {}
     });
     ttsAudioQueueRef.current = [];
+    ttsNextStartTimeRef.current = 0;
+
     if (ttsAudioCtxRef.current) {
       try { ttsAudioCtxRef.current.close(); } catch (e) {}
       ttsAudioCtxRef.current = null;
@@ -1226,57 +1235,54 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
     if (!cleanText) return;
 
-    // Immediately toggle speaking state for zero-latency UI response
+    // Immediately mark message as speaking in UI
     setSpeakingMessageId(id);
 
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      setSpeakingMessageId(null);
-      return;
-    }
+    // Dynamic script language detection for authentic regional accents
+    const detectTextLanguage = (txt: string): { langTag: string; langCode: string } => {
+      if (/[\u0B00-\u0B7F]/.test(txt)) return { langTag: 'or-IN', langCode: 'or' }; // Odia
+      if (/[\u0980-\u09FF]/.test(txt)) return { langTag: 'bn-IN', langCode: 'bn' }; // Bengali
+      if (/[\u0900-\u097F]/.test(txt)) return { langTag: 'hi-IN', langCode: 'hi' }; // Devanagari (Hindi/Marathi)
+      if (/[\u0C00-\u0C7F]/.test(txt)) return { langTag: 'te-IN', langCode: 'te' }; // Telugu
+      if (/[\u0B80-\u0BFF]/.test(txt)) return { langTag: 'ta-IN', langCode: 'ta' }; // Tamil
+      if (/[\u0A80-\u0AFF]/.test(txt)) return { langTag: 'gu-IN', langCode: 'gu' }; // Gujarati
+      if (/[\u0C80-\u0CFF]/.test(txt)) return { langTag: 'kn-IN', langCode: 'kn' }; // Kannada
+      if (/[\u0D00-\u0D7F]/.test(txt)) return { langTag: 'ml-IN', langCode: 'ml' }; // Malayalam
+      if (/[\u0A00-\u0A7F]/.test(txt)) return { langTag: 'pa-IN', langCode: 'pa' }; // Punjabi
+      if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(txt)) return { langTag: 'ur-IN', langCode: 'ur' }; // Urdu
+      if (/[\u3040-\u309F\u30A0-\u30FF]/.test(txt)) return { langTag: 'ja-JP', langCode: 'ja' }; // Japanese
+      if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(txt)) return { langTag: 'zh-CN', langCode: 'zh' }; // Chinese
+      if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(txt)) return { langTag: 'ko-KR', langCode: 'ko' }; // Korean
+      if (/[\u0400-\u04FF]/.test(txt)) return { langTag: 'ru-RU', langCode: 'ru' }; // Russian
 
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
-
-      // Dynamic script language detection for authentic regional accents
-      const detectTextLanguage = (txt: string): { langTag: string; langCode: string } => {
-        if (/[\u0B00-\u0B7F]/.test(txt)) return { langTag: 'or-IN', langCode: 'or' }; // Odia
-        if (/[\u0980-\u09FF]/.test(txt)) return { langTag: 'bn-IN', langCode: 'bn' }; // Bengali
-        if (/[\u0900-\u097F]/.test(txt)) return { langTag: 'hi-IN', langCode: 'hi' }; // Devanagari (Hindi/Marathi)
-        if (/[\u0C00-\u0C7F]/.test(txt)) return { langTag: 'te-IN', langCode: 'te' }; // Telugu
-        if (/[\u0B80-\u0BFF]/.test(txt)) return { langTag: 'ta-IN', langCode: 'ta' }; // Tamil
-        if (/[\u0A80-\u0AFF]/.test(txt)) return { langTag: 'gu-IN', langCode: 'gu' }; // Gujarati
-        if (/[\u0C80-\u0CFF]/.test(txt)) return { langTag: 'kn-IN', langCode: 'kn' }; // Kannada
-        if (/[\u0D00-\u0D7F]/.test(txt)) return { langTag: 'ml-IN', langCode: 'ml' }; // Malayalam
-        if (/[\u0A00-\u0A7F]/.test(txt)) return { langTag: 'pa-IN', langCode: 'pa' }; // Punjabi
-        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(txt)) return { langTag: 'ur-IN', langCode: 'ur' }; // Urdu
-        if (/[\u3040-\u309F\u30A0-\u30FF]/.test(txt)) return { langTag: 'ja-JP', langCode: 'ja' }; // Japanese
-        if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(txt)) return { langTag: 'zh-CN', langCode: 'zh' }; // Chinese
-        if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(txt)) return { langTag: 'ko-KR', langCode: 'ko' }; // Korean
-        if (/[\u0400-\u04FF]/.test(txt)) return { langTag: 'ru-RU', langCode: 'ru' }; // Russian
-
-        const langMap: Record<string, string> = {
-          en: 'en-IN', hi: 'hi-IN', or: 'or-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN',
-          mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN',
-          zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE'
-        };
-        const code = language || 'en';
-        return { langTag: langMap[code] || `${code}-IN`, langCode: code };
+      const langMap: Record<string, string> = {
+        en: 'en-IN', hi: 'hi-IN', or: 'or-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN',
+        mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN',
+        zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE'
       };
+      const code = language || 'en';
+      return { langTag: langMap[code] || `${code}-IN`, langCode: code };
+    };
 
-      const detectedLang = detectTextLanguage(cleanText);
+    const detectedLang = detectTextLanguage(cleanText);
 
-      // Split text into natural sentence chunks (avoids the Chrome 15s freeze bug on long responses)
-      const rawChunks = cleanText.match(/[^.!?\n।]+[.!?\n।]+|[^.!?\n।]+$/g) || [cleanText];
-      const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
+    // Fallback browser TTS method if WebSocket is unavailable
+    const fallbackToBrowserTTS = () => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        setSpeakingMessageId(null);
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
 
-      // Voice Picker matching Arohi signature voice
-      const findArohiVoice = (voices: SpeechSynthesisVoice[]) => {
-        if (!voices || voices.length === 0) return null;
+        const rawChunks = cleanText.match(/[^.!?\n।]+[.!?\n।]+|[^.!?\n।]+$/g) || [cleanText];
+        const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
+
+        const voices = window.speechSynthesis.getVoices();
         const shortLang = detectedLang.langCode.toLowerCase();
         const tagLower = detectedLang.langTag.toLowerCase();
 
-        // STRICT EXCLUSION OF MALE & SYSTEM DEFAULT MALE VOICES
         const strictlyFemaleVoices = voices.filter(v => {
           const nameLower = v.name.toLowerCase();
           const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
@@ -1285,64 +1291,32 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         });
 
         const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
-
-        return (
-          pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+        const arohiVoice = pool.find(v => v.lang.toLowerCase() === tagLower && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
           pool.find(v => v.lang.toLowerCase() === tagLower) ||
-          pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-          pool.find(v => v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) ||
-          pool.find(v => v.lang.toLowerCase().includes('en-in') && /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-          pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-          pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
-          pool[0]
-        );
-      };
-
-      const startPlayback = () => {
-        const voices = window.speechSynthesis.getVoices();
-        const arohiVoice = findArohiVoice(voices);
-
-        // Keep-alive timer so Chrome/Edge doesn't pause playback on long utterances
-        if (ttsKeepAliveTimerRef.current) {
-          clearInterval(ttsKeepAliveTimerRef.current);
-        }
-        ttsKeepAliveTimerRef.current = setInterval(() => {
-          if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
-            window.speechSynthesis.pause();
-            window.speechSynthesis.resume();
-          }
-        }, 10000);
+          pool.find(v => v.lang.toLowerCase().startsWith(shortLang)) ||
+          pool[0];
 
         let currentChunkIndex = 0;
-
         const speakNextChunk = () => {
           if (currentChunkIndex >= chunks.length) {
             stopAudioPlayback();
             return;
           }
-
           const chunkText = chunks[currentChunkIndex];
           const utterance = new SpeechSynthesisUtterance(chunkText);
           utterance.lang = detectedLang.langTag;
           utterance.rate = 1.0;
-          utterance.pitch = 1.35; // Arohi's signature soft warm female pitch
-          if (arohiVoice) {
-            utterance.voice = arohiVoice;
-          }
+          utterance.pitch = 1.35;
+          if (arohiVoice) utterance.voice = arohiVoice;
 
           utterance.onend = () => {
             currentChunkIndex++;
             speakNextChunk();
           };
-
-          utterance.onerror = (e) => {
-            console.warn('Speech chunk playback error:', e);
+          utterance.onerror = () => {
             currentChunkIndex++;
-            if (currentChunkIndex < chunks.length) {
-              speakNextChunk();
-            } else {
-              stopAudioPlayback();
-            }
+            if (currentChunkIndex < chunks.length) speakNextChunk();
+            else stopAudioPlayback();
           };
 
           activeUtterancesRef.current = [utterance];
@@ -1350,20 +1324,144 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
         };
 
         speakNextChunk();
+      } catch (err) {
+        console.error('Browser TTS fallback error:', err);
+        stopAudioPlayback();
+      }
+    };
+
+    // Primary: Use Arohi Live Voice Engine (Zypher 24kHz HD Voice via WebSocket — identical to Call)
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtxClass) {
+        fallbackToBrowserTTS();
+        return;
+      }
+
+      const audioCtx = new AudioCtxClass({ sampleRate: 24000 });
+      ttsAudioCtxRef.current = audioCtx;
+      ttsNextStartTimeRef.current = 0;
+      ttsAudioQueueRef.current = [];
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=Zypher&mode=read_aloud&lang=${encodeURIComponent(detectedLang.langCode)}${user?.uid ? `&uid=${encodeURIComponent(user.uid)}` : ''}`;
+
+      const ws = new WebSocket(wsUrl);
+      ttsWsRef.current = ws;
+
+      let receivedAudioPacket = false;
+      let turnCompleteReceived = false;
+
+      // Play continuous 24kHz PCM audio chunks with zero-gap scheduling
+      const playChunk = (base64Audio: string) => {
+        if (!audioCtx || audioCtx.state === 'closed') return;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+
+        try {
+          const binary = window.atob(base64Audio);
+          const len = binary.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+          }
+
+          const numSamples = Math.floor(len / 2);
+          if (numSamples <= 0) return;
+
+          const float32 = new Float32Array(numSamples);
+          const dataView = new DataView(bytes.buffer, bytes.byteOffset, numSamples * 2);
+          for (let i = 0; i < numSamples; i++) {
+            const pcm16 = dataView.getInt16(i * 2, true);
+            float32[i] = pcm16 / 32768.0;
+          }
+
+          const audioBuffer = audioCtx.createBuffer(1, numSamples, 24000);
+          audioBuffer.getChannelData(0).set(float32);
+
+          const source = audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioCtx.destination);
+
+          const currentTime = audioCtx.currentTime;
+          const startTime = Math.max(currentTime, ttsNextStartTimeRef.current);
+          source.start(startTime);
+          ttsNextStartTimeRef.current = startTime + audioBuffer.duration;
+
+          ttsAudioQueueRef.current.push(source);
+
+          source.onended = () => {
+            ttsAudioQueueRef.current = ttsAudioQueueRef.current.filter(s => s !== source);
+            if (ttsAudioQueueRef.current.length === 0 && turnCompleteReceived) {
+              stopAudioPlayback();
+            }
+          };
+        } catch (e) {
+          console.error('Error decoding TTS audio chunk:', e);
+        }
       };
 
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          startPlayback();
-          window.speechSynthesis.onvoiceschanged = null;
-        };
-        setTimeout(startPlayback, 50);
-      } else {
-        startPlayback();
-      }
+      ws.onopen = () => {
+        try {
+          ws.send(JSON.stringify({ text: cleanText }));
+        } catch (e) {
+          console.error('Failed to send text to Live TTS WS:', e);
+          fallbackToBrowserTTS();
+        }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.audio) {
+            receivedAudioPacket = true;
+            playChunk(data.audio);
+          }
+          if (data.turnComplete) {
+            turnCompleteReceived = true;
+            if (ttsAudioQueueRef.current.length === 0) {
+              stopAudioPlayback();
+            }
+          }
+          if (data.error && !receivedAudioPacket) {
+            console.warn('Live TTS error received:', data.error);
+            fallbackToBrowserTTS();
+          }
+        } catch (err) {
+          console.error('Error handling Live TTS message:', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.warn('Live TTS WebSocket error:', err);
+        if (!receivedAudioPacket) {
+          fallbackToBrowserTTS();
+        }
+      };
+
+      ws.onclose = () => {
+        if (!receivedAudioPacket) {
+          fallbackToBrowserTTS();
+        } else if (ttsAudioQueueRef.current.length === 0) {
+          setSpeakingMessageId(null);
+        }
+      };
+
+      // Safety timeout: if no audio packet arrives within 6 seconds, fallback
+      setTimeout(() => {
+        if (!receivedAudioPacket && speakingMessageId === id) {
+          fallbackToBrowserTTS();
+        }
+      }, 6000);
+
     } catch (err) {
-      console.error('Error starting instant Arohi speech:', err);
-      stopAudioPlayback();
+      console.error('Error initializing Live TTS WebSocket:', err);
+      fallbackToBrowserTTS();
     }
   };
 
@@ -2640,12 +2738,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       return;
     }
 
-    const streamingMsgId = (Date.now() + 1).toString();
+    const streamStartTime = Date.now();
+    const streamingMsgId = (streamStartTime + 1).toString();
     const initialAssistantMessage: Message = {
       id: streamingMsgId,
       role: 'assistant',
       content: '',
       isStreaming: true,
+      createdAt: streamStartTime,
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -2690,6 +2790,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       const decoder = new TextDecoder('utf-8');
       let accumulatedText = '';
       let buffer = '';
+      let recordedThinkingDuration: number | undefined = undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -2707,11 +2808,25 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             try {
               const data = JSON.parse(dataStr);
               if (data.chunk) {
+                if (recordedThinkingDuration === undefined) {
+                  recordedThinkingDuration = Number(((Date.now() - streamStartTime) / 1000).toFixed(1));
+                }
                 accumulatedText += data.chunk;
-                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, content: accumulatedText } : m));
+                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { 
+                  ...m, 
+                  content: accumulatedText,
+                  thinkingDuration: recordedThinkingDuration 
+                } : m));
               } else if (data.done && data.response && !accumulatedText) {
+                if (recordedThinkingDuration === undefined) {
+                  recordedThinkingDuration = Number(((Date.now() - streamStartTime) / 1000).toFixed(1));
+                }
                 accumulatedText = data.response;
-                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, content: accumulatedText } : m));
+                setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { 
+                  ...m, 
+                  content: accumulatedText,
+                  thinkingDuration: recordedThinkingDuration 
+                } : m));
               }
             } catch (e) {
               console.warn('Error parsing SSE json:', e);
@@ -2724,8 +2839,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         throw new Error('Streaming connection returned empty response');
       }
 
+      const finalElapsed = Number(((Date.now() - streamStartTime) / 1000).toFixed(1));
+      const resolvedThinkingTime = recordedThinkingDuration || Math.max(0.8, finalElapsed);
+
       // Mark streaming complete
-      setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { ...m, isStreaming: false } : m));
+      setMessages((prev) => prev.map(m => m.id === streamingMsgId ? { 
+        ...m, 
+        isStreaming: false,
+        thinkingDuration: resolvedThinkingTime
+      } : m));
 
       // Sync assistant response to admin portal safely
       fetch('/api/admin/sync-chat', {
@@ -2770,10 +2892,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         fallbackText = `I apologize for the brief connection hiccup! As **AROHI**, your AI opportunity advisor, I am ready to guide you on careers, government schemes, skills, and business opportunities. Please ask your question again or explore our Jobs board!`;
       }
 
+      const fallbackElapsed = Number(((Date.now() - streamStartTime) / 1000).toFixed(1));
       setMessages((prev) => prev.map(m => m.id === streamingMsgId ? {
         ...m,
         content: fallbackText,
-        isStreaming: false
+        isStreaming: false,
+        thinkingDuration: Math.max(0.8, fallbackElapsed)
       } : m));
 
       fetch('/api/admin/sync-chat', {
@@ -3700,9 +3824,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     msg.role === 'assistant' ? 'font-sans tracking-wide space-y-3' : 'text-white'
                   }`}>
                     {msg.role === 'assistant' && msg.isStreaming && !parsed.cleanedContent ? (
-                      <ArohiThinkingIndicator isDarkMode={isDarkMode} />
+                      <ArohiThinkingIndicator 
+                        isDarkMode={isDarkMode} 
+                        isLive={true} 
+                        startTime={typeof msg.createdAt === 'number' ? msg.createdAt : undefined} 
+                      />
                     ) : (
                       <>
+                        {msg.role === 'assistant' && parsed.cleanedContent && (
+                          <ArohiThinkingIndicator 
+                            isDarkMode={isDarkMode} 
+                            isLive={false} 
+                            duration={msg.thinkingDuration || 2.4} 
+                          />
+                        )}
                         {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab)}
                         {msg.role === 'assistant' && msg.isStreaming && (
                           <span className="inline-block w-2 h-4 ml-1 bg-amber-400 animate-pulse rounded-xs align-middle" />
@@ -3800,17 +3935,29 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       )}
                     </button>
 
-                    {/* Text to Speech Button */}
+                    {/* Text to Speech Button (Arohi Signature Voice) */}
                     <button
                       onClick={() => speakMessage(msg.id, parsed.cleanedContent)}
-                      className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                      className={`px-2 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSpeaking 
-                          ? (isDarkMode ? 'text-amber-400 bg-[#1a1435] animate-pulse' : 'text-amber-600 bg-amber-100 animate-pulse')
-                          : (isDarkMode ? 'hover:bg-[#1a1435] hover:text-white' : 'hover:bg-slate-200 hover:text-slate-900')
+                          ? (isDarkMode ? 'text-pink-300 bg-pink-950/60 border border-pink-500/40 shadow-sm shadow-pink-500/20' : 'text-pink-700 bg-pink-100 border border-pink-300 shadow-xs')
+                          : (isDarkMode ? 'text-slate-400 hover:bg-[#1a1435] hover:text-white' : 'text-slate-500 hover:bg-slate-200 hover:text-slate-900')
                       }`}
-                      title={isSpeaking ? "Stop speech" : "Read aloud"}
+                      title={isSpeaking ? "Stop Arohi Voice" : "Read aloud with Arohi Voice"}
                     >
-                      {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      {isSpeaking ? (
+                        <>
+                          <VolumeX className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                          <span className="text-[10px] font-bold text-pink-400 hidden sm:inline">Speaking</span>
+                          <span className="flex items-center gap-0.5 ml-0.5">
+                            <span className="w-0.5 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-0.5 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-0.5 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </span>
+                        </>
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5" />
+                      )}
                     </button>
 
                     {/* More Action dropdown */}
@@ -3905,7 +4052,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
           {isLoading && !messages.some(m => m.isStreaming) && (
             <div className="max-w-4xl mx-auto w-full py-2">
-              <ArohiThinkingIndicator isDarkMode={isDarkMode} />
+              <ArohiThinkingIndicator isDarkMode={isDarkMode} isLive={true} />
             </div>
           )}
 

@@ -5164,7 +5164,7 @@ app.post('/api/chat', async (req, res) => {
         const langName = languageNames[language];
         dynamicInstruction += `\n\n[USER INTERFACE LANGUAGE: ${langName}. The user prefers ${langName.split(' ')[0]}. You MUST reply primarily in ${langName} script or in highly natural sounding transliterated script (mixing local phonetic spelling with English keywords) depending on how the user communicates. Match their regional preference warmly, motivatingly, and professionally in that language.]`;
       } else {
-        dynamicInstruction += `\n\n[USER INTERFACE LANGUAGE: ENGLISH. The user prefers English. Maintain default English unless they type in any Indian regional language or Hinglish/transliterated language, in which case match their chosen language perfectly.]`;
+        dynamicInstruction += `\n\n[ZERO-SHOT AUTOMATIC MULTILINGUAL DETECTION & MIRRORING MANDATE: Automatically detect the language and script of the user's prompt (Odia/ଓଡ଼ିଆ, Bengali/বাংলা, Hindi/हिंदी, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Punjabi/ਪੰਜਾਬੀ, Kannada/ಕನ್ನಡ, Malayalam/മലയാളം, Urdu/اردو, English, etc., including Romanized transliterations like "kemiti achha", "kemon acho", "kaise ho"). You MUST INSTANTLY AND NATURALLY RESPOND ENTIRELY IN THE EXACT SAME LANGUAGE that the user used. Never default back to English unless the user communicates in English.]`;
       }
 
       if (messageText.toLowerCase().includes('resume') || messageText.toLowerCase().includes('cv') || messageText.toLowerCase().includes('biodata') || messageText.toLowerCase().includes('career')) {
@@ -5601,7 +5601,11 @@ app.post('/api/live-voice-turn', async (req, res) => {
 You are currently on a direct, real-time live voice call with the user.
 Your voice is warm, natural, respectful, and energetic.
 Keep your spoken replies conversational, direct, and concise (typically 2-4 sentences for voice dialogue, avoiding bulleted lists or raw markdown formatting like asterisks and headers unless specifically asked for a structured breakdown).
-Never use robotic meta-commentary like "As an AI model" or "According to my database". Speak naturally as Arohi.`;
+Never use robotic meta-commentary like "As an AI model" or "According to my database". Speak naturally as Arohi.
+
+ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
+- Automatically detect the language of what the user is speaking (Odia/ଓଡ଼ିଆ, Bengali/বাংলা, Hindi/हिंदी, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Punjabi, English, or Romanized transliterations like "kemiti achha", "kemon achho", "kaise ho").
+- YOU MUST RESPOND IN THE EXACT SAME SPOKEN LANGUAGE that the user used on that turn. If the user speaks Odia, reply in natural fluent Odia. If Bengali, reply in Bengali. If Hindi, reply in Hindi. If English, reply in English.`;
 
     if (uid) {
       try {
@@ -5632,7 +5636,7 @@ Never use robotic meta-commentary like "As an AI model" or "According to my data
     };
 
     if (language && languageNames[language]) {
-      dynamicInstruction += `\nSpoken conversation language: ${languageNames[language]}. Respond naturally in this language.`;
+      dynamicInstruction += `\nSpoken conversation language preference: ${languageNames[language]}. Respond naturally in this language.`;
     }
 
     const formattedContents: any[] = [];
@@ -7669,8 +7673,56 @@ function getArohiFallbackResponse(userPrompt: string = '', fileName?: string, li
     fileIntro = `### 📎 Document Uploaded: \`${fileName}\`\n\nI have successfully received your document attachment! As **AROHI**, I can confirm that this **.${fileExt.toUpperCase()}** file has been safely registered for career/MSME analysis. \n\n*I will utilize state-of-the-art visual and linguistic models to extract specific content from your files!* \n\n---\n\n`;
   }
 
-  // Pure greetings or small-talk check
+  // Detect Odia (Script or Romanized/Transliterated Odia)
+  const isOdia = /[\u0B00-\u0B7F]/.test(userPrompt) ||
+    /\b(namaskar|kemiti|achha|achhanti|kahantu|katha|kan|karibi|kariba|mote|mate|mora|tame|apana|apananka|apananku|odisha|odia|khusi|lagiba|bhalo|bhala|kie|aji|kali|dhanyabad|suprabhat|subha|sandhya|kichi|sahajya|karantu|kuha)\b/i.test(p);
+
+  // Detect Bengali (Script or Romanized/Transliterated Bengali)
+  const isBengali = /[\u0980-\u09FF]/.test(userPrompt) ||
+    /\b(nomoshkar|namaskar|kemon|achhen|acho|achho|bolun|bolte|ki|bhalo|aami|ami|apni|tumi|bangla|amader|ekhane|kothay|keno|dhanyabad|shubh)\b/i.test(p);
+
+  // Detect Hindi (Script or Romanized/Hinglish)
+  const isHindi = /[\u0900-\u097F]/.test(userPrompt) ||
+    /\b(namaste|kaise|kya|batao|bataiye|aap|tum|mujhe|mera|meri|karna|chahiye|shukriya|dhanyawad|kaise ho|kaisi ho)\b/i.test(p);
+
+  // Pure greetings or small-talk check with language mirroring
   if (isGreetingOrSmallTalk(userPrompt)) {
+    if (isOdia) {
+      return fileIntro + `ନମସ୍କାର! ମୁଁ **ଆରୋହୀ (AROHI)**, ଆପଣଙ୍କର AI କ୍ୟାରିଅର୍ ଓ ସୁଯୋଗ ପରାମର୍ଶଦାତା (Arohi AI)।
+
+ମୁଁ ଆପଣଙ୍କୁ ନିମ୍ନଲିଖିତ ବିଷୟରେ ସାହାଯ୍ୟ କରିପାରିବି:
+- **ଶିକ୍ଷା ଓ କ୍ୟାରିଅର୍**: ରେଜ୍ୟୁମେ, ମକ୍ ଇଣ୍ଟରଭ୍ୟୁ, ପାଠ୍ୟକ୍ରମ, ସରକାରୀ ପରୀକ୍ଷା ଓ ଷ୍ଟଡି ପ୍ଲାନ୍।
+- **ସରକାରୀ ଯୋଜନା ଓ ଋଣ**: କେନ୍ଦ୍ର ଓ ରାଜ୍ୟ ଯୋଜନା, PMEGP, ମୁଦ୍ରା ଲୋନ୍, ଏବଂ ଦିବ୍ୟାଙ୍ଗ ସୁବିଧା।
+- **ଷ୍ଟାର୍ଟଅପ୍ ଓ ବ୍ୟବସାୟ**: ବ୍ୟବସାୟ ଯୋଜନା, MSME ସହାୟତା ଓ ବଜାର ଅନୁସନ୍ଧାନ।
+- **ପ୍ରଯୁକ୍ତିବିଦ୍ୟା ଓ କୋଡିଂ**: କମ୍ପ୍ୟୁଟର ପ୍ରୋଗ୍ରାମିଂ, ବିଜ୍ଞାନ ଓ ସାମ୍ପ୍ରତିକ ଘଟଣାବଳୀ।
+
+*ଆଜି ଆପଣ କ'ଣ ଜାଣିବାକୁ କିମ୍ବା ଶିଖିବାକୁ ଚାହାଁନ୍ତି? ମୋତେ ନିଃସଙ୍କୋଚରେ କୁହନ୍ତୁ!*`;
+    }
+
+    if (isBengali) {
+      return fileIntro + `নমস্কার! আমি **আরোহী (AROHI)**, Arohi AI-তে আপনার এআই সুযোগ ও ক্যারিয়ার উপদেষ্টা।
+
+আমি আপনাকে সাহায্য করতে পারি:
+- **ক্যারিয়ার ও শিক্ষা**: রেজুমে তৈরি, মক ইন্টারভিউ, সরকারি পরীক্ষা ও স্টাডি গাইড।
+- **সরকারি প্রকল্প ও ঋণ**: কেন্দ্র ও রাজ্য সরকারি স্কিম, মুদ্রা লোন ও স্টার্টআপ সাহায্য।
+- **ব্যবসা ও উদ্যোগ**: নতুন ব্যবসার পরিকল্পনা, MSME সহায়তা ও বাজার বিশ্লেষণ।
+- **প্রযুক্তি ও কোডিং**: প্রোগ্রামিং, বিজ্ঞান ও রিয়েল-টাইম তথ্য।
+
+*আপনি আজ কী বিষয়ে জানতে বা শুরু করতে চান? বলুন, আমি সাহায্য করছি!*`;
+    }
+
+    if (isHindi) {
+      return fileIntro + `नमस्ते! मैं **आरोही (AROHI)** हूँ, Arohi AI पर आपकी AI करियर व अवसर सलाहकार।
+
+मैं आपकी इन विषयों में सहायता कर सकती हूँ:
+- **करियर और शिक्षा**: रेज़्यूमे, मॉक इंटरव्यू, कोर्सेस, सरकारी परीक्षाएं और स्टडी प्लान।
+- **सरकारी योजनाएं और लोन**: केंद्र व राज्य योजनाएं, PMEGP, मुद्रा लोन और दिव्यांगजन सहायता।
+- **स्टार्टअप और बिज़नेस**: बिज़नेस आइडिया, MSME सपोर्ट और मार्केट रिसर्च।
+- **प्रौद्योगिकी और कोडिंग**: प्रोग्रामिंग, साइंस और ताज़ा अपडेट्स।
+
+*बताइए, आज आप क्या हासिल करना चाहते हैं? मैं आपकी पूरी मदद करूँगी!*`;
+    }
+
     return fileIntro + `Hello there! I am **AROHI**, your AI Opportunity & Growth Advisor on Arohi AI.
 
 I am here to assist you with:
@@ -9994,18 +10046,19 @@ async function startServer() {
         "\n- TONE & DELIVERY: Speak with clean warmth, professional enthusiasm, and clear articulation. Speak naturally and directly to the user. Do NOT use repetitive forced filler greetings like 'Namaste ji!', 'Namaskar ji!', or 'Haan ji!'." +
         "\n- For standard casual conversational Q&A, keep responses clear, warm, and conversational (2-4 sentences)." +
         "\n- STRICT NON-STOP STORYTELLING & SPEECH MANDATE: You are granted EXPLICIT SPECIAL PERMISSION to recite and narrate long stories and speeches during voice calls! When the user asks you to give a speech for students/startups, address an auditorium, tell a story, or recite 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' (in Odia, Hindi, English, or ANY language), ONCE A STORY HAS BEEN INITIATED, ALL 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR 'Are you listening?' PROMPTS ARE STRICTLY DISABLED AND FORBIDDEN! YOU MUST NARRATE THE ENTIRE STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE UNBROKEN STREAM WITHOUT EVER STOPPING TO ASK 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR ANY OTHER CONTINUATION OR PRESENCE QUESTION! Recite the complete unabridged narrative from beginning to end in full scale without stopping midway. Take whatever time is needed (10, 12, 15+ minutes or as long as it takes). NEVER ask 'Are you still there?' or 'Should I continue?'. ONLY pause if the user actively interrupts or speaks into their microphone!" +
-        "\n\n=== DYNAMIC INSTANT LANGUAGE ADAPTATION & SPEECH MIRRORING MANDATE ===" +
-        "\n- ABSOLUTE MULTILINGUAL RECOGNITION: Arohi automatically detects and supports 150+ languages (Odia/ଓଡ଼ିଆ, Hindi/हिंदी, English, Bengali, Telugu, Tamil, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, etc.)." +
-        "\n- IF THE USER SPEAKS OR SENDS A PROMPT IN ODIA (e.g., ଓଡ଼ିଆ script or spoken Odia like 'mote business karibaku achhi', 'kemiti achha', 'mu odisha ru', 'state schemes bisayare kuha', 'kan karibi', 'namaskar'), YOU MUST IMMEDIATELY SWITCH AND RESPOND ENTIRELY IN SWEET, NATURAL SPOKEN ODIA (ଓଡ଼ିଆ)!" +
-        "\n- IF THE USER SPEAKS IN HINDI, BENGALI, TELUGU, TAMIL, MARATHI, GUJARATI, PUNJABI, etc.: IMMEDIATELY RESPOND ENTIRELY IN THAT EXACT SPOKEN LANGUAGE WITH LOVING DESI WARMTH!" +
-        "\n- NEVER remain in English or Hindi if the user speaks in Odia or another regional language. Instantly pivot your voice response to the user's spoken language on that very turn!" +
-        "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'—ALWAYS search Google and provide accurate, up-to-the-second news!" +
-        (reqLang && reqLang !== 'en' ? `\n- INITIAL PREFERRED LANGUAGE HINT: The user's active UI language setting is set to '${reqLang}'.` : '');
+        "\n\n=== INITIAL CALL WELCOME & DYNAMIC REAL-TIME MULTILINGUAL ADAPTATION ===" +
+        "\n- WELCOME GREETING IN ENGLISH: ALWAYS begin incoming voice calls with a warm, cheerful, and natural welcoming greeting in ENGLISH (e.g., 'Hello! I am Arohi, your AI guide. How can I help you today?')." +
+        "\n- INSTANT DYNAMIC MULTILINGUAL ADAPTATION: You are fully multilingual across 150+ languages (English, Hindi/हिंदी, Odia/ଓଡ଼ିଆ, Bengali/বাংলা, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Kannada, Malayalam, Punjabi, Urdu, Spanish, French, German, Japanese, and more)." +
+        "\n- AS SOON AS THE USER SPEAKS IN ANY REGIONAL OR GLOBAL LANGUAGE (such as Odia, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, etc., or spoken/transliterated words like 'kemiti achha', 'mote business kariba ku achhi', 'mujhe guidance chahiye', 'state schemes bisayare kuha'), YOU MUST IMMEDIATELY AND SEAMLESSLY PIVOT TO REPLY IN THAT EXACT USER'S SPOKEN LANGUAGE with native fluency, sweet tone, and warmth!" +
+        "\n- If the user speaks English, continue answering in English. If the user changes language at any time during the conversation, switch immediately to match their spoken language on that very turn!" +
+        "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'—ALWAYS search Google and provide accurate, up-to-the-second news!";
 
       if (uid && !isReadAloud) {
         try {
-          const userSnap = await safeUserDb.get(uid);
-          if (userSnap.exists) {
+          const userPromise = safeUserDb.get(uid);
+          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 600));
+          const userSnap: any = await Promise.race([userPromise, timeoutPromise]);
+          if (userSnap && userSnap.exists) {
             const userData = userSnap.data();
             const displayName = userData.displayName || '';
             const profile = userData.profile || {};
@@ -10029,7 +10082,7 @@ async function startServer() {
             // Summarize past chats (Lifetime memory)
             if (userData.arohiChats && userData.arohiChats.length > 0) {
               voiceMemory += `\n\n=== PAST CHAT HIGHLIGHTS ===`;
-              userData.arohiChats.forEach((chat: any) => {
+              userData.arohiChats.slice(-3).forEach((chat: any) => {
                 voiceMemory += `\n* Chat "${chat.title}" [Date: ${chat.date || 'Recent'}] is saved in lifetime memory.`;
               });
             }
@@ -10037,14 +10090,14 @@ async function startServer() {
             // Summarize past voice calls (Lifetime memory)
             if (userData.arohiCalls && userData.arohiCalls.length > 0) {
               voiceMemory += `\n\n=== PAST VOICE CALL SUMMARIES ===`;
-              userData.arohiCalls.forEach((call: any) => {
+              userData.arohiCalls.slice(-3).forEach((call: any) => {
                 if (call.summaryText) {
                   voiceMemory += `\n* Call [${call.date || 'Recent'}]: ${call.summaryText.replace(/\n/g, ' ')}`;
                 }
               });
             }
 
-            voiceMemory += `\n\nAROHI VOICE MEMORY DIRECTIONS: Warmly greet the user ("${displayName}") and maintain high empathy and intelligence. Never assume or fix a default city (like Delhi) or career goal unless the user explicitly provided it. Arohi naturally discovers the user's location and interests from what they share in speech and chat. If they refer to past chats or voice calls listed above, confirm your recollection beautifully and provide helpful continuity. Maintain a highly warm, positive, inspirational, and engaging tone. For standard Q&A keep answers clear, BUT when narrating 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' or giving a speech or story for students or startups, ALL 'Are you still there?' OR 'Should I continue?' PROMPTS ARE STRICTLY DISABLED ONCE INITIATED. ALWAYS tell the complete full-scale unabridged story continuously from start to finish in a single stream without stopping, pausing, asking if you should continue, or checking if the user is still there!`;
+            voiceMemory += `\n\nAROHI VOICE MEMORY DIRECTIONS: Warmly greet the user ("${displayName}") and maintain high empathy and intelligence. Never assume or fix a default city (like Delhi) or career goal unless the user explicitly provided it. Arohi naturally discovers the user's location and interests from what they share in speech and chat. If they refer to past chats or voice calls listed above, confirm your recollection beautifully and provide helpful continuity. Maintain a highly warm, positive, inspirational, and engaging tone.`;
             
             voiceSystemInstruction += voiceMemory;
           }
@@ -10054,22 +10107,8 @@ async function startServer() {
         }
       }
 
-      // Pre-fetch top real-time headlines for live voice grounding (only for live voice calls, not read-aloud)
-      if (!isReadAloud) {
-        try {
-          const liveVoiceHeadlines = await fetchGoogleNewsLive('India latest news and developments');
-          if (liveVoiceHeadlines && liveVoiceHeadlines.length > 0) {
-            const formattedVoiceNews = liveVoiceHeadlines.map((n, i) => `${i + 1}. [${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''} (${n.date || 'Today'})`).join('\n');
-            voiceSystemInstruction += `\n\n=== LIVE GOOGLE & WEB NEWS GROUNDING (PRE-FETCHED FOR THIS VOICE CALL ON ${new Date().toLocaleDateString('en-IN')}) ===\n${formattedVoiceNews}\n\nDIRECTIVE: Refer to these real-time headlines to answer breaking news, politics, current ministers, or state updates accurately during this voice call!`;
-          }
-        } catch (vNewsErr) {
-          console.warn('Voice call live news prefetch error:', vNewsErr);
-        }
-      }
-
       const liveModelsToTry = [
-        "gemini-3.1-flash-live-preview",
-        "gemini-2.0-flash-exp"
+        "gemini-3.1-flash-live-preview"
       ];
 
       let session: any = null;
@@ -10274,19 +10313,34 @@ async function startServer() {
           console.log(`Gemini Live session connected successfully with model: ${liveModel}`);
           logWsEvent('gemini_live_connected', { voice: selectedVoice, model: liveModel });
 
-          // Flush any pending text prompts queued while connecting
-          while (pendingTextPrompts.length > 0) {
-            const queuedText = pendingTextPrompts.shift();
-            if (queuedText && session) {
-              try {
-                session.sendClientContent({
-                  turns: [{ role: 'user', parts: [{ text: queuedText }] }],
-                  turnComplete: true
-                });
-                console.log(`Flushed queued user text prompt to Gemini Live session: "${queuedText.slice(0, 50)}..."`);
-              } catch (qErr) {
-                console.error("Error flushing queued text to Gemini Live session:", qErr);
+          // Flush any pending text prompts queued while connecting or trigger instant initial welcome greeting
+          if (pendingTextPrompts.length > 0) {
+            while (pendingTextPrompts.length > 0) {
+              const queuedText = pendingTextPrompts.shift();
+              if (queuedText && session) {
+                try {
+                  session.sendClientContent({
+                    turns: [{ role: 'user', parts: [{ text: queuedText }] }],
+                    turnComplete: true
+                  });
+                  console.log(`Flushed queued user text prompt to Gemini Live session: "${queuedText.slice(0, 50)}..."`);
+                } catch (qErr) {
+                  console.error("Error flushing queued text to Gemini Live session:", qErr);
+                }
               }
+            }
+          } else if (!isReadAloud && session) {
+            // Instantly start talking when call connects (< 200ms) with a natural warm hello
+            try {
+              const greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
+              
+              session.sendClientContent({
+                turns: [{ role: 'user', parts: [{ text: greetingInstruction }] }],
+                turnComplete: true
+              });
+              console.log("Triggered instant Arohi welcome greeting on call connect.");
+            } catch (greetErr) {
+              console.warn("Could not trigger initial welcome greeting:", greetErr);
             }
           }
 
@@ -10350,7 +10404,7 @@ async function startServer() {
                   }
                 }
                 if (!replyText) {
-                  replyText = "I heard you clearly! I am here to assist with your career, education, government exams, business, or scheme inquiries. What would you like to explore next?";
+                  replyText = getArohiFallbackResponse(parsed.text || '');
                 }
                 if (clientWs.readyState === WebSocket.OPEN) {
                   clientWs.send(JSON.stringify({ transcript: replyText, speaker: 'arohi' }));
