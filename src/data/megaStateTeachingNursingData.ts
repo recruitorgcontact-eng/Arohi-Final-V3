@@ -1,0 +1,1125 @@
+import { MockTest } from '../types/examTypes';
+
+export const MEGA_STATE_TEACHING_NURSING_MOCK_TESTS: MockTest[] = [
+  // 1. AIIMS NORCET Maternal & Child Health (OBG & Pediatrics)
+  {
+    id: 'test_aiims_norcet_obg_peds',
+    slug: 'aiims-norcet-obstetrics-gynecology-pediatrics-mock',
+    title: 'AIIMS NORCET • Obstetrics, Gynecology & Pediatric Nursing High-Yield Drill',
+    titleOdia: 'AIIMS NORCET • ପ୍ରସୂତି ଓ ଶିଶୁ ଚିକିତ୍ସା ନର୍ସିଂ ସିବିଟି ମକ୍',
+    shortDescription: 'AIIMS New Delhi NORCET pattern: APGAR scoring, Stages of Labor, Postpartum Hemorrhage (PPH), Neonatal Resuscitation, and Milestones.',
+    mainCategory: 'nursing',
+    subCategory: 'aiims_norcet',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'AIIMS NORCET 2026',
+    gradeOrClass: 'B.Sc Nursing / GNM',
+    board: 'AIIMS New Delhi Examination Section',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'AIIMS High Yield',
+    attemptsCount: 39800,
+    averageScore: 16.4,
+    cutoffEstimated: 17.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.33 penalty per wrong response).'],
+    sections: [{ id: 'sec_norcet_obg', name: 'OBG & Pediatric Nursing', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }],
+    questions: [
+      {
+        id: 'obg_q1',
+        questionNumber: 1,
+        sectionId: 'sec_norcet_obg',
+        sectionName: 'Obstetric Nursing',
+        subject: 'Maternal Health',
+        topic: 'Stages of Labor & Active Management of Third Stage (AMTSL)',
+        type: 'single_choice',
+        text: 'What is the standard first-line uterotonic drug and dose administered immediately after the birth of the baby as part of the Active Management of the Third Stage of Labor (AMTSL) to prevent postpartum hemorrhage (PPH)?',
+        options: [
+          { id: 'A', text: 'Oxytocin 10 IU Intramuscularly (IM)' },
+          { id: 'B', text: 'Methylergonovine 0.2 mg IV' },
+          { id: 'C', text: 'Misoprostol 100 mcg oral' },
+          { id: 'D', text: 'Carboprost 250 mcg IM' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.33,
+        difficulty: 'easy',
+        explanation: 'WHO and Indian Ministry of Health guidelines mandate 10 IU of Oxytocin IM as the preferred first-line drug of choice in AMTSL.',
+        referenceNotes: 'DC Dutta\'s Textbook of Obstetrics AMTSL Guidelines'
+      }
+    ]
+  },
+
+  // 2. AIIMS NORCET Psychiatric & Mental Health Nursing
+  {
+    id: 'test_aiims_norcet_psychiatric',
+    slug: 'aiims-norcet-psychiatric-mental-health-nursing-mock',
+    title: 'AIIMS NORCET • Psychiatric & Mental Health Nursing Clinical Drill',
+    titleOdia: 'AIIMS NORCET • ମାନସିକ ସ୍ୱାସ୍ଥ୍ୟ ଓ ସାଇକ୍ରିଆଟିକ୍ ନର୍ସିଂ ମକ୍',
+    shortDescription: 'Schizophrenia (Bleuler\'s 4 A\'s), Depression & Suicide precautions, Lithium toxicity, Defense mechanisms, and ECT care.',
+    mainCategory: 'nursing',
+    subCategory: 'aiims_norcet',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'AIIMS NORCET 2026',
+    gradeOrClass: 'B.Sc Nursing / GNM',
+    board: 'AIIMS New Delhi',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Psychiatric Care Track',
+    attemptsCount: 31200,
+    averageScore: 17.1,
+    cutoffEstimated: 18.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.33 wrong).'],
+    sections: [{ id: 'sec_psych', name: 'Mental Health Nursing', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }],
+    questions: [
+      {
+        id: 'psych_q1',
+        questionNumber: 1,
+        sectionId: 'sec_psych',
+        sectionName: 'Psychiatric Nursing',
+        subject: 'Psychopharmacology',
+        topic: 'Lithium Carbonate Therapeutic Range & Toxicity',
+        type: 'single_choice',
+        text: 'What is the therapeutic serum concentration range of Lithium maintained in patients receiving maintenance therapy for Bipolar Mood Disorder?',
+        options: [
+          { id: 'A', text: '0.6 to 1.2 mEq/L (Toxicity typically begins above 1.5 mEq/L)' },
+          { id: 'B', text: '2.0 to 3.5 mEq/L' },
+          { id: 'C', text: '0.1 to 0.4 mEq/L' },
+          { id: 'D', text: '4.0 to 5.5 mEq/L' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.33,
+        difficulty: 'easy',
+        explanation: 'Therapeutic level of lithium for acute mania is 0.8–1.2 mEq/L and for maintenance is 0.6–1.0 mEq/L. Levels above 1.5 mEq/L cause toxic symptoms like coarse tremors, vomiting, and ataxia.',
+        referenceNotes: 'Ahuja\'s Textbook of Postgraduate Psychiatry'
+      }
+    ]
+  },
+
+  // 3. ESIC Nursing Officer All-India CBT
+  {
+    id: 'test_esic_nursing_officer_cbt',
+    slug: 'esic-nursing-officer-all-india-cbt-mock',
+    title: 'ESIC Nursing Officer (UPSC) • Medical-Surgical & Paramedical Grand Mock',
+    titleOdia: 'ESIC ନର୍ସିଂ ଅଫିସର (UPSC) • ସିବିଟି ଅଲ୍ ଇଣ୍ଡିଆ ଗ୍ରାଣ୍ଡ ମକ୍',
+    shortDescription: 'Employees\' State Insurance Corporation Nursing Officer exam: Medical-Surgical, Community Medicine, Anatomy, Pharmacology, and Reasoning.',
+    mainCategory: 'nursing',
+    subCategory: 'esic_nursing',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'ESIC Nursing Officer 2026',
+    gradeOrClass: 'B.Sc Nursing / GNM',
+    board: 'UPSC / ESIC',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Central Govt Nursing',
+    attemptsCount: 38400,
+    averageScore: 16.9,
+    cutoffEstimated: 18.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.33 penalty).'],
+    sections: [{ id: 'sec_esic_n', name: 'ESIC Nursing Core', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }],
+    questions: [
+      {
+        id: 'esic_n_q1',
+        questionNumber: 1,
+        sectionId: 'sec_esic_n',
+        sectionName: 'Medical-Surgical Nursing',
+        subject: 'Endocrine Care',
+        topic: 'Diabetic Ketoacidosis (DKA) Management',
+        type: 'single_choice',
+        text: 'Which intravenous fluid is the initial fluid of choice in the acute resuscitation of a patient presenting with severe Diabetic Ketoacidosis (DKA) with profound dehydration?',
+        options: [
+          { id: 'A', text: '0.9% Normal Saline (Isotonic 0.9% NaCl)' },
+          { id: 'B', text: '5% Dextrose in Water (D5W)' },
+          { id: 'C', text: '3% Hypertonic Saline' },
+          { id: 'D', text: '10% Dextrose' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.33,
+        difficulty: 'easy',
+        explanation: 'Initial fluid therapy in DKA requires aggressive volume expansion with 0.9% normal saline (1–1.5 L in the first hour) to restore intravascular volume and renal perfusion.',
+        referenceNotes: 'Brunner & Suddarth\'s Medical-Surgical Nursing'
+      }
+    ]
+  },
+
+  // 4. DSSSB Nursing Officer (Delhi Govt Hospitals)
+  {
+    id: 'test_dsssb_nursing_officer_mock',
+    slug: 'dsssb-nursing-officer-delhi-govt-hospitals-mock',
+    title: 'DSSSB Nursing Officer (Delhi Govt) • Clinical Nursing & General Paper Mock',
+    titleOdia: 'DSSSB ନର୍ସିଂ ଅଫିସର (ଦିଲ୍ଲୀ ସରକାର) • ସିବିଟି ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'Delhi Subordinate Services Selection Board: 100 Marks Technical Nursing + 100 Marks General (Hindi, English, Math, Reasoning, GK).',
+    mainCategory: 'nursing',
+    subCategory: 'esic_nursing',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'DSSSB Nursing Officer 2026',
+    gradeOrClass: 'GNM / B.Sc Nursing',
+    board: 'DSSSB Delhi',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Delhi Govt Hospital Track',
+    attemptsCount: 34100,
+    averageScore: 16.2,
+    cutoffEstimated: 17.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.25 penalty).'],
+    sections: [{ id: 'sec_dsssb_n', name: 'DSSSB Combined', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.25 }],
+    questions: [
+      {
+        id: 'dss_n_q1',
+        questionNumber: 1,
+        sectionId: 'sec_dsssb_n',
+        sectionName: 'Community Health Nursing',
+        subject: 'Epidemiology',
+        topic: 'Levels of Disease Prevention',
+        type: 'single_choice',
+        text: 'Administering BCG and Hepatitis B immunization to a newborn infant falls under which level of prevention in public health?',
+        options: [
+          { id: 'A', text: 'Primary Prevention (Specific Protection)' },
+          { id: 'B', text: 'Secondary Prevention (Early diagnosis)' },
+          { id: 'C', text: 'Tertiary Prevention (Rehabilitation)' },
+          { id: 'D', text: 'Primordial Prevention' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.25,
+        difficulty: 'easy',
+        explanation: 'Immunization is a classic example of Specific Protection under Primary Prevention aimed at intercepting disease before biological onset.',
+        referenceNotes: 'Park\'s Textbook of Preventive and Social Medicine'
+      }
+    ]
+  },
+
+  // 5. NCLEX-RN Clinical Prioritization & Delegation
+  {
+    id: 'test_nclex_rn_prioritization_drill',
+    slug: 'nclex-rn-clinical-prioritization-delegation-safety',
+    title: 'NCLEX-RN • Client Prioritization, Delegation & Safety Drill',
+    titleOdia: 'NCLEX-RN • କ୍ଲିନିକାଲ ପ୍ରାୟୋରିଟାଇଜେସନ ଓ ସେଫ୍ଟି ଡ୍ରିଲ୍',
+    shortDescription: 'National Council Licensure Examination (NextGen format): ABCs (Airway, Breathing, Circulation), Maslow\'s Hierarchy, and Scope of Practice.',
+    mainCategory: 'nursing',
+    subCategory: 'nclex_nursing',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'NCLEX-RN NextGen',
+    gradeOrClass: 'Graduate Nurse',
+    board: 'National Council of State Boards of Nursing (NCSBN)',
+    durationMinutes: 60,
+    totalQuestions: 20,
+    totalMarks: 20,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Global Registered Nurse',
+    attemptsCount: 22800,
+    averageScore: 14.5,
+    cutoffEstimated: 15.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['20 High-Level Prioritization Questions (+1.0 / 0 penalty).'],
+    sections: [{ id: 'sec_nclex', name: 'Client Need Categories', totalQuestions: 20, totalMarks: 20, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'nclex_q1',
+        questionNumber: 1,
+        sectionId: 'sec_nclex',
+        sectionName: 'Management of Care',
+        subject: 'Prioritization',
+        topic: 'Triage & Client Assignment',
+        type: 'single_choice',
+        text: 'The charge nurse on a medical-surgical unit receives morning report. Which assigned client should the registered nurse assess FIRST?',
+        options: [
+          { id: 'A', text: 'A 60-year-old client 1 day post-thyroidectomy reporting tingling around the mouth and mild laryngeal stridor' },
+          { id: 'B', text: 'A 45-year-old client with chronic kidney disease whose serum potassium is 4.8 mEq/L' },
+          { id: 'C', text: 'A 50-year-old client post-laparoscopic cholecystectomy reporting 6/10 incisional pain' },
+          { id: 'D', text: 'A 35-year-old client with pneumonia whose temperature is 38.3°C (101°F)' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'medium',
+        explanation: 'Tingling perioral numbness and stridor post-thyroidectomy indicate hypocalcemia (tetany/laryngeal spasm due to accidental parathyroid damage) which is an immediate life-threatening airway emergency (Airway/Breathing priority).',
+        referenceNotes: 'Saunders Comprehensive Review for NCLEX-RN'
+      }
+    ]
+  },
+
+  // 6. OSSSC Combined Exam (Junior Assistant & PEO)
+  {
+    id: 'test_osssc_combined_ja_peo_mock',
+    slug: 'osssc-combined-recruitment-ja-peo-ri-mock',
+    title: 'OSSSC Combined (JA & PEO) • Odia, English, GK, Math & Computer Mock',
+    titleOdia: 'OSSSC ସମ୍ମିଳିତ ପରୀକ୍ଷା (ଜୁନିଅର ଆସିଷ୍ଟାଣ୍ଟ ଓ PEO) • ସିବିଟି ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'Odisha Sub-Ordinate Staff Selection Commission: Official 5-subject syllabus for Junior Assistant, Panchayat Executive Officer (PEO), RI and Amin.',
+    mainCategory: 'competitive_state',
+    subCategory: 'osssc_combined',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'OSSSC Combined 2026',
+    gradeOrClass: '10+2 / Graduation in Any Stream',
+    board: 'Odisha Sub-Ordinate Staff Selection Commission (OSSSC)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ଓଡ଼ିଶା OSSSC ସରକାରୀ ଚାକିରି',
+    attemptsCount: 44200,
+    averageScore: 18.2,
+    cutoffEstimated: 20.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['ସମୟ: ୬୦ ମିନିଟ୍ | ପ୍ରଶ୍ନ: ୨୫ | ମାର୍କିଂ: +୧.୦ ଠିକ୍ ଉତ୍ତର, -୦.୫୦ ଭୁଲ୍ ଉତ୍ତର ।'],
+    sections: [{ id: 'sec_osssc_ja', name: 'OSSSC Combined Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'osssc_ja_q1',
+        questionNumber: 1,
+        sectionId: 'sec_osssc_ja',
+        sectionName: 'Computer Practical Knowledge',
+        subject: 'Computer Fundamentals',
+        topic: 'Microsoft Office & Shortcut Keys',
+        type: 'single_choice',
+        text: 'In Microsoft Word and Windows OS, which keyboard shortcut is used to permanently undo the last performed action?',
+        options: [
+          { id: 'A', text: 'Ctrl + Z' },
+          { id: 'B', text: 'Ctrl + Y' },
+          { id: 'C', text: 'Ctrl + U' },
+          { id: 'D', text: 'Ctrl + X' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Ctrl + Z performs Undo, while Ctrl + Y performs Redo.',
+        referenceNotes: 'OSSSC Computer Skill Syllabus'
+      }
+    ]
+  },
+
+  // 7. BPSC Prelims (Bihar Public Service Commission)
+  {
+    id: 'test_bpsc_prelims_gs_mock',
+    slug: 'bpsc-bihar-civil-services-prelims-gs-mock',
+    title: 'BPSC (Bihar Civil Services) • 71st Prelims General Studies Master Mock',
+    titleOdia: 'BPSC (ବିହାର ସିଭିଲ୍ ସର୍ଭିସେସ୍) • ପ୍ରିଲିମ୍ସ ଜେନେରାଲ ଷ୍ଟଡିଜ୍ ମକ୍',
+    shortDescription: 'Bihar PSC: Ancient Magadha History, Champaran Satyagraha, Bihar Geography, Indian Polity, Economy, and General Science.',
+    mainCategory: 'competitive_state',
+    subCategory: 'state_psc_bpsc',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'BPSC CCE 2026',
+    gradeOrClass: 'Graduate in Any Discipline',
+    board: 'Bihar Public Service Commission (BPSC)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Bihar Administrative Service',
+    attemptsCount: 37800,
+    averageScore: 15.6,
+    cutoffEstimated: 17.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.33 penalty per wrong response).'],
+    sections: [{ id: 'sec_bpsc', name: 'BPSC GS Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }],
+    questions: [
+      {
+        id: 'bpsc_q1',
+        questionNumber: 1,
+        sectionId: 'sec_bpsc',
+        sectionName: 'History of Bihar',
+        subject: 'Modern Indian History',
+        topic: 'Champaran Satyagraha (1917)',
+        type: 'single_choice',
+        text: 'Who among the following invited Mahatma Gandhi to Champaran in Bihar to investigate the grievances of indigo farmers suffering under the Tinkathia system?',
+        options: [
+          { id: 'A', text: 'Raj Kumar Shukla' },
+          { id: 'B', text: 'Dr. Rajendra Prasad' },
+          { id: 'C', text: 'Anugrah Narayan Sinha' },
+          { id: 'D', text: 'Brajkishore Prasad' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.33,
+        difficulty: 'easy',
+        explanation: 'Raj Kumar Shukla met Mahatma Gandhi at the 1916 Lucknow Session of the Indian National Congress and persuaded him to visit Champaran.',
+        referenceNotes: 'BPSC Modern History & Bihar Special'
+      }
+    ]
+  },
+
+  // 8. UPPSC PCS (Uttar Pradesh Civil Services)
+  {
+    id: 'test_uppsc_pcs_prelims_gs1',
+    slug: 'uppsc-uttar-pradesh-pcs-prelims-gs-paper-1',
+    title: 'UPPSC PCS • Uttar Pradesh Civil Services Prelims GS Paper-1 Mock',
+    titleOdia: 'UPPSC PCS (ଉତ୍ତର ପ୍ରଦେଶ ସିଭିଲ୍ ସର୍ଭିସେସ୍) • ପ୍ରିଲିମ୍ସ ଜେନେରାଲ ଷ୍ଟଡିଜ୍ ମକ୍',
+    shortDescription: 'Uttar Pradesh Public Service Commission: UP Special GK, Indian Polity, History, Environment, and General Science.',
+    mainCategory: 'competitive_state',
+    subCategory: 'state_psc_uppsc',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'UPPSC PCS 2026',
+    gradeOrClass: 'Graduate in Any Discipline',
+    board: 'UPPSC Prayagraj',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 33.33,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'UP Administrative Service',
+    attemptsCount: 36200,
+    averageScore: 21.4,
+    cutoffEstimated: 24.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.33 correct, -0.44 penalty).'],
+    sections: [{ id: 'sec_uppsc', name: 'UPPSC GS-1', totalQuestions: 25, totalMarks: 33.33, positiveMarksPerQuestion: 1.33, negativeMarksPerQuestion: 0.44 }],
+    questions: [
+      {
+        id: 'uppsc_q1',
+        questionNumber: 1,
+        sectionId: 'sec_uppsc',
+        sectionName: 'Indian Polity',
+        subject: 'Polity & Constitution',
+        topic: 'Panchayati Raj & 73rd Constitutional Amendment',
+        type: 'single_choice',
+        text: 'The 73rd Constitutional Amendment Act, 1992 added which Schedule to the Constitution of India detailing 29 functional items for Panchayati Raj Institutions?',
+        options: [
+          { id: 'A', text: 'Eleventh Schedule (11th Schedule)' },
+          { id: 'B', text: 'Twelfth Schedule (12th Schedule - Municipalities)' },
+          { id: 'C', text: 'Tenth Schedule' },
+          { id: 'D', text: 'Ninth Schedule' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.33,
+        negativeMarks: 0.44,
+        difficulty: 'easy',
+        explanation: 'The 73rd Amendment added Part IX and the 11th Schedule containing 29 functional matters of Panchayats.',
+        referenceNotes: 'M. Laxmikanth Indian Polity Panchayati Raj'
+      }
+    ]
+  },
+
+  // 9. WBPSC WBCS (West Bengal Civil Services)
+  {
+    id: 'test_wbcs_prelims_gs_mock',
+    slug: 'wbcs-west-bengal-civil-services-prelims-mock',
+    title: 'WBPSC WBCS • West Bengal Civil Services Prelims General Studies Mock',
+    titleOdia: 'WBPSC WBCS (ପଶ୍ଚିମବଙ୍ଗ ସିଭିଲ୍ ସର୍ଭିସେସ୍) • ପ୍ରିଲିମ୍ସ ସିବିଟି ମକ୍',
+    shortDescription: 'English Composition, General Science, History of India, Geography of India with special reference to West Bengal, and Indian National Movement.',
+    mainCategory: 'competitive_state',
+    subCategory: 'state_psc_wbcs',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'WBCS Prelims 2026',
+    gradeOrClass: 'Graduate in Any Discipline',
+    board: 'West Bengal Public Service Commission (WBPSC)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'WBCS Executive Track',
+    attemptsCount: 29400,
+    averageScore: 16.5,
+    cutoffEstimated: 18.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.33 penalty).'],
+    sections: [{ id: 'sec_wbcs', name: 'WBCS Prelims Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }],
+    questions: [
+      {
+        id: 'wbcs_q1',
+        questionNumber: 1,
+        sectionId: 'sec_wbcs',
+        sectionName: 'National Movement',
+        subject: 'Modern Indian History',
+        topic: 'Partition of Bengal & Swadeshi Movement (1905)',
+        type: 'single_choice',
+        text: 'Who was the Viceroy of British India when the controversial Partition of Bengal was promulgated on October 16, 1905?',
+        options: [
+          { id: 'A', text: 'Lord Curzon' },
+          { id: 'B', text: 'Lord Minto' },
+          { id: 'C', text: 'Lord Ripon' },
+          { id: 'D', text: 'Lord Hardinge' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.33,
+        difficulty: 'easy',
+        explanation: 'Lord Curzon partitioned Bengal in 1905, triggering the massive Swadeshi and Boycott Movement across India.',
+        referenceNotes: 'WBCS History of India'
+      }
+    ]
+  },
+
+  // 10. MPSC (Maharashtra Public Service Commission)
+  {
+    id: 'test_mpsc_state_services_prelims',
+    slug: 'mpsc-maharashtra-civil-services-prelims-mock',
+    title: 'MPSC State Services • Maharashtra PSC Prelims General Studies Mock',
+    titleOdia: 'MPSC (ମହାରାଷ୍ଟ୍ର ସିଭିଲ୍ ସର୍ଭିସେସ୍) • ପ୍ରିଲିମ୍ସ ଜେନେରାଲ ଷ୍ଟଡିଜ୍ ମକ୍',
+    shortDescription: 'Maharashtra PSC pattern: Maharashtra Geography, Social Reformers (Jyotirao Phule, Shahu Maharaj, Dr. Ambedkar), Indian Polity, and Science.',
+    mainCategory: 'competitive_state',
+    subCategory: 'state_psc_mpsc',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'MPSC Rajyaseva 2026',
+    gradeOrClass: 'Graduate in Any Stream',
+    board: 'Maharashtra Public Service Commission (MPSC)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'MPSC Officer Track',
+    attemptsCount: 31200,
+    averageScore: 32.4,
+    cutoffEstimated: 35.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.0 correct, -0.50 penalty).'],
+    sections: [{ id: 'sec_mpsc', name: 'MPSC Paper-1', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'mpsc_q1',
+        questionNumber: 1,
+        sectionId: 'sec_mpsc',
+        sectionName: 'Social History',
+        subject: 'Social Reform Movement',
+        topic: 'Satyashodhak Samaj & Mahatma Phule',
+        type: 'single_choice',
+        text: 'In 1873, the revolutionary social reform organization "Satyashodhak Samaj" (Truth-seekers\' Society) was founded in Pune by:',
+        options: [
+          { id: 'A', text: 'Mahatma Jyotirao Govindrao Phule' },
+          { id: 'B', text: 'Gopal Ganesh Agarkar' },
+          { id: 'C', text: 'Bal Gangadhar Tilak' },
+          { id: 'D', text: 'Mahadev Govind Ranade' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Jyotirao Phule founded Satyashodhak Samaj in 1873 to promote social rights and education for women and underprivileged classes.',
+        referenceNotes: 'MPSC History of Social Reformers'
+      }
+    ]
+  },
+
+  // 11. Odisha Police Constable (Battalion CBT)
+  {
+    id: 'test_odisha_police_constable_battalion',
+    slug: 'odisha-police-sepoy-constable-battalion-mock',
+    title: 'Odisha Police Constable & Sepoy • 100% Bilingual CBT Speed Mock',
+    titleOdia: 'ଓଡ଼ିଶା ପୋଲିସ କନଷ୍ଟେବଲ ଓ ସିପାହୀ (ବ୍ୟାଟାଲିୟନ) • ସିବିଟି ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'State Police Recruitment Board Odisha: Odia Language, English, Arithmetic, Aptitude/Reasoning, and Odisha General Awareness.',
+    mainCategory: 'competitive_state',
+    subCategory: 'police_si',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'Odisha Police Constable 2026',
+    gradeOrClass: '10th Matriculation Pass',
+    board: 'State Police Recruitment Board Odisha',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ଓଡ଼ିଶା ପୋଲିସ ସିପାହୀ',
+    attemptsCount: 45600,
+    averageScore: 18.9,
+    cutoffEstimated: 21.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['ସମୟ: ୬୦ ମିନିଟ୍ | ପ୍ରଶ୍ନ: ୨୫ | ମାର୍କିଂ: +୧.୦ ଠିକ୍ ଉତ୍ତର, -୦.୨୫ ଭୁଲ୍ ଉତ୍ତର ।'],
+    sections: [{ id: 'sec_opc_bat', name: 'Odisha Constable Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.25 }],
+    questions: [
+      {
+        id: 'opc_b_q1',
+        questionNumber: 1,
+        sectionId: 'sec_opc_bat',
+        sectionName: 'Odisha GK',
+        subject: 'Odisha Geography',
+        topic: 'Chilika Lake & Ramsar Wetland',
+        type: 'single_choice',
+        text: 'Which is the largest coastal brackish water lagoon in India and the first Indian wetland of international importance designated under the Ramsar Convention?',
+        options: [
+          { id: 'A', text: 'Chilika Lake (ଚିଲିକା ହ୍ରଦ)' },
+          { id: 'B', text: 'Ansupa Lake' },
+          { id: 'C', text: 'Kolleru Lake' },
+          { id: 'D', text: 'Pulicat Lake' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.25,
+        difficulty: 'easy',
+        explanation: 'Chilika Lake in Odisha was designated the first Ramsar site in India in 1981.',
+        referenceNotes: 'Odisha Reference Yearbook Geography'
+      }
+    ]
+  },
+
+  // 12. Bihar Police Sub-Inspector (Daroga)
+  {
+    id: 'test_bihar_police_si_daroga_mock',
+    slug: 'bihar-police-sub-inspector-bpssc-daroga-mock',
+    title: 'Bihar Police SI (Daroga BPSSC) • General Knowledge & Current Events Mock',
+    titleOdia: 'ବିହାର ପୋଲିସ ସବ୍-ଇନ୍ସପେକ୍ଟର (ଦାରୋଗା BPSSC) • ସିବିଟି ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'Bihar Police Sub-ordinate Services Commission: Indian History, Geography, Indian Constitution, General Science, and Current Affairs.',
+    mainCategory: 'competitive_state',
+    subCategory: 'police_si',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'Bihar Police SI 2026',
+    gradeOrClass: 'Graduate in Any Discipline',
+    board: 'BPSSC Patna',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Bihar Daroga Track',
+    attemptsCount: 38900,
+    averageScore: 34.2,
+    cutoffEstimated: 38.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.0 correct, -0.20 penalty).'],
+    sections: [{ id: 'sec_bpssc', name: 'BPSSC SI Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.2 }],
+    questions: [
+      {
+        id: 'bpssc_q1',
+        questionNumber: 1,
+        sectionId: 'sec_bpssc',
+        sectionName: 'General Knowledge',
+        subject: 'General Science',
+        topic: 'Units of Physical Quantities & Light Year',
+        type: 'single_choice',
+        text: 'A "Light Year" is a standard scientific unit used in astronomy to measure:',
+        options: [
+          { id: 'A', text: 'Astronomical Distance (~9.46 × 10¹² km)' },
+          { id: 'B', text: 'Time duration' },
+          { id: 'C', text: 'Intensity of light' },
+          { id: 'D', text: 'Velocity of light' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.2,
+        difficulty: 'easy',
+        explanation: 'A light-year is the total distance that light travels in vacuum in one Julian year (approx. 9.46 trillion kilometres).',
+        referenceNotes: 'BPSSC General Science Physics'
+      }
+    ]
+  },
+
+  // 13. UP Police Sub-Inspector (UPSI) Mool Vidhi & Hindi
+  {
+    id: 'test_upsi_mool_vidhi_samanya_hindi',
+    slug: 'up-police-si-mool-vidhi-samanya-hindi-mock',
+    title: 'UP Police SI • Mool Vidhi (Basic Law), Samanya Hindi & Constitution Mock',
+    titleOdia: 'UP ପୋଲିସ ସବ୍-ଇନ୍ସପେକ୍ଟର • ମୂଳ ବିଧି, ସମ୍ବିଧାନ ଓ ସାମାନ୍ୟ ହିନ୍ଦୀ ମକ୍',
+    shortDescription: 'Uttar Pradesh Police Recruitment and Promotion Board (UPPRPB): IPC/BNS, CrPC/BNSS, Motor Vehicles Act, Cyber Crimes, and General Hindi.',
+    mainCategory: 'competitive_state',
+    subCategory: 'police_si',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'UP Police SI 2026',
+    gradeOrClass: 'Graduate in Any Discipline',
+    board: 'UPPRPB Lucknow',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 62.5,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'UP Police Sub-Inspector',
+    attemptsCount: 39400,
+    averageScore: 43.5,
+    cutoffEstimated: 48.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.5 correct, 0 negative marking for qualifying section).'],
+    sections: [{ id: 'sec_upsi', name: 'Mool Vidhi & Hindi', totalQuestions: 25, totalMarks: 62.5, positiveMarksPerQuestion: 2.5, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'upsi_q1',
+        questionNumber: 1,
+        sectionId: 'sec_upsi',
+        sectionName: 'Mool Vidhi',
+        subject: 'Basic Law & Acts',
+        topic: 'Right to Information (RTI) Act, 2005',
+        type: 'single_choice',
+        text: 'Under the Right to Information (RTI) Act, 2005, what is the mandatory time limit for the Public Information Officer (PIO) to provide requested information concerning the "life or liberty" of an individual?',
+        options: [
+          { id: 'A', text: '48 Hours' },
+          { id: 'B', text: '30 Days' },
+          { id: 'C', text: '7 Days' },
+          { id: 'D', text: '24 Hours' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.5,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Section 7(1) of RTI Act mandates that if the information sought concerns the life or liberty of a person, it must be provided within 48 hours of receiving the request.',
+        referenceNotes: 'RTI Act 2005 Provisions'
+      }
+    ]
+  },
+
+  // 14. CTET Paper 1 (Class 1-5 Primary Teacher)
+  {
+    id: 'test_ctet_paper1_primary_mock',
+    slug: 'ctet-paper-1-child-development-pedagogy-evs-math',
+    title: 'CTET Paper 1 (Classes 1 to 5) • Child Development, Pedagogy & EVS Mock',
+    titleOdia: 'CTET ପେପର-୧ (୧ମ ରୁ ୫ମ ଶ୍ରେଣୀ ଶିକ୍ଷକ) • ଶିଶୁ ବିକାଶ ଓ ଶିକ୍ଷାଶାସ୍ତ୍ର ମକ୍',
+    shortDescription: 'Central Teacher Eligibility Test (CBSE): Piaget, Vygotsky, Kohlberg, Inclusive Education, Constructivism, Mathematics pedagogy, and EVS.',
+    mainCategory: 'competitive_state',
+    subCategory: 'teaching_ctet_otet',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'CTET Paper 1 2026',
+    gradeOrClass: 'D.El.Ed / B.El.Ed / B.Ed',
+    board: 'Central Board of Secondary Education (CBSE)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Central Primary Teacher',
+    attemptsCount: 42100,
+    averageScore: 19.4,
+    cutoffEstimated: 21.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, 0 negative marking). Minimum 60% (90/150) for general qualifying.'],
+    sections: [{ id: 'sec_ctet1', name: 'CDP & Pedagogy', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'ctet1_q1',
+        questionNumber: 1,
+        sectionId: 'sec_ctet1',
+        sectionName: 'Child Development',
+        subject: 'Pedagogy',
+        topic: 'Lev Vygotsky\'s Socio-Cultural Theory & Scaffolding',
+        type: 'single_choice',
+        text: 'In Lev Vygotsky\'s Socio-Cultural Theory of Cognitive Development, the temporary support, hints, and prompts provided by an adult or More Knowledgeable Other (MKO) to help a learner master a task is termed as:',
+        options: [
+          { id: 'A', text: 'Scaffolding' },
+          { id: 'B', text: 'Assimilation' },
+          { id: 'C', text: 'Conditioning' },
+          { id: 'D', text: 'Egocentrism' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Scaffolding refers to the temporary guidance and support given within the Zone of Proximal Development (ZPD) to facilitate independent problem-solving.',
+        referenceNotes: 'Vygotsky Educational Psychology CTET Core'
+      }
+    ]
+  },
+
+  // 15. CTET Paper 2 (Class 6-8 Upper Primary Science & Math)
+  {
+    id: 'test_ctet_paper2_science_math',
+    slug: 'ctet-paper-2-upper-primary-science-mathematics-mock',
+    title: 'CTET Paper 2 (Classes 6 to 8) • Upper Primary Science & Math Pedagogy',
+    titleOdia: 'CTET ପେପର-୨ (୬ଷ୍ଠ ରୁ ୮ମ ଶ୍ରେଣୀ) • ବିଜ୍ଞାନ ଓ ଗଣିତ ଶିକ୍ଷାଦାନ ମକ୍',
+    shortDescription: 'Upper Primary TGT Eligibility: Concept mapping, Constructivist teaching-learning approaches, Error analysis, and Curriculum development.',
+    mainCategory: 'competitive_state',
+    subCategory: 'teaching_ctet_otet',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'CTET Paper 2 2026',
+    gradeOrClass: 'B.Ed / Integrated B.Sc-B.Ed',
+    board: 'Central Board of Secondary Education (CBSE)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Central TGT Teacher Track',
+    attemptsCount: 39500,
+    averageScore: 18.6,
+    cutoffEstimated: 20.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, 0 negative marking).'],
+    sections: [{ id: 'sec_ctet2', name: 'Science & Math Pedagogy', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'ctet2_q1',
+        questionNumber: 1,
+        sectionId: 'sec_ctet2',
+        sectionName: 'Science Pedagogy',
+        subject: 'Teaching Methodology',
+        topic: 'National Curriculum Framework (NCF) & Constructivism',
+        type: 'single_choice',
+        text: 'According to the National Curriculum Framework (NCF), which approach should be prioritized by a science teacher to foster critical scientific inquiry among middle-school students?',
+        options: [
+          { id: 'A', text: 'Engaging learners in hands-on inquiry-based experiments and real-world investigations' },
+          { id: 'B', text: 'Encouraging rote memorization of scientific formulas and definitions' },
+          { id: 'C', text: 'Strictly adhering to lecture delivery without student questions' },
+          { id: 'D', text: 'Giving marks purely on neatness of laboratory notebook handwriting' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'NCF emphasizes shift from rote learning to active, constructivist, experiential hands-on exploration and inquiry.',
+        referenceNotes: 'National Curriculum Framework (NCF) for School Education'
+      }
+    ]
+  },
+
+  // 16. KVS / NVS (Kendriya Vidyalaya TGT & PGT)
+  {
+    id: 'test_kvs_nvs_tgt_pgt_pedagogy',
+    slug: 'kvs-nvs-teaching-methodology-nep-2020-mock',
+    title: 'KVS & NVS Teacher (TGT/PGT) • Perspectives on Education & Leadership Mock',
+    titleOdia: 'KVS ଓ NVS ଶିକ୍ଷକ ଭର୍ତ୍ତି (TGT/PGT) • NEP ୨୦୨୦ ଓ ଶିକ୍ଷା ଶାସ୍ତ୍ର ମକ୍',
+    shortDescription: 'Kendriya Vidyalaya & Navodaya Vidyalaya Samiti: National Education Policy (NEP 2020), School Leadership, Curricular Design, and ICT in Teaching.',
+    mainCategory: 'competitive_state',
+    subCategory: 'kvs_nvs_teacher',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'KVS / NVS Recruitment 2026',
+    gradeOrClass: 'B.Ed + Post Graduation',
+    board: 'Kendriya Vidyalaya Sangathan (KVS)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'KVS / NVS Govt Teacher',
+    attemptsCount: 34100,
+    averageScore: 17.8,
+    cutoffEstimated: 19.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, 0 negative marking).'],
+    sections: [{ id: 'sec_kvs', name: 'Perspectives on Education', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'kvs_q1',
+        questionNumber: 1,
+        sectionId: 'sec_kvs',
+        sectionName: 'Education Policy',
+        subject: 'Perspectives on Education',
+        topic: 'National Education Policy (NEP 2020) Structure',
+        type: 'single_choice',
+        text: 'The National Education Policy (NEP 2020) replaced the previous 10+2 school pedagogical structure with which new curricular design?',
+        options: [
+          { id: 'A', text: '5 + 3 + 3 + 4 (Foundational, Preparatory, Middle, Secondary)' },
+          { id: 'B', text: '5 + 4 + 3 + 2' },
+          { id: 'C', text: '4 + 4 + 4 + 4' },
+          { id: 'D', text: '3 + 3 + 3 + 3' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'NEP 2020 restructures school education into 5 years of Foundational stage (ages 3–8), 3 years of Preparatory stage (ages 8–11), 3 years of Middle stage (ages 11–14), and 4 years of Secondary stage (ages 14–18).',
+        referenceNotes: 'Ministry of Education NEP 2020 Official Policy Document'
+      }
+    ]
+  },
+
+  // 17. UGC NET Paper 1 (Teaching & Research Aptitude)
+  {
+    id: 'test_ugc_net_paper1_research_aptitude',
+    slug: 'ugc-net-paper-1-teaching-research-aptitude-mock',
+    title: 'UGC NET (Assistant Professor & JRF) • Paper 1 Teaching & Research Aptitude',
+    titleOdia: 'UGC NET (ଅଧ୍ୟାପକ ଓ JRF) • ପେପର-୧ ଶିକ୍ଷାଦାନ ଓ ଗବେଷଣା ଆପ୍ଟିଚ୍ୟୁଡ୍ ମକ୍',
+    shortDescription: 'National Eligibility Test (NTA): Research Methodologies, ICT in Higher Education, People & Environment, and Logical Reasoning.',
+    mainCategory: 'competitive_state',
+    subCategory: 'ugc_net',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'UGC NET 2026',
+    gradeOrClass: 'Master\'s Degree (55%)',
+    board: 'National Testing Agency (NTA)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Assistant Professor & JRF Track',
+    attemptsCount: 36700,
+    averageScore: 34.2,
+    cutoffEstimated: 37.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.0 correct, 0 negative marking).'],
+    sections: [{ id: 'sec_ugc1', name: 'General Paper-1', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'ugc1_q1',
+        questionNumber: 1,
+        sectionId: 'sec_ugc1',
+        sectionName: 'Research Aptitude',
+        subject: 'Research Methodology',
+        topic: 'Types of Research & Action Research',
+        type: 'single_choice',
+        text: 'Which type of research focuses directly on resolving an immediate practical classroom or institutional problem through a cyclical process of "Plan -> Act -> Observe -> Reflect"?',
+        options: [
+          { id: 'A', text: 'Action Research' },
+          { id: 'B', text: 'Fundamental / Pure Research' },
+          { id: 'C', text: 'Historical Research' },
+          { id: 'D', text: 'Descriptive Survey Research' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Action research is an applied, practitioner-led inquiry aimed at diagnosing and solving immediate local workplace or classroom difficulties.',
+        referenceNotes: 'KVS Madaan UGC NET Paper 1 Teaching and Research Aptitude'
+      }
+    ]
+  },
+
+  // 18. JIPMER & PGIMER Staff Nurse Officer
+  {
+    id: 'test_jipmer_pgimer_nursing_officer',
+    slug: 'jipmer-pgimer-nursing-officer-staff-nurse-mock',
+    title: 'JIPMER & PGIMER • Nursing Officer Advanced Clinical Procedure Mock',
+    titleOdia: 'JIPMER ଓ PGIMER • ନର୍ସିଂ ଅଫିସର ଆଡଭାନ୍ସଡ୍ କ୍ଲିନିକାଲ ମକ୍',
+    shortDescription: 'Premier autonomous medical institutes: Central venous catheter care, Chest tube drainage, Blood transfusion reactions, and ABG analysis.',
+    mainCategory: 'nursing',
+    subCategory: 'aiims_norcet',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'JIPMER / PGIMER Nursing 2026',
+    gradeOrClass: 'B.Sc Nursing / GNM',
+    board: 'JIPMER Puducherry & PGIMER Chandigarh',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Autonomous Institute Nursing',
+    attemptsCount: 29800,
+    averageScore: 16.5,
+    cutoffEstimated: 18.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, -0.25 penalty).'],
+    sections: [{ id: 'sec_jipmer_n', name: 'Clinical Nursing Procedures', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.25 }],
+    questions: [
+      {
+        id: 'jip_n_q1',
+        questionNumber: 1,
+        sectionId: 'sec_jipmer_n',
+        sectionName: 'Critical Care Nursing',
+        subject: 'Arterial Blood Gas (ABG)',
+        topic: 'Acid-Base Balance Interpretation',
+        type: 'single_choice',
+        text: 'A patient\'s ABG results show: pH = 7.28 (Low), PaCO₂ = 55 mmHg (High), and HCO₃⁻ = 24 mEq/L (Normal). What is the primary acid-base imbalance?',
+        options: [
+          { id: 'A', text: 'Uncompensated Respiratory Acidosis' },
+          { id: 'B', text: 'Compensated Metabolic Acidosis' },
+          { id: 'C', text: 'Respiratory Alkalosis' },
+          { id: 'D', text: 'Metabolic Alkalosis' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.25,
+        difficulty: 'easy',
+        explanation: 'Low pH (< 7.35) = Acidosis. High PaCO₂ (> 45 mmHg) = Respiratory etiology. Normal HCO₃⁻ (22–26) indicates no renal compensation has occurred yet => Uncompensated Respiratory Acidosis.',
+        referenceNotes: 'Urden Critical Care Nursing ABG Interpretation'
+      }
+    ]
+  },
+
+  // 19. Military Nursing Services (MNS - Indian Army)
+  {
+    id: 'test_indian_army_mns_nursing',
+    slug: 'indian-army-military-nursing-services-mns-mock',
+    title: 'Indian Army MNS (Military Nursing Service) • General Science & English Mock',
+    titleOdia: 'ଭାରତୀୟ ସେନା MNS (ମିଲିଟାରୀ ନର୍ସିଂ ସର୍ଭିସ) • ସିବିଟି ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'Armed Forces Medical Services (AFMS) Officer Cadre: Biology, Physics, Chemistry, General Intelligence, and Advanced Military English.',
+    mainCategory: 'nursing',
+    subCategory: 'aiims_norcet',
+    categoryLabel: 'Nursing & Healthcare',
+    targetExam: 'Indian Army MNS 2026',
+    gradeOrClass: '10+2 Female Candidates (PCB) / B.Sc Nursing',
+    board: 'Directorate General of Armed Forces Medical Services (DGAFMS)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Armed Forces Commissioned Officer',
+    attemptsCount: 31800,
+    averageScore: 18.2,
+    cutoffEstimated: 19.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, 0 negative marking for screening CBT).'],
+    sections: [{ id: 'sec_mns', name: 'MNS CBT Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'mns_q1',
+        questionNumber: 1,
+        sectionId: 'sec_mns',
+        sectionName: 'Human Physiology',
+        subject: 'Biology',
+        topic: 'Immune System & Immunoglobulins',
+        type: 'single_choice',
+        text: 'Which class of immunoglobulin is the only antibody capable of crossing the human maternal placenta to confer passive immunity to the fetus?',
+        options: [
+          { id: 'A', text: 'Immunoglobulin G (IgG)' },
+          { id: 'B', text: 'Immunoglobulin A (IgA - found in colostrum)' },
+          { id: 'C', text: 'Immunoglobulin M (IgM)' },
+          { id: 'D', text: 'Immunoglobulin E (IgE)' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'IgG is the smallest and most abundant antibody in human serum and uniquely crosses the placental barrier.',
+        referenceNotes: 'Ananthanarayan and Paniker\'s Textbook of Microbiology'
+      }
+    ]
+  },
+
+  // 20. REET & Super TET (State Level Teacher Recruitment)
+  {
+    id: 'test_reet_super_tet_teaching_mock',
+    slug: 'reet-rajasthan-super-tet-up-teacher-recruitment-mock',
+    title: 'REET & Super TET • State Teacher Eligibility & Pedagogy Comprehensive Mock',
+    titleOdia: 'REET ଓ ସୁପର TET • ରାଜ୍ୟ ଶିକ୍ଷକ ଯୋଗ୍ୟତା ଓ ଶିକ୍ଷାଶାସ୍ତ୍ର ମକ୍',
+    shortDescription: 'State Teacher Recruitment Board: Hindi Grammar, Mathematics Methodology, Environmental Science, and Educational Psychology.',
+    mainCategory: 'competitive_state',
+    subCategory: 'teaching_ctet_otet',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'REET / Super TET 2026',
+    gradeOrClass: 'B.Ed / D.El.Ed',
+    board: 'State Teacher Recruitment Boards',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'State Primary/Upper Primary Teacher',
+    attemptsCount: 33400,
+    averageScore: 19.1,
+    cutoffEstimated: 21.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.0 correct, 0 negative marking).'],
+    sections: [{ id: 'sec_reet', name: 'REET / Super TET Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'reet_q1',
+        questionNumber: 1,
+        sectionId: 'sec_reet',
+        sectionName: 'Educational Psychology',
+        subject: 'Psychology',
+        topic: 'Howard Gardner\'s Multiple Intelligences Theory',
+        type: 'single_choice',
+        text: 'According to Howard Gardner\'s Theory of Multiple Intelligences, an individual with a high capacity to perceive the visual-spatial world accurately (e.g. architects, sculptors, navigators) possesses which form of intelligence?',
+        options: [
+          { id: 'A', text: 'Spatial Intelligence' },
+          { id: 'B', text: 'Bodily-Kinesthetic Intelligence' },
+          { id: 'C', text: 'Interpersonal Intelligence' },
+          { id: 'D', text: 'Intrapersonal Intelligence' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Spatial intelligence is the ability to visualize 3D objects, recognize spatial orientation, and manipulate mental imagery.',
+        referenceNotes: 'Gardner\'s Frames of Mind: The Theory of Multiple Intelligences'
+      }
+    ]
+  },
+
+  // 21. CSIR NET Life Sciences (Junior Research Fellowship)
+  {
+    id: 'test_csir_net_life_sciences_mock',
+    slug: 'csir-net-life-sciences-biochemistry-genetics-mock',
+    title: 'CSIR NET Life Sciences • Biochemistry, Cell Signaling & Immunology Mock',
+    titleOdia: 'CSIR NET ଲାଇଫ୍ ସାଇନ୍ସ • ବାୟୋକେମିଷ୍ଟ୍ରି ଓ ସେଲ୍ ସିଗ୍ନାଲିଙ୍ଗ ମକ୍',
+    shortDescription: 'National Eligibility for CSIR JRF & Lectureship: Molecular Biology, Protein Conformation, Signal Transduction, and Evolutionary Biology.',
+    mainCategory: 'competitive_state',
+    subCategory: 'ugc_net',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'CSIR NET Life Sciences 2026',
+    gradeOrClass: 'M.Sc in Biological Sciences',
+    board: 'National Testing Agency (NTA)',
+    durationMinutes: 60,
+    totalQuestions: 20,
+    totalMarks: 40,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'CSIR JRF Scientist Track',
+    attemptsCount: 24100,
+    averageScore: 23.5,
+    cutoffEstimated: 26.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['20 Questions (+2.0 correct, -0.50 penalty).'],
+    sections: [{ id: 'sec_csir', name: 'CSIR Life Sciences', totalQuestions: 20, totalMarks: 40, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'csir_q1',
+        questionNumber: 1,
+        sectionId: 'sec_csir',
+        sectionName: 'Cell Signaling',
+        subject: 'Cell Biology',
+        topic: 'G-Protein Coupled Receptors (GPCR) & Second Messengers',
+        type: 'single_choice',
+        text: 'In the classic G-protein coupled receptor (GPCR) signaling pathway, the activated Gαs subunit directly stimulates which membrane-bound enzyme to produce cyclic AMP (cAMP)?',
+        options: [
+          { id: 'A', text: 'Adenylyl Cyclase (Adenylyl Cyclase converts ATP into cAMP)' },
+          { id: 'B', text: 'Phospholipase C' },
+          { id: 'C', text: 'Protein Kinase A' },
+          { id: 'D', text: 'Phosphodiesterase' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'medium',
+        explanation: 'Active Gαs-GTP activates adenylyl cyclase, which catalyzes conversion of ATP to cyclic AMP (cAMP), subsequently activating PKA.',
+        referenceNotes: 'Lodish Molecular Cell Biology Signal Transduction'
+      }
+    ]
+  },
+
+  // 22. OPSC OAS Civil Services Prelims Paper-2 (CSAT / Reasoning)
+  {
+    id: 'test_opsc_oas_csat_paper2_mock',
+    slug: 'opsc-oas-odisha-civil-services-paper-2-csat-mock',
+    title: 'OPSC OAS (Odisha Civil Services) • GS Paper-2 (CSAT / Mental Ability) Mock',
+    titleOdia: 'OPSC OAS (ଓଡ଼ିଶା ପ୍ରଶାସନିକ ସେବା) • ପ୍ରିଲିମ୍ସ ପେପର-୨ (CSAT) ମକ୍',
+    shortDescription: 'Odisha Public Service Commission: Interpersonal skills, Decision making, Analytical ability, Basic Numeracy, and English comprehension.',
+    mainCategory: 'competitive_state',
+    subCategory: 'opsc_oas',
+    categoryLabel: 'State PSCs & Police',
+    targetExam: 'OPSC OAS 2026',
+    gradeOrClass: 'Graduate in Any Stream',
+    board: 'Odisha Public Service Commission (OPSC)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ଓଡ଼ିଶା ପ୍ରଶାସନିକ ସେବା (OAS)',
+    attemptsCount: 37900,
+    averageScore: 33.4,
+    cutoffEstimated: 35.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.0 correct, -0.66 penalty for wrong answer). 33% qualifying score mandatory.'],
+    sections: [{ id: 'sec_oas_csat', name: 'OAS CSAT Paper-2', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.66 }],
+    questions: [
+      {
+        id: 'oas_c_q1',
+        questionNumber: 1,
+        sectionId: 'sec_oas_csat',
+        sectionName: 'Basic Numeracy',
+        subject: 'Aptitude & Math',
+        topic: 'Percentage & Profit-Loss Reasoning',
+        type: 'single_choice',
+        text: 'A shopkeeper marks an article at 25% above its cost price and offers a cash discount of 10% on the marked price. What is the net profit percentage earned by the shopkeeper?',
+        options: [
+          { id: 'A', text: '12.5% (Net multiplier = 1.25 × 0.90 = 1.125 => 12.5% profit)' },
+          { id: 'B', text: '15.0%' },
+          { id: 'C', text: '10.0%' },
+          { id: 'D', text: '17.5%' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.66,
+        difficulty: 'easy',
+        explanation: 'Let CP = 100. MP = 125. SP = 125 - 10% of 125 = 125 - 12.5 = 112.5. Net profit % = 12.5%.',
+        referenceNotes: 'OPSC OAS Analytical Reasoning'
+      }
+    ]
+  }
+];

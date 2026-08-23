@@ -11,26 +11,72 @@ export type ExamSubCategory =
   | 'osssc_nursing'
   | 'esic_nursing'
   | 'cho_nhm'
+  | 'nclex_nursing'
+  | 'esic_paramedical'
   | 'ssc_cgl'
   | 'ssc_chsl'
   | 'ssc_mts'
+  | 'ssc_cpo'
+  | 'ssc_steno'
   | 'upsc_prelims'
   | 'rrb_ntpc'
   | 'rrb_group_d'
   | 'ibps_po'
   | 'sbi_clerk'
+  | 'rbi_grade_b'
+  | 'lic_insurance'
   | 'nda_defence'
+  | 'defence_cds'
+  | 'defence_afcat'
+  | 'defence_capf'
   | 'opsc_oas'
   | 'osssc_combined'
   | 'teaching_ctet_otet'
+  | 'ugc_net'
+  | 'kvs_nvs_teacher'
+  | 'dsssb_teaching'
+  | 'police_si'
+  | 'state_psc_bpsc'
+  | 'state_psc_uppsc'
+  | 'state_psc_wbcs'
+  | 'state_psc_mpsc'
+  | 'school_class_1_to_5'
+  | 'school_class_6_to_8'
+  | 'school_class_9_10'
   | 'cbse_class_10'
   | 'cbse_class_12'
   | 'icse_class_10'
   | 'bse_odisha_class_10'
   | 'chse_odisha_plus2'
+  | 'olympiad_primary'
+  | 'olympiad_science_math'
+  | 'navodaya_jnvst'
+  | 'sainik_school'
   | 'neet_ug'
+  | 'neet_pg'
   | 'jee_main'
-  | 'cuet_ug';
+  | 'jee_advanced'
+  | 'bitsat_engg'
+  | 'wbjee_engg'
+  | 'gate_engineering'
+  | 'cat_mba'
+  | 'cuet_ug'
+  | 'clat_law';
+
+export interface ExamPassInfo {
+  tier: 'silver' | 'gold';
+  name: string;
+  price: number;
+  originalPrice: number;
+  totalTests: number;
+  questionsPerTest: number;
+  totalQuestions: number;
+  features: string[];
+  badge?: string;
+  testsRemaining?: number;
+  activatedAt?: string;
+  paymentMethod?: string;
+}
 
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
 export type QuestionType = 'single_choice' | 'multiple_choice' | 'numerical' | 'assertion_reason';

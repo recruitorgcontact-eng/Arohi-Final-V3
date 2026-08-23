@@ -7,6 +7,8 @@ import {
   Trash2, Check, Smartphone, Layers
 } from 'lucide-react';
 import { MockTest, ExamQuestion, QuestionAttemptState, TestSubmission } from '../../types/examTypes';
+import { ensureTestComplete } from '../../utils/examQuestionExpander';
+import { audioEngine } from '../../utils/audioEngine';
 
 interface CbtExamPlayerProps {
   test: MockTest;
@@ -17,96 +19,6 @@ interface CbtExamPlayerProps {
   onSubmit: (submission: TestSubmission) => void;
 }
 
-// Lightweight Web Audio API sound synthesizer
-class ExamAudioEngine {
-  private ctx: AudioContext | null = null;
-  private soundEnabled = true;
-
-  constructor() {
-    // Lazy initialized on first user interaction
-  }
-
-  public toggleSound(enabled?: boolean) {
-    this.soundEnabled = enabled !== undefined ? enabled : !this.soundEnabled;
-    return this.soundEnabled;
-  }
-
-  public isEnabled() {
-    return this.soundEnabled;
-  }
-
-  private getContext(): AudioContext | null {
-    if (!this.soundEnabled) return null;
-    try {
-      if (!this.ctx) {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtx) this.ctx = new AudioCtx();
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
-      return this.ctx;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  public playOptionTap() {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(580, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.06);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.06);
-    } catch (e) {}
-  }
-
-  public playButtonTap() {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(420, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.05);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.05);
-    } catch (e) {}
-  }
-
-  public playWarningBeep() {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
-    } catch (e) {}
-  }
-}
-
-const audioEngine = new ExamAudioEngine();
-
 export default function CbtExamPlayer({
   test,
   userName,
@@ -115,8 +27,11 @@ export default function CbtExamPlayer({
   onExit,
   onSubmit
 }: CbtExamPlayerProps) {
+  // Ensure test has complete questions for every section
+  const preparedTest = useMemo(() => ensureTestComplete(test), [test]);
+
   // Timing State
-  const initialTimeSeconds = test.durationMinutes * 60;
+  const initialTimeSeconds = (preparedTest.durationMinutes || 60) * 60;
   const [secondsRemaining, setSecondsRemaining] = useState(initialTimeSeconds);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const startTimeRef = useRef<number>(Date.now());
@@ -143,10 +58,48 @@ export default function CbtExamPlayer({
   const [calcDisplay, setCalcDisplay] = useState('0');
   const [calcMemory, setCalcMemory] = useState<number | null>(null);
 
+  // Dynamic Fisher-Yates Question & Option Shuffle State - Ordered Strictly by Sections
+  const [shuffledTestQuestions, setShuffledTestQuestions] = useState<ExamQuestion[]>(() => {
+    const result: ExamQuestion[] = [];
+    let globalQNum = 1;
+
+    // Process sections in exact defined order
+    preparedTest.sections.forEach((sec) => {
+      const secGroup = preparedTest.questions.filter(q => q.sectionId === sec.id);
+      const shuffledGroup = [...secGroup];
+      
+      // Shuffle questions within section
+      for (let i = shuffledGroup.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledGroup[i], shuffledGroup[j]] = [shuffledGroup[j], shuffledGroup[i]];
+      }
+
+      shuffledGroup.forEach((q) => {
+        result.push({
+          ...q,
+          questionNumber: globalQNum++
+        });
+      });
+    });
+
+    // Fallback for any questions with unmatched sectionId
+    const assignedIds = new Set(result.map(q => q.id));
+    preparedTest.questions.forEach((q) => {
+      if (!assignedIds.has(q.id)) {
+        result.push({
+          ...q,
+          questionNumber: globalQNum++
+        });
+      }
+    });
+
+    return result;
+  });
+
   // Question Attempt States dictionary
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionAttemptState>>(() => {
     const initial: Record<string, QuestionAttemptState> = {};
-    test.questions.forEach((q) => {
+    shuffledTestQuestions.forEach((q) => {
       initial[q.id] = {
         questionId: q.id,
         status: 'not_visited',
@@ -160,10 +113,10 @@ export default function CbtExamPlayer({
   const lastQuestionSwitchTimeRef = useRef<number>(Date.now());
 
   // Filter questions for active section
-  const activeSection = test.sections[activeSectionIndex] || test.sections[0];
+  const activeSection = preparedTest.sections[activeSectionIndex] || preparedTest.sections[0];
   const sectionQuestions = useMemo(() => {
-    return test.questions.filter(q => q.sectionId === activeSection.id);
-  }, [test.questions, activeSection.id]);
+    return shuffledTestQuestions.filter(q => q.sectionId === activeSection.id);
+  }, [shuffledTestQuestions, activeSection.id]);
 
   const currentQuestion = sectionQuestions[currentQuestionIndex] || sectionQuestions[0];
 
@@ -297,7 +250,7 @@ export default function CbtExamPlayer({
     // Move next
     if (currentQuestionIndex < sectionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-    } else if (activeSectionIndex < test.sections.length - 1) {
+    } else if (activeSectionIndex < preparedTest.sections.length - 1) {
       setActiveSectionIndex(prev => prev + 1);
       setCurrentQuestionIndex(0);
     }
@@ -321,11 +274,11 @@ export default function CbtExamPlayer({
 
     if (currentQuestionIndex < sectionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-    } else if (activeSectionIndex < test.sections.length - 1) {
+    } else if (activeSectionIndex < preparedTest.sections.length - 1) {
       setActiveSectionIndex(prev => prev + 1);
       setCurrentQuestionIndex(0);
     }
-  }, [currentQuestion, recordQuestionTime, currentQuestionIndex, sectionQuestions.length, activeSectionIndex, test.sections.length]);
+  }, [currentQuestion, recordQuestionTime, currentQuestionIndex, sectionQuestions.length, activeSectionIndex, preparedTest.sections.length]);
 
   const handlePrevious = useCallback(() => {
     audioEngine.playButtonTap();
@@ -335,10 +288,10 @@ export default function CbtExamPlayer({
     } else if (activeSectionIndex > 0) {
       const prevSecIdx = activeSectionIndex - 1;
       setActiveSectionIndex(prevSecIdx);
-      const prevSecQs = test.questions.filter(q => q.sectionId === test.sections[prevSecIdx].id);
+      const prevSecQs = shuffledTestQuestions.filter(q => q.sectionId === preparedTest.sections[prevSecIdx].id);
       setCurrentQuestionIndex(Math.max(0, prevSecQs.length - 1));
     }
-  }, [currentQuestionIndex, activeSectionIndex, recordQuestionTime, test.questions, test.sections]);
+  }, [currentQuestionIndex, activeSectionIndex, recordQuestionTime, shuffledTestQuestions, preparedTest.sections]);
 
   // Jump to specific question
   const handleJumpToQuestion = (sectionIdx: number, qIdx: number) => {
@@ -359,10 +312,10 @@ export default function CbtExamPlayer({
       }
     });
 
-    const totalTimeTakenSeconds = Math.max(1, (test.durationMinutes * 60) - secondsRemaining);
+    const totalTimeTakenSeconds = Math.max(1, ((preparedTest.durationMinutes || 60) * 60) - secondsRemaining);
 
     const submission: TestSubmission = {
-      testId: test.id,
+      testId: preparedTest.id,
       userName: userName || 'Aspirant',
       userState: userState || 'Odisha',
       startedAt: new Date(startTimeRef.current).toISOString(),
@@ -373,7 +326,7 @@ export default function CbtExamPlayer({
     };
 
     onSubmit(submission);
-  }, [recordQuestionTime, questionStates, test.durationMinutes, secondsRemaining, test.id, userName, userState, onSubmit]);
+  }, [recordQuestionTime, questionStates, preparedTest.durationMinutes, preparedTest.id, secondsRemaining, userName, userState, onSubmit]);
 
   // Auto-submit when time expires
   useEffect(() => {
@@ -425,7 +378,7 @@ export default function CbtExamPlayer({
     let markedForReview = 0;
     let answeredAndMarked = 0;
 
-    test.questions.forEach((q) => {
+    shuffledTestQuestions.forEach((q) => {
       const st = questionStates[q.id]?.status || 'not_visited';
       if (st === 'answered') answered++;
       else if (st === 'not_answered') notAnswered++;
@@ -434,8 +387,8 @@ export default function CbtExamPlayer({
       else if (st === 'answered_and_marked') answeredAndMarked++;
     });
 
-    return { answered, notAnswered, notVisited, markedForReview, answeredAndMarked, total: test.questions.length };
-  }, [test.questions, questionStates]);
+    return { answered, notAnswered, notVisited, markedForReview, answeredAndMarked, total: shuffledTestQuestions.length };
+  }, [shuffledTestQuestions, questionStates]);
 
   // Formatted Timer String
   const formatTimer = (totalSec: number) => {
@@ -616,9 +569,9 @@ export default function CbtExamPlayer({
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 mr-1">
             Sections:
           </span>
-          {test.sections.map((sec, idx) => {
+          {preparedTest.sections.map((sec, idx) => {
             const isSelected = activeSectionIndex === idx;
-            const secQuestions = test.questions.filter(q => q.sectionId === sec.id);
+            const secQuestions = shuffledTestQuestions.filter(q => q.sectionId === sec.id);
             const secAnswered = secQuestions.filter(q => questionStates[q.id]?.status === 'answered' || questionStates[q.id]?.status === 'answered_and_marked').length;
 
             return (
@@ -642,7 +595,7 @@ export default function CbtExamPlayer({
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
                   isSelected ? 'bg-purple-950 text-purple-200' : 'bg-slate-800 text-slate-300'
                 }`}>
-                  {secAnswered}/{sec.totalQuestions}
+                  {secAnswered}/{secQuestions.length}
                 </span>
               </button>
             );
@@ -727,7 +680,7 @@ export default function CbtExamPlayer({
               <span className="text-sm sm:text-base font-black text-purple-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-purple-400"></span>
                 <span>Question {currentQuestion?.questionNumber || (currentQuestionIndex + 1)}</span>
-                <span className="text-xs text-slate-500 font-semibold">of {test.totalQuestions}</span>
+                <span className="text-xs text-slate-500 font-semibold">of {shuffledTestQuestions.length}</span>
               </span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-md font-extrabold border border-slate-700">
                 {currentQuestion?.subject || activeSection.name}

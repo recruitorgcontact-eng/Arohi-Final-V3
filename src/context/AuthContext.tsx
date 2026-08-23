@@ -109,6 +109,18 @@ export interface UserData {
     description: string;
     timestamp: string;
   }>;
+  mockTestHistory?: any[];
+  lastExamDate?: string;
+  examPass?: {
+    tier: 'silver' | 'gold';
+    name: string;
+    totalTests: number;
+    testsRemaining: number;
+    activatedAt: string;
+    paymentMethod: string;
+  };
+  freeExamAttemptsCount?: number;
+  stats?: Record<string, any>;
   entrySource?: string;
   updatedAt?: string;
 }
@@ -328,6 +340,8 @@ interface AuthContextType {
     paymentMethod?: string;
     paymentId?: string;
   }) => Promise<void>;
+  activateExamPass: (tier: 'silver' | 'gold', paymentMethod?: string) => Promise<void>;
+  incrementFreeExamAttempt: () => Promise<number>;
   signInWithBiometrics: (email: string) => Promise<void>;
 }
 
@@ -1487,6 +1501,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const activateExamPass = async (tier: 'silver' | 'gold', paymentMethod: string = 'Razorpay / UPI') => {
+    const totalTests = tier === 'silver' ? 20 : 50;
+    const name = tier === 'silver' ? 'Arohi Exams™ Silver Pass' : 'Arohi Exams™ Gold Mega Pass';
+    
+    const passObj = {
+      tier,
+      name,
+      totalTests,
+      testsRemaining: totalTests,
+      activatedAt: new Date().toISOString(),
+      paymentMethod
+    };
+
+    if (userData) {
+      const updated = { ...userData, examPass: passObj };
+      setUserData(updated);
+      if (user?.uid) {
+        localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updated));
+      }
+    }
+
+    try {
+      localStorage.setItem('arohi_exam_pass', JSON.stringify(passObj));
+      window.dispatchEvent(new CustomEvent('arohi_exam_pass_activated', { detail: passObj }));
+    } catch (e) {}
+
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid);
+        await updateDoc(docRef, {
+          examPass: passObj,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn('Firestore exam pass update fallback noted:', err);
+      }
+    }
+  };
+
+  const incrementFreeExamAttempt = async (): Promise<number> => {
+    let currentCount = 0;
+    try {
+      currentCount = Number(localStorage.getItem('arohi_free_exam_count') || 0);
+    } catch (e) {}
+
+    const newCount = currentCount + 1;
+    try {
+      localStorage.setItem('arohi_free_exam_count', String(newCount));
+    } catch (e) {}
+
+    if (userData) {
+      const updated = { ...userData, freeExamAttemptsCount: newCount };
+      setUserData(updated);
+      if (user?.uid) {
+        localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updated));
+      }
+    }
+
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid);
+        await updateDoc(docRef, {
+          freeExamAttemptsCount: newCount,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (err) {}
+    }
+
+    return newCount;
+  };
+
   const refreshPersonalizationMemory = async (): Promise<UserPersonalizationMemory | null> => {
     if (!user) return null;
     try {
@@ -1526,7 +1611,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateArohiCalls,
       updateDiagnostics,
       updateActivities,
-      updateUserSubscription
+      updateUserSubscription,
+      activateExamPass,
+      incrementFreeExamAttempt
     }}>
       {children}
     </AuthContext.Provider>

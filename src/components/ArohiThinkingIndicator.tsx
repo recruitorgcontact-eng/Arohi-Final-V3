@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -46,6 +46,11 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
   const [seconds, setSeconds] = useState<number>(duration || 0);
   const [stageIndex, setStageIndex] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const onDurationRef = useRef(onDurationCalculated);
+
+  useEffect(() => {
+    onDurationRef.current = onDurationCalculated;
+  }, [onDurationCalculated]);
 
   // Live stopwatch timer while actively thinking
   useEffect(() => {
@@ -60,13 +65,13 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
     const interval = setInterval(() => {
       const elapsed = Number(((Date.now() - start) / 1000).toFixed(1));
       setSeconds(elapsed);
-      if (onDurationCalculated) {
-        onDurationCalculated(elapsed);
+      if (onDurationRef.current) {
+        onDurationRef.current(elapsed);
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isLive, startTime, duration, onDurationCalculated]);
+  }, [isLive, startTime, duration]);
 
   // Cycle through playful Grok-style witty thinking stages while live
   useEffect(() => {

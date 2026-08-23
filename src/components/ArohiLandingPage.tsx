@@ -7,9 +7,10 @@ import {
   MessageSquare, ChevronDown, ChevronUp, Share2, Star, 
   Shield, Clock, Globe, ArrowRight, Phone, Cpu,
   Scale, Theater, Palette,
-  Menu, X
+  Menu, X, Trophy
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
+import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
 import { PRICING_TIERS } from '../data/pricingData';
 import { Language, getTranslation } from '../translations';
 
@@ -142,6 +143,13 @@ export default function ArohiLandingPage({
                 <span>Start Free</span>
                 <ArrowRight className="w-4 h-4 text-white" />
               </button>
+
+              {/* Official 3D Neon "Arohi Exams™" Capsule Button Banner */}
+              <div className="w-full max-w-lg my-1">
+                <ArohiExamsButtonBanner
+                  onClick={() => setActiveTab('mocktests')}
+                />
+              </div>
               
               <a
                 href="#pricing-section"

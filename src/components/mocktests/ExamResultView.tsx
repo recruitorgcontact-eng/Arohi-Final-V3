@@ -40,9 +40,18 @@ export default function ExamResultView({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-6xl mx-auto pb-12">
+    <div className="relative space-y-8 animate-in fade-in duration-300 max-w-6xl mx-auto pb-12">
+      {/* Official Arohi Exams Anti-Counterfeit Background Watermark */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden flex flex-wrap items-center justify-around opacity-[0.03] select-none text-slate-100 rotate-[-25deg] scale-125">
+        {Array.from({ length: 16 }).map((_, i) => (
+          <div key={i} className="text-4xl sm:text-5xl font-black uppercase tracking-[0.3em] m-12 whitespace-nowrap">
+            AROHI EXAMS • OFFICIAL CBT MARKSHEET
+          </div>
+        ))}
+      </div>
+
       {/* 1. TOP NAVIGATION HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
         <button
           onClick={onBackToCatalog}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
@@ -51,29 +60,38 @@ export default function ExamResultView({
           <span>All Mock Tests</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer"
+            title="Download / Print Official Watermarked Marksheet"
+          >
+            <Download className="w-3.5 h-3.5 text-purple-400" />
+            <span>Export Marksheet</span>
+          </button>
+
           <button
             onClick={onRetakeTest}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Retake Test</span>
+            <span>Retake (Shuffled)</span>
           </button>
 
           <button
             onClick={onOpenLeaderboard}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span>All India Leaderboard</span>
+            <span>AIR Leaderboard</span>
           </button>
 
           <button
             onClick={onOpenAiAnalysis}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-xs font-black uppercase tracking-wider shadow-[0_4px_20px_rgba(124,58,237,0.4)] transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-xs font-black uppercase tracking-wider shadow-[0_4px_20px_rgba(124,58,237,0.4)] transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
             <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
-            <span>AI Diagnostic &amp; Weakness Report</span>
+            <span>AI Diagnostic</span>
           </button>
         </div>
       </div>

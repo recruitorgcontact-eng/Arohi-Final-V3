@@ -11,7 +11,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Phone,
-  Smartphone,
   ChevronLeft,
   ChevronRight,
   Fingerprint,
@@ -26,8 +25,6 @@ import {
   Target,
   Bot
 } from 'lucide-react';
-import { auth } from '../firebase';
-import { RecaptchaVerifier } from 'firebase/auth';
 import { isBiometricSupported } from '../lib/webauthn';
 import { PRICING_TIERS } from '../data/pricingData';
 import { LottieSuccessAnimation } from './LottieSuccess';
@@ -36,8 +33,9 @@ import ArohiAvatar from './ArohiAvatar';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'signin' | 'signup' | 'forgot' | 'phone' | 'onboarding';
+  initialMode?: 'signin' | 'signup' | 'forgot' | 'onboarding';
   upgradePrompt?: string | null;
+  forced?: boolean;
 }
 
 const ORBIT_NODES = [
@@ -49,13 +47,12 @@ const ORBIT_NODES = [
   { id: 'achieve', label: 'Achieve', icon: Target, color: '#a855f7', border: 'rgba(168, 85, 247, 0.6)', glow: 'rgba(168, 85, 247, 0.4)' }
 ];
 
-export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upgradePrompt }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upgradePrompt, forced = false }: AuthModalProps) {
   const { 
     signIn, 
     signUp, 
     signInWithGoogle, 
     signInWithApple, 
-    signInWithPhone, 
     resetPassword,
     signInWithBiometrics,
     userData,
@@ -64,11 +61,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
   // 'portal' = the luxury hero landing screen matching the reference design
   // 'email_form' = detailed email / password form (toggle signin/signup)
-  // 'phone' = phone OTP verification
   // 'forgot' = forgot password
   // 'onboarding' = mandatory profile setup
-  const [viewState, setViewState] = useState<'portal' | 'email_form' | 'phone' | 'forgot' | 'onboarding'>(
-    initialMode === 'phone' ? 'phone' : initialMode === 'onboarding' ? 'onboarding' : 'portal'
+  const [viewState, setViewState] = useState<'portal' | 'email_form' | 'forgot' | 'onboarding'>(
+    initialMode === 'onboarding' ? 'onboarding' : 'portal'
   );
 
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(
@@ -77,9 +73,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
   useEffect(() => {
     if (isOpen) {
-      if (initialMode === 'phone') {
-        setViewState('phone');
-      } else if (initialMode === 'onboarding') {
+      if (initialMode === 'onboarding') {
         setViewState('onboarding');
       } else if (initialMode === 'signup') {
         setActiveTab('signup');
@@ -136,23 +130,23 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
   useEffect(() => {
     if (viewState === 'onboarding' && userData) {
-      if (!onboardName) {
-        if (userData.profile?.name && userData.profile.name !== 'Honored Guest') {
-          setOnboardName(userData.profile.name);
-        } else if (userData.displayName && userData.displayName !== 'Honored Guest') {
-          setOnboardName(userData.displayName);
-        }
+      const candidateName = (userData.profile?.name && userData.profile.name !== 'Honored Guest')
+        ? userData.profile.name
+        : (userData.displayName && userData.displayName !== 'Honored Guest')
+          ? userData.displayName
+          : '';
+      if (candidateName) {
+        setOnboardName(prev => prev || candidateName);
       }
-      
-      if (!onboardPhone) {
-        const currentPhone = userData.profile?.phone || '';
-        const isPhoneDefault = currentPhone === '+91 98765 43210' || currentPhone === '9876543210' || currentPhone === '';
-        if (!isPhoneDefault) {
-          setOnboardPhone(currentPhone.replace(/^\+91\s*/, '').replace(/\s+/g, ''));
-        }
+
+      const currentPhone = userData.profile?.phone || '';
+      const isPhoneDefault = currentPhone === '+91 98765 43210' || currentPhone === '9876543210' || currentPhone === '';
+      if (!isPhoneDefault && currentPhone) {
+        const cleanPhone = currentPhone.replace(/^\+91\s*/, '').replace(/\s+/g, '');
+        setOnboardPhone(prev => prev || cleanPhone);
       }
     }
-  }, [viewState, userData, onboardName, onboardPhone]);
+  }, [viewState, userData?.profile?.name, userData?.profile?.phone, userData?.displayName]);
 
   // Biometric Auth Support States
   const [isBioSupported, setIsBioSupported] = useState(false);
@@ -200,28 +194,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
     }
   };
   
-  // Phone sign-in states
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<any>(null);
-
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      if (recaptchaVerifier) {
-        try {
-          recaptchaVerifier.clear();
-        } catch (e) {
-          console.warn('Error clearing recaptcha', e);
-        }
-      }
-    };
-  }, [recaptchaVerifier]);
 
   if (!isOpen) return null;
 
@@ -293,92 +268,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         }
         setError(displayMsg);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setIsLoading(true);
-
-    try {
-      if (!phoneNumber) {
-        throw new Error('Please enter a valid phone number.');
-      }
-
-      let formattedPhone = phoneNumber.trim();
-      if (!formattedPhone.startsWith('+')) {
-        if (formattedPhone.length === 10) {
-          formattedPhone = `+91${formattedPhone}`;
-        } else {
-          throw new Error('Please include your country code (e.g., +91 for India).');
-        }
-      }
-
-      let verifier = recaptchaVerifier;
-      if (!verifier) {
-        verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try again.');
-          }
-        });
-        setRecaptchaVerifier(verifier);
-      }
-
-      const confirmation = await signInWithPhone(formattedPhone, verifier, role);
-      setConfirmationResult(confirmation);
-      setOtpSent(true);
-      setSuccess(`Verification code sent successfully to ${formattedPhone}!`);
-    } catch (err: any) {
-      console.error(err);
-      let errMsg = err.message || 'Failed to send verification code.';
-      if (err.code === 'auth/invalid-phone-number') {
-        errMsg = 'Invalid phone number format. Please check the number.';
-      } else if (err.code === 'auth/too-many-requests') {
-        errMsg = 'Too many requests. Please try again later.';
-      }
-      setError(errMsg);
-      if (recaptchaVerifier) {
-        try {
-          recaptchaVerifier.clear();
-          setRecaptchaVerifier(null);
-        } catch (e) {}
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setIsLoading(true);
-
-    try {
-      if (!otp) {
-        throw new Error('Please enter the 6-digit OTP code.');
-      }
-      if (!confirmationResult) {
-        throw new Error('No OTP session found. Please request another code.');
-      }
-
-      await confirmationResult.confirm(otp);
-      setSuccess('Successfully signed in with Phone! Welcome back.');
-      setTimeout(() => {
-        onClose();
-      }, 1000);
-    } catch (err: any) {
-      console.error(err);
-      let errMsg = err.message || 'Invalid OTP code. Please try again.';
-      if (err.code === 'auth/invalid-verification-code') {
-        errMsg = 'Incorrect verification code. Please try again.';
-      }
-      setError(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -525,15 +414,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-40 bg-gradient-to-b from-sky-500/10 via-indigo-500/10 to-transparent rounded-full blur-3xl" />
         </div>
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          id="close-arohi-auth-modal-btn"
-          aria-label="Close modal"
-          className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition-all active:scale-95 z-20 backdrop-blur-md"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Close Button (Hidden when forced=true) */}
+        {!forced && (
+          <button
+            onClick={onClose}
+            id="close-arohi-auth-modal-btn"
+            aria-label="Close modal"
+            className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition-all active:scale-95 z-20 backdrop-blur-md"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Global Alert Notification */}
         {error && (
@@ -1014,111 +905,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         )}
 
         {/* ============================================================ */}
-        {/* VIEW 3: PHONE SIGN-IN / OTP FLOW */}
-        {/* ============================================================ */}
-        {viewState === 'phone' && (
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center justify-between pb-1 border-b border-violet-900/40">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewState('portal');
-                  setOtpSent(false);
-                  setPhoneNumber('');
-                  setOtp('');
-                  setError(null);
-                }}
-                className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4 text-cyan-400" />
-                <span>Back to Portal</span>
-              </button>
-              <span className="text-xs font-mono font-bold text-cyan-300">Phone Verification</span>
-            </div>
-
-            {!otpSent ? (
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <div className="p-3 bg-[#0a0518] border border-cyan-500/30 rounded-2xl text-center">
-                  <Smartphone className="w-7 h-7 text-cyan-400 mx-auto mb-1.5 animate-pulse" />
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">SMS OTP Authentication</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Enter your 10-digit mobile number to receive a secure code.</p>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
-                  <div className="relative flex">
-                    <div className="flex items-center justify-center bg-[#0a0518] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
-                      +91
-                    </div>
-                    <div className="relative flex-1">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                      <input
-                        type="tel"
-                        placeholder="9876543210"
-                        value={phoneNumber.replace(/^\+91/, '')}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 transition-all"
-                        required
-                        pattern="[0-9]{10}"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-                >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send OTP Code</span>}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="p-3 bg-[#0a0518] border border-cyan-500/30 rounded-2xl text-center">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Enter 6-Digit OTP</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Code sent to {phoneNumber}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="text"
-                      placeholder="123456"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="w-full bg-[#0a0518] border border-cyan-500/40 rounded-xl py-2.5 pl-10 pr-4 text-sm font-semibold text-white tracking-[0.4em] text-center focus:outline-none focus:border-cyan-400 transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-                >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify &amp; Sign In</span>}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtp('');
-                  }}
-                  className="w-full text-center text-xs text-cyan-400 hover:underline font-semibold cursor-pointer"
-                >
-                  Change Mobile Number
-                </button>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* VIEW 4: FORGOT PASSWORD */}
+        {/* VIEW 3: FORGOT PASSWORD */}
         {/* ============================================================ */}
         {viewState === 'forgot' && (
           <form onSubmit={handleForgotSubmit} className="relative z-10 space-y-4">

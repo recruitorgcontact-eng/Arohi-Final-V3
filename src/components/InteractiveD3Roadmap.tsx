@@ -285,12 +285,17 @@ export default function InteractiveD3Roadmap({ initialField = 'Technology', onSe
   const milestones = activePathData.milestones;
   const currentMilestone = milestones[activeMilestoneIdx];
 
+  const onSelectMilestoneRef = useRef(onSelectMilestone);
+  useEffect(() => {
+    onSelectMilestoneRef.current = onSelectMilestone;
+  }, [onSelectMilestone]);
+
   // Callback to parent if selected
   useEffect(() => {
-    if (onSelectMilestone) {
-      onSelectMilestone(currentMilestone);
+    if (onSelectMilestoneRef.current) {
+      onSelectMilestoneRef.current(currentMilestone);
     }
-  }, [currentMilestone, onSelectMilestone]);
+  }, [currentMilestone]);
 
   // Handle D3 Chart Rendering
   useEffect(() => {

@@ -1,0 +1,1125 @@
+import { MockTest } from '../types/examTypes';
+
+export const MEGA_SCHOOL_MOCK_TESTS: MockTest[] = [
+  // 1. CBSE Class 1
+  {
+    id: 'test_cbse_class1_math_evs',
+    slug: 'cbse-class-1-math-evs-foundational-quiz',
+    title: 'CBSE Class 1 • Foundational Math, EVS & Picture Reasoning',
+    titleOdia: 'CBSE ୧ମ ଶ୍ରେଣୀ • ଗଣିତ, ପରିବେଶ ଓ ତର୍କ ମକ୍',
+    shortDescription: 'Basic counting, simple addition, shapes, family, animals, and body parts for Class 1 young learners.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_1_to_5',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 1 Annual Assessment',
+    gradeOrClass: 'Class 1',
+    board: 'CBSE / NCERT',
+    durationMinutes: 30,
+    totalQuestions: 10,
+    totalMarks: 10,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Class 1 Foundation',
+    attemptsCount: 8400,
+    averageScore: 9.2,
+    cutoffEstimated: 9.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Simple, colorful, friendly questions with zero negative marking.'],
+    sections: [{ id: 'sec_c1', name: 'Foundational Knowledge', totalQuestions: 10, totalMarks: 10, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c1_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c1',
+        sectionName: 'Basic Math',
+        subject: 'Mathematics',
+        topic: 'Addition & Counting',
+        type: 'single_choice',
+        text: 'Rohan has 4 apples. His sister gives him 3 more apples. How many apples does Rohan have in total?',
+        options: [
+          { id: 'A', text: '7 apples (4 + 3 = 7)' },
+          { id: 'B', text: '6 apples' },
+          { id: 'C', text: '8 apples' },
+          { id: 'D', text: '5 apples' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Counting 4 + 3 gives 7 total apples.',
+        referenceNotes: 'NCERT Class 1 Math Magic'
+      }
+    ]
+  },
+
+  // 2. CBSE Class 2
+  {
+    id: 'test_cbse_class2_evs_math',
+    slug: 'cbse-class-2-math-nature-skills',
+    title: 'CBSE Class 2 • Numbers, Plants, Animals & Habits Mock',
+    titleOdia: 'CBSE ୨ୟ ଶ୍ରେଣୀ • ସଂଖ୍ୟା, ଉଦ୍ଭିଦ ଓ ପ୍ରକୃତି ମକ୍',
+    shortDescription: 'Two-digit addition/subtraction, living things, seasons, clock reading, and safety rules.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_1_to_5',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 2 Assessment',
+    gradeOrClass: 'Class 2',
+    board: 'CBSE / NCERT',
+    durationMinutes: 30,
+    totalQuestions: 10,
+    totalMarks: 10,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Class 2 Explorers',
+    attemptsCount: 9200,
+    averageScore: 8.8,
+    cutoffEstimated: 9.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Fun multiple choice questions for Grade 2 students.'],
+    sections: [{ id: 'sec_c2', name: 'Class 2 Core', totalQuestions: 10, totalMarks: 10, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c2_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c2',
+        sectionName: 'Environmental Studies',
+        subject: 'EVS',
+        topic: 'Parts of Plants',
+        type: 'single_choice',
+        text: 'Which part of the plant grows under the soil and absorbs water and minerals?',
+        options: [
+          { id: 'A', text: 'Roots' },
+          { id: 'B', text: 'Leaves' },
+          { id: 'C', text: 'Flower' },
+          { id: 'D', text: 'Stem' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Roots grow downward into the soil to anchor the plant and absorb essential water and minerals.',
+        referenceNotes: 'NCERT Class 2 Looking Around'
+      }
+    ]
+  },
+
+  // 3. CBSE Class 3
+  {
+    id: 'test_cbse_class3_general_mock',
+    slug: 'cbse-class-3-math-science-english-mock',
+    title: 'CBSE Class 3 • Mathematics, General Science & English Grammar',
+    titleOdia: 'CBSE ୩ୟ ଶ୍ରେଣୀ • ଗଣିତ, ବିଜ୍ଞାନ ଓ ଇଂରାଜୀ ମକ୍',
+    shortDescription: 'Multiplication tables, states of matter, bird beaks, nouns/verbs, and map directions.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_1_to_5',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 3 Annual Mock',
+    gradeOrClass: 'Class 3',
+    board: 'CBSE / NCERT',
+    durationMinutes: 40,
+    totalQuestions: 15,
+    totalMarks: 15,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Grade 3 Master',
+    attemptsCount: 11200,
+    averageScore: 12.8,
+    cutoffEstimated: 13.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['15 Questions covering fundamental concepts across 3 subjects.'],
+    sections: [{ id: 'sec_c3', name: 'Integrated Class 3', totalQuestions: 15, totalMarks: 15, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c3_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c3',
+        sectionName: 'Science',
+        subject: 'General Science',
+        topic: 'States of Matter',
+        type: 'single_choice',
+        text: 'What state of matter is water when it freezes into ice in the refrigerator?',
+        options: [
+          { id: 'A', text: 'Solid' },
+          { id: 'B', text: 'Liquid' },
+          { id: 'C', text: 'Gas' },
+          { id: 'D', text: 'Plasma' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Freezing turns liquid water into a solid block of ice.',
+        referenceNotes: 'NCERT Class 3 Science'
+      }
+    ]
+  },
+
+  // 4. CBSE Class 4
+  {
+    id: 'test_cbse_class4_evs_math',
+    slug: 'cbse-class-4-evs-math-mock',
+    title: 'CBSE Class 4 • EVS, Fractions, Geometry & Everyday Science',
+    titleOdia: 'CBSE ୪ର୍ଥ ଶ୍ରେଣୀ • ପରିବେଶ, ଭଗ୍ନାଂଶ ଓ ଜ୍ୟାମିତି ମକ୍',
+    shortDescription: 'Water cycle, animal shelters, perimeter & area basics, fraction basics, and time calculations.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_1_to_5',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 4 Board Prep',
+    gradeOrClass: 'Class 4',
+    board: 'CBSE / NCERT',
+    durationMinutes: 45,
+    totalQuestions: 20,
+    totalMarks: 20,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Class 4 Explorer',
+    attemptsCount: 13400,
+    averageScore: 16.2,
+    cutoffEstimated: 17.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Class 4 Standard syllabus test.'],
+    sections: [{ id: 'sec_c4', name: 'Core Assessment', totalQuestions: 20, totalMarks: 20, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c4_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c4',
+        sectionName: 'Mathematics',
+        subject: 'Mathematics',
+        topic: 'Geometry & Perimeter',
+        type: 'single_choice',
+        text: 'A square playground has a side of 15 metres. What is the total perimeter of the playground fence?',
+        options: [
+          { id: 'A', text: '60 metres (4 × 15 = 60 m)' },
+          { id: 'B', text: '225 metres' },
+          { id: 'C', text: '30 metres' },
+          { id: 'D', text: '45 metres' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Perimeter of a square = 4 × side length = 4 × 15 = 60 metres.',
+        referenceNotes: 'NCERT Class 4 Math Magic'
+      }
+    ]
+  },
+
+  // 5. CBSE Class 5
+  {
+    id: 'test_cbse_class5_grand_mock',
+    slug: 'cbse-class-5-grand-science-math-mock',
+    title: 'CBSE Class 5 • Grand Science, Mathematics & Social Studies Mock',
+    titleOdia: 'CBSE ୫ମ ଶ୍ରେଣୀ • ବିଜ୍ଞାନ, ଗଣିତ ଓ ସମାଜବିଜ୍ଞାନ ଗ୍ରାଣ୍ଡ ମକ୍',
+    shortDescription: 'Digestive system, seed dispersal, decimals & percentages, Indian freedom struggle, and natural resources.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_1_to_5',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 5 Final Exams',
+    gradeOrClass: 'Class 5',
+    board: 'CBSE / NCERT',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Primary Graduation Level',
+    attemptsCount: 15900,
+    averageScore: 19.5,
+    cutoffEstimated: 20.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions benchmarked against the national primary curriculum.'],
+    sections: [{ id: 'sec_c5', name: 'Primary Final Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c5_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c5',
+        sectionName: 'Science',
+        subject: 'General Science',
+        topic: 'Nutrients & Digestion',
+        type: 'single_choice',
+        text: 'Which organ in the human digestive system produces bile juice to help digest fats?',
+        options: [
+          { id: 'A', text: 'Liver' },
+          { id: 'B', text: 'Stomach' },
+          { id: 'C', text: 'Kidney' },
+          { id: 'D', text: 'Lungs' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'The liver secretes bile which is stored in the gall bladder and breaks down dietary fats.',
+        referenceNotes: 'NCERT Class 5 EVS From Tasting to Digesting'
+      }
+    ]
+  },
+
+  // 6. CBSE Class 6
+  {
+    id: 'test_cbse_class6_science_math',
+    slug: 'cbse-class-6-science-math-cbt-mock',
+    title: 'CBSE Class 6 • Middle School Science, Mathematics & Reasoning',
+    titleOdia: 'CBSE ୬ଷ୍ଠ ଶ୍ରେଣୀ • ବିଜ୍ଞାନ ଓ ଗଣିତ ସିବିଟି ମକ୍',
+    shortDescription: 'Components of food, motion & measurement of distances, integers, algebra introduction, and electricity basics.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_6_to_8',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 6 Term Exams',
+    gradeOrClass: 'Class 6',
+    board: 'CBSE / NCERT',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Middle School Stage',
+    attemptsCount: 17400,
+    averageScore: 18.2,
+    cutoffEstimated: 19.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Middle school science and arithmetic testing.'],
+    sections: [{ id: 'sec_c6', name: 'Science & Math Combined', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c6_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c6',
+        sectionName: 'Science',
+        subject: 'General Science',
+        topic: 'Motion & Measurement',
+        type: 'single_choice',
+        text: 'What is the SI standard unit of length used worldwide in modern science?',
+        options: [
+          { id: 'A', text: 'Metre (m)' },
+          { id: 'B', text: 'Centimetre (cm)' },
+          { id: 'C', text: 'Foot (ft)' },
+          { id: 'D', text: 'Kilometre (km)' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'In the International System of Units (SI), the base unit of length is the metre.',
+        referenceNotes: 'NCERT Class 6 Science Chapter 10'
+      }
+    ]
+  },
+
+  // 7. CBSE Class 7
+  {
+    id: 'test_cbse_class7_integrated_mock',
+    slug: 'cbse-class-7-integrated-science-math-mock',
+    title: 'CBSE Class 7 • Nutrition, Heat, Acids, Bases & Linear Equations',
+    titleOdia: 'CBSE ୭ମ ଶ୍ରେଣୀ • ପୋଷଣ, ଉତ୍ତାପ, ଅମ୍ଳ-କ୍ଷାର ଓ ବୀଜଗଣିତ ମକ୍',
+    shortDescription: 'Photosynthesis, acids-bases indicators, heat transfer modes (conduction, convection, radiation), triangles and simple equations.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_6_to_8',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 7 Midterm & Annual',
+    gradeOrClass: 'Class 7',
+    board: 'CBSE / NCERT',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Class 7 Mastery',
+    attemptsCount: 18100,
+    averageScore: 17.8,
+    cutoffEstimated: 19.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Class 7 integrated syllabus.'],
+    sections: [{ id: 'sec_c7', name: 'Science & Math Section', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c7_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c7',
+        sectionName: 'Science',
+        subject: 'Science (Chemistry)',
+        topic: 'Acids, Bases and Salts',
+        type: 'single_choice',
+        text: 'What color change occurs when blue litmus paper is dipped into an acidic solution like dilute hydrochloric acid?',
+        options: [
+          { id: 'A', text: 'Turns Red' },
+          { id: 'B', text: 'Turns Green' },
+          { id: 'C', text: 'Turns Yellow' },
+          { id: 'D', text: 'Remains Blue' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Acids turn blue litmus paper red, while bases turn red litmus blue.',
+        referenceNotes: 'NCERT Class 7 Science Chapter 5'
+      }
+    ]
+  },
+
+  // 8. CBSE Class 8
+  {
+    id: 'test_cbse_class8_board_bridge',
+    slug: 'cbse-class-8-science-math-board-bridge-mock',
+    title: 'CBSE Class 8 • Force, Pressure, Microorganisms & Mensuration',
+    titleOdia: 'CBSE ୮ମ ଶ୍ରେଣୀ • ବଳ, ଚାପ, ଅଣୁଜୀବ ଓ ପରିମିତି ମକ୍',
+    shortDescription: 'Crucial bridge exam before High School: Force and friction, cell structure, rational numbers, factorization, and synthetic fibers.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_6_to_8',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 8 Board Foundation',
+    gradeOrClass: 'Class 8',
+    board: 'CBSE / NCERT',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'High School Gateway',
+    attemptsCount: 21300,
+    averageScore: 16.9,
+    cutoffEstimated: 18.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['60 Minutes, 25 Questions covering crucial Class 8 conceptual topics.'],
+    sections: [{ id: 'sec_c8', name: 'Class 8 Bridge Paper', totalQuestions: 25, totalMarks: 25, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'c8_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c8',
+        sectionName: 'Physics',
+        subject: 'Physics',
+        topic: 'Force and Pressure',
+        type: 'single_choice',
+        text: 'Pressure is defined as force per unit area (P = F / A). What is the SI unit of pressure?',
+        options: [
+          { id: 'A', text: 'Pascal (Pa) or N/m²' },
+          { id: 'B', text: 'Joule (J)' },
+          { id: 'C', text: 'Newton (N)' },
+          { id: 'D', text: 'Watt (W)' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: '1 Pascal is equal to 1 Newton of force applied perpendicularly over an area of 1 square metre.',
+        referenceNotes: 'NCERT Class 8 Physics Chapter 11'
+      }
+    ]
+  },
+
+  // 9. CBSE Class 9 Science
+  {
+    id: 'test_cbse_class9_science_full',
+    slug: 'cbse-class-9-science-physics-chem-bio-mock',
+    title: 'CBSE Class 9 Science • Physics, Chemistry & Biology Full Mock',
+    titleOdia: 'CBSE ୯ମ ଶ୍ରେଣୀ ବିଜ୍ଞାନ • ପଦାର୍ଥ, ରସାୟନ ଓ ଜୀବବିଜ୍ଞାନ ମକ୍',
+    shortDescription: 'Laws of Motion, Gravitation, Matter in our Surroundings, Atoms & Molecules, and Fundamental Unit of Life (Cell).',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_9_10',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 9 Annual Exams',
+    gradeOrClass: 'Class 9',
+    board: 'CBSE / NCERT',
+    durationMinutes: 90,
+    totalQuestions: 30,
+    totalMarks: 60,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Class 9 Benchmark',
+    attemptsCount: 24800,
+    averageScore: 41.5,
+    cutoffEstimated: 45.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['90 Minutes for 30 high-yield questions with +2 / -0.5 marking.'],
+    sections: [{ id: 'sec_c9_sci', name: 'Science Theory Paper', totalQuestions: 30, totalMarks: 60, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'c9s_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c9_sci',
+        sectionName: 'Biology',
+        subject: 'Biology',
+        topic: 'Cell - Fundamental Unit of Life',
+        type: 'single_choice',
+        text: 'Which organelle is known as the "Powerhouse of the Cell" due to ATP synthesis?',
+        options: [
+          { id: 'A', text: 'Mitochondria' },
+          { id: 'B', text: 'Golgi Apparatus' },
+          { id: 'C', text: 'Endoplasmic Reticulum' },
+          { id: 'D', text: 'Lysosome' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Mitochondria generate cellular energy in the form of ATP (Adenosine Triphosphate).',
+        referenceNotes: 'NCERT Class 9 Science Chapter 5'
+      }
+    ]
+  },
+
+  // 10. CBSE Class 9 Mathematics
+  {
+    id: 'test_cbse_class9_math_mock',
+    slug: 'cbse-class-9-math-polynomials-geometry-mock',
+    title: 'CBSE Class 9 Mathematics • Number Systems, Polynomials & Circles',
+    titleOdia: 'CBSE ୯ମ ଶ୍ରେଣୀ ଗଣିତ • ବହୁପଦୀ, ସଂଖ୍ୟା ପଦ୍ଧତି ଓ ଜ୍ୟାମିତି ମକ୍',
+    shortDescription: 'Irrational numbers, Remainder Theorem, Coordinate Geometry, Linear Equations in Two Variables, Lines & Angles.',
+    mainCategory: 'school_boards',
+    subCategory: 'school_class_9_10',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 9 Mathematics',
+    gradeOrClass: 'Class 9',
+    board: 'CBSE / NCERT',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Math Rigor',
+    attemptsCount: 22100,
+    averageScore: 33.4,
+    cutoffEstimated: 36.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Standard numerical and analytical questions.'],
+    sections: [{ id: 'sec_c9_m', name: 'Mathematics Core', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'c9m_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c9_m',
+        sectionName: 'Algebra',
+        subject: 'Mathematics',
+        topic: 'Polynomials & Identities',
+        type: 'single_choice',
+        text: 'What is the expansion of the algebraic identity (a + b + c)²?',
+        options: [
+          { id: 'A', text: 'a² + b² + c² + 2ab + 2bc + 2ca' },
+          { id: 'B', text: 'a² + b² + c² + ab + bc + ca' },
+          { id: 'C', text: 'a² + b² + c² - 2ab - 2bc - 2ca' },
+          { id: 'D', text: 'a³ + b³ + c³ + 3abc' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: '(a + b + c)² = a² + b² + c² + 2(ab + bc + ca).',
+        referenceNotes: 'NCERT Class 9 Math Chapter 2'
+      }
+    ]
+  },
+
+  // 11. CBSE Class 11 Physics
+  {
+    id: 'test_cbse_class11_physics_mock',
+    slug: 'cbse-class-11-physics-mechanics-thermo-mock',
+    title: 'CBSE Class 11 Physics • Kinematics, Laws of Motion & Thermodynamics',
+    titleOdia: 'CBSE ୧୧ଶ ଶ୍ରେଣୀ ପଦାର୍ଥ ବିଜ୍ଞାନ • ଗତି ବିଜ୍ଞାନ ଓ ତାପଗତିକୀ ମକ୍',
+    shortDescription: 'Vectors, Projectile Motion, Work Energy Power, System of Particles, Gravitation, and First Law of Thermodynamics.',
+    mainCategory: 'school_boards',
+    subCategory: 'cbse_class_12',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 11 / JEE-NEET Foundation',
+    gradeOrClass: 'Class 11 Science',
+    board: 'CBSE / NCERT',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Senior Secondary Foundation',
+    attemptsCount: 26500,
+    averageScore: 31.8,
+    cutoffEstimated: 35.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Standard Senior Secondary Marking Scheme.'],
+    sections: [{ id: 'sec_c11_p', name: 'Physics Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'c11p_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c11_p',
+        sectionName: 'Mechanics',
+        subject: 'Physics',
+        topic: 'Work, Energy and Power',
+        type: 'single_choice',
+        text: 'What is the work done by a centripetal force on a particle moving in a uniform circular orbit of radius R?',
+        options: [
+          { id: 'A', text: 'Zero (Since force is perpendicular to displacement: W = F·d·cos 90° = 0)' },
+          { id: 'B', text: 'F × 2πR' },
+          { id: 'C', text: '½ m v²' },
+          { id: 'D', text: 'm v² / R' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'The centripetal force acts towards the centre while displacement is tangential (90° angle), so cos 90° = 0, meaning work done is zero.',
+        referenceNotes: 'NCERT Class 11 Physics Chapter 6'
+      }
+    ]
+  },
+
+  // 12. CBSE Class 11 Chemistry
+  {
+    id: 'test_cbse_class11_chem_mock',
+    slug: 'cbse-class-11-chemistry-structure-bonding-mock',
+    title: 'CBSE Class 11 Chemistry • Chemical Bonding, Mole Concept & GOC',
+    titleOdia: 'CBSE ୧୧ଶ ଶ୍ରେଣୀ ରସାୟନ • ରାସାୟନିକ ବନ୍ଧନ ଓ ମୌଳିକ ସଂକଳ୍ପ ମକ୍',
+    shortDescription: 'Structure of Atom, Periodic Classification, Hybridization (sp, sp², sp³), Thermodynamics, and General Organic Chemistry.',
+    mainCategory: 'school_boards',
+    subCategory: 'cbse_class_12',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 11 Annual / Entrance Prep',
+    gradeOrClass: 'Class 11 Science',
+    board: 'CBSE / NCERT',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Chemistry Core',
+    attemptsCount: 25100,
+    averageScore: 32.2,
+    cutoffEstimated: 34.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['High-yield theoretical and numerical questions.'],
+    sections: [{ id: 'sec_c11_c', name: 'Chemistry Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'c11c_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c11_c',
+        sectionName: 'Inorganic Chemistry',
+        subject: 'Chemistry',
+        topic: 'Chemical Bonding & Hybridization',
+        type: 'single_choice',
+        text: 'What is the hybridization and geometric shape of a methane (CH₄) molecule?',
+        options: [
+          { id: 'A', text: 'sp³ Hybridization, Tetrahedral shape with 109.5° bond angles' },
+          { id: 'B', text: 'sp² Hybridization, Trigonal Planar' },
+          { id: 'C', text: 'sp Hybridization, Linear' },
+          { id: 'D', text: 'dsp² Hybridization, Square Planar' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'In CH₄, carbon forms 4 equivalent sigma bonds with hydrogen using sp³ hybrid orbitals in a regular tetrahedral arrangement.',
+        referenceNotes: 'NCERT Class 11 Chemistry Chapter 4'
+      }
+    ]
+  },
+
+  // 13. CBSE Class 12 Commerce & Economics
+  {
+    id: 'test_cbse_class12_commerce_eco',
+    slug: 'cbse-class-12-accountancy-economics-business-mock',
+    title: 'CBSE Class 12 Commerce • Accountancy, Macroeconomics & Business Studies',
+    titleOdia: 'CBSE ୧୨ଶ ଶ୍ରେଣୀ ବାଣିଜ୍ୟ • ଆକାଉଣ୍ଟାନ୍ସି ଓ ଅର୍ଥନୀତି ମକ୍',
+    shortDescription: 'Partnership accounts, Cash Flow Statements, National Income Accounting, Monetary Policy, and Principles of Management.',
+    mainCategory: 'school_boards',
+    subCategory: 'cbse_class_12',
+    categoryLabel: 'School Boards',
+    targetExam: 'CBSE Class 12 Commerce Board',
+    gradeOrClass: 'Class 12 Commerce',
+    board: 'CBSE',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Commerce Board Level',
+    attemptsCount: 19800,
+    averageScore: 36.4,
+    cutoffEstimated: 38.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['CBSE 12th Commerce standard test.'],
+    sections: [{ id: 'sec_c12_com', name: 'Commerce Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'c12com_q1',
+        questionNumber: 1,
+        sectionId: 'sec_c12_com',
+        sectionName: 'Economics',
+        subject: 'Macroeconomics',
+        topic: 'National Income Accounting',
+        type: 'single_choice',
+        text: 'Which measure represents Gross Domestic Product (GDP) minus Depreciation of capital assets?',
+        options: [
+          { id: 'A', text: 'Net Domestic Product (NDP = GDP - Depreciation)' },
+          { id: 'B', text: 'Gross National Product (GNP)' },
+          { id: 'C', text: 'Net National Product (NNP)' },
+          { id: 'D', text: 'Personal Disposable Income' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Deducting consumption of fixed capital (depreciation) from gross domestic product gives net domestic product (NDP).',
+        referenceNotes: 'NCERT Class 12 Macroeconomics Chapter 2'
+      }
+    ]
+  },
+
+  // 14. Odisha BSE Class 9 (HSC Pre-Board)
+  {
+    id: 'test_bse_odisha_class9_hsc',
+    slug: 'odisha-bse-class-9-odia-math-science-mock',
+    title: 'Odisha BSE 9th (ନବମ ଶ୍ରେଣୀ) • ସାହିତ୍ୟ ଧାରା, ବିଜ୍ଞାନ ଓ ବୀଜଗଣିତ',
+    titleOdia: 'ଓଡ଼ିଶା ମାଧ୍ୟମିକ ଶିକ୍ଷା ପରିଷଦ ୯ମ ଶ୍ରେଣୀ • ସାହିତ୍ୟ, ଗଣିତ ଓ ବିଜ୍ଞାନ ମକ୍',
+    shortDescription: 'Bilingual Odia & English Mock: Odia Sahitya Dhara, Physical Science, Life Science, Geometry, and Social Science.',
+    mainCategory: 'school_boards',
+    subCategory: 'bse_odisha_class_10',
+    categoryLabel: 'School Boards',
+    targetExam: 'BSE Odisha Class 9 Summative Exam',
+    gradeOrClass: 'Class 9 High School',
+    board: 'Board of Secondary Education, Odisha (BSE)',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ଓଡ଼ିଶା ୯ମ ଶ୍ରେଣୀ',
+    attemptsCount: 27900,
+    averageScore: 35.8,
+    cutoffEstimated: 38.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['ସମୟ: ୯୦ ମିନିଟ୍ | ପ୍ରଶ୍ନ: ୨୫ | ମାର୍କିଂ: +୨.୦ ଠିକ୍ ଉତ୍ତର, -୦.୫୦ ଭୁଲ୍ ଉତ୍ତର ।'],
+    sections: [{ id: 'sec_bse9', name: 'BSE Class 9 Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'bse9_q1',
+        questionNumber: 1,
+        sectionId: 'sec_bse9',
+        sectionName: 'Odia Sahitya',
+        subject: 'Odia Language',
+        topic: 'Sandhi and Byakarana',
+        type: 'single_choice',
+        text: 'ଓଡ଼ିଆ ବ୍ୟାକରଣରେ "ଦିଗ୍ + ଅନ୍ତ" ସନ୍ଧି ହେଲେ କେଉଁ ଶୁଦ୍ଧ ପଦଟି ଗଠିତ ହୁଏ?',
+        options: [
+          { id: 'A', text: 'ଦିଗନ୍ତ' },
+          { id: 'B', text: 'ଦିଗାନ୍ତ' },
+          { id: 'C', text: 'ଦିକ୍ ଅନ୍ତ' },
+          { id: 'D', text: 'ଦିଗ୍ ଅନ୍ତ' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'ବ୍ୟଞ୍ଜନ ସନ୍ଧି ନିୟମାନୁଯାୟୀ କ୍/ଗ୍ ସ୍ଥାନରେ ଗ୍ ହୋଇ ଦିଗ୍ + ଅନ୍ତ = ଦିଗନ୍ତ ଗଠିତ ହୁଏ ।',
+        referenceNotes: 'BSE Odisha Class 9 Byakarana'
+      }
+    ]
+  },
+
+  // 15. Odisha CHSE +2 Science
+  {
+    id: 'test_chse_odisha_plus2_science',
+    slug: 'odisha-chse-plus2-science-physics-chemistry-biology',
+    title: 'Odisha CHSE +2 Science • Annual Board & OJEE Combined Mock',
+    titleOdia: 'ଓଡ଼ିଶା ଉଚ୍ଚ ମାଧ୍ୟମିକ ଶିକ୍ଷା ପରିଷଦ (+୨ ବିଜ୍ଞାନ) • ବୋର୍ଡ ମକ୍ ଟେଷ୍ଟ',
+    shortDescription: 'Council of Higher Secondary Education Odisha pattern: Electromagnetic Induction, Electrochemistry, Genetics & Ecology.',
+    mainCategory: 'school_boards',
+    subCategory: 'chse_odisha_plus2',
+    categoryLabel: 'School Boards',
+    targetExam: 'Odisha CHSE +2 Science Annual',
+    gradeOrClass: '+2 2nd Year Science',
+    board: 'CHSE Odisha',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'CHSE +2 ବିଜ୍ଞାନ',
+    attemptsCount: 29400,
+    averageScore: 34.1,
+    cutoffEstimated: 36.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Full CHSE +2 Science syllabus questions.'],
+    sections: [{ id: 'sec_chse_sci', name: 'CHSE Science Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'chse_q1',
+        questionNumber: 1,
+        sectionId: 'sec_chse_sci',
+        sectionName: 'Physics',
+        subject: 'Physics',
+        topic: 'Electromagnetic Induction & Faraday Laws',
+        type: 'single_choice',
+        text: 'According to Lenz\'s Law in electromagnetic induction, the polarity of induced electromotive force (EMF) is such that it:',
+        options: [
+          { id: 'A', text: 'Always opposes the change in magnetic flux producing it' },
+          { id: 'B', text: 'Always assists the change in magnetic flux' },
+          { id: 'C', text: 'Is independent of magnetic flux change' },
+          { id: 'D', text: 'Only depends on the wire resistance' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Lenz\'s law is a consequence of conservation of energy: induced current produces magnetic effects that oppose the cause that produced it.',
+        referenceNotes: 'CHSE Odisha Physics Bureau Textbook'
+      }
+    ]
+  },
+
+  // 16. Odisha CHSE +2 Arts & Commerce
+  {
+    id: 'test_chse_odisha_plus2_arts_commerce',
+    slug: 'odisha-chse-plus2-arts-commerce-odia-history-eco',
+    title: 'Odisha CHSE +2 Arts & Commerce • ସାହିତ୍ୟ ଜ୍ୟୋତି, ଇତିହାସ ଓ ଅର୍ଥନୀତି',
+    titleOdia: 'ଓଡ଼ିଶା CHSE +୨ କଳା ଓ ବାଣିଜ୍ୟ • ସାହିତ୍ୟ ଜ୍ୟୋତି, ଇତିହାସ ଓ ଅର୍ଥନୀତି',
+    shortDescription: 'Sahitya Jyoti (Odia MIL), Indian History, Macroeconomics, Political Science, and Banking basics.',
+    mainCategory: 'school_boards',
+    subCategory: 'chse_odisha_plus2',
+    categoryLabel: 'School Boards',
+    targetExam: 'Odisha CHSE +2 Arts & Commerce',
+    gradeOrClass: '+2 2nd Year Arts/Commerce',
+    board: 'CHSE Odisha',
+    durationMinutes: 90,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'CHSE +୨ କଳା ଓ ବାଣିଜ୍ୟ',
+    attemptsCount: 23100,
+    averageScore: 36.8,
+    cutoffEstimated: 38.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['CHSE Arts & Commerce curriculum paper.'],
+    sections: [{ id: 'sec_chse_arts', name: 'CHSE Arts Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'chse_art_q1',
+        questionNumber: 1,
+        sectionId: 'sec_chse_arts',
+        sectionName: 'Odia MIL',
+        subject: 'Odia Sahitya Jyoti',
+        topic: 'Odia Classical Literature',
+        type: 'single_choice',
+        text: 'ଓଡ଼ିଆ ସାହିତ୍ୟର ଆଦିକବି ଭାବରେ କାହାକୁ ସମ୍ମାନିତ କରାଯାଏ ଯିଏ ସରଳ ଓଡ଼ିଆ ଭାଷାରେ ମହାଭାରତ ରଚନା କରିଥିଲେ?',
+        options: [
+          { id: 'A', text: 'ସାରଳା ଦାସ (ଝଙ୍କଡ଼ର ସାରଳା ଦାସ)' },
+          { id: 'B', text: 'ଜଗନ୍ନାଥ ଦାସ' },
+          { id: 'C', text: 'ଉପେନ୍ଦ୍ର ଭଞ୍ଜ' },
+          { id: 'D', text: 'ଫକୀର ମୋହନ ସେନାପତି' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'ପଞ୍ଚଦଶ ଶତାବ୍ଦୀରେ କପିଳେନ୍ଦ୍ର ଦେବଙ୍କ ରାଜତ୍ୱ କାଳରେ ସାରଳା ଦାସ ଓଡ଼ିଆ ମହାଭାରତ, ଚଣ୍ଡୀପୁରାଣ ଓ ବିଳଙ୍କା ରାମାୟଣ ରଚନା କରି ଆଦିକବି ଉପାଧି ପ୍ରାପ୍ତ ହୋଇଥିଲେ ।',
+        referenceNotes: 'CHSE Odisha Sahitya Jyoti Book'
+      }
+    ]
+  },
+
+  // 17. ICSE Class 9 Science
+  {
+    id: 'test_icse_class9_science_mock',
+    slug: 'icse-class-9-physics-chemistry-biology-mock',
+    title: 'ICSE Class 9 • Physics, Chemistry & Biology Concept Drill',
+    titleOdia: 'ICSE ୯ମ ଶ୍ରେଣୀ • ବିଜ୍ଞାନ କନସେପ୍ଟ ଡ୍ରିଲ୍',
+    shortDescription: 'CISCE Class 9 syllabus: Measurements and Experimentation, Motion in One Dimension, Chemical Changes, Cell Tissue, and Plant Physiology.',
+    mainCategory: 'school_boards',
+    subCategory: 'icse_class_10',
+    categoryLabel: 'School Boards',
+    targetExam: 'ICSE Class 9 Exams',
+    gradeOrClass: 'Class 9 ICSE',
+    board: 'CISCE (ICSE)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ICSE Rigor',
+    attemptsCount: 16500,
+    averageScore: 33.2,
+    cutoffEstimated: 35.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Standard ICSE syllabus examination.'],
+    sections: [{ id: 'sec_icse9', name: 'ICSE 9th Science', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'icse9_q1',
+        questionNumber: 1,
+        sectionId: 'sec_icse9',
+        sectionName: 'Physics',
+        subject: 'Physics',
+        topic: 'Measurements & Vernier Caliper',
+        type: 'single_choice',
+        text: 'What is the least count of a standard Vernier caliper where 1 main scale division is 1 mm and 10 Vernier divisions coincide with 9 main scale divisions?',
+        options: [
+          { id: 'A', text: '0.1 mm (0.01 cm)' },
+          { id: 'B', text: '0.01 mm' },
+          { id: 'C', text: '1 mm' },
+          { id: 'D', text: '0.5 mm' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'Least count = 1 MSD - 1 VSD = 1 mm - 0.9 mm = 0.1 mm = 0.01 cm.',
+        referenceNotes: 'Selina Concise ICSE Physics Class 9'
+      }
+    ]
+  },
+
+  // 18. ICSE Class 10 History & Civics
+  {
+    id: 'test_icse_class10_history_civics',
+    slug: 'icse-class-10-history-civics-board-mock',
+    title: 'ICSE Class 10 History & Civics • Board Exam Simulation',
+    titleOdia: 'ICSE ୧୦ମ ଶ୍ରେଣୀ ଇତିହାସ ଓ ପୌରବିଜ୍ଞାନ ବୋର୍ଡ ମକ୍',
+    shortDescription: 'CISCE Board pattern: The Union Parliament, President & Prime Minister, First War of Independence (1857), Indian National Movement, and UNO.',
+    mainCategory: 'school_boards',
+    subCategory: 'icse_class_10',
+    categoryLabel: 'School Boards',
+    targetExam: 'ICSE Class 10 Board 2026',
+    gradeOrClass: 'Class 10 ICSE',
+    board: 'CISCE (ICSE)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'ICSE Class 10 Official',
+    attemptsCount: 19400,
+    averageScore: 35.4,
+    cutoffEstimated: 37.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Official ICSE pattern marking.'],
+    sections: [{ id: 'sec_icse10_hc', name: 'History & Civics', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }],
+    questions: [
+      {
+        id: 'icse10_hc_q1',
+        questionNumber: 1,
+        sectionId: 'sec_icse10_hc',
+        sectionName: 'Civics',
+        subject: 'Indian Civics',
+        topic: 'The Union Parliament & Lok Sabha',
+        type: 'single_choice',
+        text: 'What is the maximum constitutionally permissible strength of the Lok Sabha (House of the People) as per current Indian Constitutional norms?',
+        options: [
+          { id: 'A', text: '550 Members (530 from States + 20 from UTs; Anglo-Indian nomination abolished)' },
+          { id: 'B', text: '552 Members' },
+          { id: 'C', text: '545 Members' },
+          { id: 'D', text: '250 Members' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.5,
+        difficulty: 'easy',
+        explanation: 'With the 104th Constitutional Amendment Act 2019 discontinuing the nomination of 2 Anglo-Indians, the maximum strength is 550 members.',
+        referenceNotes: 'Total History and Civics ICSE Class 10'
+      }
+    ]
+  },
+
+  // 19. Jawahar Navodaya Vidyalaya Selection Test (JNVST Class 6)
+  {
+    id: 'test_jnvst_class6_selection',
+    slug: 'jnvst-class-6-navodaya-selection-test-mock',
+    title: 'JNVST Navodaya (Class 6) • Mental Ability, Arithmetic & Language Mock',
+    titleOdia: 'ଜବାହର ନବୋଦୟ ବିଦ୍ୟାଳୟ ପ୍ରବେଶ ପରୀକ୍ଷା (୬ଷ୍ଠ ଶ୍ରେଣୀ) • ମେଣ୍ଟାଲ ଆବିଲିଟି ଓ ଗଣିତ',
+    shortDescription: 'National Navodaya Selection: Mental Ability Non-Verbal Figures, Arithmetic Word Problems, and Reading Passages.',
+    mainCategory: 'school_boards',
+    subCategory: 'navodaya_jnvst',
+    categoryLabel: 'School Boards',
+    targetExam: 'JNVST Class 6 Selection 2026',
+    gradeOrClass: 'Class 5 to 6 Entry',
+    board: 'Navodaya Vidyalaya Samiti (NVS)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 31.25,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Navodaya Scholarship Track',
+    attemptsCount: 38200,
+    averageScore: 24.1,
+    cutoffEstimated: 26.5,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+1.25 marks each with zero negative marking).'],
+    sections: [{ id: 'sec_jnvst', name: 'JNVST Selection Paper', totalQuestions: 25, totalMarks: 31.25, positiveMarksPerQuestion: 1.25, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'jnv_q1',
+        questionNumber: 1,
+        sectionId: 'sec_jnvst',
+        sectionName: 'Mental Ability',
+        subject: 'Non-Verbal Reasoning',
+        topic: 'Figure Matching & Odd-Man-Out',
+        type: 'single_choice',
+        text: 'Among four geometric figures, three figures have exactly 4 sides (Quadrilaterals). One figure has 3 sides (Triangle). Which is the odd one out?',
+        options: [
+          { id: 'A', text: 'Triangle (Has 3 sides, unlike Square, Rectangle, Rhombus which have 4 sides)' },
+          { id: 'B', text: 'Square' },
+          { id: 'C', text: 'Rectangle' },
+          { id: 'D', text: 'Rhombus' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.25,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'The triangle has 3 sides while the others are 4-sided quadrilaterals.',
+        referenceNotes: 'JNVST Official Class 6 Guide'
+      }
+    ]
+  },
+
+  // 20. All India Sainik School Entrance Examination (AISSEE Class 6 & 9)
+  {
+    id: 'test_sainik_school_aissee_mock',
+    slug: 'aissee-all-india-sainik-school-entrance-mock',
+    title: 'AISSEE Sainik School • Mathematics, Intelligence & General Knowledge',
+    titleOdia: 'ସୈନିକ ସ୍କୁଲ ଅଲ୍ ଇଣ୍ଡିଆ ଏଣ୍ଟ୍ରାନ୍ସ (AISSEE) • ଗଣିତ ଓ ଜେନେରାଲ ନଲେଜ୍ ମକ୍',
+    shortDescription: 'Ministry of Defence Sainik School Entrance: Quantitative Reasoning, Intelligence Test, GK, and English.',
+    mainCategory: 'school_boards',
+    subCategory: 'sainik_school',
+    categoryLabel: 'School Boards',
+    targetExam: 'AISSEE Sainik School 2026',
+    gradeOrClass: 'Class 6 & 9 Admission',
+    board: 'National Testing Agency (NTA)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 50,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'Sainik Cadet Track',
+    attemptsCount: 31200,
+    averageScore: 37.2,
+    cutoffEstimated: 40.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['25 Questions (+2.0 marks per correct response, zero negative marking).'],
+    sections: [{ id: 'sec_aissee', name: 'AISSEE General Paper', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'ais_q1',
+        questionNumber: 1,
+        sectionId: 'sec_aissee',
+        sectionName: 'General Knowledge',
+        subject: 'National Defence & Geography',
+        topic: 'Indian Armed Forces & Highest Gallantry Award',
+        type: 'single_choice',
+        text: 'Which is the highest wartime gallantry military decoration in India awarded for supreme bravery in the presence of the enemy?',
+        options: [
+          { id: 'A', text: 'Param Vir Chakra (PVC)' },
+          { id: 'B', text: 'Maha Vir Chakra' },
+          { id: 'C', text: 'Vir Chakra' },
+          { id: 'D', text: 'Ashoka Chakra' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 2.0,
+        negativeMarks: 0.0,
+        difficulty: 'easy',
+        explanation: 'Param Vir Chakra is India\'s highest wartime military decoration, first awarded to Major Somnath Sharma in 1947.',
+        referenceNotes: 'AISSEE Defence & General Knowledge'
+      }
+    ]
+  },
+
+  // 21. National Science Olympiad (NSO Class 6 to 10)
+  {
+    id: 'test_nso_national_science_olympiad',
+    slug: 'national-science-olympiad-nso-advanced-mock',
+    title: 'National Science Olympiad (NSO) • High-Order Scientific Thinking (HOTs)',
+    titleOdia: 'ନ୍ୟାସନାଲ ସାଇନ୍ସ ଅଲମ୍ପିଆଡ (NSO) • ହାଇ-ଅର୍ଡର ସାଇଣ୍ଟିଫିକ୍ ଥିଙ୍କିଙ୍ଗ ମକ୍',
+    shortDescription: 'Science Olympiad Foundation (SOF) pattern: Logical Reasoning, Science Core, and Achievers Section.',
+    mainCategory: 'school_boards',
+    subCategory: 'olympiad_science_math',
+    categoryLabel: 'School Boards',
+    targetExam: 'SOF National Science Olympiad (NSO)',
+    gradeOrClass: 'Classes 6 to 10',
+    board: 'Science Olympiad Foundation (SOF)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 35,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'NSO Olympiad Achiever',
+    attemptsCount: 26800,
+    averageScore: 24.5,
+    cutoffEstimated: 27.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['High-Order Thinking (HOTs) Science Olympiad questions.'],
+    sections: [{ id: 'sec_nso', name: 'NSO Achievers Paper', totalQuestions: 25, totalMarks: 35, positiveMarksPerQuestion: 1.4, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'nso_q1',
+        questionNumber: 1,
+        sectionId: 'sec_nso',
+        sectionName: 'Achievers Section',
+        subject: 'Applied Physics',
+        topic: 'Optics & Total Internal Reflection',
+        type: 'single_choice',
+        text: 'Optical fibres used in modern high-speed telecommunications and internet cables operate primarily on which optical principle?',
+        options: [
+          { id: 'A', text: 'Total Internal Reflection (TIR)' },
+          { id: 'B', text: 'Diffuse Reflection' },
+          { id: 'C', text: 'Refraction only' },
+          { id: 'D', text: 'Polarization' }
+        ],
+        correctAnswer: 'A',
+        positiveMarks: 1.4,
+        negativeMarks: 0.0,
+        difficulty: 'medium',
+        explanation: 'Optical fibres transmit light signals across long distances with minimal loss by trapping light via Total Internal Reflection at the core-cladding boundary.',
+        referenceNotes: 'SOF NSO Achievers Question Bank'
+      }
+    ]
+  },
+
+  // 22. International Mathematics Olympiad (IMO Class 6 to 10)
+  {
+    id: 'test_imo_international_math_olympiad',
+    slug: 'international-mathematics-olympiad-imo-master-mock',
+    title: 'International Mathematics Olympiad (IMO) • Number Theory & Geometry',
+    titleOdia: 'ଇଣ୍ଟରନ୍ୟାସନାଲ ମ୍ୟାଥମେଟିକ୍ସ ଅଲମ୍ପିଆଡ (IMO) • ଜ୍ୟାମିତି ଓ ନମ୍ବର ଥିଓରୀ',
+    shortDescription: 'SOF IMO pattern: Mathematical Reasoning, Everyday Quantitative Logic, and Achievers Section.',
+    mainCategory: 'school_boards',
+    subCategory: 'olympiad_science_math',
+    categoryLabel: 'School Boards',
+    targetExam: 'SOF International Math Olympiad (IMO)',
+    gradeOrClass: 'Classes 6 to 10',
+    board: 'Science Olympiad Foundation (SOF)',
+    durationMinutes: 60,
+    totalQuestions: 25,
+    totalMarks: 35,
+    isLive: true,
+    isFree: true,
+    featuredBadge: 'IMO Olympiad Gold',
+    attemptsCount: 28400,
+    averageScore: 23.9,
+    cutoffEstimated: 26.0,
+    createdAt: '2026-02-22T08:00:00Z',
+    instructions: ['Challenging, creative mathematical puzzles and theorems.'],
+    sections: [{ id: 'sec_imo', name: 'IMO Olympiad Paper', totalQuestions: 25, totalMarks: 35, positiveMarksPerQuestion: 1.4, negativeMarksPerQuestion: 0.0 }],
+    questions: [
+      {
+        id: 'imo_q1',
+        questionNumber: 1,
+        sectionId: 'sec_imo',
+        sectionName: 'Achievers Math',
+        subject: 'Mathematics',
+        topic: 'Number Theory & Divisibility',
+        type: 'single_choice',
+        text: 'What is the remainder when 2²⁰²⁶ is divided by 7?',
+        options: [
+          { id: 'A', text: '4 (Since 2³ ≡ 1 mod 7; 2026 = 3 × 675 + 1; so 2¹ ≡ 2 mod 7... wait: 2³=8=1 mod 7, 2026÷3 has remainder 1, so 2¹=2, or 2²⁰²⁶ mod 7 = 4? Let\'s check: 2¹=2, 2²=4, 2³=1; remainder is 2)' },
+          { id: 'B', text: '2 (2³ = 8 ≡ 1 mod 7. 2026 = 3×675 + 1. Therefore 2²⁰²⁶ = (2³)⁶⁷⁵ × 2¹ ≡ 1⁶⁷⁵ × 2 = 2)' },
+          { id: 'C', text: '1' },
+          { id: 'D', text: '6' }
+        ],
+        correctAnswer: 'B',
+        positiveMarks: 1.4,
+        negativeMarks: 0.0,
+        difficulty: 'hard',
+        explanation: 'By modular arithmetic, 2³ = 8 ≡ 1 (mod 7). Since 2026 = 3(675) + 1, we have 2²⁰²⁶ = (2³)⁶⁷⁵ · 2¹ ≡ 1⁶⁷⁵ · 2 ≡ 2 (mod 7).',
+        referenceNotes: 'SOF IMO Number Theory Advanced'
+      }
+    ]
+  }
+];

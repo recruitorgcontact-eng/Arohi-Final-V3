@@ -43,13 +43,16 @@ import {
   Scale,
   Theater,
   Palette,
-  Box
+  Box,
+  Trophy,
+  Award
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
 import { useAuth } from '../context/AuthContext';
 import ArohiAvatar from './ArohiAvatar';
 import HeaderNotifications from './HeaderNotifications';
+import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
 
 interface WelcomeLandingProps {
   onEnter: () => void;
@@ -1181,6 +1184,17 @@ export default function WelcomeLanding({
             </button>
           </div>
 
+          {/* Official 3D Neon "Arohi Exams™" Capsule Button Banner */}
+          <div className="mt-4 pt-3.5 border-t border-purple-500/20">
+            <ArohiExamsButtonBanner
+              isDarkMode={isDarkMode}
+              onClick={() => {
+                setActiveTab('mocktests');
+                onEnter();
+              }}
+            />
+          </div>
+
 
 
         </div>
@@ -1471,6 +1485,23 @@ export default function WelcomeLanding({
                   >
                     <span>Voice Call & Chat</span>
                     <Sparkles className="w-4 h-4 text-purple-500" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('mocktests');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 hover:bg-amber-500/20 flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-amber-500" />
+                      <span>Arohi Exams™ (CBT Tests)</span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded-md">
+                      Hot
+                    </span>
                   </button>
 
                   <button

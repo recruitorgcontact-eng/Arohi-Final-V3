@@ -82,8 +82,10 @@ const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 // INITIAL_REVIEWS and Review interface are imported from ./data/reviewsData
 
 export default function App() {
-  const { user, userData, updateApplications, updateUserSubscription } = useAuth();
+  const { user, userData, loading, updateApplications, updateUserSubscription } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup' | 'forgot' | 'onboarding'>('signin');
+  const [authUpgradePrompt, setAuthUpgradePrompt] = useState<string | null>(null);
   const [hasEntered, setHasEntered] = useState(() => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
@@ -736,7 +738,7 @@ export default function App() {
         }
       }
     }
-  }, [userData?.isSubscribed, userData?.subscriptionEndDate, userData?.subscriptions, userData?.subscriptionDetails]);
+  }, [userData?.isSubscribed, userData?.subscriptionEndDate, JSON.stringify(userData?.subscriptions), JSON.stringify(userData?.subscriptionDetails)]);
 
   const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
     const saved = getStorageItem('arohi_subscription_details');
@@ -873,9 +875,6 @@ export default function App() {
       return null;
     }
   });
-
-  const [authUpgradePrompt, setAuthUpgradePrompt] = useState<string | null>(null);
-  const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup'>('signup');
 
   // Triggered when unauthenticated user or logged-in user clicks Upgrade
   const handleInitiateUpgrade = (planIndex = 0, autoLaunchCheckout = true) => {
@@ -1588,9 +1587,12 @@ export default function App() {
   // Sync applications and states with Firestore in real time if user is logged in
   useEffect(() => {
     if (user && userData?.applications) {
-      setApplications(userData.applications);
+      setApplications(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(userData.applications)) return prev;
+        return userData.applications || prev;
+      });
     }
-  }, [user, userData?.applications]);
+  }, [user?.uid, JSON.stringify(userData?.applications)]);
 
   const handleAddPosting = (newPost: Posting) => {
     const updated = [newPost, ...postings];
@@ -3175,7 +3177,7 @@ export default function App() {
     <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white pb-24 xl:pb-12 transition-colors duration-300 ${isDarkMode ? 'bg-[#070814] text-slate-100 dark' : 'bg-[#f8f9fe] text-slate-900 light'}`}>
       
       {/* Interactive Parallax Background Scroll Effects */}
-      <BackgroundScrollEffects />
+      <BackgroundScrollEffects isDarkMode={isDarkMode} />
 
       {/* Dynamic SEO Head Title and Meta Description Updates */}
       <SEOHead 
@@ -3675,7 +3677,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+      <main className={`flex-1 w-full ${activeTab === 'home' ? 'p-0' : 'max-w-7xl mx-auto px-4 py-8'}`}>
         {/* Integrated 2-Day Free Trial Banner inside Main Screen UI for non-home tabs */}
         {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && (
           <div className={`mb-6 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
@@ -4521,6 +4523,15 @@ export default function App() {
           isDarkMode={isDarkMode}
         />
       )}
+
+      {/* Primary Authentication Portal (Forced for unauthenticated visitors, dismissible for authenticated users) */}
+      <AuthModal
+        isOpen={!loading && (!user || isAuthModalOpen)}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authInitialMode}
+        upgradePrompt={authUpgradePrompt}
+        forced={!user}
+      />
 
     </div>
   );

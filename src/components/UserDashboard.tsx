@@ -5,7 +5,7 @@ import {
   ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, Crown,
   Download, RefreshCw, Trophy, Calendar, Check, Play, GraduationCap, Map, Clock, Share2,
   Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu,
-  Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer
+  Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer, Brain
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { computeSubscriptionState } from '../utils/subscriptionEngine';
@@ -76,7 +76,7 @@ export default function UserDashboard({
   
   const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
 
-  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'subscriptions' | 'profile' | 'applications' | 'courses'>(
+  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'subscriptions' | 'profile' | 'applications' | 'courses' | 'mocktests'>(
     initialSection === 'subscriptions' ? 'subscriptions' : 'all'
   );
 
@@ -225,11 +225,23 @@ export default function UserDashboard({
   // Modal details
   const [activeReceipt, setActiveReceipt] = useState<any | null>(null);
   const [activeCertificate, setActiveCertificate] = useState<any | null>(null);
+  const [mockTestHistory, setMockTestHistory] = useState<any[]>([]);
   const hasInitializedDiagnosticsRef = useRef(false);
 
   // Sync profile & other lists in real time from context or localStorage fallbacks
   useEffect(() => {
     if (user && userData) {
+      // Sync Mock Test History from Firestore
+      if (userData?.mockTestHistory && Array.isArray(userData.mockTestHistory)) {
+        setMockTestHistory(userData.mockTestHistory);
+      } else {
+        try {
+          const localSaved = localStorage.getItem('arohi_mock_test_submissions');
+          setMockTestHistory(localSaved ? JSON.parse(localSaved) : []);
+        } catch {
+          setMockTestHistory([]);
+        }
+      }
       // LOGGED-IN FIREBASE STATE
       if (userData.diagnostics) {
         setDiagnostics({
@@ -466,6 +478,14 @@ export default function UserDashboard({
       setEnrolledCourseList(mappedGuestCourses);
       setCompletedCount(guestCompletedTotal);
 
+      // Guest Mock Test History
+      try {
+        const localSaved = localStorage.getItem('arohi_mock_test_submissions');
+        setMockTestHistory(localSaved ? JSON.parse(localSaved) : []);
+      } catch {
+        setMockTestHistory([]);
+      }
+
       // Guest checklist count
       const guestChecklistStr = localStorage.getItem('recruit_checked_checklist');
       if (guestChecklistStr) {
@@ -482,8 +502,20 @@ export default function UserDashboard({
     }
   }, [user, userData]);
 
-  // Synchronize activities in real time on storage/custom updates
+  // Synchronize activities & mock test completions in real time
   useEffect(() => {
+    const handleExamCompleted = (e: any) => {
+      if (e.detail) {
+        setMockTestHistory(prev => [e.detail, ...prev.filter(item => item.id !== e.detail.id)]);
+      } else {
+        try {
+          const localSaved = localStorage.getItem('arohi_mock_test_submissions');
+          if (localSaved) setMockTestHistory(JSON.parse(localSaved));
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('arohi_mock_test_completed', handleExamCompleted);
+
     const handleSync = () => {
       const stored = localStorage.getItem('recruit_activities');
       if (stored) {
@@ -496,7 +528,9 @@ export default function UserDashboard({
     };
     window.addEventListener('storage', handleSync);
     window.addEventListener('recruit_activities_update', handleSync);
+
     return () => {
+      window.removeEventListener('arohi_mock_test_completed', handleExamCompleted);
       window.removeEventListener('storage', handleSync);
       window.removeEventListener('recruit_activities_update', handleSync);
     };
@@ -1219,6 +1253,7 @@ export default function UserDashboard({
         {[
           { id: 'all', label: '📊 Dashboard Overview', icon: Sparkles },
           { id: 'subscriptions', label: '👑 Subscription Plans & Tiers', icon: Crown, badge: '₹399+' },
+          { id: 'mocktests', label: '🎓 Exams & Mock Tests', icon: Brain, badge: `${mockTestHistory.length}` },
           { id: 'profile', label: '👤 Profile Registry', icon: User },
           { id: 'applications', label: '💼 Job Applications', icon: Briefcase, badge: `${appliedJobs.length}` },
           { id: 'courses', label: '📚 Enrolled Courses', icon: GraduationCap, badge: `${totalEnrolledCount}` }
@@ -1751,6 +1786,143 @@ export default function UserDashboard({
             )}
           </div>
           
+          {/* AROHI EXAMS & MOCK TESTS HISTORY MODULE */}
+          <div id="mock-tests-history-anchor" className="bg-white p-6 rounded-[2rem] border border-purple-100 shadow-xl text-left space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-600/10 text-purple-600 flex items-center justify-center font-bold">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <span>Arohi Exams & Mock Tests History</span>
+                    <span className="text-[10px] bg-purple-100 text-purple-800 font-black px-2 py-0.5 rounded-full">
+                      {mockTestHistory.length} Attempted
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Verified performance logs from In-Chat CBT quizzes and All-India Mock Test portal
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('mocktests')}
+                className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                <Play className="w-3 h-3 fill-white" />
+                <span>Take New Mock Test</span>
+              </button>
+            </div>
+
+            {/* Performance Summary Pill Grid */}
+            {mockTestHistory.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-purple-50/60 p-3.5 rounded-2xl border border-purple-100/80">
+                <div className="text-left">
+                  <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Tests Taken</span>
+                  <span className="text-base font-black text-slate-900">{mockTestHistory.length}</span>
+                </div>
+                <div className="text-left">
+                  <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Avg. Accuracy</span>
+                  <span className="text-base font-black text-purple-700">
+                    {Math.round(mockTestHistory.reduce((acc, cur) => acc + (cur.accuracy || 0), 0) / mockTestHistory.length)}%
+                  </span>
+                </div>
+                <div className="text-left">
+                  <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Best Score</span>
+                  <span className="text-base font-black text-emerald-600">
+                    {Math.max(...mockTestHistory.map(m => m.scoreMarks || 0))} Marks
+                  </span>
+                </div>
+                <div className="text-left">
+                  <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Questions Practiced</span>
+                  <span className="text-base font-black text-indigo-700">
+                    {mockTestHistory.reduce((acc, cur) => acc + (cur.totalQuestions || 0), 0)} Qs
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Exam Attempts List */}
+            {mockTestHistory.length === 0 ? (
+              <div className="text-center py-8 space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-slate-500 text-xs font-semibold">No mock test history recorded yet.</p>
+                <p className="text-[11px] text-slate-400 max-w-md mx-auto">
+                  Take a CBT Mock Test in the Exam Portal or ask Arohi in Chat to start an interactive exam simulation!
+                </p>
+                <button
+                  onClick={() => onNavigateTab && onNavigateTab('mocktests')}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Brain className="w-3.5 h-3.5" />
+                  <span>Open Mock Tests Portal</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                {mockTestHistory.map((test, idx) => {
+                  const dateStr = test.completedAt 
+                    ? new Date(test.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : 'Recently Completed';
+                  const accuracy = test.accuracy || (test.answeredCount > 0 ? Math.round((test.correctCount / test.answeredCount) * 100) : 0);
+
+                  return (
+                    <div 
+                      key={test.id || `exam_${idx}`}
+                      className="p-4 rounded-2xl border border-slate-200/80 hover:border-purple-300 bg-slate-50/70 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3.5"
+                    >
+                      <div className="space-y-1.5 text-left flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                            {test.source || 'CBT Mock Test'}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {dateStr}
+                          </span>
+                        </div>
+                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 leading-snug">
+                          {test.examTitle || 'Science & General Practice Test'}
+                        </h4>
+                        <div className="flex items-center gap-3 text-[11px] text-slate-600 font-semibold flex-wrap">
+                          <span>Qs: <strong className="text-slate-900">{test.totalQuestions || 30}</strong></span>
+                          <span>•</span>
+                          <span className="text-emerald-700 font-bold">✓ {test.correctCount || 0} Correct</span>
+                          <span>•</span>
+                          <span className="text-rose-600 font-bold">✗ {test.wrongCount || 0} Wrong</span>
+                          <span>•</span>
+                          <span>Score: <strong className="text-purple-900">{test.scoreMarks ?? (test.correctCount * 4)} Marks</strong></span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                        <div className="text-right">
+                          <span className="text-[9px] text-slate-400 uppercase font-black block">Accuracy</span>
+                          <span className={`text-sm font-black px-2 py-0.5 rounded-lg border ${
+                            accuracy >= 80 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                              : accuracy >= 50 
+                              ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            {accuracy}%
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => onNavigateTab && onNavigateTab('mocktests')}
+                          className="p-2 bg-white hover:bg-purple-50 text-purple-600 border border-purple-200 rounded-xl transition-all cursor-pointer shadow-xs"
+                          title="Open in CBT Simulator"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* NEW MODULE: DYNAMIC ACADEMY COURSE PROGRESS TRACKER */}
           <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl text-left">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-50 pb-2.5 flex items-center gap-2">

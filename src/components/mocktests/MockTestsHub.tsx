@@ -7,7 +7,10 @@ import ExamResultView from './ExamResultView';
 import ExamAiAnalysisView from './ExamAiAnalysisView';
 import ExamLeaderboardView from './ExamLeaderboardView';
 import CustomExamGenerator from './CustomExamGenerator';
+import ArohiExamPassModal from './ArohiExamPassModal';
 import { useAuth } from '../../context/AuthContext';
+import { db } from '../../firebase';
+import { doc, updateDoc, arrayUnion, setDoc, getDoc } from 'firebase/firestore';
 
 interface MockTestsHubProps {
   isDarkMode?: boolean;
@@ -30,9 +33,25 @@ export default function MockTestsHub({
   const [currentView, setCurrentView] = useState<'catalog' | 'player' | 'result' | 'ai_analysis' | 'leaderboard' | 'generator'>('catalog');
   const [selectedTest, setSelectedTest] = useState<MockTest | null>(null);
   const [activeReport, setActiveReport] = useState<TestResultReport | null>(null);
+  const [isExamPassModalOpen, setIsExamPassModalOpen] = useState(false);
+  const [passModalTier, setPassModalTier] = useState<'silver' | 'gold'>('silver');
 
-  // If initialTestSlug is provided, auto-select that test
+  // Check for dynamic custom CBT test from chat or initialTestSlug
   useEffect(() => {
+    try {
+      const storedCustom = sessionStorage.getItem('arohi_active_custom_cbt');
+      if (storedCustom) {
+        const customObj: MockTest = JSON.parse(storedCustom);
+        if (customObj && customObj.id && Array.isArray(customObj.questions) && customObj.questions.length > 0) {
+          sessionStorage.removeItem('arohi_active_custom_cbt');
+          setAllTests(prev => [customObj, ...prev.filter(t => t.id !== customObj.id)]);
+          setSelectedTest(customObj);
+          setCurrentView('player');
+          return;
+        }
+      }
+    } catch (e) {}
+
     if (initialTestSlug) {
       const match = allTests.find(t => t.slug === initialTestSlug || t.id === initialTestSlug);
       if (match) {
@@ -40,7 +59,7 @@ export default function MockTestsHub({
         setCurrentView('player');
       }
     }
-  }, [initialTestSlug, allTests]);
+  }, [initialTestSlug]);
 
   // Handle Test Submission & Rigorous Evaluation
   const handleTestSubmission = async (submission: TestSubmission) => {
@@ -204,7 +223,58 @@ export default function MockTestsHub({
     setActiveReport(report);
     setCurrentView('result');
 
-    // Async sync to server
+    // 1. Save to local storage
+    const historyItem = {
+      id: report.id,
+      examTitle: selectedTest.title,
+      subject: selectedTest.categoryLabel || 'Competitive Exam',
+      totalQuestions: selectedTest.totalQuestions,
+      answeredCount: totalAttempted,
+      correctCount: totalCorrect,
+      wrongCount: totalIncorrect,
+      unattemptedCount: totalUnattempted,
+      accuracy: Math.round(accuracyPercentage),
+      scoreMarks: finalRawScore,
+      maxScore: selectedTest.totalMarks,
+      percentage: Math.round(scorePercentage),
+      timeSpentSeconds: submission.totalTimeTakenSeconds,
+      totalDurationMinutes: selectedTest.durationMinutes,
+      completedAt: submission.completedAt,
+      source: 'All-India CBT Portal',
+      userName: userName
+    };
+
+    try {
+      const existingStr = localStorage.getItem('arohi_mock_test_submissions');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      existing.unshift(historyItem);
+      localStorage.setItem('arohi_mock_test_submissions', JSON.stringify(existing.slice(0, 50)));
+    } catch (e) {}
+
+    // 2. Save to Firestore user profile
+    if (user && user.uid && db) {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          mockTestHistory: arrayUnion(historyItem),
+          lastExamDate: new Date().toISOString()
+        }).catch(async () => {
+          await setDoc(userRef, {
+            mockTestHistory: [historyItem],
+            lastExamDate: new Date().toISOString()
+          }, { merge: true });
+        });
+      } catch (firestoreErr) {
+        console.warn('Firestore mock test sync noted:', firestoreErr);
+      }
+    }
+
+    // 3. Dispatch global event so student dashboard refreshes
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('arohi_mock_test_completed', { detail: historyItem }));
+    }
+
+    // 4. Async sync to server
     try {
       fetch('/api/mocktests/submit', {
         method: 'POST',
@@ -229,9 +299,13 @@ export default function MockTestsHub({
             setSelectedTest(t);
             setCurrentView('leaderboard');
           }}
+          onOpenExamPass={(tier) => {
+            if (tier) setPassModalTier(tier);
+            setIsExamPassModalOpen(true);
+          }}
           onOpenInChatQuiz={() => {
             if (onOpenChatWithPrompt) {
-              onOpenChatWithPrompt('Arohi, please start a live 5-question interactive MCQ mock test for me with instant scoring and explanations.');
+              onOpenChatWithPrompt('Arohi, please start a 30-question interactive CBSE science mock test for me with timer and instant scoring.');
             } else if (onNavigateTab) {
               onNavigateTab('chat');
             }
@@ -300,6 +374,14 @@ export default function MockTestsHub({
           }}
         />
       )}
+
+      {/* Arohi Exams Test Pass Purchase / Unlock Modal */}
+      <ArohiExamPassModal
+        isOpen={isExamPassModalOpen}
+        onClose={() => setIsExamPassModalOpen(false)}
+        isDarkMode={isDarkMode}
+        selectedTier={passModalTier}
+      />
     </div>
   );
 }
