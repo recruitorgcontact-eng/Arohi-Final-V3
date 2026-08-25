@@ -54,7 +54,11 @@ export default function ExamResultView({
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
         <button
           onClick={onBackToCatalog}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            isDarkMode 
+              ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10' 
+              : 'bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 border-slate-300 shadow-sm'
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>All Mock Tests</span>
@@ -63,16 +67,24 @@ export default function ExamResultView({
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              isDarkMode 
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700' 
+                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-sm'
+            }`}
             title="Download / Print Official Watermarked Marksheet"
           >
-            <Download className="w-3.5 h-3.5 text-purple-400" />
+            <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             <span>Export Marksheet</span>
           </button>
 
           <button
             onClick={onRetakeTest}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10' 
+                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-sm'
+            }`}
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Retake (Shuffled)</span>
@@ -80,9 +92,13 @@ export default function ExamResultView({
 
           <button
             onClick={onOpenLeaderboard}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              isDarkMode 
+                ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/30' 
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300 font-black shadow-sm'
+            }`}
           >
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>AIR Leaderboard</span>
           </button>
 
@@ -99,30 +115,36 @@ export default function ExamResultView({
       {/* 2. HERO SCORECARD BANNER */}
       <div className={`p-6 sm:p-8 rounded-3xl border relative overflow-hidden shadow-2xl ${
         isDarkMode 
-          ? 'bg-gradient-to-br from-[#18113c] via-[#100b29] to-[#1e0e3d] border-purple-500/40 text-white' 
-          : 'bg-white border-purple-200 text-slate-900'
+          ? 'bg-gradient-to-br from-[#18113c] via-[#100b29] to-[#1e0e3d] border-purple-500/40 text-white dark-card' 
+          : 'bg-white border-purple-200 text-slate-900 shadow-purple-50'
       }`}>
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-purple-500/20 pb-5">
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-5 ${
+            isDarkMode ? 'border-purple-500/20' : 'border-slate-200'
+          }`}>
             <div>
-              <span className="inline-flex items-center gap-1.5 bg-[#00e676]/10 text-[#00e676] border border-[#00e676]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-2">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-2 border ${
+                isDarkMode 
+                  ? 'bg-[#00e676]/10 text-[#00e676] border-[#00e676]/30' 
+                  : 'bg-emerald-100 text-emerald-950 border-emerald-300 font-bold'
+              }`}>
                 <CheckCircle2 className="w-3.5 h-3.5" /> Examination Evaluated
               </span>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white">
+              <h1 className={`text-xl sm:text-2xl md:text-3xl font-black ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
                 {report.testTitle}
               </h1>
-              <p className="text-xs text-slate-300 font-semibold mt-1">
-                Candidate: <strong className="text-purple-300">{report.userName}</strong> ({report.userState}) • Submitted on {new Date(report.submittedAt).toLocaleDateString()}
+              <p className={`text-xs font-semibold mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                Candidate: <strong className={isDarkMode ? 'text-purple-300' : 'text-purple-950 font-bold'}>{report.userName}</strong> ({report.userState}) • Submitted on {new Date(report.submittedAt).toLocaleDateString()}
               </p>
             </div>
 
             {/* Cutoff Status Chip */}
             <div className={`px-4 py-2.5 rounded-2xl border text-center font-bold ${
               report.hasClearedCutoff
-                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                : 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                ? isDarkMode ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                : isDarkMode ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-amber-50 border-amber-300 text-amber-950'
             }`}>
               <span className="text-[10px] uppercase tracking-wider block font-black">Estimated Cutoff ({report.cutoffScore})</span>
               <span className="text-sm font-black flex items-center justify-center gap-1 mt-0.5">
@@ -134,71 +156,99 @@ export default function ExamResultView({
           {/* Core Metric Highlights Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Score */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Final Score</span>
-              <div className="text-2xl sm:text-3xl font-black text-amber-300">
-                {report.score.toFixed(1)} <span className="text-xs text-slate-400 font-normal">/ {report.maxScore}</span>
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Final Score</span>
+              <div className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-800'}`}>
+                {report.score.toFixed(1)} <span className={`text-xs font-normal ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>/ {report.maxScore}</span>
               </div>
-              <span className="text-[10px] text-purple-300 font-bold block">{report.percentage.toFixed(1)}% Marks</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-purple-300' : 'text-purple-900'}`}>{report.percentage.toFixed(1)}% Marks</span>
             </div>
 
             {/* All India Rank */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">All India Rank</span>
-              <div className="text-2xl sm:text-3xl font-black text-purple-400">
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>All India Rank</span>
+              <div className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-purple-400' : 'text-purple-900'}`}>
                 #{report.allIndiaRank}
               </div>
-              <span className="text-[10px] text-slate-400 font-bold block">of {report.totalParticipants.toLocaleString()} Aspirants</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>of {report.totalParticipants.toLocaleString()} Aspirants</span>
             </div>
 
             {/* Percentile */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Percentile</span>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Percentile</span>
+              <div className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-emerald-400' : 'text-emerald-800'}`}>
                 {report.percentile.toFixed(1)}%ile
               </div>
-              <span className="text-[10px] text-emerald-300/80 font-bold block">Top {Math.max(1, Math.round(100 - report.percentile))}% Pool</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-emerald-300/80' : 'text-emerald-900'}`}>Top {Math.max(1, Math.round(100 - report.percentile))}% Pool</span>
             </div>
 
             {/* Accuracy */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Accuracy</span>
-              <div className="text-2xl sm:text-3xl font-black text-cyan-300">
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Accuracy</span>
+              <div className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-cyan-300' : 'text-cyan-800'}`}>
                 {report.accuracyPercentage.toFixed(1)}%
               </div>
-              <span className="text-[10px] text-slate-400 font-bold block">{report.totalCorrect} of {report.totalAttempted} right</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{report.totalCorrect} of {report.totalAttempted} right</span>
             </div>
 
             {/* State Rank */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">State Rank</span>
-              <div className="text-2xl sm:text-3xl font-black text-rose-400">
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>State Rank</span>
+              <div className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-rose-400' : 'text-rose-800'}`}>
                 #{report.stateRank}
               </div>
-              <span className="text-[10px] text-slate-400 font-bold block">{report.userState} State</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{report.userState} State</span>
             </div>
 
             {/* Time Taken */}
-            <div className="bg-[#120d2a] border border-[#2d2163] p-4 rounded-2xl text-center space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Time Taken</span>
-              <div className="text-xl sm:text-2xl font-black text-indigo-300 font-mono">
+            <div className={`p-4 rounded-2xl text-center space-y-1 border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-[#2d2163]' 
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Time Taken</span>
+              <div className={`text-xl sm:text-2xl font-black font-mono ${isDarkMode ? 'text-indigo-300' : 'text-indigo-900'}`}>
                 {formatSeconds(report.timeSpentSeconds)}
               </div>
-              <span className="text-[10px] text-slate-400 font-bold block">Limit: {Math.round(report.totalDurationSeconds / 60)} min</span>
+              <span className={`text-[10px] font-bold block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Limit: {Math.round(report.totalDurationSeconds / 60)} min</span>
             </div>
           </div>
 
           {/* Positive vs Negative Marks Breakdown */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0d0920] border border-[#23184d] p-3.5 rounded-2xl text-xs">
+          <div className={`flex flex-wrap items-center justify-between gap-3 border p-3.5 rounded-2xl text-xs ${
+            isDarkMode 
+              ? 'bg-[#0d0920] border-[#23184d]' 
+              : 'bg-slate-100/80 border-slate-200'
+          }`}>
             <div className="flex items-center gap-4">
-              <span className="text-slate-400 font-bold">Marking Breakdown:</span>
-              <span className="text-emerald-400 font-black">+{report.positiveMarksTotal.toFixed(1)} Earned</span>
-              <span className="text-rose-400 font-black">-{report.negativeMarksDeducted.toFixed(1)} Lost to Penalties</span>
+              <span className={isDarkMode ? 'text-slate-400 font-bold' : 'text-slate-700 font-bold'}>Marking Breakdown:</span>
+              <span className={isDarkMode ? 'text-emerald-400 font-black' : 'text-emerald-800 font-black'}>+{report.positiveMarksTotal.toFixed(1)} Earned</span>
+              <span className={isDarkMode ? 'text-rose-400 font-black' : 'text-rose-800 font-black'}>-{report.negativeMarksDeducted.toFixed(1)} Lost to Penalties</span>
             </div>
-            <div className="flex items-center gap-3 text-[11px] font-bold text-slate-300">
-              <span className="flex items-center gap-1 text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> {report.totalCorrect} Correct</span>
-              <span className="flex items-center gap-1 text-rose-400"><XCircle className="w-3.5 h-3.5" /> {report.totalIncorrect} Incorrect</span>
-              <span className="flex items-center gap-1 text-slate-400"><AlertCircle className="w-3.5 h-3.5" /> {report.totalUnattempted} Skipped</span>
+            <div className={`flex items-center gap-3 text-[11px] font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+              <span className={`flex items-center gap-1 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-800'}`}><CheckCircle2 className="w-3.5 h-3.5" /> {report.totalCorrect} Correct</span>
+              <span className={`flex items-center gap-1 ${isDarkMode ? 'text-rose-400' : 'text-rose-800'}`}><XCircle className="w-3.5 h-3.5" /> {report.totalIncorrect} Incorrect</span>
+              <span className={`flex items-center gap-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}><AlertCircle className="w-3.5 h-3.5" /> {report.totalUnattempted} Skipped</span>
             </div>
           </div>
         </div>
@@ -206,48 +256,66 @@ export default function ExamResultView({
 
       {/* 3. SECTIONAL PERFORMANCE BREAKDOWN */}
       <div className="space-y-4">
-        <h3 className="text-lg font-black text-white flex items-center gap-2">
-          <Layers className="w-5 h-5 text-purple-400" />
+        <h3 className={`text-lg font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+          <Layers className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <span>Section-wise Performance Breakdown</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {report.sectionResults.map((sec) => (
+          {report.sectionResults.map((sec, sIdx) => (
             <div
-              key={sec.sectionId}
+              key={`${sec.sectionId}-${sIdx}`}
               className={`p-5 rounded-2xl border ${
-                isDarkMode ? 'bg-[#120d2a] border-[#291e56]' : 'bg-white border-slate-200'
+                isDarkMode ? 'bg-[#120d2a] border-[#291e56]' : 'bg-white border-slate-200 shadow-sm'
               } space-y-4`}
             >
-              <div className="flex items-start justify-between gap-2 border-b border-purple-500/15 pb-3">
+              <div className={`flex items-start justify-between gap-2 border-b pb-3 ${
+                isDarkMode ? 'border-purple-500/15' : 'border-slate-200'
+              }`}>
                 <div>
-                  <h4 className="text-sm font-black text-white">{sec.sectionName}</h4>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                  <h4 className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>{sec.sectionName}</h4>
+                  <p className={`text-[11px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                     {sec.totalQuestions} Questions • Max Score: {sec.maxScore}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-base font-black text-amber-300">{sec.score.toFixed(1)}</span>
-                  <span className="text-xs text-slate-400 font-normal"> / {sec.maxScore}</span>
+                  <span className={`text-base font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-800'}`}>{sec.score.toFixed(1)}</span>
+                  <span className={`text-xs font-normal ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}> / {sec.maxScore}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                <div className="bg-[#181138] p-2 rounded-xl border border-purple-500/20">
-                  <span className="text-[10px] text-slate-400 block font-bold">Attempted</span>
-                  <span className="text-sm font-black text-white">{sec.attempted}</span>
+                <div className={`p-2 rounded-xl border ${
+                  isDarkMode 
+                    ? 'bg-[#181138] border-purple-500/20' 
+                    : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Attempted</span>
+                  <span className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>{sec.attempted}</span>
                 </div>
-                <div className="bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/30">
-                  <span className="text-[10px] text-emerald-300 block font-bold">Correct</span>
-                  <span className="text-sm font-black text-emerald-400">{sec.correct}</span>
+                <div className={`p-2 rounded-xl border ${
+                  isDarkMode 
+                    ? 'bg-emerald-500/10 border-emerald-500/30' 
+                    : 'bg-emerald-50 border-emerald-200'
+                }`}>
+                  <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Correct</span>
+                  <span className={`text-sm font-black ${isDarkMode ? 'text-emerald-400' : 'text-emerald-900'}`}>{sec.correct}</span>
                 </div>
-                <div className="bg-rose-500/10 p-2 rounded-xl border border-rose-500/30">
-                  <span className="text-[10px] text-rose-300 block font-bold">Incorrect</span>
-                  <span className="text-sm font-black text-rose-400">{sec.incorrect}</span>
+                <div className={`p-2 rounded-xl border ${
+                  isDarkMode 
+                    ? 'bg-rose-500/10 border-rose-500/30' 
+                    : 'bg-rose-50 border-rose-200'
+                }`}>
+                  <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-rose-300' : 'text-rose-800'}`}>Incorrect</span>
+                  <span className={`text-sm font-black ${isDarkMode ? 'text-rose-400' : 'text-rose-900'}`}>{sec.incorrect}</span>
                 </div>
-                <div className="bg-cyan-500/10 p-2 rounded-xl border border-cyan-500/30">
-                  <span className="text-[10px] text-cyan-300 block font-bold">Accuracy</span>
-                  <span className="text-sm font-black text-cyan-400">{sec.accuracy.toFixed(0)}%</span>
+                <div className={`p-2 rounded-xl border ${
+                  isDarkMode 
+                    ? 'bg-cyan-500/10 border-cyan-500/30' 
+                    : 'bg-cyan-50 border-cyan-200'
+                }`}>
+                  <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-800'}`}>Accuracy</span>
+                  <span className={`text-sm font-black ${isDarkMode ? 'text-cyan-400' : 'text-cyan-900'}`}>{sec.accuracy.toFixed(0)}%</span>
                 </div>
               </div>
             </div>
@@ -257,23 +325,29 @@ export default function ExamResultView({
 
       {/* 4. DETAILED QUESTION-BY-QUESTION SOLUTIONS */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#21184d] pb-3">
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-3 ${
+          isDarkMode ? 'border-[#21184d]' : 'border-slate-200'
+        }`}>
           <div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-400" />
+            <h3 className={`text-lg font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+              <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <span>Question Paper Solutions &amp; Step-by-Step Derivations</span>
             </h3>
-            <p className="text-xs text-slate-400 font-semibold mt-0.5">
+            <p className={`text-xs font-semibold mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
               Review official answer keys, rationale, and your recorded choices.
             </p>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-[#120d2a] p-1 rounded-xl border border-[#2d2163]">
+          <div className={`flex items-center gap-1.5 p-1 rounded-xl border ${
+            isDarkMode ? 'bg-[#120d2a] border-[#2d2163]' : 'bg-white border-slate-300 shadow-sm'
+          }`}>
             <button
               onClick={() => setQuestionFilter('all')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                questionFilter === 'all' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
+                questionFilter === 'all' 
+                  ? 'bg-purple-600 text-white' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-950'
               }`}
             >
               All ({report.detailedQuestions.length})
@@ -281,7 +355,9 @@ export default function ExamResultView({
             <button
               onClick={() => setQuestionFilter('correct')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                questionFilter === 'correct' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                questionFilter === 'correct' 
+                  ? 'bg-emerald-600 text-white' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-950'
               }`}
             >
               Correct ({report.totalCorrect})
@@ -289,7 +365,9 @@ export default function ExamResultView({
             <button
               onClick={() => setQuestionFilter('incorrect')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                questionFilter === 'incorrect' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
+                questionFilter === 'incorrect' 
+                  ? 'bg-rose-600 text-white' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-950'
               }`}
             >
               Incorrect ({report.totalIncorrect})
@@ -297,7 +375,9 @@ export default function ExamResultView({
             <button
               onClick={() => setQuestionFilter('unattempted')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                questionFilter === 'unattempted' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                questionFilter === 'unattempted' 
+                  ? 'bg-slate-700 text-white' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-950'
               }`}
             >
               Skipped ({report.totalUnattempted})
@@ -314,37 +394,45 @@ export default function ExamResultView({
 
             return (
               <div
-                key={q.id}
-                className={`rounded-2xl border transition-all ${
-                  isDarkMode ? 'bg-[#120d2a] border-[#291e56]' : 'bg-white border-slate-200'
-                } overflow-hidden`}
+                key={`${q.id}-${idx}`}
+                className={`rounded-2xl border transition-all overflow-hidden ${
+                  isDarkMode ? 'bg-[#120d2a] border-[#291e56]' : 'bg-white border-slate-200 shadow-sm'
+                }`}
               >
                 {/* Collapsible Header */}
                 <div
                   onClick={() => setExpandedQuestionId(expandedQuestionId === q.id ? null : q.id)}
-                  className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors"
+                  className={`p-4 flex items-center justify-between gap-4 cursor-pointer transition-colors ${
+                    isDarkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 ${
                       isCorrect 
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                        ? isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-emerald-100 text-emerald-950 border border-emerald-300'
                         : isAttempted 
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' 
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        ? isDarkMode ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-rose-100 text-rose-950 border border-rose-300'
+                        : isDarkMode ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-slate-100 text-slate-700 border border-slate-300'
                     }`}>
                       Q{q.questionNumber || (idx + 1)}
                     </span>
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase text-purple-400 bg-purple-900/30 px-2 py-0.5 rounded border border-purple-500/30">
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                          isDarkMode 
+                            ? 'text-purple-400 bg-purple-900/30 border-purple-500/30' 
+                            : 'text-purple-950 bg-purple-100 border-purple-300'
+                        }`}>
                           {q.subject}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-semibold truncate max-w-xs">
+                        <span className={`text-[10px] font-semibold truncate max-w-xs ${
+                          isDarkMode ? 'text-slate-400' : 'text-slate-600'
+                        }`}>
                           {q.topic}
                         </span>
                       </div>
-                      <p className="text-xs font-bold text-white line-clamp-1 mt-1">
+                      <p className={`text-xs font-bold line-clamp-1 mt-1 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
                         {q.text}
                       </p>
                     </div>
@@ -353,10 +441,10 @@ export default function ExamResultView({
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${
                       isCorrect
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        ? isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
                         : isAttempted
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                        : 'bg-slate-800 text-slate-400'
+                        ? isDarkMode ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-rose-100 text-rose-900 border border-rose-300'
+                        : isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-700'
                     }`}>
                       {isCorrect ? '+Earned' : isAttempted ? '-Penalty' : 'Skipped'}
                     </span>
@@ -366,50 +454,71 @@ export default function ExamResultView({
 
                 {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="p-5 border-t border-[#23184d] space-y-4 bg-[#0d0920]">
+                  <div className={`p-5 border-t space-y-4 ${
+                    isDarkMode ? 'border-[#23184d] bg-[#0d0920]' : 'border-slate-200 bg-slate-50'
+                  }`}>
                     {/* Full Question Text */}
-                    <div className="text-sm font-semibold text-slate-100 leading-relaxed">
+                    <div className={`text-sm font-semibold leading-relaxed ${
+                      isDarkMode ? 'text-slate-100' : 'text-slate-950'
+                    }`}>
                       {q.text}
                     </div>
 
                     {/* Options List with Color Coding */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {q.options.map((opt) => {
+                      {q.options.map((opt, oIdx) => {
                         const isChosen = q.userResponse === opt.id;
                         const isRightAnswer = q.correctAnswer === opt.id;
 
-                        let optClasses = 'bg-[#150f33] border-[#291e56] text-slate-300';
+                        let optClasses = isDarkMode 
+                          ? 'bg-[#150f33] border-[#291e56] text-slate-300' 
+                          : 'bg-white border-slate-200 text-slate-800';
+
                         if (isRightAnswer) {
-                          optClasses = 'bg-emerald-500/15 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500 font-bold';
+                          optClasses = isDarkMode 
+                            ? 'bg-emerald-500/15 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500 font-bold'
+                            : 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500 font-bold';
                         } else if (isChosen && !isRightAnswer) {
-                          optClasses = 'bg-rose-500/15 border-rose-500 text-rose-200 ring-1 ring-rose-500 font-bold';
+                          optClasses = isDarkMode 
+                            ? 'bg-rose-500/15 border-rose-500 text-rose-200 ring-1 ring-rose-500 font-bold'
+                            : 'bg-rose-50 border-rose-500 text-rose-950 ring-1 ring-rose-500 font-bold';
                         }
 
                         return (
                           <div
-                            key={opt.id}
+                            key={`${opt.id}-${oIdx}`}
                             className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${optClasses}`}
                           >
                             <span className="font-black shrink-0">({opt.id})</span>
                             <span className="flex-1">{opt.text}</span>
-                            {isRightAnswer && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
-                            {isChosen && !isRightAnswer && <XCircle className="w-4 h-4 text-rose-400 shrink-0" />}
+                            {isRightAnswer && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                            {isChosen && !isRightAnswer && <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />}
                           </div>
                         );
                       })}
                     </div>
 
                     {/* Detailed Rationale & Explanation Box */}
-                    <div className="bg-[#18113c] border border-purple-500/30 p-4 rounded-xl space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-black text-purple-300 uppercase tracking-wider">
-                        <Sparkles className="w-4 h-4 text-yellow-300" />
+                    <div className={`p-4 rounded-xl space-y-2 border ${
+                      isDarkMode 
+                        ? 'bg-[#18113c] border-purple-500/30' 
+                        : 'bg-white border-purple-200 shadow-sm'
+                    }`}>
+                      <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-wider ${
+                        isDarkMode ? 'text-purple-300' : 'text-purple-950'
+                      }`}>
+                        <Sparkles className="w-4 h-4 text-amber-500" />
                         <span>Official Solution &amp; Conceptual Rationale</span>
                       </div>
-                      <p className="text-xs text-slate-200 leading-relaxed">
+                      <p className={`text-xs leading-relaxed ${
+                        isDarkMode ? 'text-slate-200' : 'text-slate-800 font-medium'
+                      }`}>
                         {q.explanation}
                       </p>
                       {q.referenceNotes && (
-                        <p className="text-[10px] text-purple-300/80 font-mono pt-1">
+                        <p className={`text-[10px] font-mono pt-1 ${
+                          isDarkMode ? 'text-purple-300/80' : 'text-purple-900 font-semibold'
+                        }`}>
                           📖 Reference: {q.referenceNotes}
                         </p>
                       )}

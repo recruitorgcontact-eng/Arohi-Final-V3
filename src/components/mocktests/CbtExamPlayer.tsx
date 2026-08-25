@@ -450,22 +450,34 @@ export default function CbtExamPlayer({
                 onExit();
               }
             }}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer shrink-0 border border-white/10"
+            className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border-slate-300'
+            }`}
             title="Exit CBT Player"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="bg-purple-600/25 text-purple-300 border border-purple-500/35 text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-md truncate max-w-[130px] sm:max-w-none">
+              <span className={`text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-md truncate max-w-[130px] sm:max-w-none border ${
+                isDarkMode 
+                  ? 'bg-purple-600/25 text-purple-300 border-purple-500/35' 
+                  : 'bg-purple-100 text-purple-900 border-purple-300'
+              }`}>
                 {test.targetExam}
               </span>
-              <span className="text-[10px] text-emerald-400 font-bold hidden md:inline-flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className={`text-[10px] font-bold hidden md:inline-flex items-center gap-1 ${
+                isDarkMode ? 'text-emerald-400' : 'text-emerald-700'
+              }`}>
+                <span className={`w-2 h-2 rounded-full animate-pulse ${isDarkMode ? 'bg-emerald-400' : 'bg-emerald-600'}`}></span>
                 <span>Live CBT Engine</span>
               </span>
             </div>
-            <h2 className="text-xs sm:text-sm font-black truncate max-w-[160px] sm:max-w-xs md:max-w-md mt-0.5 text-white">
+            <h2 className={`text-xs sm:text-sm font-black truncate max-w-[160px] sm:max-w-xs md:max-w-md mt-0.5 ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
               {test.title}
             </h2>
           </div>
@@ -478,16 +490,20 @@ export default function CbtExamPlayer({
               ? 'bg-rose-500/20 border-rose-500 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.35)]' 
               : isDarkMode
               ? 'bg-[#1a123e] border-[#3b2b7d] text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
-              : 'bg-amber-50 border-amber-300 text-amber-800'
+              : 'bg-amber-50 border-amber-300 text-amber-900'
           }`}>
-            <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLowTime ? 'text-rose-400 animate-spin' : 'text-amber-400'}`} />
+            <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLowTime ? 'text-rose-400 animate-spin' : isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
             <span>{formatTimer(secondsRemaining)}</span>
           </div>
 
           {/* Quick Progress Badge */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-950/60 border border-purple-800/40 text-[10px] font-black text-purple-300">
+          <div className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black border ${
+            isDarkMode 
+              ? 'bg-purple-950/60 border-purple-800/40 text-purple-300' 
+              : 'bg-purple-50 border-purple-200 text-purple-900'
+          }`}>
             <span>Progress:</span>
-            <span className="text-emerald-400">{progressPercent}%</span>
+            <span className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>{progressPercent}%</span>
           </div>
         </div>
 
@@ -501,7 +517,9 @@ export default function CbtExamPlayer({
               setSoundEnabled(res);
             }}
             className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer hidden sm:flex items-center justify-center ${
-              soundEnabled ? 'bg-purple-600/20 border-purple-500/30 text-purple-300' : 'bg-white/5 border-white/10 text-slate-500'
+              soundEnabled 
+                ? isDarkMode ? 'bg-purple-600/20 border-purple-500/30 text-purple-300' : 'bg-purple-100 border-purple-300 text-purple-800'
+                : isDarkMode ? 'bg-white/5 border-white/10 text-slate-500' : 'bg-slate-100 border-slate-300 text-slate-400'
             }`}
             title={soundEnabled ? 'Mute Sound' : 'Enable Tactile Tap Sounds'}
           >
@@ -512,7 +530,11 @@ export default function CbtExamPlayer({
           <button
             onClick={() => setIsCalculatorOpen(prev => !prev)}
             className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
-              isCalculatorOpen ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-amber-300 border-amber-500/30'
+              isCalculatorOpen 
+                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md' 
+                : isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-amber-300 border-amber-500/30' 
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
             }`}
             title="Open CBT Scientific Calculator"
           >
@@ -524,7 +546,11 @@ export default function CbtExamPlayer({
           <button
             onClick={() => setIsScratchpadOpen(prev => !prev)}
             className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
-              isScratchpadOpen ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-cyan-300 border-cyan-500/30'
+              isScratchpadOpen 
+                ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md' 
+                : isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-cyan-300 border-cyan-500/30' 
+                : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border-cyan-300'
             }`}
             title="Open Rough Scratchpad Sheet"
           >
@@ -535,7 +561,11 @@ export default function CbtExamPlayer({
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer hidden md:flex items-center justify-center"
+            className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer hidden md:flex items-center justify-center ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border-slate-300'
+            }`}
             title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen Examination Mode'}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -544,7 +574,11 @@ export default function CbtExamPlayer({
           {/* Keyboard Shortcuts Help */}
           <button
             onClick={() => setIsKeyboardHelpOpen(prev => !prev)}
-            className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/10 text-purple-300 border border-purple-500/20 transition-all cursor-pointer hidden lg:flex items-center justify-center"
+            className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer hidden lg:flex items-center justify-center ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 text-purple-300 border-purple-500/20' 
+                : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'
+            }`}
             title="Keyboard Shortcuts Guide"
           >
             <Keyboard className="w-4 h-4" />
@@ -566,7 +600,9 @@ export default function CbtExamPlayer({
         isDarkMode ? 'bg-[#0f0a24] border-[#22184d]' : 'bg-slate-100 border-slate-200'
       }`}>
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 mr-1">
+          <span className={`text-[10px] font-black uppercase tracking-wider shrink-0 mr-1 ${
+            isDarkMode ? 'text-slate-400' : 'text-slate-700'
+          }`}>
             Sections:
           </span>
           {preparedTest.sections.map((sec, idx) => {
@@ -576,7 +612,7 @@ export default function CbtExamPlayer({
 
             return (
               <button
-                key={sec.id}
+                key={`${sec.id || 'sec'}-${idx}`}
                 onClick={() => {
                   audioEngine.playButtonTap();
                   recordQuestionTime();
@@ -588,12 +624,14 @@ export default function CbtExamPlayer({
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md font-black ring-2 ring-purple-400/50'
                     : isDarkMode
                     ? 'bg-[#18123a] text-slate-300 hover:bg-[#251d52] border border-[#2b2158]'
-                    : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                    : 'bg-white text-slate-800 hover:bg-slate-200 border border-slate-300 font-bold'
                 }`}
               >
                 <span>{sec.name}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                  isSelected ? 'bg-purple-950 text-purple-200' : 'bg-slate-800 text-slate-300'
+                  isSelected 
+                    ? 'bg-purple-950 text-purple-200' 
+                    : isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-800'
                 }`}>
                   {secAnswered}/{secQuestions.length}
                 </span>
@@ -605,11 +643,15 @@ export default function CbtExamPlayer({
         {/* Right side Language & Font Sizers */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Language Switcher */}
-          <div className="flex items-center gap-1 text-[11px] font-bold bg-white/5 p-1 rounded-xl border border-white/10">
+          <div className={`flex items-center gap-1 text-[11px] font-bold p-1 rounded-xl border ${
+            isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+          }`}>
             <button
               onClick={() => { audioEngine.playOptionTap(); setSelectedLanguage('english'); }}
               className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
-                selectedLanguage === 'english' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                selectedLanguage === 'english' 
+                  ? 'bg-purple-600 text-white shadow-sm' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               EN
@@ -617,7 +659,9 @@ export default function CbtExamPlayer({
             <button
               onClick={() => { audioEngine.playOptionTap(); setSelectedLanguage('odia'); }}
               className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
-                selectedLanguage === 'odia' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                selectedLanguage === 'odia' 
+                  ? 'bg-purple-600 text-white shadow-sm' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               ଓଡ଼ିଆ
@@ -625,7 +669,9 @@ export default function CbtExamPlayer({
             <button
               onClick={() => { audioEngine.playOptionTap(); setSelectedLanguage('hindi'); }}
               className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
-                selectedLanguage === 'hindi' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                selectedLanguage === 'hindi' 
+                  ? 'bg-purple-600 text-white shadow-sm' 
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               हिन्दी
@@ -633,23 +679,25 @@ export default function CbtExamPlayer({
           </div>
 
           {/* Font Controls */}
-          <div className="hidden sm:flex items-center gap-1 bg-white/5 px-2 py-1 rounded-xl border border-white/10 text-[10px] font-black text-slate-300">
+          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-xl border text-[10px] font-black ${
+            isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-white border-slate-300 text-slate-800 shadow-sm'
+          }`}>
             <span>Font:</span>
             <button 
               onClick={() => setFontSizeLevel('normal')} 
-              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'normal' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'}`}
+              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'normal' ? 'bg-purple-600 text-white' : isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
             >
               A
             </button>
             <button 
               onClick={() => setFontSizeLevel('large')} 
-              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'large' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'}`}
+              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'large' ? 'bg-purple-600 text-white' : isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
             >
               A+
             </button>
             <button 
               onClick={() => setFontSizeLevel('xlarge')} 
-              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'xlarge' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'}`}
+              className={`px-1.5 py-0.5 rounded-lg ${fontSizeLevel === 'xlarge' ? 'bg-purple-600 text-white' : isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
             >
               A++
             </button>
@@ -670,23 +718,35 @@ export default function CbtExamPlayer({
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
         {/* LEFT PANE: QUESTION DISPLAY & CONTROLS */}
-        <div className="flex-1 flex flex-col overflow-y-auto border-r border-[#21184d]/60 relative">
+        <div className={`flex-1 flex flex-col overflow-y-auto relative ${
+          isDarkMode ? 'border-r border-[#21184d]/60' : 'border-r border-slate-200'
+        }`}>
           
           {/* Question Meta Header Bar */}
           <div className={`px-4 sm:px-8 py-3 border-b flex items-center justify-between gap-4 ${
             isDarkMode ? 'bg-[#110c2e]/70 border-[#22184d]' : 'bg-slate-50 border-slate-200'
           }`}>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <span className="text-sm sm:text-base font-black text-purple-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+              <span className={`text-sm sm:text-base font-black flex items-center gap-1.5 ${
+                isDarkMode ? 'text-purple-400' : 'text-purple-800 font-black'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-purple-400' : 'bg-purple-700'}`}></span>
                 <span>Question {currentQuestion?.questionNumber || (currentQuestionIndex + 1)}</span>
-                <span className="text-xs text-slate-500 font-semibold">of {shuffledTestQuestions.length}</span>
+                <span className={`text-xs font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-600 font-bold'}`}>
+                  of {shuffledTestQuestions.length}
+                </span>
               </span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-md font-extrabold border border-slate-700">
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-extrabold border ${
+                isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-200 text-slate-800 border-slate-300 font-black'
+              }`}>
                 {currentQuestion?.subject || activeSection.name}
               </span>
               {currentQuestion?.topic && (
-                <span className="text-[10px] bg-purple-950/60 text-purple-300 px-2 py-0.5 rounded-md font-semibold border border-purple-800/40 hidden md:inline">
+                <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border hidden md:inline ${
+                  isDarkMode 
+                    ? 'bg-purple-950/60 text-purple-300 border-purple-800/40' 
+                    : 'bg-purple-100 text-purple-900 border-purple-300 font-bold'
+                }`}>
                   {currentQuestion.topic}
                 </span>
               )}
@@ -694,10 +754,18 @@ export default function CbtExamPlayer({
 
             {/* Marks Legend */}
             <div className="flex items-center gap-2 text-xs font-bold shrink-0">
-              <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-lg text-[11px] font-black">
+              <span className={`px-2.5 py-0.5 rounded-lg text-[11px] font-black border ${
+                isDarkMode 
+                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25' 
+                  : 'text-emerald-900 bg-emerald-100 border-emerald-300 font-black'
+              }`}>
                 +{currentQuestion?.positiveMarks || activeSection.positiveMarksPerQuestion} Marks
               </span>
-              <span className="text-rose-400 bg-rose-500/10 border border-rose-500/25 px-2 py-0.5 rounded-lg text-[11px] font-black">
+              <span className={`px-2 py-0.5 rounded-lg text-[11px] font-black border ${
+                isDarkMode 
+                  ? 'text-rose-400 bg-rose-500/10 border-rose-500/25' 
+                  : 'text-rose-900 bg-rose-100 border-rose-300 font-black'
+              }`}>
                 -{currentQuestion?.negativeMarks || activeSection.negativeMarksPerQuestion}
               </span>
             </div>
@@ -712,7 +780,9 @@ export default function CbtExamPlayer({
                 <div className={`font-semibold leading-relaxed ${
                   fontSizeLevel === 'large' ? 'text-lg sm:text-xl' : fontSizeLevel === 'xlarge' ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'
                 }`}>
-                  <p className="text-white whitespace-pre-line tracking-wide">
+                  <p className={`whitespace-pre-line tracking-wide font-medium ${
+                    isDarkMode ? 'text-white' : 'text-slate-900 font-semibold'
+                  }`}>
                     {selectedLanguage === 'odia' && currentQuestion.textOdia 
                       ? currentQuestion.textOdia 
                       : selectedLanguage === 'hindi' && currentQuestion.textHindi
@@ -723,14 +793,16 @@ export default function CbtExamPlayer({
 
                 {/* Question Diagram / Image if present */}
                 {currentQuestion.image && (
-                  <div className="my-4 rounded-2xl overflow-hidden border border-purple-500/30 max-w-lg bg-black/40 p-2">
+                  <div className={`my-4 rounded-2xl overflow-hidden border max-w-lg p-2 ${
+                    isDarkMode ? 'border-purple-500/30 bg-black/40' : 'border-purple-300 bg-purple-50/50'
+                  }`}>
                     <img src={currentQuestion.image} alt="Question diagram" className="w-full h-auto object-contain rounded-xl" />
                   </div>
                 )}
 
                 {/* Options List */}
                 <div className="space-y-3.5 pt-2">
-                  {currentQuestion.options.map((opt) => {
+                  {currentQuestion.options.map((opt, optIndex) => {
                     const isSelected = questionStates[currentQuestion.id]?.selectedOption === opt.id;
                     const optText = (selectedLanguage === 'odia' && opt.textOdia) 
                       ? opt.textOdia 
@@ -740,14 +812,14 @@ export default function CbtExamPlayer({
 
                     return (
                       <div
-                        key={opt.id}
+                        key={`${opt.id}-${optIndex}`}
                         onClick={() => handleSelectOption(opt.id)}
                         className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-start gap-4 select-none ${
                           isSelected
-                            ? 'bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950 border-purple-400 shadow-[0_4px_25px_rgba(124,58,237,0.35)] text-white scale-[1.01] ring-2 ring-purple-400/40'
+                            ? 'bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950 border-purple-400 shadow-[0_4px_25px_rgba(124,58,237,0.35)] text-white scale-[1.01] ring-2 ring-purple-400/40 font-bold'
                             : isDarkMode
                             ? 'bg-[#130e30] border-[#291e5c] hover:border-purple-500/50 hover:bg-[#1a1340] text-slate-200'
-                            : 'bg-white border-slate-300 hover:border-purple-400 text-slate-800'
+                            : 'bg-white border-slate-300 hover:border-purple-400 text-slate-900 shadow-sm hover:shadow'
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-black text-xs shrink-0 transition-all ${
@@ -755,7 +827,7 @@ export default function CbtExamPlayer({
                             ? 'bg-purple-500 border-purple-300 text-white shadow-[0_0_12px_rgba(168,85,247,0.6)]'
                             : isDarkMode
                             ? 'border-slate-600 bg-slate-800 text-slate-300'
-                            : 'border-slate-300 bg-slate-100 text-slate-700'
+                            : 'border-slate-300 bg-slate-100 text-slate-800 font-bold'
                         }`}>
                           {isSelected ? <Check className="w-4 h-4 stroke-[3]" /> : opt.id}
                         </div>
@@ -770,7 +842,9 @@ export default function CbtExamPlayer({
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-400 font-medium">No question found.</div>
+              <div className={`p-8 text-center font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                No question found.
+              </div>
             )}
           </div>
 
@@ -782,16 +856,24 @@ export default function CbtExamPlayer({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleMarkForReviewAndNext}
-                className="bg-purple-600/20 hover:bg-purple-600/35 text-purple-300 border border-purple-500/40 text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+                className={`text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 border ${
+                  isDarkMode 
+                    ? 'bg-purple-600/20 hover:bg-purple-600/35 text-purple-300 border-purple-500/40 shadow-sm' 
+                    : 'bg-purple-100 hover:bg-purple-200 text-purple-900 border-purple-300 font-bold shadow-sm'
+                }`}
               >
-                <Bookmark className="w-3.5 h-3.5 text-purple-300" />
+                <Bookmark className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Mark for Review &amp; Next</span>
                 <span className="sm:hidden">Mark Review</span>
               </button>
 
               <button
                 onClick={handleClearResponse}
-                className="bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                className={`text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 border ${
+                  isDarkMode 
+                    ? 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border-slate-300'
+                }`}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Clear Response</span>
@@ -804,7 +886,11 @@ export default function CbtExamPlayer({
               <button
                 disabled={currentQuestionIndex === 0 && activeSectionIndex === 0}
                 onClick={handlePrevious}
-                className="disabled:opacity-30 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                className={`disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95 border ${
+                  isDarkMode 
+                    ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 font-bold'
+                }`}
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
@@ -823,55 +909,69 @@ export default function CbtExamPlayer({
 
         {/* RIGHT PANE: QUESTION PALETTE & CANDIDATE STATS (Desktop) */}
         <div className={`hidden lg:flex w-80 border-t lg:border-t-0 flex-col shrink-0 overflow-y-auto ${
-          isDarkMode ? 'bg-[#0d0922]' : 'bg-slate-50'
+          isDarkMode ? 'bg-[#0d0922] border-l border-[#21184d]/60' : 'bg-slate-50 border-l border-slate-200'
         }`}>
           {/* Candidate Card */}
-          <div className="p-4 border-b border-[#21184d] flex items-center gap-3">
+          <div className={`p-4 border-b flex items-center gap-3 ${
+            isDarkMode ? 'border-[#21184d]' : 'border-slate-200'
+          }`}>
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-black text-white text-sm shrink-0 shadow-md">
               {userName.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-black text-white truncate">{userName}</p>
-              <p className="text-[10px] text-slate-400 font-semibold">Candidate • {userState}</p>
+              <p className={`text-xs font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{userName}</p>
+              <p className={`text-[10px] font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Candidate • {userState}
+              </p>
             </div>
           </div>
 
           {/* Legend Grid */}
-          <div className="p-4 border-b border-[#21184d] space-y-2 text-[10px] font-bold">
-            <span className="text-slate-400 uppercase tracking-wider text-[9px] block">Status Legend:</span>
+          <div className={`p-4 border-b space-y-2 text-[10px] font-bold ${
+            isDarkMode ? 'border-[#21184d]' : 'border-slate-200'
+          }`}>
+            <span className={`uppercase tracking-wider text-[9px] block ${
+              isDarkMode ? 'text-slate-400' : 'text-slate-700'
+            }`}>
+              Status Legend:
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-lg bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shadow-sm">
                   {summaryCounts.answered}
                 </span>
-                <span className="text-slate-300 truncate">Answered</span>
+                <span className={`truncate ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Answered</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-lg bg-rose-500 text-white font-black flex items-center justify-center text-[10px] shadow-sm">
                   {summaryCounts.notAnswered}
                 </span>
-                <span className="text-slate-300 truncate">Not Answered</span>
+                <span className={`truncate ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Not Answered</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-lg bg-purple-500 text-white font-black flex items-center justify-center text-[10px] shadow-sm">
                   {summaryCounts.markedForReview}
                 </span>
-                <span className="text-slate-300 truncate">Marked Review</span>
+                <span className={`truncate ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Marked Review</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-lg bg-slate-700 text-slate-300 font-black flex items-center justify-center text-[10px]">
+                <span className={`w-5 h-5 rounded-lg font-black flex items-center justify-center text-[10px] ${
+                  isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-800 border border-slate-300'
+                }`}>
                   {summaryCounts.notVisited}
                 </span>
-                <span className="text-slate-300 truncate">Not Visited</span>
+                <span className={`truncate ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Not Visited</span>
               </div>
             </div>
           </div>
 
           {/* Question Palette Grid */}
           <div className="p-4 flex-1 overflow-y-auto">
-            <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-300 mb-3 flex items-center justify-between">
+            <h4 className={`text-[11px] font-black uppercase tracking-wider mb-3 flex items-center justify-between ${
+              isDarkMode ? 'text-purple-300' : 'text-purple-900'
+            }`}>
               <span>{activeSection.name}</span>
-              <span className="text-slate-400 font-mono text-[10px]">
+              <span className={`font-mono text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600 font-bold'}`}>
                 {sectionQuestions.length} Questions
               </span>
             </h4>
@@ -881,7 +981,10 @@ export default function CbtExamPlayer({
                 const st = questionStates[q.id]?.status || 'not_visited';
                 const isCurrent = currentQuestionIndex === qIdx;
 
-                let colorClasses = 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700';
+                let colorClasses = isDarkMode 
+                  ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                  : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-200 shadow-sm font-bold';
+
                 if (st === 'answered') {
                   colorClasses = 'bg-emerald-500 border-emerald-400 text-slate-950 font-black shadow-sm';
                 } else if (st === 'not_answered') {
@@ -894,10 +997,10 @@ export default function CbtExamPlayer({
 
                 return (
                   <button
-                    key={q.id}
+                    key={`${q.id || 'q'}-${qIdx}`}
                     onClick={() => handleJumpToQuestion(activeSectionIndex, qIdx)}
                     className={`h-9 rounded-xl border flex items-center justify-center text-xs font-black transition-all cursor-pointer hover:scale-105 active:scale-95 ${colorClasses} ${
-                      isCurrent ? 'ring-2 ring-white scale-105 shadow-md' : ''
+                      isCurrent ? (isDarkMode ? 'ring-2 ring-white scale-105 shadow-md' : 'ring-2 ring-purple-600 scale-105 shadow-md') : ''
                     }`}
                   >
                     {q.questionNumber || (qIdx + 1)}
@@ -908,7 +1011,9 @@ export default function CbtExamPlayer({
           </div>
 
           {/* Quick Submit Test Footer in Palette */}
-          <div className="p-4 border-t border-[#21184d] bg-[#0c081e]">
+          <div className={`p-4 border-t ${
+            isDarkMode ? 'border-[#21184d] bg-[#0c081e]' : 'border-slate-200 bg-white'
+          }`}>
             <button
               onClick={() => setIsSubmitModalOpen(true)}
               className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
@@ -923,15 +1028,21 @@ export default function CbtExamPlayer({
       {/* 4. MOBILE DRAWER QUESTION PALETTE */}
       {isMobilePaletteOpen && (
         <div className="fixed inset-0 z-[200] lg:hidden bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
-          <div className="bg-[#120d2a] border-t-2 border-purple-500/50 rounded-t-3xl p-5 max-h-[80vh] flex flex-col space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between border-b border-[#2d2163] pb-3">
+          <div className={`rounded-t-3xl p-5 max-h-[80vh] flex flex-col space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-300 border-t-2 ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-purple-500/50 text-white' 
+              : 'bg-white border-purple-400 text-slate-900'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDarkMode ? 'border-[#2d2163]' : 'border-slate-200'
+            }`}>
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-purple-400" />
-                <h3 className="text-sm font-black text-white">Question Palette</h3>
+                <h3 className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Question Palette</h3>
               </div>
               <button
                 onClick={() => setIsMobilePaletteOpen(false)}
-                className="p-1 rounded-lg bg-white/10 text-slate-300 hover:text-white"
+                className={`p-1 rounded-lg ${isDarkMode ? 'bg-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 text-slate-700 hover:text-slate-900'}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -939,19 +1050,19 @@ export default function CbtExamPlayer({
 
             {/* Quick Status */}
             <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
-              <div className="bg-emerald-500/20 text-emerald-300 p-2 rounded-xl border border-emerald-500/30">
+              <div className={`p-2 rounded-xl border ${isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 text-emerald-900 border-emerald-300'}`}>
                 <div className="font-black text-base">{summaryCounts.answered}</div>
                 <div>Answered</div>
               </div>
-              <div className="bg-rose-500/20 text-rose-300 p-2 rounded-xl border border-rose-500/30">
+              <div className={`p-2 rounded-xl border ${isDarkMode ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-rose-50 text-rose-900 border-rose-300'}`}>
                 <div className="font-black text-base">{summaryCounts.notAnswered}</div>
                 <div>Unanswered</div>
               </div>
-              <div className="bg-purple-500/20 text-purple-300 p-2 rounded-xl border border-purple-500/30">
+              <div className={`p-2 rounded-xl border ${isDarkMode ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 text-purple-900 border-purple-300'}`}>
                 <div className="font-black text-base">{summaryCounts.markedForReview}</div>
                 <div>Review</div>
               </div>
-              <div className="bg-slate-800 text-slate-300 p-2 rounded-xl border border-slate-700">
+              <div className={`p-2 rounded-xl border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-800 border-slate-300'}`}>
                 <div className="font-black text-base">{summaryCounts.notVisited}</div>
                 <div>Not Visited</div>
               </div>
@@ -964,17 +1075,20 @@ export default function CbtExamPlayer({
                   const st = questionStates[q.id]?.status || 'not_visited';
                   const isCurrent = currentQuestionIndex === qIdx;
 
-                  let colorClasses = 'bg-slate-800 border-slate-700 text-slate-400';
+                  let colorClasses = isDarkMode 
+                    ? 'bg-slate-800 border-slate-700 text-slate-400' 
+                    : 'bg-slate-100 border-slate-300 text-slate-800 font-bold';
+
                   if (st === 'answered') colorClasses = 'bg-emerald-500 border-emerald-400 text-slate-950 font-black';
                   else if (st === 'not_answered') colorClasses = 'bg-rose-500 border-rose-400 text-white font-black';
                   else if (st === 'marked_for_review') colorClasses = 'bg-purple-600 border-purple-400 text-white font-black';
 
                   return (
                     <button
-                      key={q.id}
+                      key={`mob-${q.id || 'q'}-${qIdx}`}
                       onClick={() => handleJumpToQuestion(activeSectionIndex, qIdx)}
                       className={`h-10 rounded-xl border flex items-center justify-center text-xs font-black transition-all cursor-pointer ${colorClasses} ${
-                        isCurrent ? 'ring-2 ring-white scale-105' : ''
+                        isCurrent ? (isDarkMode ? 'ring-2 ring-white scale-105' : 'ring-2 ring-purple-600 scale-105') : ''
                       }`}
                     >
                       {q.questionNumber || (qIdx + 1)}
@@ -989,7 +1103,7 @@ export default function CbtExamPlayer({
                 setIsMobilePaletteOpen(false);
                 setIsSubmitModalOpen(true);
               }}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase py-3 rounded-xl shadow-md"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase py-3 rounded-xl shadow-md cursor-pointer hover:scale-[1.02]"
             >
               Submit Examination ({summaryCounts.answered}/{summaryCounts.total})
             </button>
@@ -999,22 +1113,32 @@ export default function CbtExamPlayer({
 
       {/* 5. CBT SCIENTIFIC CALCULATOR MODAL */}
       {isCalculatorOpen && (
-        <div className="fixed bottom-16 right-4 sm:right-8 z-[200] w-72 sm:w-80 bg-[#120d2a] border-2 border-amber-500/50 rounded-3xl p-4 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between border-b border-[#2d2163] pb-2">
-            <div className="flex items-center gap-1.5 text-xs font-black text-amber-300">
+        <div className={`fixed bottom-16 right-4 sm:right-8 z-[200] w-72 sm:w-80 border-2 rounded-3xl p-4 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200 ${
+          isDarkMode ? 'bg-[#120d2a] border-amber-500/50' : 'bg-white border-amber-400 text-slate-900'
+        }`}>
+          <div className={`flex items-center justify-between border-b pb-2 ${
+            isDarkMode ? 'border-[#2d2163]' : 'border-slate-200'
+          }`}>
+            <div className={`flex items-center gap-1.5 text-xs font-black ${
+              isDarkMode ? 'text-amber-300' : 'text-amber-900'
+            }`}>
               <Calculator className="w-4 h-4" />
               <span>Standard CBT Calculator</span>
             </div>
             <button
               onClick={() => setIsCalculatorOpen(false)}
-              className="p-1 rounded-lg bg-white/10 text-slate-400 hover:text-white"
+              className={`p-1 rounded-lg ${isDarkMode ? 'bg-white/10 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'}`}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Calculator Screen */}
-          <div className="bg-[#090618] border border-[#2b2158] rounded-xl p-3 text-right font-mono font-black text-xl text-amber-300 overflow-x-auto">
+          <div className={`rounded-xl p-3 text-right font-mono font-black text-xl overflow-x-auto border ${
+            isDarkMode 
+              ? 'bg-[#090618] border-[#2b2158] text-amber-300' 
+              : 'bg-slate-100 border-slate-300 text-amber-900'
+          }`}>
             {calcDisplay}
           </div>
 
@@ -1024,7 +1148,11 @@ export default function CbtExamPlayer({
               <button
                 key={btn}
                 onClick={() => handleCalcInput(btn)}
-                className="p-2.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-800/50 text-purple-200 cursor-pointer active:scale-95 font-mono"
+                className={`p-2.5 rounded-xl border cursor-pointer active:scale-95 font-mono ${
+                  isDarkMode 
+                    ? 'bg-purple-950/80 hover:bg-purple-900 border-purple-800/50 text-purple-200' 
+                    : 'bg-purple-100 hover:bg-purple-200 border-purple-300 text-purple-900 font-bold'
+                }`}
               >
                 {btn}
               </button>
@@ -1034,7 +1162,9 @@ export default function CbtExamPlayer({
                 key={btn}
                 onClick={() => handleCalcInput(btn)}
                 className={`p-2.5 rounded-xl border cursor-pointer active:scale-95 font-mono ${
-                  btn === '*' ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                  btn === '*' 
+                    ? (isDarkMode ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900 font-bold')
+                    : (isDarkMode ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-bold')
                 }`}
               >
                 {btn}
@@ -1045,7 +1175,9 @@ export default function CbtExamPlayer({
                 key={btn}
                 onClick={() => handleCalcInput(btn)}
                 className={`p-2.5 rounded-xl border cursor-pointer active:scale-95 font-mono ${
-                  btn === '-' ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                  btn === '-' 
+                    ? (isDarkMode ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900 font-bold')
+                    : (isDarkMode ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-bold')
                 }`}
               >
                 {btn}
@@ -1056,7 +1188,9 @@ export default function CbtExamPlayer({
                 key={btn}
                 onClick={() => handleCalcInput(btn)}
                 className={`p-2.5 rounded-xl border cursor-pointer active:scale-95 font-mono ${
-                  btn === '+' ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                  btn === '+' 
+                    ? (isDarkMode ? 'bg-purple-950/80 border-purple-800/50 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900 font-bold')
+                    : (isDarkMode ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-bold')
                 }`}
               >
                 {btn}
@@ -1067,7 +1201,9 @@ export default function CbtExamPlayer({
                 key={btn}
                 onClick={() => handleCalcInput(btn)}
                 className={`p-2.5 rounded-xl border cursor-pointer active:scale-95 font-mono ${
-                  btn === '=' ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black border-amber-400' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                  btn === '=' 
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black border-amber-400' 
+                    : (isDarkMode ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-bold')
                 }`}
               >
                 {btn}
@@ -1079,23 +1215,29 @@ export default function CbtExamPlayer({
 
       {/* 6. ROUGH SCRATCHPAD SHEET MODAL */}
       {isScratchpadOpen && (
-        <div className="fixed bottom-16 left-4 sm:left-8 z-[200] w-80 sm:w-96 bg-[#120d2a] border-2 border-cyan-500/50 rounded-3xl p-4 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between border-b border-[#2d2163] pb-2">
-            <div className="flex items-center gap-1.5 text-xs font-black text-cyan-300">
+        <div className={`fixed bottom-16 left-4 sm:left-8 z-[200] w-80 sm:w-96 border-2 rounded-3xl p-4 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200 ${
+          isDarkMode ? 'bg-[#120d2a] border-cyan-500/50' : 'bg-white border-cyan-400 text-slate-900'
+        }`}>
+          <div className={`flex items-center justify-between border-b pb-2 ${
+            isDarkMode ? 'border-[#2d2163]' : 'border-slate-200'
+          }`}>
+            <div className={`flex items-center gap-1.5 text-xs font-black ${
+              isDarkMode ? 'text-cyan-300' : 'text-cyan-900'
+            }`}>
               <Edit3 className="w-4 h-4" />
               <span>Rough Working Scratchpad</span>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setScratchpadText('')}
-                className="p-1 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300"
+                className={`p-1 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300' : 'bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700'}`}
                 title="Clear Notes"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setIsScratchpadOpen(false)}
-                className="p-1 rounded-lg bg-white/10 text-slate-400 hover:text-white"
+                className={`p-1 rounded-lg ${isDarkMode ? 'bg-white/10 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'}`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1106,9 +1248,13 @@ export default function CbtExamPlayer({
             value={scratchpadText}
             onChange={(e) => setScratchpadText(e.target.value)}
             placeholder="Type rough calculations, formulas, elimination notes here..."
-            className="w-full h-48 bg-[#080516] border border-[#2d2158] rounded-xl p-3 text-xs text-cyan-200 font-mono focus:outline-none focus:border-cyan-400 resize-none"
+            className={`w-full h-48 rounded-xl p-3 text-xs font-mono focus:outline-none resize-none border ${
+              isDarkMode 
+                ? 'bg-[#080516] border-[#2d2158] text-cyan-200 focus:border-cyan-400' 
+                : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-cyan-600'
+            }`}
           />
-          <div className="text-[9px] text-slate-400 text-right">
+          <div className={`text-[9px] text-right ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Scratchpad notes are strictly private and preserved during this session.
           </div>
         </div>
@@ -1117,46 +1263,72 @@ export default function CbtExamPlayer({
       {/* 7. KEYBOARD SHORTCUTS MODAL */}
       {isKeyboardHelpOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#120d2a] border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 space-y-4 text-white shadow-2xl animate-in zoom-in-95 duration-200 text-left">
-            <div className="flex items-center justify-between border-b border-[#2d2163] pb-3">
+          <div className={`border-2 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 text-left ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-purple-500/50 text-white' 
+              : 'bg-white border-purple-400 text-slate-900'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDarkMode ? 'border-[#2d2163]' : 'border-slate-200'
+            }`}>
               <div className="flex items-center gap-2">
-                <Keyboard className="w-5 h-5 text-purple-400" />
-                <h3 className="text-base font-black">CBT Keyboard Shortcuts</h3>
+                <Keyboard className="w-5 h-5 text-purple-500" />
+                <h3 className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>CBT Keyboard Shortcuts</h3>
               </div>
               <button
                 onClick={() => setIsKeyboardHelpOpen(false)}
-                className="p-1 rounded-lg bg-white/10 text-slate-400 hover:text-white"
+                className={`p-1 rounded-lg ${isDarkMode ? 'bg-white/10 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'}`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-slate-300">Select Option A, B, C, D</span>
-                <span className="font-mono font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800 text-purple-200">1, 2, 3, 4 or A, B, C, D</span>
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}>Select Option A, B, C, D</span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDarkMode ? 'bg-purple-950 border-purple-800 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900'
+                }`}>1, 2, 3, 4 or A, B, C, D</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-slate-300">Save &amp; Next</span>
-                <span className="font-mono font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800 text-purple-200">Right Arrow / Enter</span>
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}>Save &amp; Next</span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDarkMode ? 'bg-purple-950 border-purple-800 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900'
+                }`}>Right Arrow / Enter</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-slate-300">Previous Question</span>
-                <span className="font-mono font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800 text-purple-200">Left Arrow</span>
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}>Previous Question</span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDarkMode ? 'bg-purple-950 border-purple-800 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900'
+                }`}>Left Arrow</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-slate-300">Mark for Review &amp; Next</span>
-                <span className="font-mono font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800 text-purple-200">M</span>
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}>Mark for Review &amp; Next</span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDarkMode ? 'bg-purple-950 border-purple-800 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900'
+                }`}>M</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-slate-300">Clear Current Selection</span>
-                <span className="font-mono font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800 text-purple-200">X</span>
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}>Clear Current Selection</span>
+                <span className={`font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDarkMode ? 'bg-purple-950 border-purple-800 text-purple-200' : 'bg-purple-100 border-purple-300 text-purple-900'
+                }`}>X</span>
               </div>
             </div>
 
             <button
               onClick={() => setIsKeyboardHelpOpen(false)}
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase py-2.5 rounded-xl"
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase py-2.5 rounded-xl cursor-pointer"
             >
               Got It
             </button>
@@ -1167,38 +1339,54 @@ export default function CbtExamPlayer({
       {/* 8. SUBMISSION CONFIRMATION MODAL */}
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#120d2a] border-2 border-purple-500/50 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-left text-white animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 border-b border-[#2d2163] pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shadow-md">
+          <div className={`border-2 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-left animate-in zoom-in-95 duration-200 ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-purple-500/50 text-white' 
+              : 'bg-white border-purple-400 text-slate-900'
+          }`}>
+            <div className={`flex items-center gap-3 border-b pb-4 ${
+              isDarkMode ? 'border-[#2d2163]' : 'border-slate-200'
+            }`}>
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-md border ${
+                isDarkMode ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'bg-purple-100 border-purple-300 text-purple-800'
+              }`}>
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black">Confirm Examination Submission</h3>
-                <p className="text-xs text-slate-400 font-semibold truncate max-w-xs sm:max-w-sm">{test.title}</p>
+                <h3 className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Confirm Examination Submission</h3>
+                <p className={`text-xs font-semibold truncate max-w-xs sm:max-w-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{test.title}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs text-slate-300 font-medium leading-relaxed">
+              <p className={`text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 Review your response summary before final evaluation. Once submitted, your all-India percentile, subject breakdown, and AI diagnostic report will be instantly calculated.
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-2xl text-center">
-                  <span className="text-xs text-emerald-300 block font-bold">Answered</span>
-                  <span className="text-xl font-black text-emerald-400">{summaryCounts.answered}</span>
+                <div className={`p-3 rounded-2xl text-center border ${
+                  isDarkMode ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-300'
+                }`}>
+                  <span className={`text-xs block font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-900'}`}>Answered</span>
+                  <span className={`text-xl font-black ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{summaryCounts.answered}</span>
                 </div>
-                <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-2xl text-center">
-                  <span className="text-xs text-rose-300 block font-bold">Unanswered</span>
-                  <span className="text-xl font-black text-rose-400">{summaryCounts.notAnswered}</span>
+                <div className={`p-3 rounded-2xl text-center border ${
+                  isDarkMode ? 'bg-rose-500/10 border-rose-500/30' : 'bg-rose-50 border-rose-300'
+                }`}>
+                  <span className={`text-xs block font-bold ${isDarkMode ? 'text-rose-300' : 'text-rose-900'}`}>Unanswered</span>
+                  <span className={`text-xl font-black ${isDarkMode ? 'text-rose-400' : 'text-rose-700'}`}>{summaryCounts.notAnswered}</span>
                 </div>
-                <div className="bg-purple-500/10 border border-purple-500/30 p-3 rounded-2xl text-center">
-                  <span className="text-xs text-purple-300 block font-bold">Marked</span>
-                  <span className="text-xl font-black text-purple-400">{summaryCounts.markedForReview}</span>
+                <div className={`p-3 rounded-2xl text-center border ${
+                  isDarkMode ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-300'
+                }`}>
+                  <span className={`text-xs block font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-900'}`}>Marked</span>
+                  <span className={`text-xl font-black ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}>{summaryCounts.markedForReview}</span>
                 </div>
-                <div className="bg-slate-800/80 border border-slate-700 p-3 rounded-2xl text-center">
-                  <span className="text-xs text-slate-400 block font-bold">Not Visited</span>
-                  <span className="text-xl font-black text-slate-200">{summaryCounts.notVisited}</span>
+                <div className={`p-3 rounded-2xl text-center border ${
+                  isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-100 border-slate-300'
+                }`}>
+                  <span className={`text-xs block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Not Visited</span>
+                  <span className={`text-xl font-black ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{summaryCounts.notVisited}</span>
                 </div>
               </div>
             </div>
@@ -1206,7 +1394,9 @@ export default function CbtExamPlayer({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isDarkMode ? 'bg-white/5 hover:bg-white/10 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                }`}
               >
                 Return to Test
               </button>

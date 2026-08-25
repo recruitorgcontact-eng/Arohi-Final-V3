@@ -130,6 +130,19 @@ export default function WelcomeLanding({
     : 'User';
 
   const [landingInputText, setLandingInputText] = useState('');
+  const landingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const adjustLandingTextareaHeight = () => {
+    if (landingTextareaRef.current) {
+      landingTextareaRef.current.style.height = 'auto';
+      const scrollH = landingTextareaRef.current.scrollHeight;
+      landingTextareaRef.current.style.height = `${Math.min(Math.max(scrollH, 32), 110)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustLandingTextareaHeight();
+  }, [landingInputText]);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -979,7 +992,7 @@ export default function WelcomeLanding({
 
           {/* Floating Search/Prompt Input Field */}
           <form onSubmit={handlePromptSubmit} className="relative mb-3">
-            <div className={`flex items-center gap-2 rounded-2xl p-1.5 sm:p-2 border transition-all ${
+            <div className={`flex items-end gap-2 rounded-2xl p-1.5 sm:p-2 border transition-all ${
               isListening
                 ? 'bg-purple-950/30 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)] ring-2 ring-rose-500/50'
                 : isDarkMode 
@@ -988,7 +1001,7 @@ export default function WelcomeLanding({
             }`}>
               
               {/* Left Sparkles Icon / Recording Pulse */}
-              <div className="pl-2.5 text-purple-500 shrink-0 flex items-center justify-center">
+              <div className="pl-2.5 pb-2 text-purple-500 shrink-0 flex items-center justify-center">
                 {isListening ? (
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -999,24 +1012,36 @@ export default function WelcomeLanding({
                 )}
               </div>
 
-              {/* Input Text Area */}
-              <input 
-                type="text" 
-                value={landingInputText}
-                onChange={(e) => setLandingInputText(e?.target?.value ?? "")}
-                placeholder={isListening ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
-                className={`w-full bg-transparent text-xs sm:text-sm font-medium outline-none px-1 ${
-                  isListening
-                    ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
-                    : isDarkMode ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
-                }`}
-              />
+              {/* Input Text Area with Smooth Inner Scrolling */}
+              <div className="flex-1 min-w-0 py-0.5">
+                <textarea 
+                  ref={landingTextareaRef}
+                  rows={1}
+                  value={landingInputText}
+                  onChange={(e) => {
+                    setLandingInputText(e?.target?.value ?? "");
+                    adjustLandingTextareaHeight();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handlePromptSubmit();
+                    }
+                  }}
+                  placeholder={isListening ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
+                  className={`w-full bg-transparent text-xs sm:text-sm font-medium outline-none px-1 py-1 leading-relaxed max-h-28 min-h-[32px] overflow-y-auto resize-none chat-input-scrollbar ${
+                    isListening
+                      ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
+                      : isDarkMode ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                  }`}
+                />
+              </div>
 
               {/* If user typed or spoke text, show Send button */}
               {landingInputText.trim().length > 0 && (
                 <button
                   type="submit"
-                  className="p-2 sm:p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
+                  className="p-2 sm:p-2.5 mb-0.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
                   title="Send to Arohi AI"
                 >
                   <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1027,7 +1052,7 @@ export default function WelcomeLanding({
               <button
                 type="button"
                 onClick={toggleVoiceInput}
-                className={`p-2 sm:p-2.5 rounded-xl text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center ${
+                className={`p-2 sm:p-2.5 mb-0.5 rounded-xl text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center ${
                   isListening
                     ? 'bg-rose-600 ring-4 ring-rose-500/40 animate-pulse shadow-rose-500/50'
                     : 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_4px_12px_rgba(124,58,237,0.35)]'

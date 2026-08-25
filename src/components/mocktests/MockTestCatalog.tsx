@@ -4,10 +4,19 @@ import {
   BookOpen, Brain, Play, Filter, HeartPulse, Landmark, 
   GraduationCap, Building, ChevronRight, Layers, HelpCircle,
   TrendingUp, Users, ShieldAlert, ArrowRight, Zap, ShieldCheck,
-  Check, Lock
+  Check, Lock, MapPin, Globe2, FileText, Info, X
 } from 'lucide-react';
-import { MockTest, ExamMainCategory } from '../../types/examTypes';
+import { MockTest, ExamMainCategory, KGBreadcrumbItem, KGLevel } from '../../types/examTypes';
 import { INITIAL_MOCK_TESTS, MOCK_EXAM_CATEGORIES } from '../../data/mockTestsData';
+import { resolveKGLineage } from '../../data/examKnowledgeGraph';
+import { isTestInCategory } from '../../utils/examCategoryClassifier';
+import ExamKGBreadcrumbs from './ExamKGBreadcrumbs';
+import { 
+  MASTER_EXAMS_DATABASE, 
+  MASTER_EXAM_SECTORS, 
+  ALL_INDIAN_STATES, 
+  MasterExamDefinition 
+} from '../../data/masterExamsRegistry';
 
 interface MockTestCatalogProps {
   tests?: MockTest[];
@@ -17,6 +26,8 @@ interface MockTestCatalogProps {
   onOpenLeaderboard: (test: MockTest) => void;
   onOpenInChatQuiz?: () => void;
   onOpenExamPass?: (tier?: 'silver' | 'gold') => void;
+  onOpenKGLanding?: (test: MockTest) => void;
+  onOpenSchoolBoards?: () => void;
 }
 
 export default function MockTestCatalog({
@@ -26,12 +37,93 @@ export default function MockTestCatalog({
   onOpenCustomGenerator,
   onOpenLeaderboard,
   onOpenInChatQuiz,
-  onOpenExamPass
+  onOpenExamPass,
+  onOpenKGLanding,
+  onOpenSchoolBoards
 }: MockTestCatalogProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedState, setSelectedState] = useState<string>('All-India / Central');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('all');
   const [selectedQuestionFilter, setSelectedQuestionFilter] = useState<'all' | '100' | '50' | 'sectional'>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExamDetails, setSelectedExamDetails] = useState<MasterExamDefinition | null>(null);
+  const [showKnowledgeGraphModal, setShowKnowledgeGraphModal] = useState(false);
+
+  // Dynamically compute active Knowledge Graph breadcrumbs for the current filter state
+  const catalogBreadcrumbs: KGBreadcrumbItem[] = [
+    {
+      level: 'country',
+      id: 'india',
+      label: 'India (National)',
+      slug: 'india',
+      url: '/mocktests',
+      badge: 'National'
+    }
+  ];
+
+  if (selectedState && selectedState !== 'all' && selectedState !== 'All-India / Central') {
+    catalogBreadcrumbs.push({
+      level: 'state',
+      id: selectedState.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      label: selectedState,
+      slug: selectedState.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      url: `/mocktests/state/${selectedState.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      badge: 'State Cadre'
+    });
+  }
+
+  if (selectedCategory && selectedCategory !== 'all') {
+    const catObj = MOCK_EXAM_CATEGORIES.find(c => c.id === selectedCategory);
+    catalogBreadcrumbs.push({
+      level: 'authority',
+      id: selectedCategory,
+      label: catObj ? catObj.label : selectedCategory,
+      slug: selectedCategory,
+      url: `/mocktests/category/${selectedCategory}`,
+      badge: 'Authority / Sector'
+    });
+  }
+
+  if (selectedSubCategory && selectedSubCategory !== 'all') {
+    const sample = tests.find(t => t.subCategory === selectedSubCategory);
+    catalogBreadcrumbs.push({
+      level: 'exam',
+      id: selectedSubCategory,
+      label: sample ? sample.targetExam : selectedSubCategory,
+      slug: selectedSubCategory,
+      url: `/mocktests/exam/${selectedSubCategory}`,
+      badge: 'Target Exam'
+    });
+  }
+
+  if (searchQuery) {
+    catalogBreadcrumbs.push({
+      level: 'subject',
+      id: 'search',
+      label: `Filter: "${searchQuery}"`,
+      slug: 'search',
+      url: `/mocktests?q=${encodeURIComponent(searchQuery)}`
+    });
+  }
+
+  const handleBreadcrumbSelect = (level: KGLevel) => {
+    if (level === 'country') {
+      setSelectedState('All-India / Central');
+      setSelectedCategory('all');
+      setSelectedSubCategory('all');
+      setSearchQuery('');
+    } else if (level === 'state') {
+      setSelectedCategory('all');
+      setSelectedSubCategory('all');
+      setSearchQuery('');
+    } else if (level === 'authority') {
+      setSelectedSubCategory('all');
+      setSearchQuery('');
+    } else if (level === 'exam') {
+      setSearchQuery('');
+    }
+  };
 
   // Handle category change
   const handleCategorySelect = (catId: string) => {
@@ -42,21 +134,36 @@ export default function MockTestCatalog({
   // Derive available subcategories for current category
   const relevantTestsForSubcats = selectedCategory === 'all' 
     ? tests 
-    : tests.filter(t => t.mainCategory === selectedCategory);
+    : tests.filter(t => isTestInCategory(t, selectedCategory));
 
   const availableSubCategories = Array.from(
     new Set(relevantTestsForSubcats.map(t => t.subCategory))
   );
 
   const filteredTests = tests.filter((test) => {
-    // Category filter
-    if (selectedCategory !== 'all' && test.mainCategory !== selectedCategory) {
+    // State filter
+    if (selectedState !== 'All-India / Central' && selectedState !== 'all') {
+      const matchState = test.state === selectedState || test.state === 'All-India / Central' || !test.state;
+      if (!matchState) return false;
+    }
+
+    // Category filter using intelligent categorizer
+    if (selectedCategory !== 'all' && !isTestInCategory(test, selectedCategory)) {
       return false;
     }
+
     // SubCategory filter
     if (selectedSubCategory !== 'all' && test.subCategory !== selectedSubCategory) {
       return false;
     }
+
+    // Language filter
+    if (selectedLanguage !== 'all') {
+      if (test.supportedLanguages && !test.supportedLanguages.includes(selectedLanguage)) {
+        return false;
+      }
+    }
+
     // Question length filter
     if (selectedQuestionFilter === '100' && test.totalQuestions !== 100) {
       return false;
@@ -67,16 +174,24 @@ export default function MockTestCatalog({
     if (selectedQuestionFilter === 'sectional' && test.totalQuestions >= 50) {
       return false;
     }
+
     // Search query
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = test.title.toLowerCase().includes(q) || (test.titleOdia && test.titleOdia.includes(q));
+      const matchTitle = test.title.toLowerCase().includes(q) || 
+                         (test.titleOdia && test.titleOdia.includes(q)) || 
+                         (test.titleHindi && test.titleHindi.includes(q));
       const matchDesc = test.shortDescription.toLowerCase().includes(q);
       const matchTarget = test.targetExam.toLowerCase().includes(q);
       const matchBoard = test.board?.toLowerCase().includes(q);
       const matchCategory = test.categoryLabel.toLowerCase().includes(q);
-      const matchSubject = test.questions.some(qn => qn.subject.toLowerCase().includes(q) || qn.topic.toLowerCase().includes(q));
-      if (!matchTitle && !matchDesc && !matchTarget && !matchSubject && !matchBoard && !matchCategory) return false;
+      const matchStateName = test.state?.toLowerCase().includes(q);
+      const matchSubject = test.questions.some(qn => 
+        qn.subject.toLowerCase().includes(q) || 
+        qn.topic.toLowerCase().includes(q) ||
+        (qn.textHindi && qn.textHindi.toLowerCase().includes(q))
+      );
+      if (!matchTitle && !matchDesc && !matchTarget && !matchSubject && !matchBoard && !matchCategory && !matchStateName) return false;
     }
     return true;
   });
@@ -101,40 +216,58 @@ export default function MockTestCatalog({
                 : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
             }`}>
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Realistic CBT Examination Engine</span>
+              <span>India\'s Master Exam Knowledge Graph &amp; CBT Simulator</span>
             </span>
             <span className={`text-xs px-3 py-1 rounded-full font-bold ${
               isDarkMode 
                 ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30' 
                 : 'bg-purple-100 text-purple-900 border border-purple-200'
             }`}>
-              Class 1-12 • All Boards • Nursing • Central &amp; State Competitive
+              All 28 Indian States • 26 Sectors • 150+ Exams Ready
             </span>
           </div>
 
           <h1 className={`text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight ${
             isDarkMode ? 'text-white' : 'text-slate-900'
           }`}>
-            Arohi AI All-India Realistic <br />
+            Arohi AI Master India <br />
             <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 dark:from-purple-400 dark:via-pink-400 dark:to-amber-300 bg-clip-text text-transparent">
-              Mock Tests &amp; AI Diagnostic Platform
+              Realistic Mock Tests &amp; Official Blueprint Engine
             </span>
           </h1>
 
           <p className={`text-xs sm:text-sm font-medium leading-relaxed max-w-2xl ${
             isDarkMode ? 'text-slate-300' : 'text-slate-700'
           }`}>
-            Simulate exact real exam interfaces with authentic timings, negative marking ratios, All-India Leaderboards, state-wise rank tracking, and deep AI diagnostic reports highlighting your exact improvement areas.
+            Appear for authentic, ready-to-take mock tests replicating official question patterns, negative marking penalties, sectional timers, state-wise rank prediction, and AI-powered diagnostic scorecards across all national &amp; state jurisdictions.
           </p>
 
           {/* Quick Action CTAs */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
+              onClick={() => setShowKnowledgeGraphModal(true)}
+              className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-2"
+            >
+              <Landmark className="w-4 h-4 text-slate-950" />
+              <span>Explore 26 Exam Blueprints &amp; Syllabi</span>
+            </button>
+
+            {onOpenSchoolBoards && (
+              <button
+                onClick={onOpenSchoolBoards}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-2"
+              >
+                <GraduationCap className="w-4 h-4 text-emerald-200" />
+                <span>Class 1–12 School Boards Hub</span>
+              </button>
+            )}
+
+            <button
               onClick={onOpenCustomGenerator}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-xs font-black uppercase tracking-wider shadow-[0_4px_25px_rgba(124,58,237,0.4)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-xs font-black uppercase tracking-wider shadow-[0_4px_25px_rgba(124,58,237,0.4)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-2"
             >
               <Brain className="w-4 h-4 text-yellow-300" />
-              <span>Create AI Custom Test on Any Topic</span>
+              <span>Synthesize Custom Topic Test</span>
             </button>
 
             {onOpenInChatQuiz && (
@@ -147,7 +280,7 @@ export default function MockTestCatalog({
                 }`}
               >
                 <HelpCircle className={`w-4 h-4 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
-                <span>Take In-Chat Interactive Quiz</span>
+                <span>Take In-Chat Quiz</span>
               </button>
             )}
           </div>
@@ -159,196 +292,170 @@ export default function MockTestCatalog({
         }`}>
           <div className="space-y-0.5">
             <span className={`text-[10px] uppercase font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              {selectedCategory === 'all' ? 'Total Available Tests' : 'Active Category Tests'}
+              Available Test Papers
             </span>
             <div className={`text-lg sm:text-xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-600'}`}>
-              {selectedCategory === 'all' ? `${tests.length}+ Tests` : `${tests.filter(t => t.mainCategory === selectedCategory).length} Real Tests`}
+              {tests.length}+ Ready Tests
             </div>
           </div>
           
           <div className="space-y-0.5">
             <span className={`text-[10px] uppercase font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              {selectedCategory === 'school_boards' ? 'Active Board Tracks' :
-               selectedCategory === 'nursing' ? 'Target Nursing Exams' :
-               selectedCategory === 'competitive_central' ? 'Central Govt Tracks' :
-               selectedCategory === 'entrance_exams' ? 'Target Entrances' :
-               selectedCategory === 'competitive_state' ? 'State PSC & Teaching' :
-               'All-India Exam Tracks'}
+              Jurisdiction / State Scope
             </span>
             <div className={`text-lg sm:text-xl font-black truncate ${isDarkMode ? 'text-rose-400' : 'text-rose-600'}`}>
-              {selectedCategory === 'school_boards' ? 'CBSE / ICSE / Odisha BSE' :
-               selectedCategory === 'nursing' ? 'AIIMS / OSSSC / ESIC' :
-               selectedCategory === 'competitive_central' ? 'UPSC / SSC / RRB / IBPS' :
-               selectedCategory === 'entrance_exams' ? 'NEET / JEE / CUET / CLAT' :
-               selectedCategory === 'competitive_state' ? 'OPSC / SI / CTET / OTET' :
-               'School, Nursing & Govt'}
+              {selectedState === 'All-India / Central' ? 'All 28 Indian States' : selectedState}
             </div>
           </div>
 
           <div className="space-y-0.5">
             <span className={`text-[10px] uppercase font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              {selectedCategory === 'school_boards' ? 'Grades & Subjects' :
-               selectedCategory === 'nursing' ? 'Clinical Focus' :
-               selectedCategory === 'competitive_central' ? 'Tiers & Stages' :
-               selectedCategory === 'entrance_exams' ? 'Curriculum Scope' :
-               'Coverage Depth'}
+              Exam Sectors Covered
             </span>
             <div className={`text-lg sm:text-xl font-black truncate ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-              {selectedCategory === 'school_boards' ? 'Class 1 to 10 (All Subjects)' :
-               selectedCategory === 'nursing' ? 'Core Clinical & OBG/Peds' :
-               selectedCategory === 'competitive_central' ? 'Tier-1 & Tier-2 CBT' :
-               selectedCategory === 'entrance_exams' ? 'NTA Realistic Standard' :
-               '100% Official Blueprint'}
+              26 Master Sectors
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <span className={`text-[10px] uppercase font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Evaluation Mode</span>
+            <span className={`text-[10px] uppercase font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Marking Simulation
+            </span>
             <div className={`text-lg sm:text-xl font-black ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
-              Real Negative Marking
+              Official Negative Ratios
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. AROHI EXAMS™ OFFICIAL TEST PASSES (₹99 for 20 Tests / ₹199 for 50 Tests) */}
+      {/* 2. DYNAMIC KNOWLEDGE GRAPH BREADCRUMB NAVIGATION & JURISDICTION PICKER */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className={`text-base sm:text-lg font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <Zap className="w-5 h-5 text-amber-500" />
-              <span>Arohi Exams™ Passes • Unlock 100-Question CBT Tests</span>
-            </h2>
-            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Valid across School Classes 1-10 (All Indian Boards) &amp; All Competitive Exams. Separate from Arohi AI subscription.
-            </p>
+          <span className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Knowledge Graph Relational Lineage:
+          </span>
+          <span className={`text-[10px] font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+            {filteredTests.length} Matching Tests
+          </span>
+        </div>
+        <ExamKGBreadcrumbs
+          breadcrumbs={catalogBreadcrumbs}
+          canonicalPath={catalogBreadcrumbs[catalogBreadcrumbs.length - 1].url}
+          isDarkMode={isDarkMode}
+          onSelectLevel={handleBreadcrumbSelect}
+        />
+      </div>
+
+      <div className={`p-5 rounded-3xl border space-y-4 ${
+        isDarkMode ? 'bg-[#120d2a] border-[#291e56]' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+        <div className="flex flex-col md:flex-row items-center gap-3">
+          {/* State Dropdown Selector */}
+          <div className="w-full md:w-72 shrink-0">
+            <label className={`text-[10px] font-black uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-700'
+            }`}>
+              <MapPin className="w-3.5 h-3.5 text-amber-500" />
+              <span>Select State / Jurisdiction:</span>
+            </label>
+            <select
+              value={selectedState}
+              onChange={(e) => setSelectedState(e.target.value)}
+              className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs font-bold focus:outline-none transition-all cursor-pointer ${
+                isDarkMode 
+                  ? 'bg-[#1a123a] border-purple-500/40 text-white focus:border-amber-400' 
+                  : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-purple-600'
+              }`}
+            >
+              {ALL_INDIAN_STATES.map((state) => (
+                <option key={state} value={state} className={isDarkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Input */}
+          <div className="flex-1 w-full">
+            <label className={`text-[10px] font-black uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-700'
+            }`}>
+              <Search className="w-3.5 h-3.5 text-purple-400" />
+              <span>Search Across All Exams, Authorities, Boards &amp; Subjects:</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search e.g. UPSC CSE, SSC CGL, RRB NTPC, IBPS PO, NEET UG, JEE Main, CTET, UP Police, BPSC, MPSC, OPSC..."
+                className={`w-full border rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none transition-all ${
+                  isDarkMode 
+                    ? 'bg-[#1a123a] border-purple-500/40 text-white placeholder-slate-400 focus:border-purple-400' 
+                    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-purple-500'
+                }`}
+              />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Silver Pass (20 Tests × 100 Qs = ₹99) */}
-          <div className={`p-5 rounded-3xl border relative overflow-hidden transition-all flex flex-col justify-between ${
-            isDarkMode 
-              ? 'bg-gradient-to-br from-[#1b143c] to-[#110d29] border-purple-500/40 hover:border-purple-400' 
-              : 'bg-white border-purple-200 shadow-md hover:border-purple-300'
+        {/* Language Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none text-xs border-t border-purple-500/15">
+          <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1 ${
+            isDarkMode ? 'text-purple-300' : 'text-purple-700'
           }`}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-slate-700/50 text-slate-200 border-slate-600' 
-                    : 'bg-slate-100 text-slate-800 border-slate-300'
-                }`}>
-                  🥈 Silver Pass
-                </span>
-                <span className={`text-xs font-bold line-through ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>₹499</span>
-              </div>
+            <Globe2 className="w-3.5 h-3.5 text-purple-400" />
+            <span>Language:</span>
+          </span>
 
-              <div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className={`text-3xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>₹99</span>
-                  <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>/ one-time</span>
-                </div>
-                <h3 className={`text-sm font-black mt-1 ${isDarkMode ? 'text-purple-200' : 'text-purple-900'}`}>
-                  20 Full CBT Tests × 100 Questions (2,000 Qs)
-                </h3>
-              </div>
-
-              <ul className={`space-y-1.5 text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Dynamic question &amp; option shuffle on every attempt</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Official Arohi CBT Engine with live countdown timer</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>Official "Arohi Exams" watermarked report export</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className={`pt-4 mt-4 border-t ${isDarkMode ? 'border-purple-500/20' : 'border-purple-100'}`}>
-              <button
-                onClick={() => onOpenExamPass?.('silver')}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                <span>Unlock 20 Tests for ₹99</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Gold Mega Pass (50 Tests × 100 Qs = ₹199) */}
-          <div className={`p-5 rounded-3xl border relative overflow-hidden transition-all flex flex-col justify-between shadow-xl ${
-            isDarkMode 
-              ? 'bg-gradient-to-br from-[#26174a] via-[#1a0f38] to-[#120a2e] border-amber-500/50 hover:border-amber-400' 
-              : 'bg-amber-50/70 border-amber-300 hover:border-amber-400'
-          }`}>
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-yellow-400 text-slate-950 text-[10px] font-black uppercase px-3 py-0.5 rounded-bl-xl shadow-md">
-              👑 Best Value
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
-                    : 'bg-amber-100 text-amber-900 border-amber-300'
-                }`}>
-                  🥇 Gold Mega Pass
-                </span>
-                <span className={`text-xs font-bold line-through ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>₹999</span>
-              </div>
-
-              <div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className={`text-3xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>₹199</span>
-                  <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>/ one-time</span>
-                </div>
-                <h3 className={`text-sm font-black mt-1 ${isDarkMode ? 'text-amber-200' : 'text-amber-900'}`}>
-                  50 Full CBT Tests × 100 Questions (5,000 Qs)
-                </h3>
-              </div>
-
-              <ul className={`space-y-1.5 text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>50 full-length tests with dynamic shuffling</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>All categories unlocked: Class 1-10, AIIMS NORCET, SSC, UPSC</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>Unlimited AI Weakness Diagnostic &amp; Remedial practice</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className={`pt-4 mt-4 border-t ${isDarkMode ? 'border-amber-500/20' : 'border-amber-200'}`}>
-              <button
-                onClick={() => onOpenExamPass?.('gold')}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02]"
-              >
-                <Sparkles className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                <span>Unlock 50 Tests for ₹199</span>
-              </button>
-            </div>
-          </div>
+          {[
+            { id: 'all', label: 'All Languages' },
+            { id: 'en', label: 'English' },
+            { id: 'hi', label: 'हिन्दी (Hindi)' },
+            { id: 'or', label: 'ଓଡ଼ିଆ (Odia)' },
+            { id: 'mr', label: 'मराठी (Marathi)' },
+            { id: 'ta', label: 'தமிழ் (Tamil)' },
+            { id: 'te', label: 'తెలుగు (Telugu)' },
+            { id: 'bn', label: 'বাংলা (Bengali)' },
+            { id: 'gu', label: 'ગુજરાતી (Gujarati)' },
+            { id: 'pa', label: 'ਪੰਜਾਬੀ (Punjabi)' }
+          ].map((lang) => (
+            <button
+              key={lang.id}
+              onClick={() => setSelectedLanguage(lang.id)}
+              className={`px-3 py-1 rounded-xl font-bold transition-all text-xs shrink-0 cursor-pointer ${
+                selectedLanguage === lang.id
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : isDarkMode
+                  ? 'bg-[#18113c] text-slate-300 border border-purple-500/20 hover:bg-purple-500/20'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-purple-50'
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 3. CATEGORY SELECTOR CAROUSEL */}
+      {/* 3. TARGET EXAM CATEGORY SECTOR CAROUSEL */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className={`text-base sm:text-lg font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             <Layers className="w-5 h-5 text-purple-500" />
-            <span>Select Your Target Exam Track</span>
+            <span>Select Target Exam Sector (All 26 Sectors)</span>
           </h2>
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            {tests.length} Active CBT Papers
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -356,7 +463,7 @@ export default function MockTestCatalog({
             const isSelected = selectedCategory === cat.id;
             const categoryTestCount = cat.id === 'all' 
               ? tests.length 
-              : tests.filter(t => t.mainCategory === cat.id).length;
+              : tests.filter(t => isTestInCategory(t, cat.id)).length;
 
             return (
               <button
@@ -378,11 +485,15 @@ export default function MockTestCatalog({
                       ? 'bg-purple-600/20 text-purple-300' 
                       : 'bg-purple-100 text-purple-700'
                   }`}>
-                    {cat.id === 'nursing' ? <HeartPulse className="w-4 h-4" /> :
+                    {cat.id === 'medical_neet_nursing' ? <HeartPulse className="w-4 h-4" /> :
                      cat.id === 'school_boards' ? <GraduationCap className="w-4 h-4" /> :
-                     cat.id === 'entrance_exams' ? <Award className="w-4 h-4" /> :
-                     cat.id === 'competitive_state' ? <Building className="w-4 h-4" /> :
-                     cat.id === 'competitive_central' ? <Landmark className="w-4 h-4" /> :
+                     cat.id === 'engineering_jee_gate' ? <Award className="w-4 h-4" /> :
+                     cat.id === 'state_psc_all_28' ? <Building className="w-4 h-4" /> :
+                     cat.id === 'police_state_cadres' ? <ShieldCheck className="w-4 h-4" /> :
+                     cat.id === 'upsc_civil' ? <Landmark className="w-4 h-4" /> :
+                     cat.id === 'railway_rrb' ? <Zap className="w-4 h-4" /> :
+                     cat.id === 'teaching_tet_ctet' ? <GraduationCap className="w-4 h-4" /> :
+                     cat.id === 'management_cat_mba' ? <TrendingUp className="w-4 h-4" /> :
                      <Sparkles className="w-4 h-4" />}
                   </span>
                   <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
@@ -408,37 +519,8 @@ export default function MockTestCatalog({
         </div>
       </div>
 
-      {/* 3. SEARCH & SUB-CATEGORY FILTERS */}
+      {/* 4. SUB-CATEGORY & QUESTION LENGTH FILTERS */}
       <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search all mock tests (e.g. AIIMS NORCET, Odisha BSE 10th, CBSE 10, SSC CGL, NEET, UPSC, RRB NTPC, CTET)..."
-              className={`w-full border rounded-2xl pl-10 pr-4 py-3 text-xs font-medium focus:outline-none transition-all ${
-                isDarkMode 
-                  ? 'bg-[#120d2a] border-[#2d2163] text-white placeholder-slate-400 focus:border-purple-400' 
-                  : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-purple-500 shadow-sm'
-              }`}
-            />
-          </div>
-
-          <button
-            onClick={onOpenCustomGenerator}
-            className={`w-full sm:w-auto px-4 py-3 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 ${
-              isDarkMode 
-                ? 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/40 text-purple-300 hover:text-white' 
-                : 'bg-purple-50 hover:bg-purple-100 border-purple-300 text-purple-800'
-            }`}
-          >
-            <Brain className="w-4 h-4 text-amber-500" />
-            <span>Generate On-Demand Test</span>
-          </button>
-        </div>
-
         {/* Sub-Category Filter Pills */}
         {availableSubCategories.length > 1 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
@@ -446,7 +528,7 @@ export default function MockTestCatalog({
               isDarkMode ? 'text-slate-400' : 'text-slate-600'
             }`}>
               <Filter className="w-3 h-3 text-purple-500" />
-              <span>Sub-Track:</span>
+              <span>Specific Exam:</span>
             </span>
 
             <button
@@ -459,7 +541,7 @@ export default function MockTestCatalog({
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-purple-50'
               }`}
             >
-              All Sub-Tracks ({relevantTestsForSubcats.length})
+              All Sub-Exams ({relevantTestsForSubcats.length})
             </button>
 
             {availableSubCategories.map((subcat) => {
@@ -495,7 +577,7 @@ export default function MockTestCatalog({
             isDarkMode ? 'text-amber-400' : 'text-amber-700'
           }`}>
             <Zap className="w-3 h-3 text-amber-500" />
-            <span>Question Volume:</span>
+            <span>Format / Volume:</span>
           </span>
 
           <button
@@ -567,12 +649,15 @@ export default function MockTestCatalog({
         </div>
       </div>
 
-      {/* 4. TESTS GRID */}
+      {/* 5. TESTS GRID */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className={`text-sm font-black uppercase tracking-wider ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-            Available Mock Tests ({filteredTests.length})
+            Ready-to-Appear Mock Tests ({filteredTests.length})
           </h3>
+          <span className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            Showing {filteredTests.length} of {tests.length} Total Papers
+          </span>
         </div>
 
         {filteredTests.length === 0 ? (
@@ -580,7 +665,9 @@ export default function MockTestCatalog({
             isDarkMode ? 'bg-[#120d2a] border-[#2d2163]' : 'bg-white border-slate-200'
           }`}>
             <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
-            <h4 className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>No mock tests matched your search query</h4>
+            <h4 className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              No mock tests matched your current filter criteria
+            </h4>
             <p className={`text-xs max-w-md mx-auto ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
               You can instantly synthesize a custom exam paper with Arohi AI for your exact subject or syllabus.
             </p>
@@ -593,9 +680,9 @@ export default function MockTestCatalog({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredTests.map((test) => (
+            {filteredTests.map((test, idx) => (
               <div
-                key={test.id}
+                key={`${test.id}-${idx}`}
                 className={`rounded-3xl border transition-all flex flex-col justify-between overflow-hidden shadow-lg ${
                   isDarkMode 
                     ? 'bg-[#120d2a] border-[#291e56] hover:border-purple-500/60 hover:shadow-[0_8px_30px_rgba(124,58,237,0.2)]' 
@@ -608,7 +695,7 @@ export default function MockTestCatalog({
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
                       isDarkMode 
                         ? 'bg-purple-900/40 text-purple-300 border-purple-500/30' 
-                        : 'bg-purple-50 text-purple-800 border-purple-200'
+                        : 'bg-purple-50 text-purple-950 border-purple-300 font-bold'
                     }`}>
                       {test.categoryLabel}
                     </span>
@@ -616,7 +703,7 @@ export default function MockTestCatalog({
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
                         isDarkMode 
                           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' 
-                          : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-emerald-50 text-emerald-950 border-emerald-300 font-bold'
                       }`}>
                         <Sparkles className="w-3 h-3 text-amber-500" /> {test.featuredBadge}
                       </span>
@@ -627,13 +714,19 @@ export default function MockTestCatalog({
                     {test.title}
                   </h3>
 
+                  {test.titleHindi && (
+                    <p className={`text-xs font-bold ${isDarkMode ? 'text-amber-300/90' : 'text-amber-900'}`}>
+                      {test.titleHindi}
+                    </p>
+                  )}
+
                   {test.titleOdia && (
-                    <p className={`text-xs font-semibold ${isDarkMode ? 'text-purple-300/90' : 'text-purple-700'}`}>
+                    <p className={`text-xs font-bold ${isDarkMode ? 'text-purple-300/90' : 'text-purple-950'}`}>
                       {test.titleOdia}
                     </p>
                   )}
 
-                  <p className={`text-xs leading-relaxed line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <p className={`text-xs leading-relaxed line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                     {test.shortDescription}
                   </p>
 
@@ -642,28 +735,28 @@ export default function MockTestCatalog({
                     <div className={`p-2 rounded-xl border ${
                       isDarkMode ? 'bg-[#18113c] border-purple-500/20' : 'bg-slate-50 border-slate-200'
                     }`}>
-                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Duration</span>
-                      <span className={`text-xs font-black ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>{test.durationMinutes} Mins</span>
+                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Duration</span>
+                      <span className={`text-xs font-black ${isDarkMode ? 'text-indigo-300' : 'text-slate-950'}`}>{test.durationMinutes} Mins</span>
                     </div>
                     <div className={`p-2 rounded-xl border ${
                       isDarkMode ? 'bg-[#18113c] border-purple-500/20' : 'bg-slate-50 border-slate-200'
                     }`}>
-                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Questions</span>
-                      <span className={`text-xs font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>{test.totalQuestions} Qs</span>
+                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Questions</span>
+                      <span className={`text-xs font-black ${isDarkMode ? 'text-amber-300' : 'text-slate-950'}`}>{test.totalQuestions} Qs</span>
                     </div>
                     <div className={`p-2 rounded-xl border ${
                       isDarkMode ? 'bg-[#18113c] border-purple-500/20' : 'bg-slate-50 border-slate-200'
                     }`}>
-                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Marks</span>
-                      <span className={`text-xs font-black ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>{test.totalMarks} Marks</span>
+                      <span className={`text-[10px] block font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Total Marks</span>
+                      <span className={`text-xs font-black ${isDarkMode ? 'text-emerald-300' : 'text-slate-950'}`}>{test.totalMarks} Marks</span>
                     </div>
                   </div>
 
                   {/* Section Tags */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {test.sections.map((sec) => (
-                      <span key={sec.id} className={`text-[10px] font-medium px-2 py-0.5 rounded-md border ${
-                        isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
+                      <span key={sec.id} className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                        isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-slate-100 border-slate-300 text-slate-800'
                       }`}>
                         {sec.name} ({sec.totalQuestions}Q)
                       </span>
@@ -672,25 +765,42 @@ export default function MockTestCatalog({
                 </div>
 
                 {/* Card Footer & Action */}
-                <div className={`p-4 border-t flex items-center justify-between gap-3 ${
+                <div className={`p-4 border-t flex flex-wrap items-center justify-between gap-2 ${
                   isDarkMode ? 'border-[#21184d] bg-[#0e0922]' : 'border-slate-100 bg-slate-50/80'
                 }`}>
-                  <button
-                    onClick={() => onOpenLeaderboard(test)}
-                    className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors cursor-pointer ${
-                      isDarkMode ? 'text-amber-300 hover:text-amber-200' : 'text-amber-700 hover:text-amber-800'
-                    }`}
-                  >
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Leaderboard</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onOpenLeaderboard(test)}
+                      className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors cursor-pointer ${
+                        isDarkMode ? 'text-amber-300 hover:text-amber-200' : 'text-amber-900 hover:text-amber-950'
+                      }`}
+                    >
+                      <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Rankings</span>
+                    </button>
+
+                    {onOpenKGLanding && (
+                      <button
+                        onClick={() => onOpenKGLanding(test)}
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors cursor-pointer px-2 py-1 rounded-lg border ${
+                          isDarkMode 
+                            ? 'bg-purple-900/30 text-purple-300 border-purple-500/30 hover:bg-purple-900/50' 
+                            : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                        }`}
+                        title="View Official Blueprint, Syllabus & Knowledge Graph Lineage"
+                      >
+                        <Landmark className="w-3.5 h-3.5 text-purple-400" />
+                        <span>SEO Hub</span>
+                      </button>
+                    )}
+                  </div>
 
                   <button
                     onClick={() => onSelectTest(test)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                    className="px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5"
                   >
                     <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                    <span>Start Test</span>
+                    <span>Appear Now ⚡</span>
                   </button>
                 </div>
               </div>
@@ -698,6 +808,105 @@ export default function MockTestCatalog({
           </div>
         )}
       </div>
+
+      {/* 6. MASTER EXAM KNOWLEDGE GRAPH MODAL */}
+      {showKnowledgeGraphModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className={`w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDarkMode ? 'bg-[#100a28] border-purple-500/40 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-4 border-purple-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 flex items-center justify-center text-slate-950 font-black">
+                  <Landmark className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black">
+                    Master India Exam Knowledge Graph Registry
+                  </h3>
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Official Authority Blueprints, Stages, Syllabi &amp; Marking Schemes across India
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowKnowledgeGraphModal(false)}
+                className={`p-2 rounded-xl transition-all cursor-pointer ${
+                  isDarkMode ? 'hover:bg-white/10 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {MASTER_EXAMS_DATABASE.map((exam) => (
+                <div
+                  key={exam.id}
+                  className={`p-5 rounded-2xl border transition-all space-y-3 ${
+                    isDarkMode ? 'bg-[#18113c] border-purple-500/20 hover:border-purple-400' : 'bg-slate-50 border-slate-200 hover:border-purple-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {exam.authorityShort} • {exam.state}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-400">
+                      {exam.frequency}
+                    </span>
+                  </div>
+
+                  <h4 className="text-sm font-black leading-snug">{exam.name}</h4>
+                  {exam.nameHindi && <p className="text-xs text-amber-300">{exam.nameHindi}</p>}
+
+                  <p className={`text-xs line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                    {exam.summaryOverview}
+                  </p>
+
+                  <div className="space-y-1.5 text-[11px] pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-purple-300">Pattern:</strong>
+                      <span className="truncate">{exam.totalMarksPattern}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-rose-300">Penalty:</strong>
+                      <span>{exam.negativeMarking}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {exam.stages.map((stage, idx) => (
+                      <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
+                        {stage}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-emerald-400">
+                      ✓ {exam.testCountReady} Ready Papers
+                    </span>
+                    <button
+                      onClick={() => {
+                        setShowKnowledgeGraphModal(false);
+                        const match = tests.find(t => t.slug === exam.featuredTestSlug);
+                        if (match) {
+                          onSelectTest(match);
+                        } else {
+                          setSearchQuery(exam.name.split(' ')[0]);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black uppercase cursor-pointer"
+                    >
+                      Appear for Test ⚡
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

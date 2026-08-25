@@ -637,6 +637,21 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   }, [language]);
 
   const [input, setInput] = useState('');
+  const chatTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Auto-adjust textarea height dynamically and enable clean inner scrollbar when sentences get long
+  const adjustChatTextareaHeight = () => {
+    if (chatTextareaRef.current) {
+      chatTextareaRef.current.style.height = 'auto';
+      const scrollH = chatTextareaRef.current.scrollHeight;
+      chatTextareaRef.current.style.height = `${Math.min(Math.max(scrollH, 38), 135)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustChatTextareaHeight();
+  }, [input]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -4125,10 +4140,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               : isDarkMode 
                 ? 'bg-[#0e0a21]/90 border-[#2b2158] shadow-[0_10px_35px_rgba(0,0,0,0.8)]' 
                 : 'bg-white/95 border-purple-200/90 shadow-[0_10px_30px_rgba(124,58,237,0.12)]'
-          } backdrop-blur-2xl border rounded-full p-2 sm:p-2.5 flex items-center gap-2 transition-all`}>
+          } backdrop-blur-2xl border rounded-[26px] p-1.5 sm:p-2 flex items-end gap-1.5 sm:gap-2 transition-all shadow-xl`}>
             
             {/* Camera / Vision Stream Button */}
-            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0`} title="Camera / Vision Upload">
+            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0 mb-0.5`} title="Camera / Vision Upload">
               <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
               <input 
                 type="file" 
@@ -4139,7 +4154,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </label>
 
             {/* Document Upload Button */}
-            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0`} title="Attach Document">
+            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700'} rounded-full transition-colors cursor-pointer shrink-0 mb-0.5`} title="Attach Document">
               <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
               <input 
                 type="file" 
@@ -4149,24 +4164,30 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               />
             </label>
 
-            {/* Text Input Box */}
-            <input
-              type="text"
-              placeholder={recording ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
-              value={input}
-              onChange={(e) => setInput(e?.target?.value ?? "")}
-              onKeyDown={handleKeyPress}
-              className={`flex-1 min-w-0 bg-transparent px-2 sm:px-3 py-2 text-sm ${
-                recording 
-                  ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
-                  : isDarkMode ? 'text-white placeholder-slate-400' : 'text-slate-900 placeholder-slate-400'
-              } focus:outline-none font-medium`}
-            />
+            {/* Text Input / Multi-line Area with Scrollbar */}
+            <div className="flex-1 min-w-0 flex items-center py-0.5">
+              <textarea
+                ref={chatTextareaRef}
+                rows={1}
+                placeholder={recording ? "Listening... Speak now 🎙️" : "Tell me what you want to achieve..."}
+                value={input}
+                onChange={(e) => {
+                  setInput(e?.target?.value ?? "");
+                  adjustChatTextareaHeight();
+                }}
+                onKeyDown={handleKeyPress}
+                className={`w-full bg-transparent px-2.5 sm:px-3 py-1.5 text-sm leading-relaxed max-h-36 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
+                  recording 
+                    ? 'text-rose-400 dark:text-rose-300 font-bold placeholder-rose-400/80 animate-pulse'
+                    : isDarkMode ? 'text-white placeholder-slate-400' : 'text-slate-900 placeholder-slate-400'
+                } focus:outline-none font-medium`}
+              />
+            </div>
 
             {/* Microphone Speech to Text Button */}
             <button
               onClick={toggleRecording}
-              className={`p-2.5 sm:p-3 rounded-full transition-all shrink-0 cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-full transition-all shrink-0 cursor-pointer mb-0.5 ${
                 recording 
                   ? 'bg-rose-600 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)] ring-4 ring-rose-500/40' 
                   : (isDarkMode ? 'bg-[#181136] hover:bg-[#271c54] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700')
@@ -4180,7 +4201,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <button
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !uploadedFileName) || isLoading}
-              className={`p-2.5 sm:p-3 bg-[#7c3aed] hover:bg-[#6d28d9] ${isDarkMode ? 'disabled:bg-[#181230] disabled:text-slate-600' : 'disabled:bg-slate-200 disabled:text-slate-400'} text-white rounded-full shadow-md cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center`}
+              className={`p-2.5 sm:p-3 bg-[#7c3aed] hover:bg-[#6d28d9] ${isDarkMode ? 'disabled:bg-[#181230] disabled:text-slate-600' : 'disabled:bg-slate-200 disabled:text-slate-400'} text-white rounded-full shadow-md cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5`}
             >
               <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>

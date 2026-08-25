@@ -39,6 +39,7 @@ import { BlogPage } from './components/BlogPage';
 import PWAInstaller from './components/PWAInstaller';
 import BottomNavBar from './components/BottomNavBar';
 import ArohiLandingPage from './components/ArohiLandingPage';
+import ArohiGuideView from './components/ArohiGuideView';
 import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
@@ -248,8 +249,8 @@ export default function App() {
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDetails, setShareDetails] = useState({
-    title: 'Arohi AI',
-    text: "Check out Arohi AI - India's #1 Multilingual AI Growth & Opportunity Engine! Live voice calling with AI Arohi in 150+ languages.",
+    title: 'Arohi AI — One AI. Infinite Opportunities.',
+    text: "Arohi AI — One AI. Infinite Opportunities. 🚀 Built by Bharat, Built for Bharat! 🇮🇳 Meet India's sovereign LLM & LMM with live voice calling in 150+ languages. Empowering Class 1–12 students, career aspirants, innovators, startups, and businesses—because anyone can be who they want to be. Try it now:",
     url: 'https://arohiai.com'
   });
   const [copiedLink, setCopiedLink] = useState(false);
@@ -259,8 +260,8 @@ export default function App() {
 
   const handleOpenShare = (title?: string, text?: string, url?: string) => {
     setShareDetails({
-      title: title || 'Arohi AI',
-      text: text || "Check out Arohi AI - India's #1 Multilingual AI Growth & Opportunity Engine! Live voice calling with AI Arohi in 150+ languages.",
+      title: title || 'Arohi AI — One AI. Infinite Opportunities.',
+      text: text || "Arohi AI — One AI. Infinite Opportunities. 🚀 Built by Bharat, Built for Bharat! 🇮🇳 Meet India's sovereign LLM & LMM with live voice calling in 150+ languages. Empowering Class 1–12 students, career aspirants, innovators, startups, and businesses—because anyone can be who they want to be. Try it now:",
       url: url || 'https://arohiai.com'
     });
     setShareModalOpen(true);
@@ -497,9 +498,9 @@ export default function App() {
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       const descMap: Record<string, string> = {
-        hi: 'भारत के छात्रों, युवा पेशेवरों और एमएसएमई के लिए एआई सहायक आरोही से लाइव करियर मार्गदर्शन, रेज़्यूमे विश्लेषण, मॉक इंटरव्यू, नौकरी पोस्टिंग और उद्यम व्यावसायिक सहायता।',
-        or: 'ଭାରତର ଛาତ୍ର, ଯୁବ ପେସାଦାର ଓ ଏମଏସଏମଇ ମାନଙ୍କ ପାଇଁ AI ସହାୟକ ଆରୋହୀଙ୍କ ଠାରୁ କ୍ୟାରିୟର ପରାମର୍ଶ, ରେଜୁମେ ବିଶ୍ଳେଷଣ, ମକ୍ ଇଣ୍ଟରଭ୍ୟୁ ଏବଂ ସରକារୀ ଯୋଜନା ସହାୟତା।',
-        en: 'Empowering India\'s students, young professionals, and MSMEs. Get live career guidance from AI assistant Arohi, dynamic resume analysis, mock interviews, job postings, and Udyam business assistance.'
+        hi: 'आरोही एआई — वन एआई। इनफिनिट अपॉर्चुनिटीज। भारत द्वारा निर्मित, भारत के लिए निर्मित। 150+ भाषाओं में लाइव वॉयस एआई के साथ कक्षा 1-12 के छात्रों, करियर उम्मीदवारों, इनोवेटर्स, स्टार्टअप्स और व्यवसायों का सशक्तिकरण।',
+        or: 'ଆରୋହୀ AI — One AI. Infinite Opportunities. ଭାରତ ଦ୍ୱାରା ନିର୍ମିତ, ଭାରତ ପାଇଁ ନିର୍ମିତ। ୧୫୦+ ଭାଷାରେ ଲାଇଭ୍ ଭଏସ୍ AI ସହ ଶ୍ରେଣୀ ୧-୧୨ ଛାତ୍ରଛାତ୍ରୀ, କ୍ୟାରିୟର ଆଶାୟୀ, ଉଦ୍ଭାବକ, ଷ୍ଟାର୍ଟଅପ୍ ଏବଂ ବ୍ୟବସାୟର ସଶକ୍ତିକରଣ।',
+        en: 'Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. India’s sovereign LLM cum LMM AI ecosystem with real-time voice in 150+ languages for Class 1–12 students, career aspirants, innovators, startups, and businesses.'
       };
       metaDesc.setAttribute('content', descMap[language] || descMap['en']);
     }
@@ -2035,7 +2036,7 @@ export default function App() {
             onSubscribe={handleSubscribe} 
             onNavigateTab={(tab) => setActiveTab(tab)} 
             onOpenAuth={() => setIsAuthModalOpen(true)}
-            onShare={() => handleOpenShare('My Career Dashboard', "Check out Arohi AI - India's #1 Multilingual AI Growth & Opportunity Engine! Live voice calling with AI Arohi in 150+ languages.", 'https://arohiai.com')}
+            onShare={() => handleOpenShare('Arohi AI — One AI. Infinite Opportunities.', "Arohi AI — One AI. Infinite Opportunities. 🚀 Built by Bharat, Built for Bharat! 🇮🇳 Meet India's sovereign LLM & LMM with live voice calling in 150+ languages. Empowering Class 1–12 students, career aspirants, innovators, startups, and businesses—because anyone can be who they want to be. Try it now:", 'https://arohiai.com')}
             tokenUsage={tokenUsage}
             onIncrementTokenUsage={handleIncrementTokenUsage}
             onSetTokenUsage={handleSetTokenUsage}
@@ -2085,64 +2086,31 @@ export default function App() {
             onUpdateAppStatus={handleUpdateAppStatus}
           />
         );
+      case 'guide':
       case 'arohi':
         return (
-          <div className="max-w-4xl mx-auto text-center py-12 px-4 space-y-8 animate-in fade-in slide-in-from-bottom duration-300">
-            <div className="inline-flex items-center gap-2 bg-[#7c3aed]/10 text-[#a78bfa] border border-[#7c3aed]/30 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-yellow-300" /> Unified Career & Business Assistant
-            </div>
-            
-            <div className="space-y-3">
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a78bfa] to-[#ec4899]">AROHI</span>
-              </h1>
-              <p className="text-base text-slate-300 max-w-2xl mx-auto font-medium">
-                Your unified live ecosystem advisor for finding jobs, analyzing resumes, validating startup ideas, calculating Mudra Loan eligibility, and mapping your professional growth.
-              </p>
-            </div>
-
-            <div className="bg-[#120e2b] border border-[#2d2163] rounded-3xl p-8 shadow-2xl relative overflow-hidden text-left max-w-3xl mx-auto">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <h3 className="text-lg font-black text-white mb-6 flex items-center gap-2.5">
-                <span className="text-xl">👩</span> What AROHI Can Do For You:
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <span className="block text-sm font-bold text-violet-300">💼 Smart Sarkari & Private Jobs</span>
-                  <p className="text-xs text-slate-300">Instantly query age limits, reservation criteria, exam dates, and registration process details for UPSC, SSC, Banking, and Railways.</p>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="block text-sm font-bold text-violet-300">📝 ATS Resume Score & Check</span>
-                  <p className="text-xs text-slate-300">Optimize your portfolio. Find missing high-impact keywords, grade ATS layout compatibility, and get structural tips.</p>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="block text-sm font-bold text-violet-300">🏦 Mudra & PMEGP Funding eligibility</span>
-                  <p className="text-xs text-slate-300">Check business startup subsidy guidelines, Mudra Shishu/Kishor loan eligibility steps, and get verified Central & State Government portals.</p>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="block text-sm font-bold text-violet-300">🚀 Odisha Business & State Subsidies</span>
-                  <p className="text-xs text-slate-300">Get specialized local insights on Odisha startups, Mukhyamantri Karma Tatpara Abhiyan (MUKTA), and rural skill training.</p>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-[#251a54] flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-xs text-slate-400 font-semibold text-center sm:text-left">
-                  Ready to test her? Click the button to launch your private chat window instantly.
-                </p>
-                <button
-                  onClick={() => {
-                    setIsChatOpen(true);
-                    setIsChatMinimized(false);
-                  }}
-                  className="bg-gradient-to-r from-[#7c3aed] to-[#d946ef] hover:from-[#6d28d9] hover:to-[#c084fc] text-white font-black text-xs uppercase tracking-wider py-3.5 px-8 rounded-2xl shadow-[0_4px_25px_rgba(124,58,237,0.45)] cursor-pointer flex items-center gap-2 transform hover:scale-[1.02] active:scale-95 transition-all"
-                >
-                  <Bot className="w-4.5 h-4.5 text-yellow-300" /> Open Live Chat Window
-                </button>
-              </div>
-            </div>
-          </div>
+          <ArohiGuideView
+            onOpenChat={(initialPrompt) => {
+              if (initialPrompt) {
+                setChatInitialPrompt(initialPrompt);
+              }
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onSelectAudience={(slug) => {
+              setSelectedAudienceSlug(slug);
+              setActiveTab('audience');
+              window.history.pushState(null, '', `/audience/${slug}`);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onShare={() => handleOpenShare()}
+            language={language}
+            isDarkMode={isDarkMode}
+          />
         );
       case 'franchise':
         return <FranchisePage />;
@@ -3539,7 +3507,7 @@ export default function App() {
                     Share Platform with Friends
                   </h3>
                   <p className="text-xs text-slate-400 font-semibold mt-1">
-                    Help others discover India's #1 Multilingual AI Career & MSME Engine with 20+ specialized audience categories and live voice guidance in 150+ regional languages!
+                    Help others discover India's sovereign LLM cum LMM AI built by Bharat, for Bharat with live voice guidance in 150+ languages for Class 1–12 students, career aspirants, innovators, startups, and businesses!
                   </p>
                 </div>
 
@@ -3768,7 +3736,7 @@ export default function App() {
               <span className="font-black text-white text-base tracking-tight">Arohi AI</span>
             </div>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Empowering India’s Students, Professionals, and MSMEs. Secure, verified career pipelines, upskilling programs, resume parsing, and business guide tools.
+              Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. 🇮🇳 India’s sovereign LLM cum LMM AI ecosystem built for the ambition of young Bharat. Powered by real-time voice in 150+ languages, visual intelligence, and 24/7 guidance for Class 1–12 students, career aspirants, innovators, startups, and businesses. Your dreams, your language, your future—because anyone can be whoever they want to be.
             </p>
             <button
               onClick={() => handleOpenShare()}

@@ -109,25 +109,37 @@ export default function ExamAiAnalysisView({
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={onBackToResult}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            isDarkMode 
+              ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10' 
+              : 'bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 border-slate-300 shadow-sm'
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Scorecard</span>
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
-            <Brain className="w-3.5 h-3.5 text-purple-400" />
+          <span className={`text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 border ${
+            isDarkMode 
+              ? 'bg-purple-600/20 text-purple-300 border-purple-500/30' 
+              : 'bg-purple-100 text-purple-950 border-purple-300 font-bold'
+          }`}>
+            <Brain className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             <span>Arohi AI Diagnostic Intelligence</span>
           </span>
         </div>
       </div>
 
       {loading ? (
-        <div className="p-16 text-center space-y-4 bg-[#120d2a] border border-[#2d2163] rounded-3xl">
-          <Sparkles className="w-10 h-10 text-yellow-300 animate-spin mx-auto" />
-          <h3 className="text-lg font-black text-white">Generating Personalized AI Diagnostic Report...</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+        <div className={`p-16 text-center space-y-4 rounded-3xl border ${
+          isDarkMode 
+            ? 'bg-[#120d2a] border-[#2d2163]' 
+            : 'bg-white border-slate-200 shadow-lg'
+        }`}>
+          <Sparkles className="w-10 h-10 text-amber-500 animate-spin mx-auto" />
+          <h3 className={`text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>Generating Personalized AI Diagnostic Report...</h3>
+          <p className={`text-xs max-w-md mx-auto ${isDarkMode ? 'text-slate-400' : 'text-slate-700 font-medium'}`}>
             Arohi AI is analyzing your question accuracy patterns, speed pacing, elimination mistakes, and weak topic clusters.
           </p>
         </div>
@@ -135,24 +147,34 @@ export default function ExamAiAnalysisView({
         <div className="space-y-8">
           
           {/* 1. MASTER AI VERDICT BANNER */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-900/50 via-[#18103c] to-indigo-900/50 border-2 border-purple-500/40 shadow-2xl relative overflow-hidden text-white space-y-4">
-            <div className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider text-purple-300">
-              <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
+          <div className={`p-6 sm:p-8 rounded-3xl border-2 shadow-2xl relative overflow-hidden space-y-4 ${
+            isDarkMode 
+              ? 'bg-gradient-to-r from-purple-900/50 via-[#18103c] to-indigo-900/50 border-purple-500/40 text-white dark-card' 
+              : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50 border-purple-200 text-slate-900 shadow-purple-100/50'
+          }`}>
+            <div className={`flex items-center gap-2.5 text-xs font-black uppercase tracking-wider ${
+              isDarkMode ? 'text-purple-300' : 'text-purple-950'
+            }`}>
+              <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
               <span>Arohi AI Exam Mentor Verdict</span>
             </div>
 
-            <p className="text-base sm:text-lg font-bold leading-relaxed text-slate-100">
+            <p className={`text-base sm:text-lg font-bold leading-relaxed ${
+              isDarkMode ? 'text-slate-100' : 'text-slate-950'
+            }`}>
               "{analysis.overallVerdict}"
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-purple-500/20 text-xs">
+            <div className={`flex flex-wrap items-center gap-4 pt-2 border-t text-xs ${
+              isDarkMode ? 'border-purple-500/20' : 'border-purple-100'
+            }`}>
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-emerald-400" />
-                <span className="text-slate-300">Target Score Delta: <strong className="text-emerald-300">+{Math.max(2, Math.round(report.maxScore * 0.25))} Marks Possible</strong></span>
+                <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>Target Score Delta: <strong className={isDarkMode ? 'text-emerald-300 font-black' : 'text-emerald-900 font-black'}>+{Math.max(2, Math.round(report.maxScore * 0.25))} Marks Possible</strong></span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span className="text-slate-300">Estimated Turnaround: <strong className="text-amber-300">7 to 10 Days</strong></span>
+                <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>Estimated Turnaround: <strong className={isDarkMode ? 'text-amber-300 font-black' : 'text-amber-900 font-black'}>7 to 10 Days</strong></span>
               </div>
             </div>
           </div>
@@ -160,15 +182,23 @@ export default function ExamAiAnalysisView({
           {/* 2. STRENGTHS & CRITICAL WEAKNESSES DUAL CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Strengths */}
-            <div className="bg-[#120d2a] border border-emerald-500/30 p-6 rounded-3xl space-y-4 shadow-lg">
-              <div className="flex items-center gap-2 text-emerald-400 font-black text-sm uppercase tracking-wider">
+            <div className={`p-6 rounded-3xl space-y-4 shadow-lg border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-emerald-500/30' 
+                : 'bg-white border-emerald-200'
+            }`}>
+              <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
                 <CheckCircle2 className="w-5 h-5" />
                 <span>Demonstrated Strengths</span>
               </div>
-              <ul className="space-y-2.5 text-xs text-slate-200">
+              <ul className={`space-y-2.5 text-xs ${isDarkMode ? 'text-slate-200' : 'text-slate-800 font-medium'}`}>
                 {analysis.strengthsSummary.map((str, i) => (
-                  <li key={i} className="flex items-start gap-2.5 bg-emerald-500/5 border border-emerald-500/15 p-3 rounded-xl">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                  <li key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                    isDarkMode 
+                      ? 'bg-emerald-500/5 border-emerald-500/15' 
+                      : 'bg-emerald-50/60 border-emerald-200'
+                  }`}>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                     <span>{str}</span>
                   </li>
                 ))}
@@ -176,15 +206,23 @@ export default function ExamAiAnalysisView({
             </div>
 
             {/* Critical Weaknesses */}
-            <div className="bg-[#120d2a] border border-rose-500/30 p-6 rounded-3xl space-y-4 shadow-lg">
-              <div className="flex items-center gap-2 text-rose-400 font-black text-sm uppercase tracking-wider">
+            <div className={`p-6 rounded-3xl space-y-4 shadow-lg border ${
+              isDarkMode 
+                ? 'bg-[#120d2a] border-rose-500/30' 
+                : 'bg-white border-rose-200'
+            }`}>
+              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-black text-sm uppercase tracking-wider">
                 <AlertTriangle className="w-5 h-5" />
                 <span>Primary Score Leaks (Gaps)</span>
               </div>
-              <ul className="space-y-2.5 text-xs text-slate-200">
+              <ul className={`space-y-2.5 text-xs ${isDarkMode ? 'text-slate-200' : 'text-slate-800 font-medium'}`}>
                 {analysis.criticalWeaknesses.map((weak, i) => (
-                  <li key={i} className="flex items-start gap-2.5 bg-rose-500/5 border border-rose-500/15 p-3 rounded-xl">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
+                  <li key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                    isDarkMode 
+                      ? 'bg-rose-500/5 border-rose-500/15' 
+                      : 'bg-rose-50/60 border-rose-200'
+                  }`}>
+                    <span className="w-2 h-2 rounded-full bg-rose-500 mt-1.5 shrink-0" />
                     <span>{weak}</span>
                   </li>
                 ))}
@@ -193,14 +231,24 @@ export default function ExamAiAnalysisView({
           </div>
 
           {/* 3. TOPIC-WISE HIGH YIELD ACTION PLAN */}
-          <div className="bg-[#120d2a] border border-[#2d2163] p-6 sm:p-8 rounded-3xl space-y-6 shadow-xl">
-            <div className="flex items-center justify-between gap-4 border-b border-[#23184d] pb-4">
+          <div className={`p-6 sm:p-8 rounded-3xl space-y-6 shadow-xl border ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-[#2d2163]' 
+              : 'bg-white border-purple-200'
+          }`}>
+            <div className={`flex items-center justify-between gap-4 border-b pb-4 ${
+              isDarkMode ? 'border-[#23184d]' : 'border-slate-200'
+            }`}>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-purple-400" />
+                <h3 className={`text-base sm:text-lg font-black flex items-center gap-2 ${
+                  isDarkMode ? 'text-white' : 'text-slate-950'
+                }`}>
+                  <BookOpen className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <span>Topic-wise Gap Remediation &amp; Action Plan</span>
                 </h3>
-                <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                <p className={`text-xs font-semibold mt-0.5 ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-700'
+                }`}>
                   High-yield strategy to convert weak topics into scoring assets.
                 </p>
               </div>
@@ -210,29 +258,49 @@ export default function ExamAiAnalysisView({
               {analysis.topicWiseActionPlan.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#18113c] border border-purple-500/25 p-4 sm:p-5 rounded-2xl space-y-3"
+                  className={`p-4 sm:p-5 rounded-2xl space-y-3 border ${
+                    isDarkMode 
+                      ? 'bg-[#18113c] border-purple-500/25' 
+                      : 'bg-slate-50 border-purple-100'
+                  }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-black text-purple-300 bg-purple-900/40 px-3 py-1 rounded-lg border border-purple-500/30">
+                    <span className={`text-xs font-black px-3 py-1 rounded-lg border ${
+                      isDarkMode 
+                        ? 'text-purple-300 bg-purple-900/40 border-purple-500/30' 
+                        : 'text-purple-950 bg-purple-100 border-purple-300'
+                    }`}>
                       Topic: {item.topic}
                     </span>
-                    <span className="text-[11px] font-bold text-amber-300">
+                    <span className={`text-[11px] font-bold ${
+                      isDarkMode ? 'text-amber-300' : 'text-amber-900'
+                    }`}>
                       💡 {item.highYieldFact}
                     </span>
                   </div>
 
-                  <p className="text-xs text-rose-300 font-medium">
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-rose-300' : 'text-rose-900'
+                  }`}>
                     ⚠️ <strong>Identified Gap:</strong> {item.gapDescription}
                   </p>
 
-                  <p className="text-xs text-emerald-300 font-medium bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                  <p className={`text-xs font-medium p-3 rounded-xl border ${
+                    isDarkMode 
+                      ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' 
+                      : 'text-emerald-950 bg-emerald-50 border-emerald-300'
+                  }`}>
                     🎯 <strong>Recommended Action:</strong> {item.recommendedRemedy}
                   </p>
 
                   {onAskArohiInChat && (
                     <button
                       onClick={() => onAskArohiInChat(`Explain the concepts, high-yield rules and provide 5 practice MCQs for ${item.topic} for my ${report.testTitle} preparation.`)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-600/20 hover:bg-indigo-600/40 px-3 py-1.5 rounded-lg border border-indigo-500/30 transition-all cursor-pointer"
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                        isDarkMode 
+                          ? 'text-indigo-300 hover:text-white bg-indigo-600/20 hover:bg-indigo-600/40 border-indigo-500/30' 
+                          : 'text-purple-950 bg-purple-100 hover:bg-purple-200 border-purple-300 font-black'
+                      }`}
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>Ask Arohi to Teach {item.topic} in Chat</span>
@@ -245,35 +313,61 @@ export default function ExamAiAnalysisView({
           </div>
 
           {/* 4. SPEED & TIME MANAGEMENT CRITIQUE */}
-          <div className="bg-[#120d2a] border border-[#2d2163] p-6 rounded-3xl space-y-4">
-            <h3 className="text-base font-black text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-cyan-400" />
+          <div className={`p-6 rounded-3xl space-y-4 border ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-[#2d2163]' 
+              : 'bg-white border-slate-200 shadow-md'
+          }`}>
+            <h3 className={`text-base font-black flex items-center gap-2 ${
+              isDarkMode ? 'text-white' : 'text-slate-950'
+            }`}>
+              <Clock className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
               <span>Time Management &amp; Pacing Diagnostics</span>
             </h3>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className={`text-xs leading-relaxed ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'
+            }`}>
               {analysis.timeManagementCritique.paceRecommendation}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div className="bg-[#150f33] p-4 rounded-xl border border-[#2d2163]">
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-bold">Negative Marking Impact</span>
-                <span className="text-lg font-black text-rose-400">-{analysis.negativeMarkingImpact.marksLostToGuesses} Marks</span>
-                <p className="text-xs text-slate-300 mt-1">{analysis.negativeMarkingImpact.recoveryAdvice}</p>
+              <div className={`p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-[#150f33] border-[#2d2163]' 
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`text-[10px] uppercase tracking-wider block font-bold ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-600'
+                }`}>Negative Marking Impact</span>
+                <span className="text-lg font-black text-rose-600 dark:text-rose-400">-{analysis.negativeMarkingImpact.marksLostToGuesses} Marks</span>
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{analysis.negativeMarkingImpact.recoveryAdvice}</p>
               </div>
 
-              <div className="bg-[#150f33] p-4 rounded-xl border border-[#2d2163]">
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-bold">Avg. Speed per Correct Answer</span>
-                <span className="text-lg font-black text-emerald-400">{analysis.timeManagementCritique.averageSecondsPerCorrect}s / question</span>
-                <p className="text-xs text-slate-300 mt-1">Optimal target speed for this exam format is ~60-80s per question.</p>
+              <div className={`p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-[#150f33] border-[#2d2163]' 
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`text-[10px] uppercase tracking-wider block font-bold ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-600'
+                }`}>Avg. Speed per Correct Answer</span>
+                <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{analysis.timeManagementCritique.averageSecondsPerCorrect}s / question</span>
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Optimal target speed for this exam format is ~60-80s per question.</p>
               </div>
             </div>
           </div>
 
           {/* 5. 7-DAY TARGETED STUDY PLAN */}
-          <div className="bg-[#120d2a] border border-[#2d2163] p-6 sm:p-8 rounded-3xl space-y-6">
-            <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-amber-400" />
+          <div className={`p-6 sm:p-8 rounded-3xl space-y-6 border ${
+            isDarkMode 
+              ? 'bg-[#120d2a] border-[#2d2163]' 
+              : 'bg-white border-slate-200 shadow-md'
+          }`}>
+            <h3 className={`text-base sm:text-lg font-black flex items-center gap-2 ${
+              isDarkMode ? 'text-white' : 'text-slate-950'
+            }`}>
+              <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               <span>7-Day Strategic Revision Schedule</span>
             </h3>
 
@@ -281,16 +375,28 @@ export default function ExamAiAnalysisView({
               {analysis.studySchedule7Days.map((sched, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#18113c] border border-purple-500/20 p-4 rounded-2xl space-y-2.5"
+                  className={`p-4 rounded-2xl space-y-2.5 border ${
+                    isDarkMode 
+                      ? 'bg-[#18113c] border-purple-500/20' 
+                      : 'bg-slate-50 border-slate-200'
+                  }`}
                 >
-                  <span className="text-[10px] font-black uppercase text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 inline-block">
+                  <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-block ${
+                    isDarkMode 
+                      ? 'text-amber-300 bg-amber-500/10 border-amber-500/20' 
+                      : 'text-amber-950 bg-amber-100 border-amber-300 font-bold'
+                  }`}>
                     {sched.day}
                   </span>
-                  <h4 className="text-xs font-black text-white">{sched.focusSubject}</h4>
-                  <ul className="space-y-1.5 text-[11px] text-slate-300">
+                  <h4 className={`text-xs font-black ${
+                    isDarkMode ? 'text-white' : 'text-slate-950'
+                  }`}>{sched.focusSubject}</h4>
+                  <ul className={`space-y-1.5 text-[11px] ${
+                    isDarkMode ? 'text-slate-300' : 'text-slate-700 font-medium'
+                  }`}>
                     {sched.tasks.map((t, ti) => (
                       <li key={ti} className="flex items-start gap-1.5">
-                        <span className="text-purple-400 font-bold">•</span>
+                        <span className="text-purple-600 dark:text-purple-400 font-bold">•</span>
                         <span>{t}</span>
                       </li>
                     ))}

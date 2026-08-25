@@ -649,7 +649,7 @@ export const COMPREHENSIVE_EXPANDED_MOCK_TESTS: MockTest[] = [
   // 9. CENTRAL RECRUITMENT: UPSC CSE Prelims GS Paper-1 Full Mock
   // ==========================================
   {
-    id: 'test_upsc_cse_prelims_gs1',
+    id: 'test_upsc_cse_prelims_gs1_flagship',
     slug: 'upsc-civil-services-prelims-gs-paper-1',
     title: 'UPSC CSE Prelims • General Studies Paper-1 Flagship Mock',
     titleOdia: 'UPSC ସିଭିଲ୍ ସର୍ଭିସେସ୍ ପ୍ରିଲିମ୍ସ • GS ପେପର-୧ ଅଲ୍ ଇଣ୍ଡିଆ ମକ୍',

@@ -1868,7 +1868,7 @@ export default function UserDashboard({
 
                   return (
                     <div 
-                      key={test.id || `exam_${idx}`}
+                      key={`${test.id || 'exam'}_${idx}_${test.completedAt || ''}`}
                       className="p-4 rounded-2xl border border-slate-200/80 hover:border-purple-300 bg-slate-50/70 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3.5"
                     >
                       <div className="space-y-1.5 text-left flex-1">

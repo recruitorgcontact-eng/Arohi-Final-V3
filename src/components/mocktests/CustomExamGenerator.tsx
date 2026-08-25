@@ -425,37 +425,59 @@ export default function CustomExamGenerator({
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            isDarkMode 
+              ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10' 
+              : 'bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 border-slate-300 shadow-sm'
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to All Exams Catalog</span>
         </button>
 
-        <span className="bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+        <span className={`text-xs font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border ${
+          isDarkMode 
+            ? 'bg-purple-600/20 text-purple-300 border-purple-500/30' 
+            : 'bg-purple-100 text-purple-950 border-purple-300 font-bold'
+        }`}>
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
           <span>AI Custom 10 to 100 Questions CBT Generator</span>
         </span>
       </div>
 
       {/* Main Generator Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#1b1244] via-[#120c30] to-[#251052] border-2 border-purple-500/40 shadow-2xl text-white space-y-6">
+      <div className={`p-6 sm:p-8 rounded-3xl border-2 shadow-2xl space-y-6 transition-all ${
+        isDarkMode 
+          ? 'bg-gradient-to-r from-[#1b1244] via-[#120c30] to-[#251052] border-purple-500/40 text-white dark-card' 
+          : 'bg-white border-purple-200 text-slate-900 shadow-purple-100/50'
+      }`}>
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider mb-2">
-            <ShieldCheck className="w-3.5 h-3.5" />
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-wider mb-2 ${
+            isDarkMode 
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+              : 'bg-emerald-50 text-emerald-950 border-emerald-300'
+          }`}>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
             <span>Full 50 & 100 Questions Support • Instant CBT Simulation</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2">
-            <Brain className="w-6 h-6 text-purple-400" />
+          <h2 className={`text-xl sm:text-2xl font-black flex items-center gap-2 ${
+            isDarkMode ? 'text-white' : 'text-slate-950'
+          }`}>
+            <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             <span>Generate Custom Mock Tests for Any Exam or Board</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1">
+          <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
+            isDarkMode ? 'text-slate-300' : 'text-slate-700 font-medium'
+          }`}>
             Pick any target board or exam (CBSE Class 10/12, Odisha BSE 10th, NEET UG, JEE Main, SSC CGL, RRB, UPSC, Nursing AIIMS/ESIC, Banking) and choose from 10 to 100 questions. Arohi AI will dynamically configure the syllabus and questions.
           </p>
         </div>
 
         {/* 1-Click Popular Preset Pills */}
         <div className="space-y-2">
-          <span className="text-[11px] font-black uppercase tracking-wider text-purple-300 block">
+          <span className={`text-[11px] font-black uppercase tracking-wider block ${
+            isDarkMode ? 'text-purple-300' : 'text-purple-950'
+          }`}>
             Popular 1-Click High-Yield Presets:
           </span>
           <div className="flex flex-wrap gap-2">
@@ -471,8 +493,10 @@ export default function CustomExamGenerator({
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-left border ${
                   selectedTargetKey === preset.key
-                    ? 'bg-purple-600/50 border-purple-400 text-white shadow-md'
-                    : 'bg-white/5 hover:bg-purple-600/30 hover:border-purple-400 border-white/10 text-slate-300 hover:text-white'
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-md'
+                    : isDarkMode 
+                      ? 'bg-white/5 hover:bg-purple-600/30 hover:border-purple-400 border-white/10 text-slate-300 hover:text-white'
+                      : 'bg-purple-50/80 hover:bg-purple-100 border-purple-200 text-purple-950 hover:border-purple-300'
                 }`}
               >
                 {preset.label}
@@ -485,14 +509,22 @@ export default function CustomExamGenerator({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           {/* Target Exam Select */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-300 flex items-center justify-between">
+            <label className={`text-xs font-black flex items-center justify-between ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-900'
+            }`}>
               <span>Target Exam / Board</span>
-              <span className="text-[10px] text-purple-300 font-normal">Auto-adapts syllabus</span>
+              <span className={`text-[10px] font-bold ${
+                isDarkMode ? 'text-purple-300' : 'text-purple-700'
+              }`}>Auto-adapts syllabus</span>
             </label>
             <select
               value={selectedTargetKey}
               onChange={(e) => handleSelectTargetKey(e.target.value)}
-              className="w-full bg-[#110b28] border border-[#2d2163] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-purple-400"
+              className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none transition-colors ${
+                isDarkMode 
+                  ? 'bg-[#110b28] border border-[#2d2163] text-white focus:border-purple-400' 
+                  : 'bg-slate-50 border border-slate-300 text-slate-950 focus:border-purple-600 focus:bg-white'
+              }`}
             >
               <optgroup label="School Boards (Classes 1–12)">
                 <option value="cbse_class_10">CBSE Class 10 Board Exam</option>
@@ -526,48 +558,70 @@ export default function CustomExamGenerator({
 
           {/* Grade / Qualification */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-300">Grade / Eligibility Tier</label>
+            <label className={`text-xs font-black ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-900'
+            }`}>Grade / Eligibility Tier</label>
             <input
               type="text"
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
               placeholder="e.g. Class 10 CBSE, +2 Science, Graduate"
-              className="w-full bg-[#110b28] border border-[#2d2163] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-purple-400"
+              className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none transition-colors ${
+                isDarkMode 
+                  ? 'bg-[#110b28] border border-[#2d2163] text-white placeholder-slate-500 focus:border-purple-400' 
+                  : 'bg-slate-50 border border-slate-300 text-slate-950 placeholder-slate-500 focus:border-purple-600 focus:bg-white'
+              }`}
             />
           </div>
 
           {/* Subject / Module */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-300">Subject / Module</label>
+            <label className={`text-xs font-black ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-900'
+            }`}>Subject / Module</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Science & Mathematics, Physics, Indian Polity"
-              className="w-full bg-[#110b28] border border-[#2d2163] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-purple-400"
+              className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none transition-colors ${
+                isDarkMode 
+                  ? 'bg-[#110b28] border border-[#2d2163] text-white placeholder-slate-500 focus:border-purple-400' 
+                  : 'bg-slate-50 border border-slate-300 text-slate-950 placeholder-slate-500 focus:border-purple-600 focus:bg-white'
+              }`}
             />
           </div>
 
           {/* Custom Topic / Chapter */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-300">Specific Chapter / Syllabus Topic</label>
+            <label className={`text-xs font-black ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-900'
+            }`}>Specific Chapter / Syllabus Topic</label>
             <input
               type="text"
               value={customTopic}
               onChange={(e) => setCustomTopic(e.target.value)}
               placeholder="e.g. Light Reflection & Refraction, Quadratic Equations"
-              className="w-full bg-[#110b28] border border-[#2d2163] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-purple-400"
+              className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none transition-colors ${
+                isDarkMode 
+                  ? 'bg-[#110b28] border border-[#2d2163] text-white placeholder-slate-500 focus:border-purple-400' 
+                  : 'bg-slate-50 border border-slate-300 text-slate-950 placeholder-slate-500 focus:border-purple-600 focus:bg-white'
+              }`}
             />
           </div>
 
           {/* Question Count Selector - 10, 20, 25, 50, 100 Qs */}
           <div className="space-y-1.5 sm:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-black text-slate-300">
+              <label className={`text-xs font-black ${
+                isDarkMode ? 'text-slate-300' : 'text-slate-900'
+              }`}>
                 Number of Questions in Mock Test
               </label>
-              <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+              <span className={`text-[11px] font-black flex items-center gap-1 ${
+                isDarkMode ? 'text-emerald-400' : 'text-emerald-800'
+              }`}>
+                <Clock className="w-3.5 h-3.5" />
                 <span>
                   {questionCount <= 10 ? '15 Mins' : questionCount <= 25 ? '40 Mins' : questionCount <= 50 ? '75 Mins' : '150 Mins'} Test Duration
                 </span>
@@ -588,12 +642,18 @@ export default function CustomExamGenerator({
                   onClick={() => setQuestionCount(opt.count)}
                   className={`p-2.5 rounded-xl text-center transition-all cursor-pointer border ${
                     questionCount === opt.count
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg scale-105'
-                      : 'bg-[#110b28] border-[#2d2163] text-slate-300 hover:bg-[#1b1244] hover:text-white'
+                      ? 'bg-purple-600 border-purple-500 text-white shadow-lg scale-105 font-black'
+                      : isDarkMode
+                        ? 'bg-[#110b28] border-[#2d2163] text-slate-300 hover:bg-[#1b1244] hover:text-white'
+                        : 'bg-slate-50 border-slate-300 text-slate-900 hover:bg-purple-50 font-bold'
                   }`}
                 >
-                  <div className="text-sm font-black">{opt.label}</div>
-                  <div className="text-[10px] text-purple-300 font-medium">{opt.sub}</div>
+                  <div className={`text-sm font-black ${
+                    questionCount === opt.count ? 'text-white' : isDarkMode ? 'text-white' : 'text-slate-950'
+                  }`}>{opt.label}</div>
+                  <div className={`text-[10px] font-semibold ${
+                    questionCount === opt.count ? 'text-purple-200' : isDarkMode ? 'text-purple-300' : 'text-purple-800'
+                  }`}>{opt.sub}</div>
                 </button>
               ))}
             </div>
@@ -601,17 +661,21 @@ export default function CustomExamGenerator({
 
           {/* Difficulty Level */}
           <div className="space-y-1.5 sm:col-span-2">
-            <label className="text-xs font-black text-slate-300">Difficulty Pattern</label>
+            <label className={`text-xs font-black ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-900'
+            }`}>Difficulty Pattern</label>
             <div className="grid grid-cols-3 gap-2">
               {(['easy', 'medium', 'hard'] as const).map((diff) => (
                 <button
                   key={diff}
                   type="button"
                   onClick={() => setDifficulty(diff)}
-                  className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border ${
                     difficulty === diff
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                      : 'bg-[#110b28] border border-[#2d2163] text-slate-300 hover:bg-[#1b1244]'
+                      ? 'bg-purple-600 border-purple-500 text-white shadow-md'
+                      : isDarkMode
+                        ? 'bg-[#110b28] border-[#2d2163] text-slate-300 hover:bg-[#1b1244]'
+                        : 'bg-slate-50 border-slate-300 text-slate-900 hover:bg-purple-50'
                   }`}
                 >
                   {diff}
@@ -622,32 +686,36 @@ export default function CustomExamGenerator({
         </div>
 
         {errorMsg && (
-          <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-xs text-rose-600 dark:text-rose-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Generate & Launch Button */}
-        <div className="pt-4 border-t border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-400 flex items-center gap-1.5">
-            <BookOpen className="w-4 h-4 text-purple-400" />
-            <span>Configured: <strong className="text-white">{selectedTarget}</strong> • <strong className="text-emerald-400">{questionCount} Questions</strong></span>
+        <div className={`pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${
+          isDarkMode ? 'border-purple-500/20' : 'border-slate-200'
+        }`}>
+          <div className={`text-xs flex items-center gap-1.5 ${
+            isDarkMode ? 'text-slate-400' : 'text-slate-700 font-medium'
+          }`}>
+            <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span>Configured: <strong className={isDarkMode ? 'text-white' : 'text-slate-950 font-black'}>{selectedTarget}</strong> • <strong className={isDarkMode ? 'text-emerald-400' : 'text-emerald-800 font-black'}>{questionCount} Questions</strong></span>
           </div>
 
           <button
             disabled={isGenerating}
             onClick={handleGenerate}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-[0_4px_25px_rgba(16,185,129,0.35)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider shadow-[0_4px_25px_rgba(16,185,129,0.35)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isGenerating ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
                 <span>Synthesizing {questionCount} Exam Questions with AI...</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-slate-950 text-slate-950" />
+                <Play className="w-4 h-4 fill-white text-white" />
                 <span>Launch {questionCount}-Question CBT Exam Now</span>
               </>
             )}

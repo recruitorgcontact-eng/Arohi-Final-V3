@@ -1,6 +1,6 @@
 {
-  "name": "Arohi AI ",
-  "description": "India\u0027s Next Generation Hiring Engine ",
+  "name": "Arohi AI",
+  "description": "Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. India’s sovereign LLM cum LMM AI ecosystem with 150+ languages live voice AI.",
   "requestFramePermissions": [
     "microphone",
     "geolocation"

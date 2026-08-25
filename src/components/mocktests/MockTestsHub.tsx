@@ -8,6 +8,11 @@ import ExamAiAnalysisView from './ExamAiAnalysisView';
 import ExamLeaderboardView from './ExamLeaderboardView';
 import CustomExamGenerator from './CustomExamGenerator';
 import ArohiExamPassModal from './ArohiExamPassModal';
+import ExamKGLandingPage from './ExamKGLandingPage';
+import SchoolBoardKGLandingPage from './SchoolBoardKGLandingPage';
+import SchoolBoardsDirectoryView from './SchoolBoardsDirectoryView';
+import { MasterSchoolBoardDefinition, SchoolBoardGrade, SchoolBoardGradeSubject, MASTER_SCHOOL_BOARDS_MAP } from '../../data/schoolBoardsKnowledgeGraph';
+import { resolveKGLineage } from '../../data/examKnowledgeGraph';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
 import { doc, updateDoc, arrayUnion, setDoc, getDoc } from 'firebase/firestore';
@@ -30,8 +35,10 @@ export default function MockTestsHub({
   const userState = (user as any)?.state || 'Odisha';
 
   const [allTests, setAllTests] = useState<MockTest[]>(INITIAL_MOCK_TESTS);
-  const [currentView, setCurrentView] = useState<'catalog' | 'player' | 'result' | 'ai_analysis' | 'leaderboard' | 'generator'>('catalog');
+  const [currentView, setCurrentView] = useState<'catalog' | 'player' | 'result' | 'ai_analysis' | 'leaderboard' | 'generator' | 'kg_landing' | 'school_boards' | 'school_landing'>('catalog');
   const [selectedTest, setSelectedTest] = useState<MockTest | null>(null);
+  const [selectedBoard, setSelectedBoard] = useState<MasterSchoolBoardDefinition | null>(null);
+  const [selectedGradeSlug, setSelectedGradeSlug] = useState<string>('class-10');
   const [activeReport, setActiveReport] = useState<TestResultReport | null>(null);
   const [isExamPassModalOpen, setIsExamPassModalOpen] = useState(false);
   const [passModalTier, setPassModalTier] = useState<'silver' | 'gold'>('silver');
@@ -303,12 +310,70 @@ export default function MockTestsHub({
             if (tier) setPassModalTier(tier);
             setIsExamPassModalOpen(true);
           }}
+          onOpenKGLanding={(t) => {
+            setSelectedTest(t);
+            setCurrentView('kg_landing');
+          }}
+          onOpenSchoolBoards={() => {
+            setCurrentView('school_boards');
+          }}
           onOpenInChatQuiz={() => {
             if (onOpenChatWithPrompt) {
               onOpenChatWithPrompt('Arohi, please start a 30-question interactive CBSE science mock test for me with timer and instant scoring.');
             } else if (onNavigateTab) {
               onNavigateTab('chat');
             }
+          }}
+        />
+      )}
+
+      {currentView === 'kg_landing' && selectedTest && (
+        <ExamKGLandingPage
+          lineage={selectedTest.kgLineage || resolveKGLineage(selectedTest)}
+          relatedTests={allTests.filter(t => 
+            t.subCategory === selectedTest.subCategory || 
+            t.targetExam === selectedTest.targetExam ||
+            t.board === selectedTest.board
+          )}
+          currentTest={selectedTest}
+          isDarkMode={isDarkMode}
+          onBack={() => setCurrentView('catalog')}
+          onSelectTest={(t) => {
+            setSelectedTest(t);
+            setCurrentView('player');
+          }}
+          onOpenCustomGeneratorWithTopic={(topic) => {
+            setCurrentView('generator');
+          }}
+        />
+      )}
+
+      {currentView === 'school_boards' && (
+        <SchoolBoardsDirectoryView
+          isDarkMode={isDarkMode}
+          onBackToCatalog={() => setCurrentView('catalog')}
+          onSelectBoard={(board, gradeSlug) => {
+            setSelectedBoard(board);
+            if (gradeSlug) setSelectedGradeSlug(gradeSlug);
+            setCurrentView('school_landing');
+          }}
+        />
+      )}
+
+      {currentView === 'school_landing' && selectedBoard && (
+        <SchoolBoardKGLandingPage
+          board={selectedBoard}
+          initialGradeSlug={selectedGradeSlug}
+          isDarkMode={isDarkMode}
+          onBack={() => setCurrentView('school_boards')}
+          onStartBoardQuiz={(board, grade, subject) => {
+            // Find existing board mock test or generate a quick one
+            const matchedTest = allTests.find(t => 
+              t.board?.toLowerCase().includes(board.code.toLowerCase()) ||
+              t.title.toLowerCase().includes(board.code.toLowerCase())
+            ) || allTests[0];
+            setSelectedTest(matchedTest);
+            setCurrentView('player');
           }}
         />
       )}

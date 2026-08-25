@@ -494,8 +494,8 @@ export default function AdminPanel({
 
   // Live Search Engine Optimization (SEO) Pulse & Audit Diagnostic Engine
   const runSeoDiagnostic = () => {
-    const title = document.title || 'Arohi AI - India’s Next-Gen Career, Job, and MSME Growth Engine';
-    const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || 'Empowering India\'s students, young professionals, and MSMEs. Get live career guidance from AI assistant Arohi, dynamic resume analysis, mock interviews, job postings, and Udyam business assistance.';
+    const title = document.title || 'Arohi AI — One AI. Infinite Opportunities. | Built by Bharat, Built for Bharat';
+    const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || 'Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. India’s sovereign LLM cum LMM AI ecosystem with real-time voice in 150+ languages for Class 1–12 students, career aspirants, innovators, startups, and businesses.';
     const keywords = document.querySelector('meta[name="keywords"]')?.getAttribute('content') || 'arohiai.com, career guidance India, AI career coach, resume score India, mock interview simulator, MSME Udyam registration, private sector jobs, student career advisor, recruitment portal, Sarkari job guide';
     const geoRegion = document.querySelector('meta[name="geo.region"]')?.getAttribute('content') || 'IN';
     const geoPosition = document.querySelector('meta[name="geo.position"]')?.getAttribute('content') || '20.5937;78.9629';

@@ -1,10 +1,14 @@
 import { MockTest, ExamPassInfo } from '../types/examTypes';
+import { resolveKGLineage } from './examKnowledgeGraph';
 import { ADDITIONAL_MOCK_TESTS } from './moreMockTestsData';
 import { COMPREHENSIVE_EXPANDED_MOCK_TESTS } from './comprehensiveMockTestsData';
 import { MEGA_SCHOOL_MOCK_TESTS } from './megaSchoolMockTestsData';
 import { MEGA_ENTRANCE_MOCK_TESTS } from './megaEntranceMockTestsData';
 import { MEGA_CENTRAL_GOVT_MOCK_TESTS } from './megaCentralGovtMockTestsData';
 import { MEGA_STATE_TEACHING_NURSING_MOCK_TESTS } from './megaStateTeachingNursingData';
+import { EXPANDED_SECTOR_MOCK_TESTS } from './expandedSectorMockTestsData';
+import { PAN_INDIA_MASTER_MOCK_TESTS } from './masterMockTestsData';
+import { classifyTestCategory } from '../utils/examCategoryClassifier';
 
 export const AROHI_EXAM_PASSES: ExamPassInfo[] = [
   {
@@ -46,7 +50,7 @@ export const AROHI_EXAM_PASSES: ExamPassInfo[] = [
   }
 ];
 
-export const INITIAL_MOCK_TESTS: MockTest[] = [
+const DEFAULT_MOCK_TESTS: MockTest[] = [
   // 1. AIIMS NORCET 2026 Grand Mock Test (Nursing) - 25 Complete Questions
   {
     id: 'test_aiims_norcet_2026',
@@ -1746,20 +1750,51 @@ export const INITIAL_MOCK_TESTS: MockTest[] = [
         referenceNotes: 'Bipan Chandra - India\'s Struggle for Independence'
       }
     ]
-  },
+  }
+];
+
+const RAW_INITIAL_MOCK_TESTS: MockTest[] = [
+  ...DEFAULT_MOCK_TESTS,
+  ...PAN_INDIA_MASTER_MOCK_TESTS,
   ...ADDITIONAL_MOCK_TESTS,
   ...COMPREHENSIVE_EXPANDED_MOCK_TESTS,
   ...MEGA_SCHOOL_MOCK_TESTS,
   ...MEGA_ENTRANCE_MOCK_TESTS,
   ...MEGA_CENTRAL_GOVT_MOCK_TESTS,
-  ...MEGA_STATE_TEACHING_NURSING_MOCK_TESTS
+  ...MEGA_STATE_TEACHING_NURSING_MOCK_TESTS,
+  ...EXPANDED_SECTOR_MOCK_TESTS
 ];
 
+const seenTestIds = new Set<string>();
+const DEDUPED_MOCK_TESTS: MockTest[] = [];
+
+for (const test of RAW_INITIAL_MOCK_TESTS) {
+  if (!seenTestIds.has(test.id)) {
+    seenTestIds.add(test.id);
+    DEDUPED_MOCK_TESTS.push(test);
+  }
+}
+
+export const INITIAL_MOCK_TESTS: MockTest[] = DEDUPED_MOCK_TESTS.map(test => {
+  const resolvedCategory = classifyTestCategory(test);
+  return {
+    ...test,
+    resolvedCategory,
+    kgLineage: test.kgLineage || resolveKGLineage(test)
+  };
+});
+
 export const MOCK_EXAM_CATEGORIES = [
-  { id: 'all', label: 'All Exam Tracks', count: '100+ Tests', icon: 'Sparkles', color: 'from-purple-500 to-indigo-600' },
-  { id: 'school_boards', label: 'School Boards (Class 1-10)', count: 'CBSE / ICSE / Odisha BSE / State', icon: 'GraduationCap', color: 'from-amber-500 to-orange-600', badge: 'All Curriculums' },
-  { id: 'nursing', label: 'Nursing & Healthcare', count: 'AIIMS NORCET / OSSSC / ESIC / CHO', icon: 'HeartPulse', color: 'from-rose-500 to-pink-600', badge: 'Special Focus' },
-  { id: 'competitive_central', label: 'Central Recruitment', count: 'UPSC / SSC CGL / RRB / IBPS / NDA', icon: 'Landmark', color: 'from-blue-600 to-cyan-600' },
-  { id: 'entrance_exams', label: 'National Entrances', count: 'NEET UG / JEE Main / CUET / CLAT', icon: 'Award', color: 'from-emerald-500 to-teal-600' },
-  { id: 'competitive_state', label: 'State PSCs & Teaching', count: 'OPSC OAS / OSSSC / CTET / OTET', icon: 'Building', color: 'from-violet-600 to-purple-700' }
+  { id: 'all', label: 'All Exam Tracks', count: '150+ Tests', icon: 'Sparkles', color: 'from-purple-500 to-indigo-600' },
+  { id: 'upsc_civil', label: 'UPSC & Civil Services', count: 'CSE / IAS / IPS / NDA / CDS', icon: 'Landmark', color: 'from-amber-600 to-orange-600', badge: 'National' },
+  { id: 'ssc_graduate_12th', label: 'SSC Recruitment', count: 'CGL / CHSL / MTS / GD / CPO', icon: 'Building', color: 'from-blue-600 to-indigo-600' },
+  { id: 'railway_rrb', label: 'Railways (RRB / RRC)', count: 'NTPC / Group D / ALP / JE', icon: 'Zap', color: 'from-rose-600 to-red-600' },
+  { id: 'banking_ibps', label: 'Banking & Financial', count: 'IBPS PO / SBI / RBI / LIC', icon: 'Coins', color: 'from-emerald-600 to-teal-600' },
+  { id: 'state_psc_all_28', label: '28 State PSCs & SSBs', count: 'BPSC / UPPSC / MPSC / OPSC', icon: 'Building', color: 'from-violet-600 to-purple-700', badge: 'All 28 States' },
+  { id: 'police_state_cadres', label: 'Police & Paramilitary', count: 'UP Police / Delhi / SI / GD', icon: 'ShieldCheck', color: 'from-cyan-600 to-blue-700' },
+  { id: 'medical_neet_nursing', label: 'Medical & Nursing', count: 'NEET UG / AIIMS NORCET / ESIC', icon: 'HeartPulse', color: 'from-rose-500 to-pink-600', badge: 'Special Focus' },
+  { id: 'engineering_jee_gate', label: 'Engineering & GATE', count: 'JEE Main / Advanced / GATE CSE', icon: 'Award', color: 'from-orange-500 to-amber-600' },
+  { id: 'teaching_tet_ctet', label: 'Teaching & TET', count: 'CTET / Super TET / State TETs', icon: 'GraduationCap', color: 'from-teal-500 to-emerald-600' },
+  { id: 'management_cat_mba', label: 'Management & Law', count: 'CAT / CLAT / CMAT / Judiciary', icon: 'TrendingUp', color: 'from-indigo-600 to-slate-700' },
+  { id: 'school_boards', label: 'School Boards (Class 1-10)', count: 'CBSE / ICSE / State Boards', icon: 'GraduationCap', color: 'from-amber-500 to-orange-600', badge: 'All Curriculums' }
 ];

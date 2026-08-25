@@ -20,17 +20,133 @@ html.dark, html.dark body, body.dark {
 }
 
 /* Bright / Light theme rules */
-html.light, html.light body, body.light {
+html.light, html.light body, body.light, html:not(.dark), html:not(.dark) body {
   background-color: #f8f9fe;
   color: #0f172a;
   color-scheme: light;
 }
 
-/* Ensure crisp, high contrast font visibility in light mode for light components */
-html.light :not(.dark-card) > .text-slate-200,
-html.light :not(.dark-card) > .text-slate-300,
-html.light :not(.dark-card) > .text-slate-400 {
-  color: #334155;
+/* Global Light Mode Headings (Maximum Crispness & Contrast) */
+html.light h1:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+html.light h2:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+html.light h3:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+html.light h4:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+html.light h5:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+html.light h6:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h1:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h2:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h3:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h4:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h5:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *),
+body.light h6:not(.text-white):not([class*="bg-clip-text"]):not(.dark-card *) {
+  color: #020617 !important; /* Slate 950 */
+}
+
+/* Darker body paragraphs, descriptions, and labels in Light Mode */
+html.light p:not(.text-white):not(.dark-card *):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-cyan"]):not([class*="text-purple"]),
+body.light p:not(.text-white):not(.dark-card *):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-cyan"]):not([class*="text-purple"]) {
+  color: #1e293b; /* Slate 800 */
+}
+
+html.light label:not(.text-white):not(.dark-card *),
+body.light label:not(.text-white):not(.dark-card *) {
+  color: #0f172a !important; /* Slate 900 */
+}
+
+/* Ensure crisp, high contrast font visibility in light mode */
+html.light .text-slate-900, body.light .text-slate-900,
+html.light .text-slate-800, body.light .text-slate-800 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-700, body.light .text-slate-700,
+html.light .text-slate-600, body.light .text-slate-600 {
+  color: #1e293b !important; /* Slate 800 */
+}
+
+html.light .text-slate-500, body.light .text-slate-500,
+html.light .text-gray-500, body.light .text-gray-500,
+html.light .text-zinc-500, body.light .text-zinc-500 {
+  color: #334155 !important; /* Slate 700 */
+}
+
+html.light .text-slate-400, body.light .text-slate-400,
+html.light .text-gray-400, body.light .text-gray-400,
+html.light .text-zinc-400, body.light .text-zinc-400 {
+  color: #475569 !important; /* Slate 600 */
+}
+
+html.light .text-slate-300:not(.dark-card *):not(.text-white):not([class*="bg-purple-6"]):not([class*="bg-slate-9"]):not([class*="bg-black"]):not([class*="bg-gradient-"]),
+html.light .text-slate-200:not(.dark-card *):not(.text-white):not([class*="bg-purple-6"]):not([class*="bg-slate-9"]):not([class*="bg-black"]):not([class*="bg-gradient-"]),
+body.light .text-slate-300:not(.dark-card *):not(.text-white):not([class*="bg-purple-6"]):not([class*="bg-slate-9"]):not([class*="bg-black"]):not([class*="bg-gradient-"]),
+body.light .text-slate-200:not(.dark-card *):not(.text-white):not([class*="bg-purple-6"]):not([class*="bg-slate-9"]):not([class*="bg-black"]):not([class*="bg-gradient-"]) {
+  color: #1e293b !important; /* Slate 800 */
+}
+
+/* Deep, rich high-contrast accent colors in Light Mode */
+html.light .text-purple-300:not(.dark-card *):not(.text-white),
+html.light .text-purple-400:not(.dark-card *):not(.text-white),
+body.light .text-purple-300:not(.dark-card *):not(.text-white),
+body.light .text-purple-400:not(.dark-card *):not(.text-white) {
+  color: #6b21a8 !important; /* Purple 800 */
+}
+
+html.light .text-purple-600, html.light .text-purple-700,
+body.light .text-purple-600, body.light .text-purple-700 {
+  color: #581c87 !important; /* Purple 900 */
+}
+
+html.light .text-cyan-300:not(.dark-card *):not(.text-white),
+html.light .text-cyan-400:not(.dark-card *):not(.text-white),
+body.light .text-cyan-300:not(.dark-card *):not(.text-white),
+body.light .text-cyan-400:not(.dark-card *):not(.text-white) {
+  color: #0e7490 !important; /* Cyan 700 */
+}
+
+html.light .text-amber-300:not(.dark-card *):not(.text-white),
+html.light .text-amber-400:not(.dark-card *):not(.text-white),
+body.light .text-amber-300:not(.dark-card *):not(.text-white),
+body.light .text-amber-400:not(.dark-card *):not(.text-white) {
+  color: #92400e !important; /* Amber 800 */
+}
+
+html.light .text-emerald-300:not(.dark-card *):not(.text-white),
+html.light .text-emerald-400:not(.dark-card *):not(.text-white),
+body.light .text-emerald-300:not(.dark-card *):not(.text-white),
+body.light .text-emerald-400:not(.dark-card *):not(.text-white) {
+  color: #065f46 !important; /* Emerald 800 */
+}
+
+html.light .text-rose-300:not(.dark-card *):not(.text-white),
+html.light .text-rose-400:not(.dark-card *):not(.text-white),
+body.light .text-rose-300:not(.dark-card *):not(.text-white),
+body.light .text-rose-400:not(.dark-card *):not(.text-white) {
+  color: #9f1239 !important; /* Rose 800 */
+}
+
+html.light .text-indigo-300:not(.dark-card *):not(.text-white),
+html.light .text-indigo-400:not(.dark-card *):not(.text-white),
+body.light .text-indigo-300:not(.dark-card *):not(.text-white),
+body.light .text-indigo-400:not(.dark-card *):not(.text-white) {
+  color: #3730a3 !important; /* Indigo 800 */
+}
+
+html.light .text-blue-300:not(.dark-card *):not(.text-white),
+html.light .text-blue-400:not(.dark-card *):not(.text-white),
+body.light .text-blue-300:not(.dark-card *):not(.text-white),
+body.light .text-blue-400:not(.dark-card *):not(.text-white) {
+  color: #1e40af !important; /* Blue 800 */
+}
+
+/* Form Inputs & Interactive Controls in Light Mode */
+html.light input, html.light textarea, html.light select,
+body.light input, body.light textarea, body.light select {
+  color: #0f172a !important;
+}
+
+html.light input::placeholder, html.light textarea::placeholder,
+body.light input::placeholder, body.light textarea::placeholder {
+  color: #64748b !important; /* Slate 500 */
 }
 
 /* Force dark-card containers to always maintain high contrast light text */
@@ -238,6 +354,42 @@ html:not(.dark), html:not(.dark) body {
   scrollbar-color: rgba(124, 58, 237, 0.5) transparent;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+/* Typing Window Chat Input Scrollbar */
+.chat-input-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.6) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-input-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  display: block;
+}
+
+.chat-input-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+  margin: 4px 0;
+}
+
+.chat-input-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.chat-input-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.9);
+}
+
+html.light .chat-input-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.45);
+}
+
+html.light .chat-input-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.85);
 }
 
 .arohi-recents-scrollbar::-webkit-scrollbar,

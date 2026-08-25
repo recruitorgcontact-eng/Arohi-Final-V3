@@ -1,10 +1,152 @@
+export type KGLevel = 'country' | 'state' | 'authority' | 'exam' | 'stage' | 'subject';
+
+export interface KGBreadcrumbItem {
+  id: string;
+  label: string;
+  labelRegional?: string;
+  slug: string;
+  url: string;
+  level: KGLevel;
+  icon?: string;
+  badge?: string;
+}
+
+export interface KGCountryNode {
+  id: string; // 'india'
+  name: string; // 'India'
+  slug: string; // 'india'
+  code: string; // 'IN'
+}
+
+export interface KGStateNode {
+  id: string; // 'central' | 'odisha' | 'maharashtra' | 'uttar-pradesh' | ...
+  name: string; // 'All-India / Central' | 'Odisha' | ...
+  slug: string; // 'central' | 'odisha' | ...
+  code: string; // 'OD' | 'MH' | 'UP' | 'DL' | ...
+  capital?: string;
+  officialLanguage?: string;
+  isUnionTerritory?: boolean;
+  isCentral?: boolean;
+  totalAuthoritiesCount?: number;
+  totalExamsCount?: number;
+}
+
+export interface KGAuthorityNode {
+  id: string; // 'upsc' | 'ssc' | 'nta' | 'rrb' | 'ibps' | 'aiims' | 'opsc' | 'osssc' | 'bse-odisha' | ...
+  name: string; // 'Union Public Service Commission' | 'Odisha Staff Selection Commission'
+  shortName: string; // 'UPSC' | 'OSSSC'
+  slug: string;
+  stateId: string; // 'central' or stateId
+  website?: string;
+  category: string; // 'Central Commission' | 'State PSC' | 'Medical Board' | 'School Board'
+  description?: string;
+  totalExamsCount?: number;
+}
+
+export interface KGExamNode {
+  id: string; // 'upsc-cse' | 'ssc-cgl' | 'aiims-norcet' | 'bse-odisha-10th' | ...
+  name: string; // 'UPSC Civil Services Examination'
+  nameHindi?: string;
+  nameRegional?: string;
+  shortName: string; // 'CSE' | 'CGL' | 'NORCET'
+  code: string; // 'UPSC-CSE' | 'SSC-CGL'
+  slug: string;
+  authorityId: string;
+  stateId: string;
+  category: ExamMainCategory;
+  subCategory?: ExamSubCategory;
+  frequency: string;
+  eligibility: string;
+  defaultStages: string[]; // ['prelims', 'mains', 'interview']
+  totalMarksPattern: string;
+  negativeMarking: string;
+  overview: string;
+  syllabusHighlights: string[];
+}
+
+export interface KGStageNode {
+  id: string; // 'prelims' | 'tier-1' | 'cbt-1' | 'mains' | 'single-stage' | 'annual-board'
+  name: string; // 'Prelims (Paper 1 & Paper 2)'
+  slug: string;
+  type: ExamStageType;
+  description?: string;
+  defaultDurationMinutes?: number;
+  defaultQuestionsCount?: number;
+}
+
+export interface KGSubjectNode {
+  id: string; // 'general-studies-1' | 'csat' | 'quantitative-aptitude' | 'clinical-nursing' | ...
+  name: string;
+  slug: string;
+  code?: string;
+  category?: string;
+  icon?: string;
+  description?: string;
+}
+
+export interface ExamSEOMetadata {
+  title: string;
+  metaDescription: string;
+  keywords: string[];
+  canonicalUrl: string;
+  h1: string;
+  structuredDataJsonLd?: Record<string, any>;
+  ogType?: string;
+}
+
+export interface ExamKnowledgeGraphLineage {
+  country: KGCountryNode;
+  state: KGStateNode;
+  authority: KGAuthorityNode;
+  exam: KGExamNode;
+  stage: KGStageNode;
+  subject?: KGSubjectNode;
+  canonicalPath: string; // e.g. "/exams/india/odisha/osssc/nursing-officer/cbt/clinical-nursing"
+  breadcrumbs: KGBreadcrumbItem[];
+  seoMeta: ExamSEOMetadata;
+}
+
 export type ExamMainCategory = 
+  | 'all'
+  | 'upsc_civil'
+  | 'ssc_graduate_12th'
+  | 'railway_rrb'
+  | 'banking_ibps'
+  | 'sbi_rbi_financial'
+  | 'defence_paramilitary'
+  | 'police_state_cadres'
+  | 'engineering_jee_gate'
+  | 'medical_neet_nursing'
+  | 'management_cat_mba'
+  | 'law_clat_judiciary'
+  | 'teaching_tet_ctet'
+  | 'state_psc_all_28'
+  | 'clerical_patwari_state'
+  | 'commerce_ca_cma_cs'
+  | 'school_boards'
+  | 'agriculture_pharmacy_design'
   | 'nursing' 
   | 'competitive_central' 
   | 'competitive_state' 
-  | 'school_boards' 
   | 'college_higher' 
   | 'entrance_exams';
+
+export type ExamTestIntent = 
+  | 'full_length_mock' 
+  | 'pyq_archive' 
+  | 'speed_drill_20min' 
+  | 'topic_test' 
+  | 'current_affairs_booster';
+
+export type ExamStageType = 
+  | 'prelims' 
+  | 'mains' 
+  | 'tier_1' 
+  | 'tier_2' 
+  | 'cbt_1' 
+  | 'cbt_2' 
+  | 'single_stage'
+  | 'interview_personality';
 
 export type ExamSubCategory =
   | 'aiims_norcet'
@@ -18,21 +160,51 @@ export type ExamSubCategory =
   | 'ssc_mts'
   | 'ssc_cpo'
   | 'ssc_steno'
+  | 'ssc_gd'
+  | 'ssc_je'
+  | 'upsc_cse'
   | 'upsc_prelims'
+  | 'upsc_mains'
+  | 'upsc_nda'
+  | 'upsc_cds'
+  | 'upsc_capf'
+  | 'upsc_ese'
   | 'rrb_ntpc'
   | 'rrb_group_d'
+  | 'rrb_alp'
+  | 'rrb_je'
+  | 'rrb_rpf'
   | 'ibps_po'
+  | 'ibps_clerk'
+  | 'ibps_rrb'
+  | 'ibps_so'
+  | 'sbi_po'
   | 'sbi_clerk'
+  | 'sbi_so'
   | 'rbi_grade_b'
+  | 'rbi_assistant'
   | 'lic_insurance'
+  | 'nabard_sebi'
   | 'nda_defence'
   | 'defence_cds'
   | 'defence_afcat'
   | 'defence_capf'
+  | 'defence_agniveer'
+  | 'police_delhi'
+  | 'police_up'
+  | 'police_bihar'
+  | 'police_maharashtra'
+  | 'police_rajasthan'
+  | 'police_mp'
+  | 'police_odisha'
+  | 'police_tamil_nadu'
+  | 'police_west_bengal'
   | 'opsc_oas'
   | 'osssc_combined'
   | 'teaching_ctet_otet'
+  | 'teaching_state_tet'
   | 'ugc_net'
+  | 'csir_net'
   | 'kvs_nvs_teacher'
   | 'dsssb_teaching'
   | 'police_si'
@@ -40,6 +212,29 @@ export type ExamSubCategory =
   | 'state_psc_uppsc'
   | 'state_psc_wbcs'
   | 'state_psc_mpsc'
+  | 'state_psc_rpsc'
+  | 'state_psc_appsc'
+  | 'state_psc_tgpsc'
+  | 'state_psc_kpsc'
+  | 'state_psc_kerala'
+  | 'state_psc_mppsc'
+  | 'state_psc_gpsc'
+  | 'state_psc_hpsc'
+  | 'state_psc_ppsc'
+  | 'state_psc_jpsc'
+  | 'state_psc_cgpsc'
+  | 'state_psc_apsc'
+  | 'state_psc_spsc'
+  | 'state_psc_tpsc'
+  | 'state_psc_ukpsc'
+  | 'state_psc_hp'
+  | 'state_psc_goa'
+  | 'state_clerical_patwari'
+  | 'state_clerical_lekhpal'
+  | 'state_clerical_vdo'
+  | 'ca_foundation_inter'
+  | 'cma_cs_commerce'
+  | 'judiciary_civil_judge'
   | 'school_class_1_to_5'
   | 'school_class_6_to_8'
   | 'school_class_9_10'
@@ -58,10 +253,22 @@ export type ExamSubCategory =
   | 'jee_advanced'
   | 'bitsat_engg'
   | 'wbjee_engg'
+  | 'mht_cet_engg'
   | 'gate_engineering'
+  | 'gate_cse'
+  | 'gate_ece'
+  | 'gate_ee'
+  | 'gate_me'
+  | 'gate_ce'
   | 'cat_mba'
+  | 'xat_cmat_mba'
   | 'cuet_ug'
-  | 'clat_law';
+  | 'cuet_pg'
+  | 'clat_law'
+  | 'ailet_law'
+  | 'icar_agriculture'
+  | 'gpat_pharmacy'
+  | 'nift_nid_design';
 
 export interface ExamPassInfo {
   tier: 'silver' | 'gold';
@@ -86,6 +293,8 @@ export interface QuestionOption {
   text: string;
   textOdia?: string;
   textHindi?: string;
+  textRegional?: string;
+  regionalLanguage?: string;
   image?: string;
 }
 
@@ -100,6 +309,8 @@ export interface ExamQuestion {
   text: string;
   textOdia?: string;
   textHindi?: string;
+  textRegional?: string;
+  regionalLanguage?: string;
   image?: string;
   options: QuestionOption[];
   correctAnswer: string; // 'A', 'B', 'C', 'D' or comma separated for multi
@@ -109,6 +320,7 @@ export interface ExamQuestion {
   explanation: string;
   explanationOdia?: string;
   explanationHindi?: string;
+  explanationRegional?: string;
   referenceNotes?: string;
 }
 
@@ -127,13 +339,19 @@ export interface MockTest {
   slug: string;
   title: string;
   titleOdia?: string;
+  titleHindi?: string;
   shortDescription: string;
   mainCategory: ExamMainCategory;
   subCategory: ExamSubCategory;
   categoryLabel: string;
-  targetExam: string; // e.g. "AIIMS NORCET 2026", "OSSSC Nursing Officer", "CBSE Class 10 Board"
+  targetExam: string; // e.g. "AIIMS NORCET 2026", "OSSSC Nursing Officer", "UPSC CSE Prelims"
   gradeOrClass?: string; // e.g. "Class 10", "+2 Science", "Graduate"
-  board?: string; // "CBSE", "ICSE", "Odisha State Board", "Central NTA"
+  board?: string; // "UPSC", "SSC", "NTA", "IBPS", "RRB", "OPSC", "BPSC", "UPPSC", "MPSC", "TNPSC", "CBSE"
+  conductingAuthority?: string; // "Union Public Service Commission", "Staff Selection Commission", "State PSC", etc.
+  state?: string; // "All-India / Central" or specific Indian state e.g. "Maharashtra", "Uttar Pradesh", "Bihar"
+  examStage?: ExamStageType; // prelims, mains, tier_1, tier_2, cbt_1, single_stage
+  testIntent?: ExamTestIntent; // full_length_mock, pyq_archive, speed_drill_20min, topic_test
+  supportedLanguages?: string[]; // ['en', 'hi', 'mr', 'ta', 'te', 'bn', 'or', 'gu', 'kn', 'pa', 'ml']
   durationMinutes: number;
   totalQuestions: number;
   totalMarks: number;
@@ -141,12 +359,14 @@ export interface MockTest {
   questions: ExamQuestion[];
   isLive: boolean;
   isFree: boolean;
-  featuredBadge?: string; // "High Yield", "Real Exam Replicate", "Most Popular"
+  featuredBadge?: string; // "High Yield", "Real Exam Replicate", "Most Popular", "Official PYQ"
   attemptsCount: number;
   averageScore?: number;
   cutoffEstimated?: number;
   instructions: string[];
   createdAt: string;
+  kgLineage?: ExamKnowledgeGraphLineage;
+  resolvedCategory?: string;
 }
 
 export interface QuestionAttemptState {

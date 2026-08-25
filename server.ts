@@ -686,6 +686,94 @@ ${urlsXml}
   }
 });
 
+// Dynamic Pan-India All Competitive & Entrance Exams SEO XML Sitemap
+app.get('/sitemap-exams.xml', (req, res) => {
+  try {
+    const baseUrl = 'https://arohiai.com';
+    const today = new Date().toISOString().split('T')[0];
+    const languages = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa', 'as'];
+    
+    // Core Central & State Exam Slugs
+    const examSlugs = [
+      'upsc-cse-prelims-gs1', 'upsc-cse-csat', 'ssc-cgl-tier1', 'ssc-chsl-tier1', 'ssc-mts-havaldar',
+      'rrb-ntpc-cbt1', 'rrb-group-d', 'ibps-po-prelims', 'sbi-clerk-prelims', 'rbi-grade-b',
+      'neet-ug-medical', 'jee-main-engineering', 'cuet-ug-general', 'clat-law-entrance', 'cat-management',
+      'aiims-norcet-nursing', 'osssc-nursing-officer-cbt', 'esic-nursing-officer', 'cho-nhm-nursing',
+      'opsc-oas-prelims', 'bpsc-cce-prelims', 'uppsc-pcs-prelims', 'mpsc-state-services', 'rpsc-ras-prelims',
+      'wbpsc-wbcns-prelims', 'tnpsc-group1', 'kpsc-kas-prelims', 'ctet-paper-1', 'ctet-paper-2-math-science',
+      'otet-paper-1-odisha', 'osstet-high-school', 'odisha-police-si', 'up-police-constable', 'bihar-police-daroga'
+    ];
+
+    let urlsXml = '';
+    examSlugs.forEach((slug) => {
+      languages.forEach((lang) => {
+        urlsXml += `
+  <url>
+    <loc>${baseUrl}/exams/${slug}?lang=${lang}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    ${languages.map(l => `<xhtml:link rel="alternate" hreflang="${l}-in" href="${baseUrl}/exams/${slug}?lang=${l}"/>`).join('\n    ')}
+  </url>`;
+      });
+    });
+
+    const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urlsXml}
+</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(sitemapContent);
+  } catch (err: any) {
+    console.error('Error generating sitemap-exams.xml:', err);
+    return res.status(500).send('Error generating sitemap-exams');
+  }
+});
+
+// Dynamic Classes 1-12 & 28 State School Boards SEO XML Sitemap
+app.get('/sitemap-school.xml', (req, res) => {
+  try {
+    const baseUrl = 'https://arohiai.com';
+    const today = new Date().toISOString().split('T')[0];
+    const languages = ['en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa', 'as'];
+
+    const boards = ['cbse', 'cisce', 'nios', 'bse-odisha', 'chse-odisha', 'upmsp', 'bseb', 'msbshse', 'rbse', 'wbbse', 'bsemp', 'tnscert', 'kseab', 'bseap', 'bsetelangana', 'gseb', 'kbpe', 'pseb', 'seba'];
+    const classes = ['class-1', 'class-2', 'class-3', 'class-4', 'class-5', 'class-6', 'class-7', 'class-8', 'class-9', 'class-10', 'class-11-science', 'class-12-science', 'class-12-commerce'];
+
+    let urlsXml = '';
+    boards.forEach((board) => {
+      classes.forEach((cls) => {
+        languages.forEach((lang) => {
+          urlsXml += `
+  <url>
+    <loc>${baseUrl}/school/${board}/${cls}?lang=${lang}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    ${languages.map(l => `<xhtml:link rel="alternate" hreflang="${l}-in" href="${baseUrl}/school/${board}/${cls}?lang=${l}"/>`).join('\n    ')}
+  </url>`;
+        });
+      });
+    });
+
+    const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urlsXml}
+</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(sitemapContent);
+  } catch (err: any) {
+    console.error('Error generating sitemap-school.xml:', err);
+    return res.status(500).send('Error generating sitemap-school');
+  }
+});
+
 // Dynamic robots.txt welcoming ALL Search Engines, AI Crawlers & LLM Agents
 app.get('/robots.txt', (req, res) => {
   const robotsTxt = `# Arohi AI - Robots & AI Agents Directive (https://arohiai.com)
@@ -834,6 +922,8 @@ Allow: /
 
 # Sitemaps & LLM Discovery Files
 Sitemap: https://arohiai.com/sitemap.xml
+Sitemap: https://arohiai.com/sitemap-exams.xml
+Sitemap: https://arohiai.com/sitemap-school.xml
 Sitemap: https://arohiai.com/llms.txt
 `;
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
