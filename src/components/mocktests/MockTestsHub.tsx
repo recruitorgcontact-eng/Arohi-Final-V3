@@ -41,7 +41,7 @@ export default function MockTestsHub({
   const [selectedGradeSlug, setSelectedGradeSlug] = useState<string>('class-10');
   const [activeReport, setActiveReport] = useState<TestResultReport | null>(null);
   const [isExamPassModalOpen, setIsExamPassModalOpen] = useState(false);
-  const [passModalTier, setPassModalTier] = useState<'silver' | 'gold'>('silver');
+  const [passModalTier, setPassModalTier] = useState<'silver' | 'gold' | 'platinum'>('silver');
 
   // Check for dynamic custom CBT test from chat or initialTestSlug
   useEffect(() => {

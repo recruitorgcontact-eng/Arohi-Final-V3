@@ -271,7 +271,7 @@ export type ExamSubCategory =
   | 'nift_nid_design';
 
 export interface ExamPassInfo {
-  tier: 'silver' | 'gold';
+  tier: 'silver' | 'gold' | 'platinum';
   name: string;
   price: number;
   originalPrice: number;

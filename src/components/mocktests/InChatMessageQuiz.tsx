@@ -295,7 +295,7 @@ export default function InChatMessageQuiz({
 
   // Arohi Exam Pass Modal State
   const [isExamPassModalOpen, setIsExamPassModalOpen] = useState(false);
-  const [passModalTier, setPassModalTier] = useState<'silver' | 'gold'>('silver');
+  const [passModalTier, setPassModalTier] = useState<'silver' | 'gold' | 'platinum'>('silver');
 
   const freeAttemptsCount = userData?.freeExamAttemptsCount || 0;
   const hasActivePass = !!userData?.examPass;
@@ -620,27 +620,36 @@ export default function InChatMessageQuiz({
               <span className="text-xs font-black text-amber-300">Unlock All-India Full-Length Passes</span>
             </div>
             <p className="text-xs text-slate-300">
-              You've completed {freeAttemptsCount} in-chat tests! Upgrade to <strong>Arohi Exams™ Pass</strong> for 20-50 full 100-question CBT mock papers with dynamic shuffling.
+              You've completed {freeAttemptsCount} in-chat tests! Upgrade to <strong>Arohi Exams™ Pass</strong> for 10, 25, or 60 full 100-question CBT mock papers with dynamic shuffling.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap sm:flex-nowrap">
             <button
               onClick={() => {
                 setPassModalTier('silver');
                 setIsExamPassModalOpen(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-slate-200 to-white text-slate-950 font-black text-xs hover:scale-105 transition-all shadow-md cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-slate-200 to-white text-slate-950 font-black text-xs hover:scale-105 transition-all shadow-md cursor-pointer"
             >
-              20 Tests (₹99)
+              10 Tests (₹99)
             </button>
             <button
               onClick={() => {
                 setPassModalTier('gold');
                 setIsExamPassModalOpen(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs hover:scale-105 transition-all shadow-md cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs hover:scale-105 transition-all shadow-md cursor-pointer"
             >
-              50 Tests (₹199)
+              25 Tests (₹199)
+            </button>
+            <button
+              onClick={() => {
+                setPassModalTier('platinum');
+                setIsExamPassModalOpen(true);
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 text-slate-950 font-black text-xs hover:scale-105 transition-all shadow-md cursor-pointer"
+            >
+              60 Tests (₹299)
             </button>
           </div>
         </div>
@@ -657,7 +666,7 @@ export default function InChatMessageQuiz({
             }}
             className="text-[11px] font-black text-purple-300 hover:text-white underline cursor-pointer"
           >
-            Explore ₹99 & ₹199 Passes
+            Explore ₹99, ₹199 & ₹299 Passes
           </button>
         </div>
       )}

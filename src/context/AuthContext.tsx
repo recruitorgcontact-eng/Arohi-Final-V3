@@ -112,7 +112,7 @@ export interface UserData {
   mockTestHistory?: any[];
   lastExamDate?: string;
   examPass?: {
-    tier: 'silver' | 'gold';
+    tier: 'silver' | 'gold' | 'platinum';
     name: string;
     totalTests: number;
     testsRemaining: number;
@@ -340,7 +340,7 @@ interface AuthContextType {
     paymentMethod?: string;
     paymentId?: string;
   }) => Promise<void>;
-  activateExamPass: (tier: 'silver' | 'gold', paymentMethod?: string) => Promise<void>;
+  activateExamPass: (tier: 'silver' | 'gold' | 'platinum', paymentMethod?: string) => Promise<void>;
   incrementFreeExamAttempt: () => Promise<number>;
   signInWithBiometrics: (email: string) => Promise<void>;
 }
@@ -1501,9 +1501,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const activateExamPass = async (tier: 'silver' | 'gold', paymentMethod: string = 'Razorpay / UPI') => {
-    const totalTests = tier === 'silver' ? 20 : 50;
-    const name = tier === 'silver' ? 'Arohi Exams™ Silver Pass' : 'Arohi Exams™ Gold Mega Pass';
+  const activateExamPass = async (tier: 'silver' | 'gold' | 'platinum', paymentMethod: string = 'Razorpay / UPI') => {
+    const totalTests = tier === 'silver' ? 10 : tier === 'gold' ? 25 : 60;
+    const name = tier === 'silver' 
+      ? 'Arohi Exams™ Starter Pass (₹99)' 
+      : tier === 'gold' 
+        ? 'Arohi Exams™ Gold Pass (₹199)' 
+        : 'Arohi Exams™ Platinum Mega Pass (₹299)';
     
     const passObj = {
       tier,

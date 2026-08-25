@@ -25,7 +25,7 @@ interface MockTestCatalogProps {
   onOpenCustomGenerator: () => void;
   onOpenLeaderboard: (test: MockTest) => void;
   onOpenInChatQuiz?: () => void;
-  onOpenExamPass?: (tier?: 'silver' | 'gold') => void;
+  onOpenExamPass?: (tier?: 'silver' | 'gold' | 'platinum') => void;
   onOpenKGLanding?: (test: MockTest) => void;
   onOpenSchoolBoards?: () => void;
 }

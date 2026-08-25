@@ -9180,14 +9180,16 @@ EXAM BLUEPRINT:
 - Question Count: Exactly ${count} questions
 - Target Language: "${language}"
 
-CRITICAL CURRICULUM ACCURACY RULES:
-1. If CBSE Class 10 is selected, strictly generate NCERT Class 10 Science (Physics/Chemistry/Biology), Mathematics, or Social Science questions. Do NOT generate nursing or unrelated questions.
-2. If Odisha BSE 10th is selected, generate authentic BSE Odisha 10th curriculum questions (Bilingual English & Odia where helpful).
-3. If NEET UG is selected, generate authentic NTA NEET Class 11/12 Physics, Chemistry, Botany, and Zoology questions.
-4. If JEE Main is selected, generate high-yield Mathematics (Calculus/Vectors), Physics (Mechanics/Electromagnetism), and Chemistry (Physical/Organic/Inorganic).
-5. If SSC CGL/CHSL or RRB NTPC is selected, generate Reasoning, Quantitative Aptitude, General Science, and Current Affairs questions.
-6. If UPSC CSE is selected, generate analytical multi-statement Indian Polity, Modern History, Environment, and Economics questions.
-7. If Nursing (AIIMS NORCET / ESIC / OSSSC) is selected, generate authentic Medical-Surgical, Pharmacology, Anatomy, and Midwifery clinical questions.
+CRITICAL CURRICULUM ACCURACY & SUBJECT ISOLATION RULES:
+1. STRICT ZERO SUBJECT CONTAMINATION: Generate questions ONLY for the requested "${activeSubject}" and "${activeTopic}". If the exam is Banking, do NOT generate medical or civil services questions. If Law (CLAT), generate only Legal Aptitude, Torts, Contracts and Constitutional Law. If Defence (NDA/CDS), generate only Military GK, Physics and Mathematics.
+2. If CBSE / ICSE School Boards is selected, strictly generate standard NCERT curriculum questions for the specific grade and subject.
+3. If Odisha BSE 10th / CHSE 12th / OPSC / OSSSC is selected, generate authentic Odisha curriculum questions (Bilingual English & Odia where helpful).
+4. If NEET UG is selected, generate authentic NTA NEET Class 11/12 Physics, Chemistry, Botany, and Zoology questions.
+5. If JEE Main / Advanced is selected, generate high-yield Mathematics (Calculus/Vectors), Physics (Mechanics/Electromagnetism), and Chemistry (Physical/Organic/Inorganic).
+6. If Banking (SBI / IBPS / RBI) is selected, generate Quantitative Aptitude (DI, Series, SI/CI, Profit & Loss), Logical Reasoning (Syllogisms, Puzzles), English, and Financial Awareness questions.
+7. If SSC CGL/CHSL or RRB NTPC is selected, generate Reasoning, Quantitative Aptitude, General Science, and Current Affairs questions.
+8. If UPSC CSE is selected, generate analytical multi-statement Indian Polity, Modern History, Environment, and Economics questions.
+9. If Nursing (AIIMS NORCET / ESIC / OSSSC) is selected, generate authentic Medical-Surgical, Pharmacology, Anatomy, and Midwifery clinical questions.
 
 OUTPUT REQUIREMENTS:
 Output MUST be strictly valid JSON without any markdown or code blocks.

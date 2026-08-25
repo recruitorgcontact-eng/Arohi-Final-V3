@@ -11,8 +11,8 @@ interface ArohiExamPassModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode?: boolean;
-  selectedTier?: 'silver' | 'gold';
-  onPassActivated?: (passInfo: { tier: 'silver' | 'gold'; totalTests: number }) => void;
+  selectedTier?: 'silver' | 'gold' | 'platinum';
+  onPassActivated?: (passInfo: { tier: 'silver' | 'gold' | 'platinum'; totalTests: number }) => void;
 }
 
 export default function ArohiExamPassModal({
@@ -23,7 +23,7 @@ export default function ArohiExamPassModal({
   onPassActivated
 }: ArohiExamPassModalProps) {
   const { user, activateExamPass } = useAuth();
-  const [activeTab, setActiveTab] = useState<'silver' | 'gold'>(selectedTier);
+  const [activeTab, setActiveTab] = useState<'silver' | 'gold' | 'platinum'>(selectedTier);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showDirectUpiQr, setShowDirectUpiQr] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
@@ -35,16 +35,16 @@ export default function ArohiExamPassModal({
     silver: {
       id: 'pass_silver_99',
       tier: 'silver' as const,
-      name: 'Arohi Exams™ Silver Pass',
+      name: 'Arohi Exams™ Starter Pass',
       price: 99,
       originalPrice: 499,
-      totalTests: 20,
+      totalTests: 10,
       questionsPerTest: 100,
-      totalQuestions: 2000,
-      badge: 'Most Popular for Speed Prep',
-      description: 'Unlock 20 Full-Length CBT Tests (100 Qs each) across all School (Class 1-10) and Indian Competitive Exams.',
+      totalQuestions: 1000,
+      badge: 'Starter Speed Prep',
+      description: 'Unlock 10 Full-Length CBT Tests (100 Qs each = 1,000 Qs) across all School (Class 1-10) and Indian Competitive Exams.',
       features: [
-        '20 Full-Length CBT Tests (100 Questions each = 2,000 Questions)',
+        '10 Full-Length CBT Tests (100 Questions each = 1,000 Questions)',
         'Dynamic Question & Option Shuffle on every single attempt',
         'Official Arohi CBT Engine with live countdown timer & question palette',
         'Instant Scorecard, All-India Rank (AIR) & Percentile Curve',
@@ -55,30 +55,51 @@ export default function ArohiExamPassModal({
     gold: {
       id: 'pass_gold_199',
       tier: 'gold' as const,
-      name: 'Arohi Exams™ Gold Mega Pass',
+      name: 'Arohi Exams™ Gold Pass',
       price: 199,
-      originalPrice: 999,
-      totalTests: 50,
+      originalPrice: 899,
+      totalTests: 25,
       questionsPerTest: 100,
-      totalQuestions: 5000,
-      badge: 'Best Value • Complete Exam Mastery',
-      description: 'Unlock 50 Full-Length CBT Tests (100 Qs each = 5,000 Qs) + Unlimited AI Weakness Re-tests & 1-Click Tutor.',
+      totalQuestions: 2500,
+      badge: 'Most Popular Choice',
+      description: 'Unlock 25 Full-Length CBT Tests (100 Qs each = 2,500 Qs) + AI Weakness Diagnostic & 1-Click Tutor.',
       features: [
-        '50 Full-Length CBT Tests (100 Questions each = 5,000 Questions)',
+        '25 Full-Length CBT Tests (100 Questions each = 2,500 Questions)',
         'Dynamic Question & Option Shuffle on every attempt (No duplicate papers)',
-        'All 20+ Categories Unlocked (School Classes 1-10, AIIMS NORCET, OSSSC, SSC, UPSC, Bank, Railway)',
-        'Unlimited AI Weakness Diagnostic & Remedial Practice Tests',
+        'All Categories Unlocked (School Classes 1-10, AIIMS NORCET, OSSSC, SSC, UPSC, Bank, Railway)',
+        'AI Weakness Diagnostic & Remedial Practice Reviews',
         '1-Click "Ask Arohi AI" Instant Doubt Clarification in Chat',
         'All-India Leaderboard with Category-Wise Cutoff Benchmarking',
         'Official "Arohi Exams" Watermarked Performance Marksheet & PDF Export'
+      ]
+    },
+    platinum: {
+      id: 'pass_platinum_299',
+      tier: 'platinum' as const,
+      name: 'Arohi Exams™ Platinum Mega Pass',
+      price: 299,
+      originalPrice: 1499,
+      totalTests: 60,
+      questionsPerTest: 100,
+      totalQuestions: 6000,
+      badge: 'Maximum Value • Complete Mastery',
+      description: 'Unlock 60 Full-Length CBT Tests (100 Qs each = 6,000 Qs) + Unlimited AI Weakness Re-tests & 1-Click Live Tutor.',
+      features: [
+        '60 Full-Length CBT Tests (100 Questions each = 6,000 Questions)',
+        'Dynamic Question & Option Shuffle on every attempt (Zero duplicates)',
+        'All 20+ Categories Unlocked (School Classes 1-10, AIIMS, NEET, JEE, OPSC, SSC, UPSC, Bank, Railway)',
+        'Unlimited AI Weakness Diagnostic, 7-Day Sprint Plans & Remedial Tests',
+        '1-Click "Ask Arohi AI" Instant Doubt Clarification in Live Chat',
+        'All-India Leaderboard with State & Category Cutoff Benchmarking',
+        'Priority Evaluation with Official Watermarked Digital Certificate & PDF Export'
       ]
     }
   };
 
   const selectedPass = passes[activeTab];
 
-  const handleActivateSuccess = (tier: 'silver' | 'gold', paymentMethod: string, transactionId?: string) => {
-    const totalTests = tier === 'silver' ? 20 : 50;
+  const handleActivateSuccess = (tier: 'silver' | 'gold' | 'platinum', paymentMethod: string, transactionId?: string) => {
+    const totalTests = tier === 'silver' ? 10 : tier === 'gold' ? 25 : 60;
     
     // Save to auth context / firestore if available
     if (activateExamPass) {
@@ -208,31 +229,46 @@ export default function ArohiExamPassModal({
           </p>
 
           {/* Tier Switcher Tabs */}
-          <div className={`grid grid-cols-2 gap-2 max-w-md mx-auto mt-5 p-1 rounded-2xl border ${
+          <div className={`grid grid-cols-3 gap-1.5 max-w-lg mx-auto mt-5 p-1 rounded-2xl border ${
             isDarkMode ? 'bg-slate-900/90 border-slate-700/60' : 'bg-slate-100 border-slate-300'
           }`}>
             <button
+              type="button"
               onClick={() => { setActiveTab('silver'); setShowDirectUpiQr(false); }}
-              className={`py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'silver'
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 scale-[1.02]'
                   : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-700 hover:text-slate-950 font-bold'
               }`}
             >
-              <span>🥈 Silver Pass (₹99)</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 font-semibold">20 Tests</span>
+              <span>🥈 ₹99 Pass</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25 font-semibold">10 Tests</span>
             </button>
 
             <button
+              type="button"
               onClick={() => { setActiveTab('gold'); setShowDirectUpiQr(false); }}
-              className={`py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'gold'
                   ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-lg shadow-amber-500/30 scale-[1.02]'
                   : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-700 hover:text-slate-950 font-bold'
               }`}
             >
-              <span>👑 Gold Mega Pass (₹199)</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 font-semibold">50 Tests</span>
+              <span>👑 ₹199 Pass</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25 font-semibold">25 Tests</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setActiveTab('platinum'); setShowDirectUpiQr(false); }}
+              className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+                activeTab === 'platinum'
+                  ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/30 scale-[1.02]'
+                  : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-700 hover:text-slate-950 font-bold'
+              }`}
+            >
+              <span>💎 ₹299 Pass</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25 font-semibold">60 Tests</span>
             </button>
           </div>
         </div>

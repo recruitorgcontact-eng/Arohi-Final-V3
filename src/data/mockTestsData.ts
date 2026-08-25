@@ -13,15 +13,15 @@ import { classifyTestCategory } from '../utils/examCategoryClassifier';
 export const AROHI_EXAM_PASSES: ExamPassInfo[] = [
   {
     tier: 'silver',
-    name: 'Arohi Exams™ Silver Pass',
+    name: 'Arohi Exams™ Starter Pass',
     price: 99,
     originalPrice: 499,
-    totalTests: 20,
+    totalTests: 10,
     questionsPerTest: 100,
-    totalQuestions: 2000,
-    badge: 'Most Popular for Speed Prep',
+    totalQuestions: 1000,
+    badge: 'Starter Speed Prep',
     features: [
-      '20 Full-Length CBT Mock Tests (100 Qs each = 2,000 Questions)',
+      '10 Full-Length CBT Mock Tests (100 Qs each = 1,000 Questions)',
       'Dynamic Question & Option Shuffle on every attempt',
       'Arohi CBT Engine with live countdown timer & question palette',
       'Instant Scorecard, All-India Rank (AIR) & Percentile Curve',
@@ -31,21 +31,40 @@ export const AROHI_EXAM_PASSES: ExamPassInfo[] = [
   },
   {
     tier: 'gold',
-    name: 'Arohi Exams™ Gold Mega Pass',
+    name: 'Arohi Exams™ Gold Pass',
     price: 199,
-    originalPrice: 999,
-    totalTests: 50,
+    originalPrice: 899,
+    totalTests: 25,
     questionsPerTest: 100,
-    totalQuestions: 5000,
-    badge: 'Best Value • Complete Exam Mastery',
+    totalQuestions: 2500,
+    badge: 'Most Popular Choice',
     features: [
-      '50 Full-Length CBT Mock Tests (100 Qs each = 5,000 Questions)',
+      '25 Full-Length CBT Mock Tests (100 Qs each = 2,500 Questions)',
       'Dynamic Question & Option Shuffle on every attempt (No duplicate papers)',
-      'All 20+ Categories Unlocked (School Classes 1-10, Medical, SSC, UPSC, Bank, Railway, Teaching)',
-      'Unlimited AI Weakness Diagnostic & Remedial Practice Tests',
+      'All Categories Unlocked (School Classes 1-10, Medical, SSC, UPSC, Bank, Railway)',
+      'AI Weakness Diagnostic & Remedial Review after every exam',
       '1-Click "Ask Arohi AI" Instant Doubt Clarification in Chat',
       'All-India Leaderboard with Category-Wise Cutoff Benchmarking',
       'Official "Arohi Exams" Watermarked Performance Marksheet & PDF Export'
+    ]
+  },
+  {
+    tier: 'platinum',
+    name: 'Arohi Exams™ Platinum Mega Pass',
+    price: 299,
+    originalPrice: 1499,
+    totalTests: 60,
+    questionsPerTest: 100,
+    totalQuestions: 6000,
+    badge: 'Maximum Value • Complete Exam Mastery',
+    features: [
+      '60 Full-Length CBT Mock Tests (100 Qs each = 6,000 Questions)',
+      'Dynamic Question & Option Shuffle on every attempt (Zero duplicates)',
+      'All 20+ Categories Unlocked (School Classes 1-10, AIIMS, NEET, JEE, OPSC, SSC, UPSC, Bank, Railway)',
+      'Unlimited AI Weakness Diagnostic, 7-Day Sprint Plans & Remedial Tests',
+      '1-Click "Ask Arohi AI" Instant Doubt Clarification in Live Chat',
+      'All-India Leaderboard with State & Category Cutoff Benchmarking',
+      'Priority Evaluation with Official Watermarked Certificate & PDF Export'
     ]
   }
 ];
