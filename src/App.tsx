@@ -43,6 +43,7 @@ import ArohiGuideView from './components/ArohiGuideView';
 import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
+import BusinessOSShell from './components/business_os/BusinessOSShell';
 import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
@@ -102,7 +103,7 @@ export default function App() {
       if (p0 === 'admin') return true;
       if (p0 === 'mocktests' || p0 === 'mocktest') return true;
       if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools'].includes(p0)) {
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one'].includes(p0)) {
         return true;
       }
     }
@@ -130,7 +131,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one'];
 
   const [selectedMockTestSlug, setSelectedMockTestSlug] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -2068,6 +2069,18 @@ export default function App() {
             onUpdateAppStatus={handleUpdateAppStatus}
           />
         );
+      case 'business-os':
+      case 'businessos':
+      case 'arohione':
+      case 'one':
+        return (
+          <BusinessOSShell 
+            onBackToMainApp={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+          />
+        );
       case 'privacy':
       case 'terms':
       case 'refunds':
@@ -2158,6 +2171,7 @@ export default function App() {
           <MockTestsHub
             isDarkMode={isDarkMode}
             initialTestSlug={selectedMockTestSlug}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               setHasEntered(true);
@@ -3113,6 +3127,27 @@ export default function App() {
       </div>
     );
   };
+
+  // Standalone Direct Arohi One Business OS Enterprise Portal Render
+  if (activeTab === 'business-os' || activeTab === 'businessos' || activeTab === 'arohione' || activeTab === 'one') {
+    return (
+      <div id="arohi-business-os-portal-root" className="min-h-screen w-full font-sans antialiased">
+        <SEOHead 
+          activeTab="business-os" 
+          selectedState="" 
+          selectedAudienceSlug="" 
+          selectedProblemSlug=""
+          currentLanguage={language} 
+        />
+        <BusinessOSShell 
+          onBackToMainApp={() => {
+            setActiveTab('home');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }} 
+        />
+      </div>
+    );
+  }
 
   // Standalone Direct Admin Route Portal Render
   if (activeTab === 'admin') {

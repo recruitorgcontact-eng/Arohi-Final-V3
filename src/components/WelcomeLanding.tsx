@@ -53,6 +53,7 @@ import { useAuth } from '../context/AuthContext';
 import ArohiAvatar from './ArohiAvatar';
 import HeaderNotifications from './HeaderNotifications';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
+import ArohiOneBusinessOSButtonBanner from './business_os/ArohiOneBusinessOSButtonBanner';
 
 interface WelcomeLandingProps {
   onEnter: () => void;
@@ -841,12 +842,15 @@ export default function WelcomeLanding({
 
           {/* Center: Logo and Tagline */}
           <div className="flex flex-col items-center justify-center text-center">
-            <h1 className="text-lg sm:text-2xl font-black tracking-[-0.03em] flex items-center gap-1 font-sans">
+            <h1 className="text-lg sm:text-2xl font-black tracking-[-0.03em] flex items-center justify-center gap-1 font-sans">
               <span className={isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-300' : 'text-slate-900'}>
                 AROHI
               </span>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-fuchsia-400">
                 AI
+              </span>
+              <span className="text-[7px] sm:text-[8.5px] font-black text-cyan-400 self-start font-mono leading-none tracking-normal">
+                TM
               </span>
             </h1>
             <p className="block text-[9px] sm:text-[10.5px] font-semibold tracking-[0.2em] uppercase leading-none mt-0.5 font-sans">
@@ -1209,12 +1213,20 @@ export default function WelcomeLanding({
             </button>
           </div>
 
-          {/* Official 3D Neon "Arohi Exams™" Capsule Button Banner */}
-          <div className="mt-4 pt-3.5 border-t border-purple-500/20">
+          {/* Official 3D Neon "Arohi Exams™" and "AROHI ONE Business OS" Compact Capsule Banners */}
+          <div className="mt-2.5 pt-2 border-t border-purple-500/20 space-y-2">
             <ArohiExamsButtonBanner
               isDarkMode={isDarkMode}
               onClick={() => {
                 setActiveTab('mocktests');
+                onEnter();
+              }}
+            />
+
+            <ArohiOneBusinessOSButtonBanner
+              isDarkMode={isDarkMode}
+              onClick={() => {
+                setActiveTab('business-os');
                 onEnter();
               }}
             />
@@ -1526,6 +1538,23 @@ export default function WelcomeLanding({
                     </div>
                     <span className="text-[9px] font-black uppercase bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded-md">
                       Hot
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('business-os');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/20 flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-cyan-400" />
+                      <span>AROHI ONE™ (Business OS)</span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 px-1.5 py-0.5 rounded-md">
+                      New
                     </span>
                   </button>
 

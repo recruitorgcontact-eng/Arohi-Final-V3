@@ -22,12 +22,17 @@ export default function ArohiExamPassModal({
   selectedTier = 'silver',
   onPassActivated
 }: ArohiExamPassModalProps) {
-  const { user, activateExamPass } = useAuth();
+  const { user, userData, userMemory, activateExamPass } = useAuth();
   const [activeTab, setActiveTab] = useState<'silver' | 'gold' | 'platinum'>(selectedTier);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showDirectUpiQr, setShowDirectUpiQr] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const rawStudentName = userData?.profile?.name || userData?.displayName || userMemory?.displayName || user?.displayName || (user?.email ? user.email.split('@')[0] : '');
+  const studentName = user ? (rawStudentName?.trim() || 'Student') : 'Student';
+  const studentEmail = userData?.profile?.email || userData?.email || user?.email || '';
+  const studentPhone = userData?.profile?.phone || '';
 
   if (!isOpen) return null;
 
@@ -139,15 +144,19 @@ export default function ArohiExamPassModal({
         price: selectedPass.price,
         amountInRupees: selectedPass.price,
         planName: selectedPass.name,
-        userEmail: user?.email || '',
-        userName: user?.displayName || 'Aspirant',
+        userEmail: studentEmail,
+        userName: studentName,
+        userPhone: studentPhone,
         notes: {
           productType: 'AROHI_EXAMS_TEST_PASS',
           tier: selectedPass.tier,
-          totalTests: String(selectedPass.totalTests)
+          totalTests: String(selectedPass.totalTests),
+          candidateName: studentName,
+          candidateEmail: studentEmail,
+          userId: user?.uid || 'guest'
         },
         onSuccess: (resp) => {
-          handleActivateSuccess(selectedPass.tier, 'Razorpay / UPI Gateway', resp.razorpay_payment_id);
+          handleActivateSuccess(selectedPass.tier, 'Razorpay Payment Gateway', resp.razorpay_payment_id);
         },
         onError: (err) => {
           setIsProcessing(false);
@@ -441,6 +450,27 @@ export default function ArohiExamPassModal({
                   </form>
                 </div>
               )}
+
+              {/* Free Plan Policy Info Banner */}
+              <div className={`mt-4 p-3 rounded-2xl border text-center text-xs flex items-center justify-between gap-2 ${
+                isDarkMode 
+                  ? 'bg-slate-900/60 border-slate-800 text-slate-400' 
+                  : 'bg-slate-50 border-slate-200 text-slate-600'
+              }`}>
+                <div className="flex items-center gap-2 text-left">
+                  <span className="text-base">🎁</span>
+                  <span>
+                    <strong>Free Plan Policy:</strong> Every student can attend up to <strong>5 free tests</strong> across all categories. Passes unlock unlimited dynamic practice.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline shrink-0"
+                >
+                  Continue Free
+                </button>
+              </div>
             </>
           )}
         </div>

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Send, Bot, User, Sparkles, Plus, RefreshCw, Trash2, Mic, Paperclip, CheckCircle, 
   ArrowRight, Lightbulb, MapPin, Briefcase, Landmark, Award, Minus, X, Globe, Phone, 
-  History, Download, FileText, FileSpreadsheet, ThumbsUp, ThumbsDown, Copy, MoreHorizontal, 
+  History, Download, FileText, FileSpreadsheet, Presentation, ThumbsUp, ThumbsDown, Copy, MoreHorizontal, 
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
@@ -20,7 +20,9 @@ import ArohiAvatar from './ArohiAvatar';
 import { Language, getTranslation, getWelcomeContent, getSuggestedPrompts } from '../translations';
 import ArohiVoiceCall from './ArohiVoiceCall';
 import { generateCallSummaryPDF, generateResumePDF, analyzeTurns } from '../lib/pdfGenerator';
-import { exportToPDF, exportToWord, exportToExcel } from '../lib/documentExporter';
+import { exportToPDF, exportToWord, exportToExcel, exportToPPTX, parseContentToSlides, PresentationData, ExcelWorkbookData, parseContentToExcelData } from '../lib/documentExporter';
+import InChatMessagePresentation from './InChatMessagePresentation';
+import InChatMessageSpreadsheet from './InChatMessageSpreadsheet';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -544,6 +546,81 @@ function parseMessageMcpPayload(content: string) {
   return {
     cleanedContent: content,
     mcpData: null
+  };
+}
+
+function parseMessagePresentation(content: string) {
+  const startIndex = content.indexOf('[PRESENTATION_DATA_START]');
+  const endIndex = content.indexOf('[PRESENTATION_DATA_END]');
+  
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const rawJson = content.substring(startIndex + '[PRESENTATION_DATA_START]'.length, endIndex);
+    const textWithoutJson = content.substring(0, startIndex) + content.substring(endIndex + '[PRESENTATION_DATA_END]'.length);
+    try {
+      const parsedData = JSON.parse(rawJson);
+      return {
+        cleanedContent: textWithoutJson.trim(),
+        presentationData: parsedData as PresentationData
+      };
+    } catch (e) {
+      console.error("Failed to parse presentation JSON in message", e);
+    }
+  }
+
+  // Also auto-detect if the message is explicitly formatted as a presentation slide deck
+  const isExplicitPresentation = /Slide\s+\d+[:\-]|#\s+Slide\s+\d+/i.test(content) &&
+                                content.includes('Slide 1') &&
+                                content.includes('Slide 2');
+
+  if (isExplicitPresentation) {
+    const autoParsed = parseContentToSlides(content);
+    if (autoParsed.slides.length >= 2) {
+      return {
+        cleanedContent: content,
+        presentationData: autoParsed
+      };
+    }
+  }
+
+  return {
+    cleanedContent: content,
+    presentationData: null
+  };
+}
+
+function parseMessageSpreadsheet(content: string) {
+  const startIndex = content.indexOf('[SPREADSHEET_DATA_START]');
+  const endIndex = content.indexOf('[SPREADSHEET_DATA_END]');
+  
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const rawJson = content.substring(startIndex + '[SPREADSHEET_DATA_START]'.length, endIndex);
+    const textWithoutJson = content.substring(0, startIndex) + content.substring(endIndex + '[SPREADSHEET_DATA_END]'.length);
+    try {
+      const parsedData = JSON.parse(rawJson);
+      return {
+        cleanedContent: textWithoutJson.trim(),
+        spreadsheetData: parsedData as ExcelWorkbookData
+      };
+    } catch (e) {
+      console.error("Failed to parse spreadsheet JSON in message", e);
+    }
+  }
+
+  // Also auto-detect if the message contains markdown tables with headers & data
+  const hasMarkdownTable = content.includes('|') && content.split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|')).length >= 3;
+  if (hasMarkdownTable) {
+    const autoParsed = parseContentToExcelData(content, 'Arohi_Data_Model');
+    if (autoParsed.sheets.length > 0 && autoParsed.sheets[0].rows.length >= 2) {
+      return {
+        cleanedContent: content,
+        spreadsheetData: autoParsed
+      };
+    }
+  }
+
+  return {
+    cleanedContent: content,
+    spreadsheetData: null
   };
 }
 
@@ -3789,8 +3866,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               ? parseMessageResume(summaryParsed.cleanedContent) 
               : { cleanedContent: msg.content, resumeData: null };
 
+            const presentationParsed = msg.role === 'assistant'
+              ? parseMessagePresentation(resumeParsed.cleanedContent)
+              : { cleanedContent: msg.content, presentationData: null };
+
+            const spreadsheetParsed = msg.role === 'assistant'
+              ? parseMessageSpreadsheet(presentationParsed.cleanedContent)
+              : { cleanedContent: msg.content, spreadsheetData: null };
+
             const parsed = msg.role === 'assistant'
-              ? parseMessageMcpPayload(resumeParsed.cleanedContent)
+              ? parseMessageMcpPayload(spreadsheetParsed.cleanedContent)
               : { cleanedContent: msg.content, mcpData: null };
 
             const isLiked = likedMessageIds.includes(msg.id);
@@ -3860,6 +3945,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       </>
                     )}
                   </div>
+
+                  {presentationParsed.presentationData && (
+                    <InChatMessagePresentation
+                      presentationData={presentationParsed.presentationData}
+                      isDarkMode={isDarkMode}
+                    />
+                  )}
+
+                  {spreadsheetParsed.spreadsheetData && (
+                    <InChatMessageSpreadsheet
+                      workbookData={spreadsheetParsed.spreadsheetData}
+                      isDarkMode={isDarkMode}
+                    />
+                  )}
 
                   {resumeParsed.resumeData && (
                     <div className={`mt-4 p-4 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-[#1b1342] to-[#25155c] border-[#a78bfa]/40' : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'} border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left`}>
@@ -4055,6 +4154,24 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                             className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-[#211745] hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
                           >
                             <FileText className="w-3.5 h-3.5 text-blue-500" /> Export DOCX
+                          </button>
+                          <button
+                            onClick={() => {
+                              exportToPPTX('Arohi_AI_Presentation', parsed.cleanedContent);
+                              setActiveMessageMenuId(null);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-purple-300 hover:bg-[#211745] hover:text-white' : 'text-purple-700 hover:bg-purple-50 hover:text-purple-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                          >
+                            <Presentation className="w-3.5 h-3.5 text-purple-500" /> Export PPTX
+                          </button>
+                          <button
+                            onClick={() => {
+                              exportToExcel('Arohi_AI_Data', 'Arohi AI Data Export', parsed.cleanedContent);
+                              setActiveMessageMenuId(null);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold ${isDarkMode ? 'text-emerald-300 hover:bg-[#211745] hover:text-white' : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" /> Export Excel
                           </button>
                         </div>
                       )}

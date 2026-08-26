@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
+import ArohiOneBusinessOSButtonBanner from './business_os/ArohiOneBusinessOSButtonBanner';
 import { PRICING_TIERS } from '../data/pricingData';
 import { Language, getTranslation } from '../translations';
 
@@ -144,10 +145,14 @@ export default function ArohiLandingPage({
                 <ArrowRight className="w-4 h-4 text-white" />
               </button>
 
-              {/* Official 3D Neon "Arohi Exams™" Capsule Button Banner */}
-              <div className="w-full max-w-lg my-1">
+              {/* Official 3D Neon "Arohi Exams™" and "AROHI ONE Business OS" Compact Capsule Banners */}
+              <div className="w-full max-w-lg my-1 space-y-2">
                 <ArohiExamsButtonBanner
                   onClick={() => setActiveTab('mocktests')}
+                />
+                
+                <ArohiOneBusinessOSButtonBanner
+                  onClick={() => setActiveTab('business-os')}
                 />
               </div>
               

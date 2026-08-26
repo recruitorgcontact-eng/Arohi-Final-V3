@@ -105,6 +105,37 @@ export default function BusinessPage({ onOpenAuth }: { onOpenAuth?: () => void }
         </div>
       </div>
 
+      {/* AROHI ONE Business OS Banner */}
+      <div className="bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-slate-900/90 border border-purple-500/40 rounded-2xl md:rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-xl">
+        <div className="space-y-1.5 text-left">
+          <div className="flex items-center gap-2">
+            <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+              ENTERPRISE BUSINESS OS
+            </span>
+            <span className="text-[10px] text-amber-300 font-bold flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>Full ERP, CRM & Telephony</span>
+            </span>
+          </div>
+          <h3 className="text-lg md:text-xl font-black text-white">
+            AROHI ONE — Your Complete Business Operating System
+          </h3>
+          <p className="text-xs text-slate-300 font-medium max-w-2xl leading-relaxed">
+            Manage your entire enterprise from one unified workspace: CRM leads, sales pipeline, GST tax invoicing with dynamic UPI QR, purchases, inventory, HR payroll, and autonomous Arohi Call AI voice telephony.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            window.location.hash = '#business-os';
+            window.location.pathname = '/business-os';
+          }}
+          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-2"
+        >
+          <span>Launch AROHI ONE OS</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* SECURITY REGISTRATION NOTICE BANNER FOR STARTUP CHECKS */}
       {!user && (
         <div className="bg-gradient-to-r from-blue-950/40 via-[#0e163d]/40 to-blue-950/40 border border-blue-500/30 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left shadow-lg">

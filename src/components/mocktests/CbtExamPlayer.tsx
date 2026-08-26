@@ -322,11 +322,16 @@ export default function CbtExamPlayer({
       completedAt: new Date().toISOString(),
       totalTimeTakenSeconds,
       answers,
-      questionStates
+      questionStates,
+      preparedQuestions: shuffledTestQuestions,
+      preparedTest: {
+        ...preparedTest,
+        questions: shuffledTestQuestions
+      }
     };
 
     onSubmit(submission);
-  }, [recordQuestionTime, questionStates, preparedTest.durationMinutes, preparedTest.id, secondsRemaining, userName, userState, onSubmit]);
+  }, [recordQuestionTime, questionStates, preparedTest, secondsRemaining, userName, userState, onSubmit, shuffledTestQuestions]);
 
   // Auto-submit when time expires
   useEffect(() => {

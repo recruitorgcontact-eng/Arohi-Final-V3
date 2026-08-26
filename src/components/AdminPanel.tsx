@@ -1407,6 +1407,9 @@ export default function AdminPanel({
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-fuchsia-400 drop-shadow-[0_0_16px_rgba(99,102,241,0.4)]">
                       AI
                     </span>
+                    <span className="text-[9px] sm:text-xs font-black text-cyan-400 self-start font-mono leading-none tracking-normal">
+                      TM
+                    </span>
                   </h1>
                 </div>
 

@@ -389,6 +389,8 @@ export interface TestSubmission {
   totalTimeTakenSeconds: number;
   answers: Record<string, string>; // questionId -> selectedOption
   questionStates: Record<string, QuestionAttemptState>;
+  preparedQuestions?: ExamQuestion[];
+  preparedTest?: MockTest;
 }
 
 export interface SectionResult {

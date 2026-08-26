@@ -37,6 +37,17 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
 
   const toolsList = [
     {
+      id: 'business-os',
+      title: 'AROHI ONE — Your Business OS',
+      category: 'ENTERPRISE ERP & CRM',
+      catFilter: 'BUSINESS & GOVT',
+      description: 'Unified Business Operating System with CRM leads, GST invoicing, deals pipeline, inventory, HR payroll, and Arohi Call AI telephony.',
+      icon: Briefcase,
+      color: 'from-purple-600 via-indigo-600 to-cyan-600',
+      badge: 'FLAGSHIP OS',
+      tabId: 'business-os'
+    },
+    {
       id: 'music',
       title: 'AI Music & Song Generator',
       category: 'AI CREATIVE & AUDIO',
