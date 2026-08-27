@@ -281,8 +281,12 @@ export interface ExamPassInfo {
   features: string[];
   badge?: string;
   testsRemaining?: number;
+  testsUsed?: number;
+  validityDays?: number;
+  expiresAt?: string;
   activatedAt?: string;
   paymentMethod?: string;
+  transactionId?: string;
 }
 
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard';

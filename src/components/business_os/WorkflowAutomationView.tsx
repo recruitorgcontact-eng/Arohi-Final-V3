@@ -14,7 +14,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { AutomationRule } from './types';
 
 export default function WorkflowAutomationView() {
-  const { automations, toggleAutomation, showToast } = useBusinessOS();
+  const { automations = [], toggleAutomation, showToast } = useBusinessOS();
+  const safeAutomations = automations || [];
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
@@ -46,7 +47,7 @@ export default function WorkflowAutomationView() {
 
       {/* Rules List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {automations.map((rule) => (
+        {safeAutomations.map((rule) => (
           <div
             key={rule.id}
             className={`bg-white dark:bg-[#121214] border rounded-2xl p-4 space-y-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all flex flex-col justify-between ${

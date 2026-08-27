@@ -116,8 +116,12 @@ export interface UserData {
     name: string;
     totalTests: number;
     testsRemaining: number;
+    testsUsed?: number;
+    validityDays?: number;
+    expiresAt?: string;
     activatedAt: string;
     paymentMethod: string;
+    transactionId?: string;
   };
   freeExamAttemptsCount?: number;
   stats?: Record<string, any>;
@@ -340,7 +344,8 @@ interface AuthContextType {
     paymentMethod?: string;
     paymentId?: string;
   }) => Promise<void>;
-  activateExamPass: (tier: 'silver' | 'gold' | 'platinum', paymentMethod?: string) => Promise<void>;
+  activateExamPass: (tier: 'silver' | 'gold' | 'platinum', paymentMethod?: string, transactionId?: string) => Promise<void>;
+  consumeExamPassTest: () => Promise<{ success: boolean; testsRemaining: number; expired?: boolean }>;
   incrementFreeExamAttempt: () => Promise<number>;
   signInWithBiometrics: (email: string) => Promise<void>;
 }
@@ -1501,21 +1506,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const activateExamPass = async (tier: 'silver' | 'gold' | 'platinum', paymentMethod: string = 'Razorpay / UPI') => {
+  const activateExamPass = async (tier: 'silver' | 'gold' | 'platinum', paymentMethod: string = 'Razorpay Checkout', transactionId?: string) => {
     const totalTests = tier === 'silver' ? 10 : tier === 'gold' ? 25 : 60;
+    const validityDays = tier === 'silver' ? 30 : tier === 'gold' ? 90 : 365;
     const name = tier === 'silver' 
       ? 'Arohi Exams™ Starter Pass (₹99)' 
       : tier === 'gold' 
         ? 'Arohi Exams™ Gold Pass (₹199)' 
         : 'Arohi Exams™ Platinum Mega Pass (₹299)';
     
+    const activatedAt = new Date().toISOString();
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + validityDays);
+    const expiresAt = expiryDate.toISOString();
+
     const passObj = {
       tier,
       name,
       totalTests,
       testsRemaining: totalTests,
-      activatedAt: new Date().toISOString(),
-      paymentMethod
+      testsUsed: 0,
+      validityDays,
+      activatedAt,
+      expiresAt,
+      paymentMethod,
+      transactionId: transactionId || `TXN_${Date.now()}`
     };
 
     if (userData) {
@@ -1542,6 +1557,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('Firestore exam pass update fallback noted:', err);
       }
     }
+  };
+
+  const consumeExamPassTest = async (): Promise<{ success: boolean; testsRemaining: number; expired?: boolean }> => {
+    let currentPass: any = userData?.examPass;
+    if (!currentPass) {
+      try {
+        const stored = localStorage.getItem('arohi_exam_pass');
+        if (stored) currentPass = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    if (!currentPass) {
+      return { success: false, testsRemaining: 0 };
+    }
+
+    // Check expiry
+    if (currentPass.expiresAt && new Date(currentPass.expiresAt).getTime() < Date.now()) {
+      return { success: false, testsRemaining: 0, expired: true };
+    }
+
+    const currentRemaining = typeof currentPass.testsRemaining === 'number' 
+      ? currentPass.testsRemaining 
+      : (currentPass.totalTests || 10);
+
+    if (currentRemaining <= 0) {
+      return { success: false, testsRemaining: 0 };
+    }
+
+    const nextRemaining = Math.max(0, currentRemaining - 1);
+    const updatedPass = {
+      ...currentPass,
+      testsRemaining: nextRemaining,
+      testsUsed: (currentPass.testsUsed || 0) + 1,
+      lastUsedAt: new Date().toISOString()
+    };
+
+    if (userData) {
+      const updatedUser = { ...userData, examPass: updatedPass };
+      setUserData(updatedUser);
+      if (user?.uid) {
+        localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUser));
+      }
+    }
+
+    try {
+      localStorage.setItem('arohi_exam_pass', JSON.stringify(updatedPass));
+      window.dispatchEvent(new CustomEvent('arohi_exam_pass_updated', { detail: updatedPass }));
+    } catch (e) {}
+
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid);
+        await updateDoc(docRef, {
+          examPass: updatedPass,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (err) {}
+    }
+
+    return { success: true, testsRemaining: nextRemaining };
   };
 
   const incrementFreeExamAttempt = async (): Promise<number> => {
@@ -1617,6 +1692,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateActivities,
       updateUserSubscription,
       activateExamPass,
+      consumeExamPassTest,
       incrementFreeExamAttempt
     }}>
       {children}

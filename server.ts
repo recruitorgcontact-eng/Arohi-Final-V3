@@ -5346,26 +5346,40 @@ Construct this JSON strictly based on details discussed, or use standard profess
         messageText.toLowerCase().includes('powerpoint') ||
         messageText.toLowerCase().includes('keynote')
       ) {
-        dynamicInstruction += `\n\n[CRITICAL APPLE-GRADE PRESENTATION & KEYNOTE DIRECTIVE:
+        dynamicInstruction += `\n\n[CRITICAL PRESENTATION & SLIDE DECK DIRECTIVE:
 1. NO PROGRAMMING CODE: You MUST NEVER write Python code, scripts (like python-pptx, import pptx, RGBColor, def add_header, slide.shapes), or markdown code blocks. The user wants the ACTUAL HUMAN PRESENTATION SLIDES!
-2. APPLE KEYNOTE AESTHETIC & CRAFTSMANSHIP: Structure each slide with a punchy high-contrast title, concise executive subtitle, 3-4 impactful strategic bullet points, optional key metrics (e.g., market size or growth rate), and a bold concluding takeaway.
-3. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
-4. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
+2. INDUSTRY-SPECIFIC THEMES & AESTHETICS: Tailor the tone and theme to the user's specific domain:
+   - NGO, Social Impact, Non-Profit, Save the Children, Environment: Set "theme": "emerald_warmth"
+   - Real Estate, Architecture, Property, Construction, Hospitality: Set "theme": "luxury_slate"
+   - Healthcare, Medical, Biotech, Pharma, Clinical: Set "theme": "clinical_teal"
+   - Finance, Banking, Investment, FinTech, Corporate: Set "theme": "corporate_navy"
+   - Education, EdTech, Marketing, Creative, Media: Set "theme": "vibrant_sunburst"
+   - Technology, Strategy, Executive, AI, Keynote: Set "theme": "apple_keynote"
+3. VARIETY OF GRAPH & CHART SYSTEMS: Include native vector charts where relevant (e.g. market growth, funding distribution, budget breakdown, performance metrics, quarterly stats). Set "chart": { "type": "col" | "bar" | "line" | "pie" | "doughnut", "title": "Chart Title", "labels": ["Label 1", "Label 2", ...], "datasets": [{ "name": "Series Name", "values": [10, 25, ...] }] }.
+4. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
+5. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
 Schema:
 {
   "title": "Specific Deck Title matching User Topic",
   "subtitle": "Executive Vision & Strategic Overview",
+  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst",
   "slides": [
     {
-      "title": "Problem or Market Shift",
-      "subtitle": "The Current Landscape",
-      "bullets": ["High impact executive bullet 1", "High impact executive bullet 2", "High impact executive bullet 3"],
-      "keyMetric": { "value": "10x", "label": "Efficiency Gain" },
-      "callout": "Strategic takeaway for executive decision makers"
+      "title": "Slide Title",
+      "subtitle": "Slide Subtitle",
+      "bullets": ["Impactful strategic point 1", "Impactful strategic point 2", "Impactful strategic point 3"],
+      "keyMetric": { "value": "85%", "label": "Key Performance Metric" },
+      "chart": {
+        "type": "col",
+        "title": "Quarterly Impact / Revenue Growth",
+        "labels": ["Q1", "Q2", "Q3", "Q4"],
+        "datasets": [{ "name": "2026", "values": [12, 28, 45, 78] }]
+      },
+      "callout": "Strategic takeaway or conclusion"
     }
   ]
 }
-This allows Arohi AI to render an interactive slide carousel in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
+This allows Arohi AI to render an interactive slide carousel with dynamic charts and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
       }
 
       if (
@@ -5622,26 +5636,40 @@ app.post('/api/chat-stream', async (req, res) => {
         messageText.toLowerCase().includes('powerpoint') ||
         messageText.toLowerCase().includes('keynote')
       ) {
-        dynamicInstruction += `\n\n[CRITICAL APPLE-GRADE PRESENTATION & KEYNOTE DIRECTIVE:
+        dynamicInstruction += `\n\n[CRITICAL PRESENTATION & SLIDE DECK DIRECTIVE:
 1. NO PROGRAMMING CODE: You MUST NEVER write Python code, scripts (like python-pptx, import pptx, RGBColor, def add_header, slide.shapes), or markdown code blocks. The user wants the ACTUAL HUMAN PRESENTATION SLIDES!
-2. APPLE KEYNOTE AESTHETIC & CRAFTSMANSHIP: Structure each slide with a punchy high-contrast title, concise executive subtitle, 3-4 impactful strategic bullet points, optional key metrics (e.g., market size or growth rate), and a bold concluding takeaway.
-3. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
-4. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
+2. INDUSTRY-SPECIFIC THEMES & AESTHETICS: Tailor the tone and theme to the user's specific domain:
+   - NGO, Social Impact, Non-Profit, Save the Children, Environment: Set "theme": "emerald_warmth"
+   - Real Estate, Architecture, Property, Construction, Hospitality: Set "theme": "luxury_slate"
+   - Healthcare, Medical, Biotech, Pharma, Clinical: Set "theme": "clinical_teal"
+   - Finance, Banking, Investment, FinTech, Corporate: Set "theme": "corporate_navy"
+   - Education, EdTech, Marketing, Creative, Media: Set "theme": "vibrant_sunburst"
+   - Technology, Strategy, Executive, AI, Keynote: Set "theme": "apple_keynote"
+3. VARIETY OF GRAPH & CHART SYSTEMS: Include native vector charts where relevant (e.g. market growth, funding distribution, budget breakdown, performance metrics, quarterly stats). Set "chart": { "type": "col" | "bar" | "line" | "pie" | "doughnut", "title": "Chart Title", "labels": ["Label 1", "Label 2", ...], "datasets": [{ "name": "Series Name", "values": [10, 25, ...] }] }.
+4. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
+5. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
 Schema:
 {
   "title": "Specific Deck Title matching User Topic",
   "subtitle": "Executive Vision & Strategic Overview",
+  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst",
   "slides": [
     {
-      "title": "Problem or Market Shift",
-      "subtitle": "The Current Landscape",
-      "bullets": ["High impact executive bullet 1", "High impact executive bullet 2", "High impact executive bullet 3"],
-      "keyMetric": { "value": "10x", "label": "Efficiency Gain" },
-      "callout": "Strategic takeaway for executive decision makers"
+      "title": "Slide Title",
+      "subtitle": "Slide Subtitle",
+      "bullets": ["Impactful strategic point 1", "Impactful strategic point 2", "Impactful strategic point 3"],
+      "keyMetric": { "value": "85%", "label": "Key Performance Metric" },
+      "chart": {
+        "type": "col",
+        "title": "Quarterly Impact / Revenue Growth",
+        "labels": ["Q1", "Q2", "Q3", "Q4"],
+        "datasets": [{ "name": "2026", "values": [12, 28, 45, 78] }]
+      },
+      "callout": "Strategic takeaway or conclusion"
     }
   ]
 }
-This allows Arohi AI to render an interactive slide carousel in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
+This allows Arohi AI to render an interactive slide carousel with dynamic charts and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
       }
 
       if (
@@ -5947,6 +5975,94 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
       transcript: fallback,
       rawText: fallback
     });
+  }
+});
+
+// Flagship Arohi Zypher High-Fidelity Audio TTS Synthesizer
+const arohiZypherAudioCache = new Map<string, { audioBase64: string; mimeType: string }>();
+
+app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) => {
+  try {
+    const { text, prompt, voice = 'Zypher' } = req.body;
+    const rawInput = (text || prompt || '').trim();
+    if (!rawInput) {
+      return res.status(400).json({ success: false, error: 'Text is required for Arohi Zypher voice synthesis.' });
+    }
+
+    const cleanText = rawInput
+      .replace(/[*_#`~[\]]/g, '')
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/₹/g, 'Rupees ')
+      .replace(/\b1v1\b/gi, 'One v One')
+      .replace(/\bXP\b/g, 'X P')
+      .replace(/\bGK\b/g, 'G K')
+      .replace(/\bAI\b/g, 'A I')
+      .replace(/\bCBT\b/g, 'C B T')
+      .trim();
+
+    const cacheKey = `${voice.toLowerCase()}_${cleanText.toLowerCase()}`;
+    if (arohiZypherAudioCache.has(cacheKey)) {
+      const cached = arohiZypherAudioCache.get(cacheKey)!;
+      return res.json({
+        success: true,
+        audioBase64: cached.audioBase64,
+        mimeType: cached.mimeType,
+        sampleRate: 24000,
+        cached: true,
+        voice: 'Arohi Zypher'
+      });
+    }
+
+    const client = getAiClient('v1beta') || getAiClient('v1alpha');
+    if (client) {
+      const voicesToTry = ['Zephyr', 'Aoede', 'Kore'];
+      for (const vName of voicesToTry) {
+        try {
+          const response = await client.models.generateContent({
+            model: 'gemini-3.1-flash-tts-preview',
+            contents: [{ parts: [{ text: cleanText }] }],
+            config: {
+              responseModalities: [Modality.AUDIO],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: vName }
+                }
+              }
+            }
+          });
+
+          const part = response.candidates?.[0]?.content?.parts?.[0];
+          const audioBase64 = part?.inlineData?.data;
+          const mimeType = part?.inlineData?.mimeType || 'audio/wav';
+
+          if (audioBase64) {
+            if (arohiZypherAudioCache.size > 250) {
+              const firstKey = arohiZypherAudioCache.keys().next().value;
+              if (firstKey) arohiZypherAudioCache.delete(firstKey);
+            }
+            arohiZypherAudioCache.set(cacheKey, { audioBase64, mimeType });
+            return res.json({
+              success: true,
+              audioBase64,
+              mimeType,
+              sampleRate: 24000,
+              voice: 'Arohi Zypher'
+            });
+          }
+        } catch (ttsErr: any) {
+          console.warn(`[Arohi Zypher TTS] Voice ${vName} attempt notice:`, ttsErr?.message || ttsErr);
+        }
+      }
+    }
+
+    return res.json({
+      success: false,
+      error: 'Gemini TTS unavailable or API key not ready',
+      text: cleanText
+    });
+  } catch (err: any) {
+    console.error('Error generating Arohi Zypher audio:', err);
+    return res.status(500).json({ success: false, error: err.message || err });
   }
 });
 

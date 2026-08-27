@@ -30,6 +30,7 @@ import ArohiAiAnalysisScreen from './ArohiAiAnalysisScreen';
 import ArohiStudyPlanScreen from './ArohiStudyPlanScreen';
 import ArohiAiMentorScreen from './ArohiAiMentorScreen';
 import ExamSubjectPickerModal from './ExamSubjectPickerModal';
+import ArohiExamsArena from './ArohiExamsArena';
 
 interface MockTestsHubProps {
   isDarkMode?: boolean;
@@ -46,7 +47,7 @@ export default function MockTestsHub({
   initialTestSlug,
   onOpenAuth
 }: MockTestsHubProps) {
-  const { user, userData, userMemory, incrementFreeExamAttempt } = useAuth();
+  const { user, userData, userMemory, incrementFreeExamAttempt, consumeExamPassTest } = useAuth();
   const rawDisplayName = 
     userData?.profile?.name || 
     userData?.displayName || 
@@ -59,11 +60,35 @@ export default function MockTestsHub({
 
   const [allTests, setAllTests] = useState<MockTest[]>(INITIAL_MOCK_TESTS);
   
-  // Free tier quota policy: 5 free tests in all categories
-  const hasActivePass = Boolean(
-    userData?.examPass || 
-    (typeof window !== 'undefined' && localStorage.getItem('arohi_exam_pass'))
-  );
+  // Real pass quota tracking (from userData or local storage)
+  const [localPass, setLocalPass] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('arohi_exam_pass');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    const handlePassUpdate = (e: any) => {
+      if (e.detail) setLocalPass(e.detail);
+    };
+    window.addEventListener('arohi_exam_pass_activated', handlePassUpdate);
+    window.addEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    return () => {
+      window.removeEventListener('arohi_exam_pass_activated', handlePassUpdate);
+      window.removeEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    };
+  }, []);
+
+  const activePass = userData?.examPass || localPass;
+  const passTier = activePass?.tier || 'silver';
+  const passTotalTests = activePass?.totalTests || (passTier === 'silver' ? 10 : passTier === 'gold' ? 25 : 60);
+  const passTestsRemaining = typeof activePass?.testsRemaining === 'number' 
+    ? activePass.testsRemaining 
+    : (activePass ? passTotalTests : 0);
+  
+  const hasActivePass = Boolean(activePass && passTestsRemaining > 0);
+  const isPassExhausted = Boolean(activePass && passTestsRemaining <= 0);
 
   const [localSubmissionCount, setLocalSubmissionCount] = useState<number>(() => {
     try {
@@ -82,9 +107,9 @@ export default function MockTestsHub({
   const isFreeLimitExceeded = !hasActivePass && freeAttemptsCount >= MAX_FREE_TESTS;
   
   // 5-Tab Navigation System: 'home' | 'exams' | 'ai_mentor' | 'results' | 'profile'
-  // Special Sub-views: 'player' | 'ai_analysis' | 'study_plan' | 'leaderboard' | 'generator' | 'kg_landing' | 'school_boards' | 'school_landing'
+  // Special Sub-views: 'player' | 'ai_analysis' | 'study_plan' | 'leaderboard' | 'generator' | 'kg_landing' | 'school_boards' | 'school_landing' | 'arena'
   const [activeTab, setActiveTab] = useState<'home' | 'exams' | 'ai_mentor' | 'results' | 'profile'>('home');
-  const [subView, setSubView] = useState<'none' | 'player' | 'ai_analysis' | 'study_plan' | 'leaderboard' | 'generator' | 'kg_landing' | 'school_boards' | 'school_landing'>('none');
+  const [subView, setSubView] = useState<'none' | 'player' | 'ai_analysis' | 'study_plan' | 'leaderboard' | 'generator' | 'kg_landing' | 'school_boards' | 'school_landing' | 'arena'>('none');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<'all' | 'school' | 'competitive' | 'state'>('all');
 
   const [selectedTest, setSelectedTest] = useState<MockTest | null>(null);
@@ -119,17 +144,17 @@ export default function MockTestsHub({
     setIsSubjectPickerOpen(true);
   }, []);
 
-  // Master Launch Handler with Complete Questions Expansion and 5-Free-Tests Quota Check
+  // Master Launch Handler with Complete Questions Expansion and Pass / Free-Quota Check
   const handleLaunchTest = useCallback((test: MockTest) => {
     if (!hasActivePass && freeAttemptsCount >= MAX_FREE_TESTS) {
-      setPassModalTier('silver');
+      setPassModalTier(activePass?.tier || 'silver');
       setIsExamPassModalOpen(true);
       return;
     }
     const completeTest = ensureTestComplete(test);
     setSelectedTest(completeTest);
     setSubView('player');
-  }, [hasActivePass, freeAttemptsCount]);
+  }, [hasActivePass, freeAttemptsCount, activePass]);
 
   // Check for dynamic custom CBT test from chat or initialTestSlug
   useEffect(() => {
@@ -354,8 +379,14 @@ export default function MockTestsHub({
       setLocalSubmissionCount(existing.length);
     } catch (e) {}
 
-    // Increment free attempts counter if user does not have an active pass
-    if (!hasActivePass && incrementFreeExamAttempt) {
+    // Deduct test from pass quota if pass is active, otherwise increment free attempts counter
+    if (hasActivePass && consumeExamPassTest) {
+      consumeExamPassTest().then(res => {
+        if (res && typeof res.testsRemaining === 'number') {
+          setLocalPass((prev: any) => prev ? { ...prev, testsRemaining: res.testsRemaining } : prev);
+        }
+      }).catch(() => {});
+    } else if (incrementFreeExamAttempt) {
       incrementFreeExamAttempt().catch(() => {});
     }
 
@@ -386,14 +417,14 @@ export default function MockTestsHub({
     }`}>
       
       {/* 1. TOP AROHI EXAMS HEADER APP BAR */}
-      {subView !== 'player' && (
-        <header className={`sticky top-0 z-40 w-full border-b backdrop-blur-xl px-4 py-3.5 transition-all ${
+      {subView !== 'player' && subView !== 'arena' && (
+        <header className={`sticky top-0 z-40 w-full border-b backdrop-blur-xl px-3 sm:px-4 py-2 sm:py-2.5 transition-all ${
           isDarkMode 
-            ? 'bg-slate-950/90 border-slate-800/80 text-white shadow-sm' 
-            : 'bg-white/90 border-slate-200/80 text-slate-900 shadow-xs'
+            ? 'bg-zinc-950/80 border-white/[0.08] text-white' 
+            : 'bg-white/80 border-black/[0.06] text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
         }`}>
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
               <button 
                 onClick={() => {
                   if (subView !== 'none') {
@@ -402,57 +433,77 @@ export default function MockTestsHub({
                     setActiveTab('home');
                   }
                 }}
-                className="p-2 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors cursor-pointer"
                 aria-label="Menu"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4 h-4" />
               </button>
               
               <div 
                 onClick={() => { setSubView('none'); setActiveTab('home'); }}
-                className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform"
+                className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
               >
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-sm font-black shadow-sm">
+                <div className="w-7 h-7 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center text-xs font-semibold">
                   A
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-sm sm:text-base tracking-tight text-slate-900 dark:text-white">Arohi Exams</span>
-                    <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 text-[10px] font-black uppercase tracking-wider">
-                      CBT Pro
-                    </span>
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-xs sm:text-[13px] tracking-tight text-zinc-900 dark:text-zinc-100">Arohi Exams</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-zinc-100 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300 border border-zinc-200/60 dark:border-white/[0.08]">
+                    CBT
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {/* GAMING ARENA BUTTON (Apple Minimal Capsule) */}
+              <button
+                onClick={() => setSubView('arena')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-100 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.1] text-zinc-900 dark:text-zinc-100 border border-black/[0.06] dark:border-white/[0.08] cursor-pointer active:scale-95 transition-all"
+                title="Enter Arohi Exams Gaming Arena (1v1 Duels & Tournaments)"
+              >
+                <Crown className="w-3 h-3 text-amber-500" />
+                <span>Arena</span>
+                <span className="px-1 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-semibold">1v1</span>
+              </button>
+
               {hasActivePass ? (
                 <button
                   onClick={() => setIsExamPassModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-700 shadow-xs cursor-pointer hover:bg-emerald-100 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium border border-emerald-500/20 cursor-pointer active:scale-95 transition-all"
+                  title={`${activePass?.name || 'Exam Pass'}: ${passTestsRemaining} of ${passTotalTests} Tests Remaining`}
                 >
-                  <Crown className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <span>Pass Active</span>
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  <span>{passTestsRemaining}/{passTotalTests} Left</span>
+                </button>
+              ) : isPassExhausted ? (
+                <button
+                  onClick={() => {
+                    setPassModalTier(activePass?.tier || 'silver');
+                    setIsExamPassModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium border border-amber-500/20 cursor-pointer active:scale-95 transition-all"
+                  title="Your test pass quota is complete. Click to renew your pass."
+                >
+                  <span>Pass Expired</span>
+                  <span className="text-[9px] uppercase font-semibold text-amber-600">Renew</span>
                 </button>
               ) : (
                 <button
                   onClick={() => setIsExamPassModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-900 dark:from-purple-950/60 dark:to-indigo-950/60 dark:text-purple-200 text-xs font-bold border border-purple-200 dark:border-purple-800 shadow-xs cursor-pointer hover:border-purple-400 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 text-[11px] font-medium border border-black/[0.06] dark:border-white/[0.08] cursor-pointer active:scale-95 transition-all"
                   title="Free Tier: Attend up to 5 mock tests across all categories"
                 >
-                  <span className="text-sm">🎁</span>
-                  <span>Free: {remainingFreeTests}/5</span>
-                  <span className="hidden sm:inline font-semibold text-[11px] text-purple-600 dark:text-purple-400">Left</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>{remainingFreeTests}/5 Free</span>
                 </button>
               )}
 
               <button
                 onClick={() => setIsExamPassModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="hidden sm:inline-flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-[11px] font-medium hover:opacity-90 cursor-pointer active:scale-95 transition-all"
               >
-                <Crown className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                <span>Get Pass</span>
+                <span>{hasActivePass ? 'Pass' : 'Get Pass'}</span>
               </button>
 
               <button 
@@ -461,11 +512,11 @@ export default function MockTestsHub({
                     onOpenChatWithPrompt("Arohi, what are today's top exam updates and trending test papers?");
                   }
                 }}
-                className="p-2 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 relative transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 relative transition-colors cursor-pointer"
                 title="Exam Notifications"
               >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-600 animate-pulse"></span>
+                <Bell className="w-3.5 h-3.5" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               </button>
             </div>
           </div>
@@ -543,6 +594,16 @@ export default function MockTestsHub({
           />
         )}
 
+        {/* Arohi Exams Gaming Arena */}
+        {subView === 'arena' && (
+          <ArohiExamsArena
+            isDarkMode={isDarkMode}
+            onBackToExams={() => setSubView('none')}
+            onNavigateTab={onNavigateTab}
+            onOpenAuth={onOpenAuth}
+          />
+        )}
+
         {/* 5 BOTTOM BAR TABS */}
         {subView === 'none' && (
           <>
@@ -564,6 +625,7 @@ export default function MockTestsHub({
                 onOpenStudyPlan={() => setActiveTab('profile')}
                 onOpenAiMentor={() => setActiveTab('ai_mentor')}
                 onOpenExamPass={() => setIsExamPassModalOpen(true)}
+                onOpenArena={() => setSubView('arena')}
                 onNavigateTab={onNavigateTab}
                 onOpenAuth={onOpenAuth}
               />
@@ -581,6 +643,7 @@ export default function MockTestsHub({
                 onSelectTest={(t) => handleSelectTestWithSubjectPicker(t)}
                 onOpenSubjectPicker={(cat, t) => handleOpenSubjectPicker(cat, t)}
                 onOpenExamPass={() => setIsExamPassModalOpen(true)}
+                onOpenArena={() => setSubView('arena')}
                 initialCategoryTab={selectedCategoryTab}
               />
             )}
@@ -622,87 +685,76 @@ export default function MockTestsHub({
         )}
       </main>
 
-      {/* 3. 5-TAB BOTTOM NAVIGATION BAR (Native App Feel) */}
-      {subView !== 'player' && (
-        <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-2xl px-3 sm:px-6 py-2.5 transition-all ${
+      {/* 3. 5-TAB BOTTOM NAVIGATION BAR (Apple Minimal Native Feel) */}
+      {subView !== 'player' && subView !== 'arena' && (
+        <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl px-2 sm:px-4 py-1.5 transition-all ${
           isDarkMode 
-            ? 'bg-slate-950/95 border-slate-800/90 text-slate-400 shadow-2xl' 
-            : 'bg-white/95 border-slate-200/90 text-slate-600 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]'
+            ? 'bg-zinc-950/85 border-white/[0.08] text-zinc-400' 
+            : 'bg-white/85 border-black/[0.06] text-zinc-600 shadow-[0_-1px_3px_rgba(0,0,0,0.03)]'
         }`}>
-          <div className="max-w-lg mx-auto grid grid-cols-5 items-center text-center">
+          <div className="max-w-md mx-auto grid grid-cols-5 items-center text-center">
             
             {/* 1. Home */}
             <button
               onClick={() => { setSubView('none'); setActiveTab('home'); }}
-              className={`flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all cursor-pointer ${
                 subView === 'none' && activeTab === 'home'
-                  ? 'text-purple-600 dark:text-purple-400 font-bold scale-105'
-                  : 'hover:text-slate-900 dark:hover:text-white active:scale-95'
+                  ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-colors ${subView === 'none' && activeTab === 'home' ? 'bg-purple-100/70 dark:bg-purple-950/70' : ''}`}>
-                <Home className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <span className="text-xs tracking-tight">Home</span>
+              <Home className="w-4 h-4" />
+              <span className="text-[10px] tracking-tight">Home</span>
             </button>
 
             {/* 2. Exams */}
             <button
               onClick={() => { setSubView('none'); setSelectedCategoryTab('all'); setActiveTab('exams'); }}
-              className={`flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all cursor-pointer ${
                 subView === 'none' && activeTab === 'exams'
-                  ? 'text-purple-600 dark:text-purple-400 font-bold scale-105'
-                  : 'hover:text-slate-900 dark:hover:text-white active:scale-95'
+                  ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-colors ${subView === 'none' && activeTab === 'exams' ? 'bg-purple-100/70 dark:bg-purple-950/70' : ''}`}>
-                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <span className="text-xs tracking-tight">Exams</span>
+              <BookOpen className="w-4 h-4" />
+              <span className="text-[10px] tracking-tight">Exams</span>
             </button>
 
-            {/* 3. Central Elevated Arohi AI Action Button */}
+            {/* 3. Central Sleek Arohi AI Action Button */}
             <button
               onClick={() => { setSubView('none'); setActiveTab('ai_mentor'); }}
-              className="flex flex-col items-center -mt-6 group cursor-pointer"
+              className="flex flex-col items-center -mt-3 group cursor-pointer"
             >
-              <div className="relative">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 opacity-40 blur-sm group-hover:opacity-75 transition-opacity"></div>
-                <div className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-700 text-white flex items-center justify-center shadow-xl group-hover:scale-105 group-active:scale-95 transition-transform border-2 border-white dark:border-slate-900">
-                  <Sparkles className="w-6 h-6 fill-white text-white animate-pulse" />
-                </div>
+              <div className="w-9 h-9 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center shadow-sm group-hover:scale-105 group-active:scale-95 transition-transform">
+                <Sparkles className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-purple-600 dark:text-purple-400 mt-1">Arohi AI</span>
+              <span className="text-[9.5px] font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">AI Mentor</span>
             </button>
 
             {/* 4. Results */}
             <button
               onClick={() => { setSubView('none'); setActiveTab('results'); }}
-              className={`flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all cursor-pointer ${
                 subView === 'none' && activeTab === 'results'
-                  ? 'text-purple-600 dark:text-purple-400 font-bold scale-105'
-                  : 'hover:text-slate-900 dark:hover:text-white active:scale-95'
+                  ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-colors ${subView === 'none' && activeTab === 'results' ? 'bg-purple-100/70 dark:bg-purple-950/70' : ''}`}>
-                <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <span className="text-xs tracking-tight">Results</span>
+              <BarChart2 className="w-4 h-4" />
+              <span className="text-[10px] tracking-tight">Results</span>
             </button>
 
             {/* 5. Profile */}
             <button
               onClick={() => { setSubView('none'); setActiveTab('profile'); }}
-              className={`flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all cursor-pointer ${
                 subView === 'none' && activeTab === 'profile'
-                  ? 'text-purple-600 dark:text-purple-400 font-bold scale-105'
-                  : 'hover:text-slate-900 dark:hover:text-white active:scale-95'
+                  ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-colors ${subView === 'none' && activeTab === 'profile' ? 'bg-purple-100/70 dark:bg-purple-950/70' : ''}`}>
-                <User className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <span className="text-xs tracking-tight">Profile</span>
+              <User className="w-4 h-4" />
+              <span className="text-[10px] tracking-tight">Profile</span>
             </button>
 
           </div>

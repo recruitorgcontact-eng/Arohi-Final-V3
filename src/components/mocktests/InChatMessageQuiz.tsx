@@ -273,7 +273,7 @@ export default function InChatMessageQuiz({
   onLaunchFullCbt,
   onSyncScore
 }: InChatMessageQuizProps) {
-  const { user, userData, incrementFreeExamAttempt } = useAuth();
+  const { user, userData, incrementFreeExamAttempt, consumeExamPassTest } = useAuth();
   const userName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Aspirant');
 
   const parsedQuestions = useMemo(() => parseMcqsFromText(content), [content]);
@@ -293,13 +293,37 @@ export default function InChatMessageQuiz({
   const [isExamSubmitted, setIsExamSubmitted] = useState<boolean>(false);
   const [hasSyncedSubmission, setHasSyncedSubmission] = useState<boolean>(false);
 
-  // Arohi Exam Pass Modal State
+  // Arohi Exam Pass Modal & Quota State
   const [isExamPassModalOpen, setIsExamPassModalOpen] = useState(false);
   const [passModalTier, setPassModalTier] = useState<'silver' | 'gold' | 'platinum'>('silver');
+  const [localPass, setLocalPass] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('arohi_exam_pass');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    const handlePassUpdate = (e: any) => {
+      if (e.detail) setLocalPass(e.detail);
+    };
+    window.addEventListener('arohi_exam_pass_activated', handlePassUpdate);
+    window.addEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    return () => {
+      window.removeEventListener('arohi_exam_pass_activated', handlePassUpdate);
+      window.removeEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    };
+  }, []);
+
+  const activePass = userData?.examPass || localPass;
+  const passTestsRemaining = typeof activePass?.testsRemaining === 'number' 
+    ? activePass.testsRemaining 
+    : (activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60));
+  const isPassExpired = Boolean(activePass?.expiresAt && new Date(activePass.expiresAt).getTime() < Date.now());
+  const hasActivePass = Boolean(activePass && passTestsRemaining > 0 && !isPassExpired);
 
   const freeAttemptsCount = userData?.freeExamAttemptsCount || 0;
-  const hasActivePass = !!userData?.examPass;
-  const isFreeLimitExceeded = freeAttemptsCount >= 5 && !hasActivePass;
+  const isFreeLimitExceeded = !hasActivePass && freeAttemptsCount >= 5;
 
   // Timer State
   const defaultExamMinutes = Math.max(5, Math.min(180, Math.round(parsedQuestions.length * 1.2)));
@@ -512,9 +536,15 @@ export default function InChatMessageQuiz({
       onSyncScore(submissionData);
     }
 
-    // 5. Track attempt count for free pass quota
+    // 5. Track attempt count: deduct from active pass if active, otherwise increment free attempts counter
     try {
-      if (incrementFreeExamAttempt) {
+      if (hasActivePass && consumeExamPassTest) {
+        consumeExamPassTest().then(res => {
+          if (res && typeof res.testsRemaining === 'number') {
+            setLocalPass((prev: any) => prev ? { ...prev, testsRemaining: res.testsRemaining } : prev);
+          }
+        }).catch(() => {});
+      } else if (incrementFreeExamAttempt) {
         incrementFreeExamAttempt().catch(() => {});
       }
     } catch (e) {}

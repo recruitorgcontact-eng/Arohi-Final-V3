@@ -233,82 +233,43 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Load from local storage or fallback to defaults
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfile>(() => {
+  // Load from local storage or fallback to defaults with deep merge safety
+  const safeLoad = <T,>(keySuffix: string, fallback: T): T => {
     try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_company`);
-      return saved ? JSON.parse(saved) : INITIAL_COMPANY_PROFILE;
+      const saved = localStorage.getItem(`${STORAGE_KEY}_${keySuffix}`);
+      if (!saved) return fallback;
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(fallback)) {
+        return (Array.isArray(parsed) ? parsed : fallback) as unknown as T;
+      }
+      if (typeof fallback === 'object' && fallback !== null) {
+        return { ...fallback, ...parsed };
+      }
+      return parsed ?? fallback;
     } catch {
-      return INITIAL_COMPANY_PROFILE;
+      return fallback;
     }
-  });
+  };
 
-  const [leads, setLeads] = useState<Lead[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_leads`);
-      return saved ? JSON.parse(saved) : INITIAL_LEADS;
-    } catch {
-      return INITIAL_LEADS;
-    }
-  });
-
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_customers`);
-      return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
-    } catch {
-      return INITIAL_CUSTOMERS;
-    }
-  });
-
-  const [deals, setDeals] = useState<Deal[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_deals`);
-      return saved ? JSON.parse(saved) : INITIAL_DEALS;
-    } catch {
-      return INITIAL_DEALS;
-    }
-  });
-
-  const [quotations, setQuotations] = useState<Quotation[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_quotes`);
-      return saved ? JSON.parse(saved) : INITIAL_QUOTATIONS;
-    } catch {
-      return INITIAL_QUOTATIONS;
-    }
-  });
-
-  const [invoices, setInvoices] = useState<Invoice[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_invoices`);
-      return saved ? JSON.parse(saved) : INITIAL_INVOICES;
-    } catch {
-      return INITIAL_INVOICES;
-    }
-  });
-
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_expenses`);
-      return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
-    } catch {
-      return INITIAL_EXPENSES;
-    }
-  });
-
-  const [vendors, setVendors] = useState<Vendor[]>(INITIAL_VENDORS);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(INITIAL_PURCHASE_ORDERS);
-  const [inventory, setInventory] = useState<ProductInventoryItem[]>(INITIAL_INVENTORY);
-  const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
-  const [payroll, setPayroll] = useState<PayrollRecord[]>(INITIAL_PAYROLL);
-  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
-  const [tasks, setTasks] = useState<ProjectTask[]>(INITIAL_PROJECT_TASKS);
-  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>(INITIAL_CAMPAIGNS);
-  const [calls, setCalls] = useState<TelephonyCallRecord[]>(INITIAL_TELEPHONY_CALLS);
-  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_SUPPORT_TICKETS);
-  const [documents, setDocuments] = useState<DocumentVaultItem[]>(INITIAL_DOCUMENTS);
-  const [automations, setAutomations] = useState<AutomationRule[]>(INITIAL_AUTOMATIONS);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile>(() => safeLoad('company', INITIAL_COMPANY_PROFILE));
+  const [leads, setLeads] = useState<Lead[]>(() => safeLoad('leads', INITIAL_LEADS));
+  const [customers, setCustomers] = useState<Customer[]>(() => safeLoad('customers', INITIAL_CUSTOMERS));
+  const [deals, setDeals] = useState<Deal[]>(() => safeLoad('deals', INITIAL_DEALS));
+  const [quotations, setQuotations] = useState<Quotation[]>(() => safeLoad('quotes', INITIAL_QUOTATIONS));
+  const [invoices, setInvoices] = useState<Invoice[]>(() => safeLoad('invoices', INITIAL_INVOICES));
+  const [expenses, setExpenses] = useState<Expense[]>(() => safeLoad('expenses', INITIAL_EXPENSES));
+  const [vendors, setVendors] = useState<Vendor[]>(() => safeLoad('vendors', INITIAL_VENDORS));
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => safeLoad('purchase_orders', INITIAL_PURCHASE_ORDERS));
+  const [inventory, setInventory] = useState<ProductInventoryItem[]>(() => safeLoad('inventory', INITIAL_INVENTORY));
+  const [employees, setEmployees] = useState<Employee[]>(() => safeLoad('employees', INITIAL_EMPLOYEES));
+  const [payroll, setPayroll] = useState<PayrollRecord[]>(() => safeLoad('payroll', INITIAL_PAYROLL));
+  const [projects, setProjects] = useState<Project[]>(() => safeLoad('projects', INITIAL_PROJECTS));
+  const [tasks, setTasks] = useState<ProjectTask[]>(() => safeLoad('tasks', INITIAL_PROJECT_TASKS));
+  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>(() => safeLoad('campaigns', INITIAL_CAMPAIGNS));
+  const [calls, setCalls] = useState<TelephonyCallRecord[]>(() => safeLoad('calls', INITIAL_TELEPHONY_CALLS));
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => safeLoad('tickets', INITIAL_SUPPORT_TICKETS));
+  const [documents, setDocuments] = useState<DocumentVaultItem[]>(() => safeLoad('documents', INITIAL_DOCUMENTS));
+  const [automations, setAutomations] = useState<AutomationRule[]>(() => safeLoad('automations', INITIAL_AUTOMATIONS));
   const [roles] = useState<RolePermission[]>(INITIAL_ROLES);
 
   // Sync to local storage
@@ -321,10 +282,26 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       localStorage.setItem(`${STORAGE_KEY}_quotes`, JSON.stringify(quotations));
       localStorage.setItem(`${STORAGE_KEY}_invoices`, JSON.stringify(invoices));
       localStorage.setItem(`${STORAGE_KEY}_expenses`, JSON.stringify(expenses));
+      localStorage.setItem(`${STORAGE_KEY}_vendors`, JSON.stringify(vendors));
+      localStorage.setItem(`${STORAGE_KEY}_purchase_orders`, JSON.stringify(purchaseOrders));
+      localStorage.setItem(`${STORAGE_KEY}_inventory`, JSON.stringify(inventory));
+      localStorage.setItem(`${STORAGE_KEY}_employees`, JSON.stringify(employees));
+      localStorage.setItem(`${STORAGE_KEY}_payroll`, JSON.stringify(payroll));
+      localStorage.setItem(`${STORAGE_KEY}_projects`, JSON.stringify(projects));
+      localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(tasks));
+      localStorage.setItem(`${STORAGE_KEY}_campaigns`, JSON.stringify(campaigns));
+      localStorage.setItem(`${STORAGE_KEY}_calls`, JSON.stringify(calls));
+      localStorage.setItem(`${STORAGE_KEY}_tickets`, JSON.stringify(tickets));
+      localStorage.setItem(`${STORAGE_KEY}_documents`, JSON.stringify(documents));
+      localStorage.setItem(`${STORAGE_KEY}_automations`, JSON.stringify(automations));
     } catch (e) {
       console.warn('Storage sync error:', e);
     }
-  }, [companyProfile, leads, customers, deals, quotations, invoices, expenses]);
+  }, [
+    companyProfile, leads, customers, deals, quotations, invoices, expenses,
+    vendors, purchaseOrders, inventory, employees, payroll, projects, tasks,
+    campaigns, calls, tickets, documents, automations
+  ]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

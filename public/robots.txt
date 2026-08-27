@@ -1,31 +1,109 @@
 # Robots.txt for Arohi AI (https://arohiai.com)
-# Optimized for Global & Regional Search Engine Indexing
+# Optimized for Global Search Engines, Regional Crawlers, and AI / LLM Chatbot Search Agents
+# Explicitly allowing indexing, citation, and descriptive synthesis by all search bots and conversational AI agents.
 
 User-agent: *
 Allow: /
 Allow: /assets/
 Allow: /manifest.json
+Allow: /sitemap.xml
+Allow: /mocktests
+Allow: /business-os
+Allow: /solutions
+Allow: /audience
+Allow: /resume
+Allow: /interview
+Allow: /career
+Allow: /schemes
+Allow: /courses
+Allow: /pricing
+Allow: /blogs
 
-# Allow AI Search Crawlers for Perplexity, ChatGPT, Claude, Gemini, Google Search
+# ==============================================================================
+# AI Search Crawlers & LLM Chatbots (Fully Allowed to Read, Cite & Summarize)
+# ==============================================================================
+
+# OpenAI (ChatGPT, SearchGPT, GPT-4, GPTBot)
 User-agent: GPTBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude, ClaudeBot, Claude-Web)
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity AI Search
 User-agent: PerplexityBot
+Allow: /
+
+# Google (Gemini, Googlebot, Google-Extended, Googlebot-News)
+User-agent: Googlebot
 Allow: /
 
 User-agent: Google-Extended
 Allow: /
 
-User-agent: Googlebot
+User-agent: Googlebot-News
 Allow: /
 
+# Microsoft (Copilot, Bing, Bingbot)
 User-agent: Bingbot
 Allow: /
 
+User-agent: BingChat
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+# Apple (Apple Intelligence, Applebot)
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Meta AI / LLaMA Search
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Other Major AI Search & Retrieval Agents
+User-agent: Cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+# ==============================================================================
+# Sitemaps
+# ==============================================================================
 Sitemap: https://arohiai.com/sitemap.xml

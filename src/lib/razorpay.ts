@@ -84,55 +84,36 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
   // Check Razorpay SDK script loading
   const loaded = await loadRazorpayScript();
 
-  // If order is demo mode OR Razorpay SDK fails to load / test key, process instant verified payment completion
-  if (orderData.isDemo || !loaded || orderData.key_id === 'rzp_test_arohi_demo' || !(window as any).Razorpay) {
-    const demoPaymentId = `pay_demo_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const demoSig = `sig_demo_${Date.now()}`;
-
-    try {
-      const verifyRes = await fetch('/api/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          razorpay_order_id: orderData.order_id,
-          razorpay_payment_id: demoPaymentId,
-          razorpay_signature: demoSig,
-          userEmail: options.userEmail || '',
-          planName: options.planName,
-          amount: rawPrice,
-          currency: currency
-        })
-      });
-
-      const verifyData = await verifyRes.json();
-      if (options.onSuccess) {
-        options.onSuccess({
-          razorpay_payment_id: demoPaymentId,
-          razorpay_order_id: orderData.order_id,
-          razorpay_signature: demoSig,
-          transaction: verifyData.transaction
-        });
-      }
-      return;
-    } catch (verifyErr) {
-      if (options.onSuccess) {
-        options.onSuccess({
-          razorpay_payment_id: demoPaymentId,
-          razorpay_order_id: orderData.order_id,
-          razorpay_signature: demoSig
-        });
-      }
-      return;
+  // If Razorpay SDK fails to load or no Razorpay window is available
+  if (!loaded || !(window as any).Razorpay) {
+    const errorMsg = 'Razorpay Checkout SDK failed to load. Please check your internet connection or try again.';
+    console.error(errorMsg);
+    if (options.onError) {
+      options.onError(new Error(errorMsg));
+    } else {
+      alert(errorMsg);
     }
+    return;
+  }
+
+  // If order creation returned an error or missing key_id
+  const razorpayKey = orderData?.key_id || (typeof process !== 'undefined' && process.env.RAZORPAY_KEY_ID) || '';
+  if (!orderData || !orderData.order_id || !razorpayKey || razorpayKey === 'rzp_test_arohi_demo') {
+    const errorMsg = 'Razorpay payment gateway credentials are not yet configured or invalid. Please configure RAZORPAY_KEY_ID in Settings.';
+    console.warn(errorMsg, orderData);
+    if (options.onError) {
+      options.onError(new Error(errorMsg));
+    }
+    return;
   }
 
   // 2. Open Real Razorpay Checkout Modal
   return new Promise((resolve, reject) => {
     const rzpOptions = {
-      key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+      key: razorpayKey,
       amount: orderData.amount,
       currency: orderData.currency,
-      name: 'AROHI AI',
+      name: 'AROHI EXAMS',
       description: options.planName,
       image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=80',
       order_id: orderData.order_id,
@@ -211,68 +192,26 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
     try {
       const rzp = new (window as any).Razorpay(rzpOptions);
 
-      rzp.on('payment.failed', async function (failureResponse: any) {
-        const err = failureResponse?.error || { description: 'Payment failed', code: 'PAYMENT_FAILED' };
-        console.warn("Razorpay payment note:", err);
-
-        // If authentication failed, bad key, or test environment error occurs, complete transaction smoothly via verified fallback
-        if (
-          err.code === 'BAD_REQUEST_ERROR' ||
-          (err.description && (err.description.includes('Authentication failed') || err.description.includes('auth'))) ||
-          (err.reason && err.reason.includes('auth')) ||
-          (err.source && err.source === 'gateway')
-        ) {
-          const fallbackPayId = `pay_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-          const fallbackSig = `sig_auto_${Date.now()}`;
-          try {
-            const verifyRes = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: orderData.order_id,
-                razorpay_payment_id: fallbackPayId,
-                razorpay_signature: fallbackSig,
-                userEmail: options.userEmail || '',
-                planName: options.planName,
-                amount: rawPrice,
-                currency: currency
-              })
-            });
-            const verifyData = await verifyRes.json();
-            if (options.onSuccess) {
-              options.onSuccess({
-                razorpay_payment_id: fallbackPayId,
-                razorpay_order_id: orderData.order_id,
-                razorpay_signature: fallbackSig,
-                transaction: verifyData.transaction
-              });
-            }
-            resolve();
-            return;
-          } catch (fallbackErr) {
-            console.error('Fallback verification note:', fallbackErr);
-          }
-        }
-
+      rzp.on('payment.failed', function (failureResponse: any) {
+        const err = failureResponse?.error || { description: 'Payment declined or cancelled by user', code: 'PAYMENT_FAILED' };
+        console.warn("Razorpay payment failed:", err);
         if (options.onError) {
           options.onError(err);
         } else {
-          alert(`Payment Note: ${err.description || 'Transaction declined'}`);
+          alert(`Payment Error: ${err.description || 'Transaction declined'}`);
         }
         reject(err);
       });
 
       rzp.open();
-    } catch (openErr) {
-      console.warn("Razorpay instance open error, executing verified payment fallback:", openErr);
-      if (options.onSuccess) {
-        options.onSuccess({
-          razorpay_payment_id: `pay_fallback_${Date.now()}`,
-          razorpay_order_id: orderData.order_id,
-          razorpay_signature: `sig_fallback_${Date.now()}`
-        });
+    } catch (openErr: any) {
+      console.error("Razorpay instance open error:", openErr);
+      if (options.onError) {
+        options.onError(openErr);
+      } else {
+        alert(`Failed to open Razorpay Checkout: ${openErr.message || openErr}`);
       }
-      resolve();
+      reject(openErr);
     }
   });
 };

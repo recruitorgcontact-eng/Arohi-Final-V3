@@ -15,7 +15,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { MarketingCampaign } from './types';
 
 export default function MarketingCampaignsView() {
-  const { campaigns, addCampaign, showToast } = useBusinessOS();
+  const { campaigns = [], addCampaign, showToast } = useBusinessOS();
+  const safeCampaigns = campaigns || [];
 
   const handleLaunchCampaign = () => {
     const name = prompt('Campaign Name:');
@@ -65,8 +66,10 @@ export default function MarketingCampaignsView() {
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-        {campaigns.map((camp) => {
-          const roi = camp.spend > 0 ? ((camp.revenueGenerated / camp.spend) * 100).toFixed(0) : '0';
+        {safeCampaigns.map((camp) => {
+          const spend = camp?.spend || 0;
+          const rev = camp?.revenueGenerated || 0;
+          const roi = spend > 0 ? ((rev / spend) * 100).toFixed(0) : '0';
 
           return (
             <div
@@ -90,22 +93,22 @@ export default function MarketingCampaignsView() {
                 <div className="grid grid-cols-2 gap-2 bg-zinc-50/80 dark:bg-zinc-900/80 p-2.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06] text-xs">
                   <div>
                     <span className="text-[10px] text-zinc-400 font-bold uppercase">Audience Sent</span>
-                    <p className="font-bold text-zinc-900 dark:text-white text-xs">{camp.sentCount.toLocaleString()} Contacts</p>
+                    <p className="font-bold text-zinc-900 dark:text-white text-xs">{(camp?.sentCount || 0).toLocaleString()} Contacts</p>
                   </div>
                   <div>
                     <span className="text-[10px] text-zinc-400 font-bold uppercase">Conversions</span>
-                    <p className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">{camp.conversionsCount} Leads</p>
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">{camp?.conversionsCount || 0} Leads</p>
                   </div>
                 </div>
 
                 <div className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                   <div className="flex justify-between">
                     <span className="text-zinc-500 dark:text-zinc-400">Total Ad Spend:</span>
-                    <span className="font-bold text-rose-600 dark:text-rose-400">₹{camp.spend.toLocaleString()}</span>
+                    <span className="font-bold text-rose-600 dark:text-rose-400">₹{(camp?.spend || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500 dark:text-zinc-400">Revenue Generated:</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{(camp.revenueGenerated / 100000).toFixed(1)}L</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{((camp?.revenueGenerated || 0) / 100000).toFixed(1)}L</span>
                   </div>
                 </div>
               </div>

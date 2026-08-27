@@ -30,18 +30,21 @@ const STATUS_CONFIG: Record<LeadStatus, { label: string; bg: string; text: strin
 };
 
 export default function CrmLeadsView() {
-  const { leads, addLead, updateLead, deleteLead, convertLeadToDeal, setQuickCreateType } = useBusinessOS();
+  const { leads = [], addLead, updateLead, deleteLead, convertLeadToDeal, setQuickCreateType } = useBusinessOS();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  const filteredLeads = leads.filter(l => {
+  const safeLeads = leads || [];
+
+  const filteredLeads = safeLeads.filter(l => {
+    const q = (searchQuery || '').toLowerCase();
     const matchSearch =
-      l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === 'all' || l.status === statusFilter;
+      (l?.name || '').toLowerCase().includes(q) ||
+      (l?.company || '').toLowerCase().includes(q) ||
+      (l?.city || '').toLowerCase().includes(q) ||
+      (l?.email || '').toLowerCase().includes(q);
+    const matchStatus = statusFilter === 'all' || l?.status === statusFilter;
     return matchSearch && matchStatus;
   });
 

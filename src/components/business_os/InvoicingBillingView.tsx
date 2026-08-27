@@ -18,7 +18,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { Invoice } from './types';
 
 export default function InvoicingBillingView() {
-  const { invoices, markInvoicePaid, deleteInvoice, setQuickCreateType, showToast } = useBusinessOS();
+  const { invoices = [], markInvoicePaid, deleteInvoice, setQuickCreateType, showToast } = useBusinessOS();
+  const safeInvoices = invoices || [];
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const handleSendReminder = (invNum: string, client: string) => {
@@ -74,7 +75,7 @@ export default function InvoicingBillingView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] font-medium text-zinc-700 dark:text-zinc-300">
-              {invoices.map((inv) => (
+              {safeInvoices.map((inv) => (
                 <tr key={inv.id} className="hover:bg-zinc-50 dark:hover:bg-[#18181b]/50 transition-colors">
                   <td className="py-3 px-4">
                     <div className="font-mono font-bold text-violet-600 dark:text-violet-400 text-xs">{inv.invoiceNumber}</div>

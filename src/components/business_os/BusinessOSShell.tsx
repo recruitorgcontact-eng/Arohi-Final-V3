@@ -55,6 +55,7 @@ import SettingsTenantView from './SettingsTenantView';
 import BusinessCopilotDrawer from './BusinessCopilotDrawer';
 import CommandPaletteModal from './CommandPaletteModal';
 import QuickCreateModal from './QuickCreateModal';
+import { BusinessErrorBoundary } from './BusinessErrorBoundary';
 
 interface BusinessOSShellProps {
   onBackToMainApp?: () => void;
@@ -125,51 +126,67 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Render the appropriate module view
+  // Render the appropriate module view safely with isolated error boundaries
   const renderModuleView = () => {
-    switch (activeModule) {
-      case 'overview':
-        return <DashboardOverview />;
-      case 'crm':
-      case 'crm_leads':
-        return <CrmLeadsView />;
-      case 'customers':
-        return <CustomersView />;
-      case 'pipeline':
-        return <SalesDealsPipelineView />;
-      case 'quotations':
-        return <QuotationsView />;
-      case 'invoices':
-        return <InvoicingBillingView />;
-      case 'finance':
-        return <FinanceExpensesView />;
-      case 'purchases':
-        return <PurchasesVendorsView />;
-      case 'inventory':
-        return <InventoryStockView />;
-      case 'hr':
-      case 'hr_payroll':
-        return <HrPayrollView />;
-      case 'projects':
-        return <ProjectsTasksView />;
-      case 'marketing':
-        return <MarketingCampaignsView />;
-      case 'telephony':
-        return <ArohiCallView />;
-      case 'support':
-        return <SupportDeskView />;
-      case 'documents':
-        return <DocumentsVaultView />;
-      case 'analytics':
-        return <AnalyticsBiView />;
-      case 'automation':
-      case 'automations':
-        return <WorkflowAutomationView />;
-      case 'settings':
-        return <SettingsTenantView />;
-      default:
-        return <DashboardOverview />;
-    }
+    const getView = () => {
+      switch (activeModule) {
+        case 'overview':
+          return <DashboardOverview />;
+        case 'crm':
+        case 'crm_leads':
+          return <CrmLeadsView />;
+        case 'customers':
+          return <CustomersView />;
+        case 'pipeline':
+          return <SalesDealsPipelineView />;
+        case 'quotations':
+          return <QuotationsView />;
+        case 'invoices':
+          return <InvoicingBillingView />;
+        case 'finance':
+          return <FinanceExpensesView />;
+        case 'purchases':
+          return <PurchasesVendorsView />;
+        case 'inventory':
+          return <InventoryStockView />;
+        case 'hr':
+        case 'hr_payroll':
+          return <HrPayrollView />;
+        case 'projects':
+          return <ProjectsTasksView />;
+        case 'marketing':
+          return <MarketingCampaignsView />;
+        case 'telephony':
+          return <ArohiCallView />;
+        case 'support':
+          return <SupportDeskView />;
+        case 'documents':
+          return <DocumentsVaultView />;
+        case 'analytics':
+          return <AnalyticsBiView />;
+        case 'automation':
+        case 'automations':
+          return <WorkflowAutomationView />;
+        case 'settings':
+          return <SettingsTenantView />;
+        default:
+          return <DashboardOverview />;
+      }
+    };
+
+    return (
+      <BusinessErrorBoundary
+        key={activeModule}
+        moduleName={activeModule}
+        onResetModule={() => {
+          // Re-render or fallback
+          setActiveModule('overview');
+        }}
+        onNavigateHome={() => setActiveModule('overview')}
+      >
+        {getView()}
+      </BusinessErrorBoundary>
+    );
   };
 
   return (

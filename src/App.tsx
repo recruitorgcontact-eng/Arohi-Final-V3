@@ -3721,21 +3721,21 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {activeTab !== 'home' && (
-              <div className="flex items-center justify-between gap-3 mb-6 select-none animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-xs font-semibold">
+              <div className="flex items-center justify-between gap-3 mb-3.5 select-none animate-in fade-in duration-200">
+                <div className="flex items-center gap-1.5 text-[11px]">
                   <button
                     onClick={() => {
                       setActiveTab('home');
                       setSelectedPosting(null);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer bg-white/5 hover:bg-white/10 dark:bg-slate-900/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-sm"
+                    className="flex items-center gap-1 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-medium"
                   >
-                    <Home className="w-3.5 h-3.5 text-purple-500" />
+                    <Home className="w-3 h-3 opacity-70" />
                     <span>Home</span>
                   </button>
-                  <span className="text-slate-400 dark:text-slate-600">/</span>
-                  <span className="font-extrabold uppercase tracking-wider text-xs px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300">
-                    {activeTab === 'courses' ? 'Skills & Academy' : activeTab === 'arohi' ? 'AROHI Guide' : activeTab}
+                  <span className="text-slate-300 dark:text-zinc-700">/</span>
+                  <span className="font-semibold text-slate-800 dark:text-zinc-200 uppercase tracking-widest text-[9.5px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.08]">
+                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'mocktests' ? 'Exams' : activeTab}
                   </span>
                 </div>
 
@@ -3747,10 +3747,10 @@ export default function App() {
                       setPrevTab(temp);
                       setSelectedPosting(null);
                     }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Back to {prevTab}</span>
+                    <RotateCcw className="w-3 h-3 opacity-70" />
+                    <span>Back</span>
                   </button>
                 )}
               </div>

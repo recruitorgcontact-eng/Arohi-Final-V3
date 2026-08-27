@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, CheckCircle2, Zap, Sparkles, X, 
-  CreditCard, QrCode, Award, ArrowRight, Lock, 
+  CreditCard, Award, ArrowRight, Lock, 
   Check, Clock, BookOpen, AlertCircle, HelpCircle
 } from 'lucide-react';
 import { openRazorpayCheckout } from '../../lib/razorpay';
@@ -25,9 +25,22 @@ export default function ArohiExamPassModal({
   const { user, userData, userMemory, activateExamPass } = useAuth();
   const [activeTab, setActiveTab] = useState<'silver' | 'gold' | 'platinum'>(selectedTier);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showDirectUpiQr, setShowDirectUpiQr] = useState(false);
-  const [utrNumber, setUtrNumber] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [localPass, setLocalPass] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('arohi_exam_pass');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+
+  const activeUserPass = userData?.examPass || localPass;
+  const isPassExpired = Boolean(activeUserPass?.expiresAt && new Date(activeUserPass.expiresAt).getTime() < Date.now());
+  const currentRemaining = typeof activeUserPass?.testsRemaining === 'number'
+    ? activeUserPass.testsRemaining
+    : (activeUserPass ? (activeUserPass.totalTests || 10) : 0);
+  const hasActiveUserPass = Boolean(activeUserPass && currentRemaining > 0 && !isPassExpired);
 
   const rawStudentName = userData?.profile?.name || userData?.displayName || userMemory?.displayName || user?.displayName || (user?.email ? user.email.split('@')[0] : '');
   const studentName = user ? (rawStudentName?.trim() || 'Student') : 'Student';
@@ -46,10 +59,12 @@ export default function ArohiExamPassModal({
       totalTests: 10,
       questionsPerTest: 100,
       totalQuestions: 1000,
-      badge: 'Starter Speed Prep',
+      validityDays: 30,
+      badge: 'Starter Speed Prep (30 Days)',
       description: 'Unlock 10 Full-Length CBT Tests (100 Qs each = 1,000 Qs) across all School (Class 1-10) and Indian Competitive Exams.',
       features: [
         '10 Full-Length CBT Tests (100 Questions each = 1,000 Questions)',
+        '30 Days Unlimited Portal Validity',
         'Dynamic Question & Option Shuffle on every single attempt',
         'Official Arohi CBT Engine with live countdown timer & question palette',
         'Instant Scorecard, All-India Rank (AIR) & Percentile Curve',
@@ -66,10 +81,12 @@ export default function ArohiExamPassModal({
       totalTests: 25,
       questionsPerTest: 100,
       totalQuestions: 2500,
-      badge: 'Most Popular Choice',
+      validityDays: 90,
+      badge: 'Most Popular Choice (90 Days)',
       description: 'Unlock 25 Full-Length CBT Tests (100 Qs each = 2,500 Qs) + AI Weakness Diagnostic & 1-Click Tutor.',
       features: [
         '25 Full-Length CBT Tests (100 Questions each = 2,500 Questions)',
+        '90 Days Unlimited Portal Validity',
         'Dynamic Question & Option Shuffle on every attempt (No duplicate papers)',
         'All Categories Unlocked (School Classes 1-10, AIIMS NORCET, OSSSC, SSC, UPSC, Bank, Railway)',
         'AI Weakness Diagnostic & Remedial Practice Reviews',
@@ -87,10 +104,12 @@ export default function ArohiExamPassModal({
       totalTests: 60,
       questionsPerTest: 100,
       totalQuestions: 6000,
-      badge: 'Maximum Value • Complete Mastery',
+      validityDays: 365,
+      badge: 'Maximum Value • 1 Year (365 Days)',
       description: 'Unlock 60 Full-Length CBT Tests (100 Qs each = 6,000 Qs) + Unlimited AI Weakness Re-tests & 1-Click Live Tutor.',
       features: [
         '60 Full-Length CBT Tests (100 Questions each = 6,000 Questions)',
+        '365 Days (1 Full Year) Complete Access Validity',
         'Dynamic Question & Option Shuffle on every attempt (Zero duplicates)',
         'All 20+ Categories Unlocked (School Classes 1-10, AIIMS, NEET, JEE, OPSC, SSC, UPSC, Bank, Railway)',
         'Unlimited AI Weakness Diagnostic, 7-Day Sprint Plans & Remedial Tests',
@@ -104,29 +123,40 @@ export default function ArohiExamPassModal({
   const selectedPass = passes[activeTab];
 
   const handleActivateSuccess = (tier: 'silver' | 'gold' | 'platinum', paymentMethod: string, transactionId?: string) => {
-    const totalTests = tier === 'silver' ? 10 : tier === 'gold' ? 25 : 60;
+    const totalTests = selectedPass.totalTests;
+    const validityDays = selectedPass.validityDays;
+    const activatedAt = new Date().toISOString();
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + validityDays);
+    const expiresAt = expiryDate.toISOString();
     
     // Save to auth context / firestore if available
     if (activateExamPass) {
-      activateExamPass(tier, paymentMethod);
+      activateExamPass(tier, paymentMethod, transactionId);
     }
 
     // Save to local storage for instant offline resilience
     const passObj = {
       tier,
+      name: selectedPass.name,
       totalTests,
       testsRemaining: totalTests,
-      activatedAt: new Date().toISOString(),
+      testsUsed: 0,
+      validityDays,
+      activatedAt,
+      expiresAt,
       paymentMethod,
       transactionId: transactionId || `TXN_${Date.now()}`
     };
     try {
       localStorage.setItem('arohi_exam_pass', JSON.stringify(passObj));
+      setLocalPass(passObj);
       window.dispatchEvent(new CustomEvent('arohi_exam_pass_activated', { detail: passObj }));
     } catch (e) {}
 
     setIsProcessing(false);
     setIsSuccess(true);
+    setErrorMessage(null);
 
     if (onPassActivated) {
       onPassActivated({ tier, totalTests });
@@ -138,13 +168,14 @@ export default function ArohiExamPassModal({
   };
 
   const handleRazorpayPayment = async () => {
+    setErrorMessage(null);
     setIsProcessing(true);
     try {
       await openRazorpayCheckout({
         price: selectedPass.price,
         amountInRupees: selectedPass.price,
         planName: selectedPass.name,
-        userEmail: studentEmail,
+        userEmail: studentEmail || 'student@arohiai.com',
         userName: studentName,
         userPhone: studentPhone,
         notes: {
@@ -156,34 +187,23 @@ export default function ArohiExamPassModal({
           userId: user?.uid || 'guest'
         },
         onSuccess: (resp) => {
-          handleActivateSuccess(selectedPass.tier, 'Razorpay Payment Gateway', resp.razorpay_payment_id);
+          handleActivateSuccess(selectedPass.tier, 'Razorpay Gateway', resp.razorpay_payment_id);
         },
         onError: (err) => {
           setIsProcessing(false);
-          console.warn('Razorpay checkout note:', err);
-          // Fallback to direct activation for seamless demo or retry
-          setShowDirectUpiQr(true);
+          const errText = err?.message || err?.description || 'Razorpay transaction was not completed.';
+          console.warn('Razorpay payment error:', errText);
+          setErrorMessage(errText);
         },
         onDismiss: () => {
           setIsProcessing(false);
         }
       });
-    } catch (e) {
+    } catch (e: any) {
       setIsProcessing(false);
-      setShowDirectUpiQr(true);
+      const msg = e?.message || 'Payment was cancelled or could not be initiated.';
+      setErrorMessage(msg);
     }
-  };
-
-  const handleManualUtrSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!utrNumber.trim() || utrNumber.length < 6) {
-      alert('Please enter a valid 12-digit UPI UTR / Transaction Reference Number.');
-      return;
-    }
-    setIsProcessing(true);
-    setTimeout(() => {
-      handleActivateSuccess(selectedPass.tier, 'Direct UPI QR Scan', utrNumber.trim());
-    }, 1000);
   };
 
   return (
@@ -243,7 +263,7 @@ export default function ArohiExamPassModal({
           }`}>
             <button
               type="button"
-              onClick={() => { setActiveTab('silver'); setShowDirectUpiQr(false); }}
+              onClick={() => setActiveTab('silver')}
               className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'silver'
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 scale-[1.02]'
@@ -256,7 +276,7 @@ export default function ArohiExamPassModal({
 
             <button
               type="button"
-              onClick={() => { setActiveTab('gold'); setShowDirectUpiQr(false); }}
+              onClick={() => setActiveTab('gold')}
               className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'gold'
                   ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-lg shadow-amber-500/30 scale-[1.02]'
@@ -269,7 +289,7 @@ export default function ArohiExamPassModal({
 
             <button
               type="button"
-              onClick={() => { setActiveTab('platinum'); setShowDirectUpiQr(false); }}
+              onClick={() => setActiveTab('platinum')}
               className={`py-2 px-2 rounded-xl font-bold text-xs transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'platinum'
                   ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/30 scale-[1.02]'
@@ -291,7 +311,7 @@ export default function ArohiExamPassModal({
               </div>
               <h3 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>Arohi Exam Pass Activated!</h3>
               <p className={`text-sm mt-2 font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                Your <strong className={isDarkMode ? 'text-purple-300' : 'text-purple-800'}>{selectedPass.name}</strong> is active. You now have <strong className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>{selectedPass.totalTests} Full-Length Tests</strong> with dynamic question shuffle.
+                Your <strong className={isDarkMode ? 'text-purple-300' : 'text-purple-800'}>{selectedPass.name}</strong> is active. You now have <strong className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>{selectedPass.totalTests} Full-Length Tests</strong> ({selectedPass.validityDays} Days Validity) with dynamic question shuffle.
               </p>
               <div className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold animate-pulse ${
                 isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-900 border border-purple-300'
@@ -301,6 +321,34 @@ export default function ArohiExamPassModal({
             </div>
           ) : (
             <>
+              {/* Existing Active Pass Status Banner */}
+              {hasActiveUserPass && (
+                <div className={`mb-5 p-3.5 sm:p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                  isDarkMode 
+                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300' 
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-lg">
+                      👑
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-xs sm:text-sm">Active: {activeUserPass?.name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white uppercase">
+                          {currentRemaining} of {activeUserPass?.totalTests || 10} Left
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        {activeUserPass?.expiresAt 
+                          ? `Valid until ${new Date(activeUserPass.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` 
+                          : 'Valid for full session'} • Top-up or upgrade below anytime.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Selected Plan Details Banner */}
               <div className={`flex items-center justify-between p-4 rounded-2xl border mb-5 ${
                 isDarkMode 
@@ -367,89 +415,48 @@ export default function ArohiExamPassModal({
                 </span>
               </div>
 
-              {/* Payment Buttons / Actions */}
-              {!showDirectUpiQr ? (
-                <div className="space-y-2.5">
-                  <button
-                    onClick={handleRazorpayPayment}
-                    disabled={isProcessing}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+              {/* Error Message Notice */}
+              {errorMessage && (
+                <div className="mb-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2 animate-shake">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-bold">Payment Notification</p>
+                    <p className="mt-0.5">{errorMessage}</p>
+                  </div>
+                  <button 
+                    onClick={() => setErrorMessage(null)} 
+                    className="text-rose-400 hover:text-rose-200"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    <span>
-                      {isProcessing ? 'Connecting Gateway...' : `Pay ₹${selectedPass.price} & Unlock ${selectedPass.totalTests} Tests Instantly`}
-                    </span>
+                    <X className="w-3.5 h-3.5" />
                   </button>
-
-                  <div className={`flex items-center justify-between text-xs px-1 ${
-                    isDarkMode ? 'text-slate-400' : 'text-slate-600'
-                  }`}>
-                    <button
-                      type="button"
-                      onClick={() => setShowDirectUpiQr(true)}
-                      className="text-purple-600 dark:text-purple-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                    >
-                      <QrCode className="w-3 h-3" />
-                      <span>Or pay via Direct UPI QR / GPay / PhonePe</span>
-                    </button>
-                    <span className="flex items-center gap-1 opacity-70">
-                      <Lock className="w-3 h-3" /> 256-Bit SSL Encrypted
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                /* Direct UPI QR Form */
-                <div className={`p-4 rounded-2xl border text-center animate-fade-in ${
-                  isDarkMode ? 'bg-slate-900 border-purple-500/30' : 'bg-slate-50 border-purple-200'
-                }`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
-                      <QrCode className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                      <span>Scan UPI QR Code (GPay / PhonePe / Paytm)</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowDirectUpiQr(false)}
-                      className={`text-xs underline cursor-pointer ${isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-950'}`}
-                    >
-                      Back to Gateway
-                    </button>
-                  </div>
-
-                  <div className="inline-block p-2 bg-white rounded-xl mb-3 shadow-md border border-slate-200">
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=arohiai@icici%26pn=Arohi%20Exams%26am=${selectedPass.price}%26cu=INR`}
-                      alt="Arohi Exams UPI QR"
-                      className="w-36 h-36 mx-auto object-contain"
-                    />
-                  </div>
-
-                  <div className={`text-xs mb-3 font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
-                    Scan &amp; Pay <strong className="text-emerald-700 dark:text-emerald-400 font-black">₹{selectedPass.price}</strong> to UPI ID: <strong className="text-purple-700 dark:text-purple-300 font-black">arohiai@icici</strong>
-                  </div>
-
-                  <form onSubmit={handleManualUtrSubmit} className="max-w-sm mx-auto flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Enter 12-Digit UPI UTR / Ref No."
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className={`flex-1 px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${
-                        isDarkMode 
-                          ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' 
-                          : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
-                      }`}
-                    />
-                    <button
-                      type="submit"
-                      disabled={isProcessing || !utrNumber.trim()}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold disabled:opacity-50 transition-all cursor-pointer"
-                    >
-                      {isProcessing ? 'Verifying...' : 'Activate'}
-                    </button>
-                  </form>
                 </div>
               )}
+
+              {/* Exclusive Razorpay Payment Action */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleRazorpayPayment}
+                  disabled={isProcessing}
+                  className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2.5 transition-all transform active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <span>
+                    {isProcessing ? 'Opening Razorpay Gateway...' : `Pay ₹${selectedPass.price} via Razorpay Checkout`}
+                  </span>
+                </button>
+
+                <div className={`flex flex-wrap items-center justify-between gap-2 text-xs px-1 ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-600'
+                }`}>
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Razorpay Standard Checkout (UPI, Cards, NetBanking, Wallets)</span>
+                  </span>
+                  <span className="flex items-center gap-1 opacity-70">
+                    <Lock className="w-3 h-3" /> 256-Bit SSL Encrypted
+                  </span>
+                </div>
+              </div>
 
               {/* Free Plan Policy Info Banner */}
               <div className={`mt-4 p-3 rounded-2xl border text-center text-xs flex items-center justify-between gap-2 ${

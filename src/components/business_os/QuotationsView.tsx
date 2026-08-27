@@ -15,7 +15,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { Quotation } from './types';
 
 export default function QuotationsView() {
-  const { quotations, convertQuoteToInvoice, deleteQuotation, setQuickCreateType, showToast } = useBusinessOS();
+  const { quotations = [], convertQuoteToInvoice, deleteQuotation, setQuickCreateType, showToast } = useBusinessOS();
+  const safeQuotations = quotations || [];
   const [selectedQuote, setSelectedQuote] = useState<Quotation | null>(null);
 
   const handleSimulateSend = (qNum: string) => {
@@ -71,7 +72,7 @@ export default function QuotationsView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] font-medium text-zinc-700 dark:text-zinc-300">
-              {quotations.map((quote) => (
+              {safeQuotations.map((quote) => (
                 <tr key={quote.id} className="hover:bg-zinc-50 dark:hover:bg-[#18181b]/50 transition-colors">
                   <td className="py-3 px-4 font-mono font-bold text-violet-600 dark:text-violet-400 text-xs">
                     {quote.quoteNumber}

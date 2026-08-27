@@ -14,14 +14,18 @@ import { useBusinessOS } from './BusinessOSContext';
 import { ProductInventoryItem } from './types';
 
 export default function InventoryStockView() {
-  const { inventory, updateProductStock, addProduct, showToast } = useBusinessOS();
+  const { inventory = [], updateProductStock, addProduct, showToast } = useBusinessOS();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredItems = inventory.filter(i =>
-    i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const safeInventory = inventory || [];
+
+  const filteredItems = safeInventory.filter(i => {
+    const q = (searchQuery || '').toLowerCase();
+    const matchesName = (i?.name || '').toLowerCase().includes(q);
+    const matchesSku = (i?.sku || '').toLowerCase().includes(q);
+    const matchesCat = (i?.category || '').toLowerCase().includes(q);
+    return matchesName || matchesSku || matchesCat;
+  });
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">

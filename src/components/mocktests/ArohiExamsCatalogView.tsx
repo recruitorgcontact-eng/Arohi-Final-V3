@@ -5,6 +5,8 @@ import {
   Clock, CheckCircle, FileText
 } from 'lucide-react';
 import { MockTest } from '../../types/examTypes';
+import ArohiGamingArenaBannerButton from './ArohiGamingArenaBannerButton';
+import { useAuth } from '../../context/AuthContext';
 
 interface ArohiExamsCatalogViewProps {
   isDarkMode?: boolean;
@@ -12,6 +14,7 @@ interface ArohiExamsCatalogViewProps {
   onSelectTest: (test: MockTest) => void;
   onOpenSubjectPicker?: (category?: 'all' | 'school' | 'competitive' | 'state', test?: MockTest) => void;
   onOpenExamPass: () => void;
+  onOpenArena?: () => void;
   initialCategoryTab?: 'all' | 'school' | 'competitive' | 'state';
   freeAttemptsCount?: number;
   remainingFreeTests?: number;
@@ -25,6 +28,7 @@ export default function ArohiExamsCatalogView({
   onSelectTest,
   onOpenSubjectPicker,
   onOpenExamPass,
+  onOpenArena,
   initialCategoryTab = 'all',
   freeAttemptsCount = 0,
   remainingFreeTests = 5,
@@ -62,6 +66,19 @@ export default function ArohiExamsCatalogView({
     return true;
   });
 
+  const { userData } = useAuth();
+  const activePass = userData?.examPass || (() => {
+    try {
+      const stored = localStorage.getItem('arohi_exam_pass');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  })();
+
+  const passTestsRemaining = typeof activePass?.testsRemaining === 'number' 
+    ? activePass.testsRemaining 
+    : (activePass?.totalTests || 10);
+  const passTotalTests = activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60);
+
   return (
     <div className="space-y-7 max-w-4xl mx-auto pb-28 animate-in fade-in duration-300">
       
@@ -88,7 +105,15 @@ export default function ArohiExamsCatalogView({
         </div>
       </div>
 
-      {/* 2. FREE QUOTA STATUS BANNER */}
+      {/* GAMING ARENA HERO BUTTON BANNER */}
+      {onOpenArena && (
+        <ArohiGamingArenaBannerButton
+          onClick={onOpenArena}
+          isDarkMode={isDarkMode}
+        />
+      )}
+
+      {/* 2. FREE QUOTA & PASS STATUS BANNER */}
       <div className={`p-4 sm:p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-xs ${
         hasActivePass
           ? isDarkMode
@@ -99,11 +124,15 @@ export default function ArohiExamsCatalogView({
             : 'bg-purple-50 border-purple-200 text-purple-950'
       }`}>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🎁</span>
+          <span className="text-2xl">{hasActivePass ? '👑' : '🎁'}</span>
           <div>
             <div className="font-black text-sm sm:text-base flex items-center gap-2">
-              <span>{hasActivePass ? 'Exam Pass Active (Unlimited Tests)' : `Free Quota: ${remainingFreeTests} of ${maxFreeTests} Tests Left`}</span>
-              {!hasActivePass && (
+              <span>{hasActivePass ? (activePass?.name || 'Arohi Exam Pass Active') : `Free Quota: ${remainingFreeTests} of ${maxFreeTests} Tests Left`}</span>
+              {hasActivePass ? (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white uppercase tracking-wider">
+                  {passTestsRemaining} of {passTotalTests} Tests Left
+                </span>
+              ) : (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-600 text-white uppercase tracking-wider">
                   All Categories
                 </span>
@@ -111,8 +140,8 @@ export default function ArohiExamsCatalogView({
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1">
               {hasActivePass 
-                ? 'Enjoy unrestricted access to all 136+ test papers with instant AIR & digital marksheet generation.' 
-                : 'In Free tier you can attend 5 tests across School, Competitive, and State categories.'}
+                ? `You have ${passTestsRemaining} CBT tests remaining. Dynamic shuffle and official marksheet generation active.` 
+                : 'In Free tier you can attend 5 tests across School, Competitive, and State categories. Upgrade for 10-60+ tests.'}
             </p>
           </div>
         </div>
@@ -124,7 +153,7 @@ export default function ArohiExamsCatalogView({
               : 'bg-purple-600 text-white hover:bg-purple-500'
           }`}
         >
-          {hasActivePass ? 'Pass Info' : 'Upgrade (From ₹99)'}
+          {hasActivePass ? 'Pass Details & Top-up' : 'Upgrade (From ₹99)'}
         </button>
       </div>
 

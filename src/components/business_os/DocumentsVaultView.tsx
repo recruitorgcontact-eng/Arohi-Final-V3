@@ -15,13 +15,17 @@ import { useBusinessOS } from './BusinessOSContext';
 import { DocumentVaultItem } from './types';
 
 export default function DocumentsVaultView() {
-  const { documents, addDocument, showToast } = useBusinessOS();
+  const { documents = [], addDocument, showToast } = useBusinessOS();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredDocs = documents.filter(d =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const safeDocs = documents || [];
+
+  const filteredDocs = safeDocs.filter(d => {
+    const q = (searchQuery || '').toLowerCase();
+    const matchesTitle = (d?.title || '').toLowerCase().includes(q);
+    const matchesCat = (d?.category || '').toLowerCase().includes(q);
+    return matchesTitle || matchesCat;
+  });
 
   const handleUploadDoc = () => {
     const title = prompt('Document Title:');

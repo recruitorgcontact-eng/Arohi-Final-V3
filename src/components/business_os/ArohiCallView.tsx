@@ -20,7 +20,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { TelephonyCallRecord } from './types';
 
 export default function ArohiCallView() {
-  const { calls, simulateInboundCall, showToast } = useBusinessOS();
+  const { calls = [], simulateInboundCall, showToast } = useBusinessOS();
+  const safeCalls = calls || [];
   const [selectedCall, setSelectedCall] = useState<TelephonyCallRecord | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [callerNameInput] = useState('Rajesh Verma');
@@ -108,11 +109,11 @@ export default function ArohiCallView() {
               <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Recorded Telephony Logs</h3>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Inbound queries, outbound qualification, & AI summaries</p>
             </div>
-            <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">{calls.length} Total Calls</span>
+            <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">{safeCalls.length} Total Calls</span>
           </div>
 
           <div className="space-y-2.5">
-            {calls.map((call) => (
+            {safeCalls.map((call) => (
               <div
                 key={call.id}
                 onClick={() => setSelectedCall(call)}

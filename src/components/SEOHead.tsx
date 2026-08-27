@@ -14,8 +14,56 @@ interface SEOHeadProps {
 
 const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   chat: {
-    title: "Arohi AI - World & India's #1 Multilingual Opportunity Engine in 150+ Languages (arohiai.com)",
-    desc: "Chat and talk live with Arohi AI in Odia, Hindi, English, Bengali, Telugu, Tamil, Marathi, Gujarati, Spanish, French & 150+ languages. Solves 100+ real life problems."
+    title: "Arohi AI: ONE AI. INFINITE OPPORTUNITIES. | Sovereign AI Ecosystem in 150+ Languages (arohiai.com)",
+    desc: "Arohi AI — ONE AI. INFINITE OPPORTUNITIES. Built by Bharat, Built for Bharat. Live multilingual voice AI & LLM cum LMM solving 100+ real-life problems across exams, business, careers, and welfare in 150+ languages."
+  },
+  mocktests: {
+    title: "Arohi Exams - National CBT Mock Test Series & Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Practice real-time CBT mock tests for NEET, JEE Main, UPSC, SSC CGL, Banking, CBSE & CHSE Odisha with instant All-India rank, OMR grading, and 1v1 gaming arena battles powered by Arohi AI."
+  },
+  mocktest: {
+    title: "Arohi Exams - National CBT Mock Test Series & Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Practice real-time CBT mock tests for NEET, JEE Main, UPSC, SSC CGL, Banking, CBSE & CHSE Odisha with instant All-India rank, OMR grading, and 1v1 gaming arena battles powered by Arohi AI."
+  },
+  'business-os': {
+    title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
+  },
+  businessos: {
+    title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
+  },
+  arohione: {
+    title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
+  },
+  one: {
+    title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
+  },
+  solutions: {
+    title: "Universal Solutions Hub - 100+ Everyday Problems Solved | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Discover step-by-step verified AI solutions for 100+ real-world challenges across 23 target audiences in 150+ languages with official government portal guidance."
+  },
+  solution: {
+    title: "Universal Solutions Hub - 100+ Everyday Problems Solved | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Discover step-by-step verified AI solutions for 100+ real-world challenges across 23 target audiences in 150+ languages with official government portal guidance."
+  },
+  audience: {
+    title: "Target Audiences & Opportunities Hub | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Tailored AI tools, career roadmaps, and government schemes for Students, MSMEs, Divyangjan, Healthcare, Developers, Farmers, and Job Seekers."
+  },
+  pricing: {
+    title: "Official Plans & Pricing (Starting ₹399/mo) | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Affordable, transparent AI plans: Starter (₹399/mo), Professional (₹699/mo), Growth Business (₹1,699/mo), Elite Executive (₹3,999/mo), and Ultimate Premium (₹4,999/mo)."
+  },
+  plans: {
+    title: "Official Plans & Pricing (Starting ₹399/mo) | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Affordable, transparent AI plans: Starter (₹399/mo), Professional (₹699/mo), Growth Business (₹1,699/mo), Elite Executive (₹3,999/mo), and Ultimate Premium (₹4,999/mo)."
+  },
+  subscriptions: {
+    title: "Official Plans & Pricing (Starting ₹399/mo) | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Affordable, transparent AI plans: Starter (₹399/mo), Professional (₹699/mo), Growth Business (₹1,699/mo), Elite Executive (₹3,999/mo), and Ultimate Premium (₹4,999/mo)."
   },
   jobs: {
     title: "Arohi AI Govt & Corporate Jobs Hub - Sarkari Naukri, UPSC, OPSC, SSC & Private Vacancies",
@@ -52,10 +100,6 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   blogs: {
     title: "100+ Multilingual Knowledge Blogs on AI, Sarkari Jobs, MSME Loans & Exams | Arohi AI",
     desc: "Explore trending guides on government schemes, resume hacks, competitive exam tricks, and business subsidies in 150+ languages."
-  },
-  tools: {
-    title: "Arohi AI Smart Tools Suite - 4K Image Studio, Code Copilot & Music Studio | Arohi AI",
-    desc: "Generate 4K AI images, write full-stack code, compose music tracks, and analyze financial data with Arohi AI multi-tool ecosystem."
   }
 };
 
@@ -191,12 +235,51 @@ export default function SEOHead({
         "url": "https://arohiai.com",
         "applicationCategory": "ProductivityApplication",
         "operatingSystem": "Web, Android, iOS",
-        "offers": {
-          "@type": "Offer",
-          "price": "0.00",
-          "priceCurrency": "INR"
-        },
         "description": desc,
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "INR",
+          "lowPrice": "399.00",
+          "highPrice": "4999.00",
+          "offerCount": "5",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Starter Plan",
+              "price": "399.00",
+              "priceCurrency": "INR",
+              "description": "10,000 AI Credits, 5 Hours AI Voice, Unlimited Chat"
+            },
+            {
+              "@type": "Offer",
+              "name": "Professional Plan",
+              "price": "699.00",
+              "priceCurrency": "INR",
+              "description": "15,000 AI Credits, 10 Hours AI Voice, ATS Resumes, 3 Certificates"
+            },
+            {
+              "@type": "Offer",
+              "name": "Growth Business Plan",
+              "price": "1699.00",
+              "priceCurrency": "INR",
+              "description": "35,000 AI Credits, 25 Hours AI Voice, MSME DPR Generator, PMEGP Subsidies"
+            },
+            {
+              "@type": "Offer",
+              "name": "Elite Executive Plan",
+              "price": "3999.00",
+              "priceCurrency": "INR",
+              "description": "80,000 AI Credits, 60 Hours AI Voice, Commercial Filings & Executive Search"
+            },
+            {
+              "@type": "Offer",
+              "name": "Ultimate Premium Plan",
+              "price": "4999.00",
+              "priceCurrency": "INR",
+              "description": "100,000 AI Credits, 80 Hours AI Voice, Unlimited Filings & Dedicated VIP Priority"
+            }
+          ]
+        },
         "aggregateRating": {
           "@type": "AggregateRating",
           "ratingValue": "4.9",
@@ -216,6 +299,30 @@ export default function SEOHead({
         ]
       }
     ];
+
+    if (activeTab === 'mocktests' || activeTab === 'mocktest') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "EducationalApplication",
+        "name": "Arohi Exams & Gaming Arena",
+        "description": "National CBT mock test series and multiplayer gamified academic battles for NEET, JEE Main, UPSC, SSC, Banking, and Board Exams.",
+        "applicationCategory": "EducationalApplication",
+        "educationalUse": "Assessment",
+        "audience": {
+          "@type": "EducationalAudience",
+          "educationalRole": "student"
+        }
+      });
+    }
+
+    if (activeTab === 'business-os' || activeTab === 'businessos' || activeTab === 'arohione' || activeTab === 'one') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "BusinessAudience",
+        "name": "Arohi ONE Business OS",
+        "description": "All-in-One AI operating system for MSMEs, Startups, and Enterprises with GST invoicing, CRM pipelines, cashflow forecasting, inventory matrix, and DPR reports."
+      });
+    }
 
     if (jsonLdFaqs.length > 0) {
       schemaGraph.push({

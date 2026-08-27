@@ -15,7 +15,8 @@ import { useBusinessOS } from './BusinessOSContext';
 import { SupportTicket } from './types';
 
 export default function SupportDeskView() {
-  const { tickets, updateTicketStatus, addTicket, showToast } = useBusinessOS();
+  const { tickets = [], updateTicketStatus, addTicket, showToast } = useBusinessOS();
+  const safeTickets = tickets || [];
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
   const handleApplyAiResponse = (tkt: SupportTicket) => {
@@ -82,7 +83,7 @@ export default function SupportDeskView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] font-medium text-zinc-700 dark:text-zinc-300">
-              {tickets.map((tkt) => (
+              {safeTickets.map((tkt) => (
                 <tr key={tkt.id} className="hover:bg-zinc-50 dark:hover:bg-[#18181b]/50 transition-colors">
                   <td className="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400 text-xs">
                     {tkt.ticketCode}

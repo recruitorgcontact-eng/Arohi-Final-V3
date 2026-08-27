@@ -3,10 +3,11 @@ import {
   Trophy, CheckCircle2, Flame, Award, ArrowRight, BookOpen, 
   GraduationCap, Building2, Play, Sparkles, TrendingUp, BarChart3, 
   FileText, BrainCircuit, Target, Check, ChevronRight, Crown,
-  Layers, Star, ShieldCheck, Clock, LogIn, User
+  Layers, Star, ShieldCheck, Clock, LogIn, User, Bot, FileCheck
 } from 'lucide-react';
 import { MockTest } from '../../types/examTypes';
 import { useAuth } from '../../context/AuthContext';
+import ArohiGamingArenaBannerButton from './ArohiGamingArenaBannerButton';
 
 interface ArohiExamsHomeProps {
   isDarkMode?: boolean;
@@ -18,6 +19,7 @@ interface ArohiExamsHomeProps {
   onOpenStudyPlan: () => void;
   onOpenAiMentor: () => void;
   onOpenExamPass: () => void;
+  onOpenArena?: () => void;
   onNavigateTab?: (tab: string) => void;
   onOpenAuth?: () => void;
   freeAttemptsCount?: number;
@@ -36,6 +38,7 @@ export default function ArohiExamsHome({
   onOpenStudyPlan,
   onOpenAiMentor,
   onOpenExamPass,
+  onOpenArena,
   onNavigateTab,
   onOpenAuth,
   freeAttemptsCount = 0,
@@ -44,8 +47,34 @@ export default function ArohiExamsHome({
   maxFreeTests = 5
 }: ArohiExamsHomeProps) {
   const { user, userData, userMemory } = useAuth();
+  const [localPass, setLocalPass] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('arohi_exam_pass');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    const handlePassUpdate = (e: any) => {
+      if (e.detail) setLocalPass(e.detail);
+    };
+    window.addEventListener('arohi_exam_pass_activated', handlePassUpdate);
+    window.addEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    return () => {
+      window.removeEventListener('arohi_exam_pass_activated', handlePassUpdate);
+      window.removeEventListener('arohi_exam_pass_updated', handlePassUpdate);
+    };
+  }, []);
+
+  const activePass = userData?.examPass || localPass;
+  const passTestsRemaining = typeof activePass?.testsRemaining === 'number' 
+    ? activePass.testsRemaining 
+    : (activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60));
+  const passTotalTests = activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60);
+  const isPassExpired = Boolean(activePass?.expiresAt && new Date(activePass.expiresAt).getTime() < Date.now());
+  const isPassValid = Boolean(activePass && passTestsRemaining > 0 && !isPassExpired);
   
-  // Resolve user display name strictly from logged-in credentials or fallback to 'User'
+  // Resolve user display name strictly from logged-in credentials or fallback to 'Candidate'
   const rawDisplayName = 
     userData?.profile?.name || 
     userData?.displayName || 
@@ -55,9 +84,9 @@ export default function ArohiExamsHome({
 
   const resolvedName = rawDisplayName && rawDisplayName.trim().length > 0 
     ? rawDisplayName.trim() 
-    : 'User';
+    : 'Candidate';
 
-  const greetingName = user ? resolvedName : 'User';
+  const greetingName = user ? resolvedName : 'Candidate';
   const isCandidateLoggedIn = Boolean(user && user.uid);
 
   // Candidate recent progress from localStorage or default simulation
@@ -90,389 +119,344 @@ export default function ArohiExamsHome({
   const resumeTest = tests.find(t => t.slug?.includes('jee') || t.title?.toLowerCase().includes('jee')) || tests[0];
 
   return (
-    <div className="space-y-7 max-w-4xl mx-auto pb-28 animate-in fade-in duration-300">
+    <div className="space-y-4 max-w-4xl mx-auto pb-24 animate-in fade-in duration-200">
       
-      {/* 1. STUDENT WELCOME & STREAK BANNER */}
-      <div className={`p-5 sm:p-6 rounded-3xl border flex items-center justify-between gap-4 relative overflow-hidden transition-all shadow-sm ${
+      {/* 1. STUDENT WELCOME & STREAK BANNER (Apple ID Aesthetic) */}
+      <div className={`p-3.5 sm:p-4 rounded-2xl border flex items-center justify-between gap-3 relative overflow-hidden transition-all ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-900/95 border-slate-800 text-white' 
-          : 'bg-gradient-to-r from-white via-purple-50/20 to-white border-slate-200/80 text-slate-900 shadow-xs'
+          ? 'bg-zinc-900/60 border-white/[0.08] text-white' 
+          : 'bg-white/90 border-black/[0.06] text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
       }`}>
-        <div className="flex items-center gap-4 z-10">
+        <div className="flex items-center gap-3 z-10 min-w-0">
           <div className="relative shrink-0">
-            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full overflow-hidden border-2 border-purple-400 bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-800 shadow-md flex items-center justify-center">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/70 dark:border-white/[0.08] flex items-center justify-center font-semibold text-sm text-zinc-800 dark:text-zinc-200">
               {isCandidateLoggedIn ? (
-                <div className="w-full h-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-800 text-white font-black text-2xl flex items-center justify-center">
-                  {greetingName.charAt(0).toUpperCase()}
-                </div>
+                greetingName.charAt(0).toUpperCase()
               ) : (
-                <div className="w-full h-full bg-slate-800 text-purple-300 flex items-center justify-center">
-                  <User className="w-8 h-8" />
-                </div>
+                <User className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
               )}
             </div>
-            <div className={`absolute -bottom-1 -right-1 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white dark:border-slate-900 shadow-xs ${
-              isCandidateLoggedIn ? 'bg-emerald-600' : 'bg-purple-600'
-            }`}>
-              {isCandidateLoggedIn ? 'ACTIVE' : 'GUEST'}
-            </div>
+            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${
+              isDarkMode ? 'border-zinc-900' : 'border-white'
+            } ${isCandidateLoggedIn ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Hello, {greetingName}!
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h1 className="text-sm sm:text-[15px] font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
+                Hello, {greetingName}
               </h1>
-              <span className="text-2xl">👋</span>
+              <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300 border border-zinc-200/60 dark:border-white/[0.08]">
+                {isCandidateLoggedIn ? 'Active' : 'Guest'}
+              </span>
             </div>
-            {!isCandidateLoggedIn && onOpenAuth && (
-              <button
-                onClick={onOpenAuth}
-                className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer flex items-center gap-1 mt-1"
-              >
-                <span>Log in to save test scores & marksheets</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1">
-              Ready to test your knowledge today?
-            </p>
-            <p className="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 mt-0.5">
-              ✨ "Practice Today, Achieve Tomorrow!"
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+              Practice Today, Achieve Tomorrow • Computer Based Test Hub
             </p>
           </div>
         </div>
 
-        {/* Day Streak Card */}
-        <div className={`px-4 sm:px-5 py-3 rounded-2xl border flex items-center gap-3 z-10 shadow-xs shrink-0 ${
-          isDarkMode 
-            ? 'bg-slate-800/90 border-slate-700' 
-            : 'bg-orange-50/90 border-orange-200/80 text-orange-950'
-        }`}>
-          <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-            <Flame className="w-6 h-6 text-orange-500 fill-orange-500 animate-pulse" />
-          </div>
-          <div>
-            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">
-              {userStats.streakDays}
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Day Streak
-            </div>
-          </div>
+        {/* Day Streak Capsule */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+          <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+          <span className="text-xs font-semibold">{userStats.streakDays}</span>
+          <span className="text-[10px] tracking-wider uppercase font-medium hidden xs:inline">Days</span>
         </div>
       </div>
 
-      {/* 2. 4-METRIC STATS STRIP */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+      {/* 2. 4-METRIC STATS STRIP (Micro Minimal Grid) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* Tests Taken */}
-        <div className={`p-4 sm:p-5 rounded-2xl border flex items-center gap-3.5 transition-all hover:scale-[1.02] shadow-xs ${
-          isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/70'
+        <div className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+          isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white/80 border-black/[0.05] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
         }`}>
-          <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
-            <BookOpen className="w-6 h-6" />
+          <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <BookOpen className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Tests Taken</div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">{userStats.testsTaken}</div>
+          <div className="min-w-0">
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider truncate">Tests Taken</div>
+            <div className="text-sm sm:text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight mt-0.5">{userStats.testsTaken}</div>
           </div>
         </div>
 
         {/* Average Score */}
-        <div className={`p-4 sm:p-5 rounded-2xl border flex items-center gap-3.5 transition-all hover:scale-[1.02] shadow-xs ${
-          isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/70'
+        <div className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+          isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white/80 border-black/[0.05] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
         }`}>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Target className="w-6 h-6" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Target className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Average Score</div>
-            <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{userStats.averageScore}</div>
+          <div className="min-w-0">
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider truncate">Avg Score</div>
+            <div className="text-sm sm:text-[15px] font-semibold text-emerald-600 dark:text-emerald-400 leading-tight mt-0.5">{userStats.averageScore}</div>
           </div>
         </div>
 
         {/* All India Rank */}
-        <div className={`p-4 sm:p-5 rounded-2xl border flex items-center gap-3.5 transition-all hover:scale-[1.02] shadow-xs ${
-          isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/70'
+        <div className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+          isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white/80 border-black/[0.05] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
         }`}>
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Trophy className="w-6 h-6" />
+          <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Trophy className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">All India Rank</div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">{userStats.allIndiaRank}</div>
+          <div className="min-w-0">
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider truncate">All India Rank</div>
+            <div className="text-sm sm:text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight mt-0.5">{userStats.allIndiaRank}</div>
           </div>
         </div>
 
         {/* Percentile */}
-        <div className={`p-4 sm:p-5 rounded-2xl border flex items-center gap-3.5 transition-all hover:scale-[1.02] shadow-xs ${
-          isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/70'
+        <div className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+          isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white/80 border-black/[0.05] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
         }`}>
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-            <TrendingUp className="w-6 h-6" />
+          <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Percentile</div>
-            <div className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-0.5">{userStats.percentile}</div>
+          <div className="min-w-0">
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider truncate">Percentile</div>
+            <div className="text-sm sm:text-[15px] font-semibold text-purple-600 dark:text-purple-400 leading-tight mt-0.5">{userStats.percentile}</div>
           </div>
         </div>
       </div>
 
-      {/* 3. FREE QUOTA & EXAM PASS BANNER */}
-      <div className={`p-5 sm:p-6 rounded-3xl border relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm ${
+      {/* 3. FREE QUOTA & EXAM PASS BANNER (Apple Wallet Style) */}
+      <div className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all ${
         hasActivePass
           ? isDarkMode
-            ? 'bg-gradient-to-r from-emerald-950/50 via-teal-950/30 to-purple-950/40 border-emerald-700/50'
-            : 'bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50 border-emerald-300/80'
+            ? 'bg-emerald-950/20 border-emerald-500/20 text-white'
+            : 'bg-emerald-50/50 border-emerald-200/80 text-zinc-900'
           : isDarkMode 
-            ? 'bg-gradient-to-r from-purple-950/50 via-indigo-950/40 to-purple-950/50 border-purple-700/50' 
-            : 'bg-gradient-to-r from-purple-50 via-pink-50/50 to-indigo-50 border-purple-200'
+            ? 'bg-zinc-900/50 border-white/[0.08] text-white' 
+            : 'bg-zinc-50/80 border-black/[0.06] text-zinc-900'
       }`}>
-        <div className="flex items-center gap-4">
-          <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
-            hasActivePass 
-              ? 'bg-emerald-500/20 text-emerald-400' 
-              : 'bg-amber-400/20 text-amber-500'
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+            isPassValid ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
           }`}>
-            {hasActivePass ? (
-              <ShieldCheck className="w-7 h-7 text-emerald-500" />
+            {isPassValid ? (
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
             ) : (
-              <Crown className="w-7 h-7 fill-amber-400 text-amber-500" />
+              <Crown className="w-4 h-4 text-amber-500" />
             )}
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                {hasActivePass ? 'Arohi Exam Pass Active' : 'Free Plan: 5 Tests in All Categories'}
-                <Sparkles className="w-4 h-4 text-amber-400" />
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs sm:text-[13px] font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                {isPassValid ? (activePass?.name || 'Arohi Exam Pass') : 'Free Tier (5 Practice Tests)'}
               </h3>
-              {!hasActivePass && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-600 text-white uppercase tracking-wider">
-                  {remainingFreeTests} of {maxFreeTests} Free Left
-                </span>
-              )}
+              <span className="text-[9.5px] font-medium px-2 py-0.2 rounded-full bg-zinc-200/70 dark:bg-white/[0.08] text-zinc-700 dark:text-zinc-300">
+                {isPassValid ? `${passTestsRemaining}/${passTotalTests} Left` : `${remainingFreeTests}/${maxFreeTests} Left`}
+              </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1">
-              {hasActivePass 
-                ? 'Full CBT simulator unlocked across all School (Class 1-10) and Indian Competitive Exams with AIR rankings.' 
-                : `In Free tier, you can attend 5 tests across all categories. Upgrade for 10–60+ tests, AIR rank curves & digital marksheets.`}
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              {isPassValid 
+                ? 'Full CBT simulator unlocked across School, Competitive, and State Exams.'
+                : '5 tests included free. Upgrade for extended test packs starting at ₹99.'}
             </p>
           </div>
         </div>
+        
         <button
           onClick={onOpenExamPass}
-          className={`w-full sm:w-auto px-6 py-3 rounded-2xl text-white text-sm font-black shadow-md hover:shadow-lg transition-all shrink-0 cursor-pointer active:scale-95 text-center ${
-            hasActivePass
-              ? 'bg-emerald-600 hover:bg-emerald-500'
-              : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'
-          }`}
+          className="self-stretch sm:self-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:opacity-90 active:scale-95 transition-all cursor-pointer text-center shrink-0"
         >
-          {hasActivePass ? 'Manage Pass' : 'View Pass Options (From ₹99)'}
+          {isPassValid ? 'Pass Details' : 'View Passes (₹99)'}
         </button>
       </div>
 
+      {/* 3.5 AROHI EXAMS GAMING ARENA HERO */}
+      <ArohiGamingArenaBannerButton
+        onClick={() => {
+          if (onOpenArena) onOpenArena();
+        }}
+        isDarkMode={isDarkMode}
+      />
+
       {/* 4. EXPLORE TESTS CATEGORY CARDS */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-0.5">
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Explore Tests</h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Choose your domain to begin instant CBT practice</p>
+            <h2 className="text-xs uppercase tracking-wider font-semibold text-zinc-400 dark:text-zinc-500">Domains</h2>
+            <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Explore Examination Categories</p>
           </div>
           <button 
             onClick={() => onSelectCategory('competitive')}
-            className="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+            className="text-[11px] font-medium text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
           >
             <span>View All</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3 h-3" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {/* School Exams Card */}
           <div 
             onClick={() => onOpenSubjectPicker ? onOpenSubjectPicker('school') : onSelectCategory('school')}
-            className={`p-6 rounded-3xl border text-center space-y-4 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] group shadow-xs ${
+            className={`p-3.5 rounded-2xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.99] group ${
               isDarkMode 
-                ? 'bg-slate-900/80 border-slate-800 hover:border-purple-500/50' 
-                : 'bg-white border-slate-200/70 hover:border-purple-300 hover:shadow-md'
+                ? 'bg-zinc-900/50 border-white/[0.08]' 
+                : 'bg-white border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
             }`}
           >
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-4xl shadow-xs group-hover:scale-110 transition-transform">
-              🏫
+            <div className="flex items-start justify-between gap-2 mb-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300">
+                Classes 1–12
+              </span>
             </div>
-            <div>
-              <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white">School Exams</h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Classes 1–12 • CBSE, ICSE, State Boards</p>
-            </div>
-            <button className="w-full py-2.5 px-4 rounded-xl bg-purple-600 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 group-hover:bg-purple-500 transition-colors shadow-xs">
+            <h3 className="font-semibold text-xs sm:text-[13px] text-zinc-900 dark:text-zinc-100">School Exams</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1">CBSE, ICSE & State Boards</p>
+            <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-amber-500 transition-colors">
               <span>Choose Subject</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </div>
 
           {/* Competitive Exams Card */}
           <div 
             onClick={() => onOpenSubjectPicker ? onOpenSubjectPicker('competitive') : onSelectCategory('competitive')}
-            className={`p-6 rounded-3xl border text-center space-y-4 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] group shadow-xs ${
+            className={`p-3.5 rounded-2xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.99] group ${
               isDarkMode 
-                ? 'bg-slate-900/80 border-slate-800 hover:border-emerald-500/50' 
-                : 'bg-white border-slate-200/70 hover:border-emerald-300 hover:shadow-md'
+                ? 'bg-zinc-900/50 border-white/[0.08]' 
+                : 'bg-white border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
             }`}
           >
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-4xl shadow-xs group-hover:scale-110 transition-transform">
-              🎓
+            <div className="flex items-start justify-between gap-2 mb-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300">
+                National Level
+              </span>
             </div>
-            <div>
-              <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white">Competitive Exams</h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">JEE, NEET, UPSC, SSC, Bank & Railways</p>
-            </div>
-            <button className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 group-hover:bg-emerald-500 transition-colors shadow-xs">
+            <h3 className="font-semibold text-xs sm:text-[13px] text-zinc-900 dark:text-zinc-100">Competitive Exams</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1">JEE, NEET, UPSC, SSC, Bank & RLY</p>
+            <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-emerald-500 transition-colors">
               <span>Choose Subject</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </div>
 
           {/* State Exams Card */}
           <div 
             onClick={() => onOpenSubjectPicker ? onOpenSubjectPicker('state') : onSelectCategory('state')}
-            className={`p-6 rounded-3xl border text-center space-y-4 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] group shadow-xs ${
+            className={`p-3.5 rounded-2xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.99] group ${
               isDarkMode 
-                ? 'bg-slate-900/80 border-slate-800 hover:border-blue-500/50' 
-                : 'bg-white border-slate-200/70 hover:border-blue-300 hover:shadow-md'
+                ? 'bg-zinc-900/50 border-white/[0.08]' 
+                : 'bg-white border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
             }`}
           >
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-4xl shadow-xs group-hover:scale-110 transition-transform">
-              🏛️
-            </div>
-            <div>
-              <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white">State Exams</h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">State PCS, Police SI, TET, BPSC, OPSC</p>
-            </div>
-            <button className="w-full py-2.5 px-4 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 group-hover:bg-blue-500 transition-colors shadow-xs">
-              <span>Choose Subject</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. CONTINUE YOUR PREPARATION */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Continue Your Preparation</h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Resume right where you left off</p>
-          </div>
-          <button 
-            onClick={() => onSelectCategory('competitive')}
-            className="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-          >
-            <span>View All</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className={`p-5 sm:p-6 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-sm ${
-          isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200/70 shadow-xs'
-        }`}>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-              <FileText className="w-7 h-7" />
-            </div>
-            <div className="space-y-2 flex-1 sm:flex-initial">
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                {resumeTest.title}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                {resumeTest.subCategory || 'General'} • {resumeTest.totalQuestions} Questions
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-36 sm:w-48 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div className="h-full bg-purple-600 rounded-full w-[60%]"></div>
-                </div>
-                <span className="text-xs font-bold text-purple-600 dark:text-purple-400">60% Completed</span>
+            <div className="flex items-start justify-between gap-2 mb-2.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">
+                <Building2 className="w-4 h-4" />
               </div>
+              <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300">
+                State Boards
+              </span>
+            </div>
+            <h3 className="font-semibold text-xs sm:text-[13px] text-zinc-900 dark:text-zinc-100">State Exams</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1">PCS, Police SI, TET & State Gov</p>
+            <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-blue-500 transition-colors">
+              <span>Choose Subject</span>
+              <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
-
-          <button
-            onClick={() => onSelectTest(resumeTest)}
-            className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-black shadow-md hover:shadow-lg transition-all cursor-pointer text-center active:scale-95"
-          >
-            Resume Test
-          </button>
         </div>
       </div>
 
-      {/* 6. AI FEATURES STRIP (4 CARDS) */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">AI Features</h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Supercharge your score with intelligent exam tools</p>
+      {/* 5. CONTINUE YOUR PREPARATION (Compact Pill Card) */}
+      <div className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+        isDarkMode ? 'bg-zinc-900/40 border-white/[0.08]' : 'bg-white border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
+      }`}>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[9.5px] uppercase tracking-wider font-semibold text-purple-600 dark:text-purple-400">
+                In Progress
+              </span>
+              <span className="text-zinc-300 dark:text-zinc-700">•</span>
+              <span className="text-[10px] text-zinc-400 font-medium">60% Completed</span>
+            </div>
+            <h3 className="text-xs sm:text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate mt-0.5">
+              {resumeTest.title}
+            </h3>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <button
+          onClick={() => onSelectTest(resumeTest)}
+          className="self-stretch sm:self-center px-4 py-1.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-xs font-medium hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0 text-center"
+        >
+          Resume Test
+        </button>
+      </div>
+
+      {/* 6. AI FEATURES STRIP (4 Micro Blocks) */}
+      <div className="space-y-2">
+        <div className="px-0.5">
+          <h2 className="text-xs uppercase tracking-wider font-semibold text-zinc-400 dark:text-zinc-500">AI Intelligence</h2>
+          <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Smart Exam Tools</p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {/* Arohi AI Analysis */}
           <div 
             onClick={onOpenAiAnalysis}
-            className={`p-5 rounded-2xl border space-y-3 cursor-pointer transition-all hover:scale-[1.02] shadow-xs active:scale-[0.98] ${
-              isDarkMode ? 'bg-slate-900/70 border-slate-800 hover:border-purple-500' : 'bg-white border-slate-200/70 hover:border-purple-300 hover:shadow-md'
+            className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.98] ${
+              isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white border-black/[0.05]'
             }`}
           >
-            <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl shadow-xs">
-              🤖
+            <div className="w-6 h-6 rounded-md bg-purple-500/10 text-purple-500 flex items-center justify-center mb-2">
+              <Bot className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Arohi AI Analysis</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug mt-1">Get smart insights & personalized feedback</p>
-            </div>
+            <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">AI Analysis</h4>
+            <p className="text-[10.5px] text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1">Personalized feedback</p>
           </div>
 
           {/* Smart Recommendations */}
           <div 
             onClick={onOpenStudyPlan}
-            className={`p-5 rounded-2xl border space-y-3 cursor-pointer transition-all hover:scale-[1.02] shadow-xs active:scale-[0.98] ${
-              isDarkMode ? 'bg-slate-900/70 border-slate-800 hover:border-amber-500' : 'bg-white border-slate-200/70 hover:border-amber-300 hover:shadow-md'
+            className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.98] ${
+              isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white border-black/[0.05]'
             }`}
           >
-            <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shadow-xs">
-              🎯
+            <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-500 flex items-center justify-center mb-2">
+              <Target className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Smart Recommendations</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug mt-1">Focus on weak topics with AI guidance</p>
-            </div>
+            <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Study Plan</h4>
+            <p className="text-[10.5px] text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1">Target weak areas</p>
           </div>
 
           {/* Performance Tracking */}
           <div 
             onClick={onOpenAiAnalysis}
-            className={`p-5 rounded-2xl border space-y-3 cursor-pointer transition-all hover:scale-[1.02] shadow-xs active:scale-[0.98] ${
-              isDarkMode ? 'bg-slate-900/70 border-slate-800 hover:border-emerald-500' : 'bg-white border-slate-200/70 hover:border-emerald-300 hover:shadow-md'
+            className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.98] ${
+              isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white border-black/[0.05]'
             }`}
           >
-            <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-xs">
-              📈
+            <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2">
+              <BarChart3 className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Performance Tracking</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug mt-1">Track your progress with detailed reports</p>
-            </div>
+            <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">AIR Tracking</h4>
+            <p className="text-[10.5px] text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1">Detailed ranking data</p>
           </div>
 
           {/* PDF Solutions */}
           <div 
             onClick={onOpenAiMentor}
-            className={`p-5 rounded-2xl border space-y-3 cursor-pointer transition-all hover:scale-[1.02] shadow-xs active:scale-[0.98] ${
-              isDarkMode ? 'bg-slate-900/70 border-slate-800 hover:border-blue-500' : 'bg-white border-slate-200/70 hover:border-blue-300 hover:shadow-md'
+            className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-white/30 active:scale-[0.98] ${
+              isDarkMode ? 'bg-zinc-900/40 border-white/[0.06]' : 'bg-white border-black/[0.05]'
             }`}
           >
-            <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl shadow-xs">
-              📑
+            <div className="w-6 h-6 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2">
+              <FileCheck className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">PDF Solutions</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug mt-1">Get detailed solutions for all tests</p>
-            </div>
+            <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Solutions</h4>
+            <p className="text-[10.5px] text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1">Step-by-step papers</p>
           </div>
         </div>
       </div>

@@ -35,14 +35,16 @@ const EXPENSE_CATEGORIES = [
 ];
 
 export default function FinanceExpensesView() {
-  const { expenses, metrics, deleteExpense, setQuickCreateType, showToast } = useBusinessOS();
+  const { expenses = [], metrics, deleteExpense, setQuickCreateType, showToast } = useBusinessOS();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const filteredExpenses = expenses.filter(e =>
+  const safeExpenses = expenses || [];
+
+  const filteredExpenses = safeExpenses.filter(e =>
     selectedCategory === 'all' || e.category === selectedCategory
   );
 
-  const netProfit = metrics.totalRevenue - metrics.totalExpenses;
+  const netProfit = (metrics?.totalRevenue || 0) - (metrics?.totalExpenses || 0);
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">

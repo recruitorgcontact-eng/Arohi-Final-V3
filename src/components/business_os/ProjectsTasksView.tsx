@@ -14,10 +14,13 @@ import { useBusinessOS } from './BusinessOSContext';
 import { ProjectTask } from './types';
 
 export default function ProjectsTasksView() {
-  const { projects, tasks, updateTaskStatus, setQuickCreateType } = useBusinessOS();
+  const { projects = [], tasks = [], updateTaskStatus, setQuickCreateType } = useBusinessOS();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
 
-  const filteredTasks = tasks.filter(t =>
+  const safeProjects = projects || [];
+  const safeTasks = tasks || [];
+
+  const filteredTasks = safeTasks.filter(t =>
     selectedProjectId === 'all' || t.projectId === selectedProjectId
   );
 
@@ -51,7 +54,7 @@ export default function ProjectsTasksView() {
 
       {/* Projects Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-        {projects.map((proj) => (
+        {safeProjects.map((proj) => (
           <div
             key={proj.id}
             onClick={() => setSelectedProjectId(proj.id === selectedProjectId ? 'all' : proj.id)}

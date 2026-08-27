@@ -16,10 +16,13 @@ import { useBusinessOS } from './BusinessOSContext';
 import { Employee, PayrollRecord } from './types';
 
 export default function HrPayrollView() {
-  const { employees, payroll, generateMonthlyPayroll, showToast } = useBusinessOS();
+  const { employees = [], payroll = [], generateMonthlyPayroll, showToast } = useBusinessOS();
   const [activeTab, setActiveTab] = useState<'employees' | 'payroll'>('employees');
 
-  const totalMonthlyPayrollCost = employees.reduce((sum, e) => sum + e.monthlyCtc, 0);
+  const safeEmployees = employees || [];
+  const safePayroll = payroll || [];
+
+  const totalMonthlyPayrollCost = safeEmployees.reduce((sum, e) => sum + (e?.monthlyCtc || 0), 0);
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
@@ -50,7 +53,7 @@ export default function HrPayrollView() {
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
-            Team Roster ({employees.length})
+            Team Roster ({safeEmployees.length})
           </button>
           <button
             onClick={() => setActiveTab('payroll')}
@@ -60,7 +63,7 @@ export default function HrPayrollView() {
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
-            Payroll & Slips ({payroll.length})
+            Payroll & Slips ({safePayroll.length})
           </button>
         </div>
       </div>
@@ -69,7 +72,7 @@ export default function HrPayrollView() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <div className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl p-4 space-y-1 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
           <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Active Staff Count</span>
-          <div className="text-xl font-bold text-zinc-900 dark:text-white">{employees.length} Employees</div>
+          <div className="text-xl font-bold text-zinc-900 dark:text-white">{safeEmployees.length} Employees</div>
           <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">100% On-role</span>
         </div>
 
@@ -97,7 +100,7 @@ export default function HrPayrollView() {
       {activeTab === 'employees' ? (
         /* Team Directory */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {employees.map((emp) => (
+          {safeEmployees.map((emp) => (
             <div
               key={emp.id}
               className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] hover:border-indigo-400 dark:hover:border-indigo-600 rounded-2xl p-4 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all"
@@ -143,7 +146,7 @@ export default function HrPayrollView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] font-medium text-zinc-700 dark:text-zinc-300">
-                {payroll.map((pay) => (
+                {safePayroll.map((pay) => (
                   <tr key={pay.id} className="hover:bg-zinc-50 dark:hover:bg-[#18181b]/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="font-bold text-zinc-900 dark:text-white text-xs">{pay.employeeName}</div>

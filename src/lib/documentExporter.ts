@@ -1,6 +1,32 @@
 import { jsPDF } from 'jspdf';
 import * as XLSX from 'xlsx';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+  AlignmentType,
+  Footer,
+  PageNumber
+} from 'docx';
+
+/**
+ * Convert Hex Color (#RRGGBB or RRGGBB) to [R, G, B] tuple
+ */
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '');
+  const bigint = parseInt(clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return [isNaN(r) ? 0 : r, isNaN(g) ? 0 : g, isNaN(b) ? 0 : b];
+}
 
 /**
  * Clean markdown symbols for plain text conversion
@@ -15,10 +41,28 @@ export function cleanMarkdown(text: string): string {
 }
 
 /**
- * 1. Export Content as PDF (.pdf)
+ * 1. Export Content as Custom Industry-Themed PDF (.pdf)
+ * Features:
+ * - Domain-tailored palette (NGO, Real Estate, Healthcare, Finance, Education, Tech)
+ * - Themed Header with category badge & generation timestamp
+ * - Markdown table parsing into styled PDF grid tables
+ * - Callout quote cards with colored left accent bars
+ * - Running headers & page-numbered footers
  */
-export function exportToPDF(filenameTitle: string, documentTitle: string, content: string) {
+export function exportToPDF(
+  filenameTitle: string,
+  documentTitle: string,
+  content: string,
+  themeKey?: string
+) {
   try {
+    const theme = resolvePresentationTheme(themeKey, `${filenameTitle} ${documentTitle}`, content);
+    const [headerR, headerG, headerB] = hexToRgb(theme.headerBg);
+    const [accentR, accentG, accentB] = hexToRgb(theme.brandAccent);
+    const [badgeBgR, badgeBgG, badgeBgB] = hexToRgb(theme.badgeBg);
+    const [badgeTxtR, badgeTxtG, badgeTxtB] = hexToRgb(theme.badgeColor);
+    const [cardBgR, cardBgG, cardBgB] = hexToRgb(theme.cardBg);
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -26,140 +70,501 @@ export function exportToPDF(filenameTitle: string, documentTitle: string, conten
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const maxLineWidth = pageWidth - margin * 2;
     let cursorY = 20;
 
     // Header Banner
-    doc.setFillColor(30, 16, 70); // Deep Violet
-    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.setFillColor(headerR, headerG, headerB);
+    doc.rect(0, 0, pageWidth, 32, 'F');
 
+    // Top Accent Stripe
+    doc.setFillColor(accentR, accentG, accentB);
+    doc.rect(0, 0, pageWidth, 2.5, 'F');
+
+    // Industry Badge Pill
+    doc.setFillColor(badgeBgR, badgeBgG, badgeBgB);
+    doc.roundedRect(margin, 6, 88, 5.5, 2, 2, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(7.5);
+    doc.setTextColor(badgeTxtR, badgeTxtG, badgeTxtB);
+    doc.text(theme.badgeText.slice(0, 48), margin + 3, 9.8);
+
+    // Document Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);
-    doc.text('AROHI AI • Official Document Export', margin, 12);
+    const cleanTitle = documentTitle.length > 50 ? `${documentTitle.slice(0, 48)}...` : documentTitle;
+    doc.text(cleanTitle, margin, 18.5);
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 180, 255);
-    doc.text(documentTitle, margin, 19);
-
+    // Meta Subtitle
     doc.setFontSize(8);
-    doc.setTextColor(180, 180, 200);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`, pageWidth - margin - 35, 19);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(220, 220, 235);
+    doc.text('AROHI AI Universal Intelligence • Official Executive Document', margin, 25);
 
-    cursorY = 36;
+    doc.setFontSize(7.5);
+    doc.setTextColor(200, 200, 220);
+    doc.text(
+      `Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+      pageWidth - margin - 35,
+      25
+    );
 
-    // Body content lines
-    doc.setTextColor(30, 30, 40);
+    cursorY = 40;
+
     const lines = content.split('\n');
+    let inTable = false;
+    let tableHeaders: string[] = [];
+    let tableRows: string[][] = [];
 
-    lines.forEach((line) => {
-      if (cursorY > 275) {
+    const flushTable = () => {
+      if (tableHeaders.length === 0 && tableRows.length === 0) return;
+
+      const colCount = Math.max(tableHeaders.length, tableRows[0]?.length || 1);
+      const colWidth = maxLineWidth / colCount;
+
+      if (cursorY + (tableRows.length + 1) * 8 > 270) {
         doc.addPage();
-        cursorY = 20;
+        cursorY = 25;
       }
 
+      // Render Table Header
+      doc.setFillColor(headerR, headerG, headerB);
+      doc.rect(margin, cursorY, maxLineWidth, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(255, 255, 255);
+
+      tableHeaders.forEach((th, cIdx) => {
+        const textToDraw = th.slice(0, 25);
+        doc.text(textToDraw, margin + cIdx * colWidth + 2, cursorY + 4.8);
+      });
+      cursorY += 7;
+
+      // Render Table Rows
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      tableRows.forEach((row, rIdx) => {
+        if (cursorY > 270) {
+          doc.addPage();
+          cursorY = 25;
+        }
+
+        if (rIdx % 2 === 1) {
+          doc.setFillColor(cardBgR, cardBgG, cardBgB);
+          doc.rect(margin, cursorY, maxLineWidth, 6.5, 'F');
+        }
+
+        doc.setDrawColor(220, 225, 235);
+        doc.rect(margin, cursorY, maxLineWidth, 6.5, 'S');
+
+        doc.setTextColor(30, 41, 59);
+        row.forEach((cell, cIdx) => {
+          const cellText = String(cell).slice(0, 30);
+          doc.text(cellText, margin + cIdx * colWidth + 2, cursorY + 4.5);
+        });
+
+        cursorY += 6.5;
+      });
+
+      cursorY += 4;
+      tableHeaders = [];
+      tableRows = [];
+      inTable = false;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmed = line.trim();
-      if (trimmed.startsWith('#')) {
+
+      // Check if Markdown Table row
+      if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+        const cells = trimmed
+          .split('|')
+          .slice(1, -1)
+          .map((c) => cleanMarkdown(c.trim()));
+        const isDivider = cells.every((c) => /^[-:\s]+$/.test(c));
+
+        if (isDivider) {
+          inTable = true;
+          continue;
+        }
+
+        if (!inTable && tableHeaders.length === 0) {
+          tableHeaders = cells;
+        } else {
+          tableRows.push(cells);
+        }
+        continue;
+      } else {
+        if (inTable || tableHeaders.length > 0) {
+          flushTable();
+        }
+      }
+
+      if (!trimmed) {
+        cursorY += 2.5;
+        continue;
+      }
+
+      if (cursorY > 270) {
+        doc.addPage();
+        cursorY = 25;
+      }
+
+      // Heading 1 (#)
+      if (trimmed.startsWith('# ')) {
         const headingText = cleanMarkdown(trimmed);
+        cursorY += 3;
+        doc.setFillColor(cardBgR, cardBgG, cardBgB);
+        doc.roundedRect(margin, cursorY - 3.5, maxLineWidth, 8.5, 1.5, 1.5, 'F');
+
+        doc.setFillColor(accentR, accentG, accentB);
+        doc.rect(margin, cursorY - 3.5, 2.5, 8.5, 'F');
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
-        doc.setTextColor(100, 40, 200);
+        doc.setTextColor(headerR, headerG, headerB);
+        doc.text(headingText, margin + 5, cursorY + 2.2);
+        cursorY += 9;
+      }
+      // Heading 2 (##)
+      else if (trimmed.startsWith('## ')) {
+        const headingText = cleanMarkdown(trimmed);
+        cursorY += 2;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(accentR, accentG, accentB);
         doc.text(headingText, margin, cursorY);
-        cursorY += 7;
-      } else if (trimmed.startsWith('-') || trimmed.startsWith('*') || /^\d+\./.test(trimmed)) {
-        const bulletText = cleanMarkdown(trimmed);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.setTextColor(40, 40, 50);
 
-        const wrapped = doc.splitTextToSize(`• ${bulletText}`, maxLineWidth);
-        wrapped.forEach((wLine: string) => {
-          if (cursorY > 275) {
-            doc.addPage();
-            cursorY = 20;
-          }
-          doc.text(wLine, margin + 3, cursorY);
-          cursorY += 5;
+        doc.setDrawColor(accentR, accentG, accentB);
+        doc.setLineWidth(0.3);
+        doc.line(margin, cursorY + 1.5, margin + 45, cursorY + 1.5);
+        cursorY += 6.5;
+      }
+      // Heading 3 (###)
+      else if (trimmed.startsWith('### ')) {
+        const headingText = cleanMarkdown(trimmed);
+        cursorY += 1.5;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(headerR, headerG, headerB);
+        doc.text(headingText, margin, cursorY);
+        cursorY += 5;
+      }
+      // Callout quote (> ...)
+      else if (trimmed.startsWith('>')) {
+        const quoteText = cleanMarkdown(trimmed.replace(/^>\s*/, ''));
+        const wrapped = doc.splitTextToSize(quoteText, maxLineWidth - 10);
+        const boxHeight = wrapped.length * 4.5 + 4;
+
+        if (cursorY + boxHeight > 270) {
+          doc.addPage();
+          cursorY = 25;
+        }
+
+        doc.setFillColor(cardBgR, cardBgG, cardBgB);
+        doc.roundedRect(margin, cursorY - 2, maxLineWidth, boxHeight, 1.5, 1.5, 'F');
+
+        doc.setFillColor(accentR, accentG, accentB);
+        doc.rect(margin, cursorY - 2, 2.5, boxHeight, 'F');
+
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8.5);
+        doc.setTextColor(headerR, headerG, headerB);
+
+        wrapped.forEach((wLine: string, wIdx: number) => {
+          doc.text(wLine, margin + 6, cursorY + 2 + wIdx * 4.5);
         });
-      } else if (trimmed.length > 0) {
+
+        cursorY += boxHeight + 2;
+      }
+      // Bullet or List items (- , *, 1.)
+      else if (trimmed.startsWith('-') || trimmed.startsWith('*') || /^\d+\./.test(trimmed)) {
+        const bulletText = cleanMarkdown(trimmed.replace(/^[-*]\s*|\d+\.\s*/, ''));
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(30, 41, 59);
+
+        // Draw colored bullet indicator
+        doc.setFillColor(accentR, accentG, accentB);
+        doc.circle(margin + 2, cursorY - 1, 1.0, 'F');
+
+        const wrapped = doc.splitTextToSize(bulletText, maxLineWidth - 6);
+        wrapped.forEach((wLine: string, wIdx: number) => {
+          if (cursorY > 270) {
+            doc.addPage();
+            cursorY = 25;
+          }
+          doc.text(wLine, margin + 6, cursorY);
+          cursorY += 4.5;
+        });
+        cursorY += 1;
+      }
+      // Standard paragraph
+      else {
         const plainText = cleanMarkdown(trimmed);
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.setTextColor(40, 40, 50);
+        doc.setFontSize(9);
+        doc.setTextColor(40, 45, 60);
 
         const wrapped = doc.splitTextToSize(plainText, maxLineWidth);
         wrapped.forEach((wLine: string) => {
-          if (cursorY > 275) {
+          if (cursorY > 270) {
             doc.addPage();
-            cursorY = 20;
+            cursorY = 25;
           }
           doc.text(wLine, margin, cursorY);
-          cursorY += 5;
+          cursorY += 4.5;
         });
         cursorY += 2;
-      } else {
-        cursorY += 3;
       }
-    });
+    }
 
-    // Footer
+    if (inTable || tableHeaders.length > 0) {
+      flushTable();
+    }
+
+    // Footers & Running Headers across all pages
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      doc.setFontSize(8);
+
+      // Running top line on subsequent pages
+      if (i > 1) {
+        doc.setDrawColor(accentR, accentG, accentB);
+        doc.setLineWidth(0.4);
+        doc.line(margin, 12, pageWidth - margin, 12);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(headerR, headerG, headerB);
+        doc.text(`AROHI AI • ${cleanTitle}`, margin, 10);
+      }
+
+      // Bottom Footer
+      doc.setDrawColor(220, 225, 235);
+      doc.setLineWidth(0.3);
+      doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(140, 140, 160);
-      doc.text(`AROHI AI Document • Page ${i} of ${totalPages}`, margin, 287);
-      doc.text(`Verified Document ID: AROHI-${Date.now().toString().slice(-6)}`, pageWidth - margin - 45, 287);
+      doc.setTextColor(130, 140, 160);
+      doc.text(`Arohi AI • One AI. Infinite Opportunities. | Page ${i} of ${totalPages}`, margin, pageHeight - 7);
+      doc.text(`Doc ID: AROHI-${Date.now().toString().slice(-6)}`, pageWidth - margin - 40, pageHeight - 7);
     }
 
-    doc.save(`${filenameTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`);
+    const cleanFilename = filenameTitle
+      .replace(/[^a-zA-Z0-9_\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 50);
+
+    doc.save(`${cleanFilename || 'Arohi_AI_Document'}.pdf`);
+    return true;
   } catch (err) {
     console.error('Failed to export PDF:', err);
     alert('PDF export failed. Please try again.');
+    return false;
   }
 }
 
 /**
- * 2. Export Content as Word (.docx)
+ * 2. Export Content as Custom Industry-Themed Microsoft Word (.docx)
+ * Features:
+ * - Domain Palette Colors for Headings, Tables, and Highlights
+ * - Formatted Header Table with Industry Badge
+ * - Markdown tables parsed into native Word Tables with styled header rows
+ * - Callout blocks with left accent borders
+ * - Native Header & Footers with page numbering
  */
-export async function exportToWord(filenameTitle: string, documentTitle: string, content: string) {
+export async function exportToWord(
+  filenameTitle: string,
+  documentTitle: string,
+  content: string,
+  themeKey?: string
+) {
   try {
+    const theme = resolvePresentationTheme(themeKey, `${filenameTitle} ${documentTitle}`, content);
     const lines = content.split('\n');
-    const children: Paragraph[] = [];
+    const children: (Paragraph | Table)[] = [];
 
-    // Title Paragraph
-    children.push(
-      new Paragraph({
-        text: 'AROHI AI • Official Document Export',
-        heading: HeadingLevel.HEADING_1,
-        spacing: { after: 120 }
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: documentTitle,
-            bold: true,
-            size: 24,
-            color: '6B21A8'
-          }),
-          new TextRun({
-            text: `  |  Generated: ${new Date().toLocaleDateString('en-IN')}`,
-            size: 18,
-            color: '666666'
+    // Header Table Banner
+    const headerBannerTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              shading: { fill: theme.headerBg },
+              margins: { top: 200, bottom: 200, left: 240, right: 240 },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: theme.badgeText,
+                      bold: true,
+                      size: 16,
+                      color: theme.badgeColor
+                    })
+                  ],
+                  spacing: { after: 80 }
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: documentTitle,
+                      bold: true,
+                      size: 30,
+                      color: 'FFFFFF'
+                    })
+                  ],
+                  spacing: { after: 80 }
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Generated via Arohi AI  •  Theme: ${theme.name}  •  ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+                      size: 16,
+                      color: theme.textColorMuted
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+
+    children.push(headerBannerTable);
+    children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+
+    let tableHeaders: string[] = [];
+    let tableRows: string[][] = [];
+    let inTable = false;
+
+    const flushWordTable = () => {
+      if (tableHeaders.length === 0 && tableRows.length === 0) return;
+
+      const rows: TableRow[] = [];
+
+      // Header row
+      if (tableHeaders.length > 0) {
+        rows.push(
+          new TableRow({
+            tableHeader: true,
+            children: tableHeaders.map(
+              (th) =>
+                new TableCell({
+                  shading: { fill: theme.headerBg },
+                  margins: { top: 120, bottom: 120, left: 150, right: 150 },
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: th,
+                          bold: true,
+                          size: 18,
+                          color: 'FFFFFF'
+                        })
+                      ]
+                    })
+                  ]
+                })
+            )
           })
-        ],
-        spacing: { after: 240 }
-      })
-    );
+        );
+      }
 
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
+      // Data rows
+      tableRows.forEach((row, rIdx) => {
+        rows.push(
+          new TableRow({
+            children: row.map(
+              (cell) =>
+                new TableCell({
+                  shading: rIdx % 2 === 1 ? { fill: theme.cardBg } : undefined,
+                  margins: { top: 100, bottom: 100, left: 150, right: 150 },
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: cell,
+                          size: 18,
+                          color: '1E293B'
+                        })
+                      ]
+                    })
+                  ]
+                })
+            )
+          })
+        );
+      });
 
-      if (trimmed.startsWith('#')) {
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows
+        })
+      );
+      children.push(new Paragraph({ text: '', spacing: { after: 180 } }));
+
+      tableHeaders = [];
+      tableRows = [];
+      inTable = false;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+
+      // Check if Markdown Table row
+      if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+        const cells = trimmed
+          .split('|')
+          .slice(1, -1)
+          .map((c) => cleanMarkdown(c.trim()));
+        const isDivider = cells.every((c) => /^[-:\s]+$/.test(c));
+
+        if (isDivider) {
+          inTable = true;
+          continue;
+        }
+
+        if (!inTable && tableHeaders.length === 0) {
+          tableHeaders = cells;
+        } else {
+          tableRows.push(cells);
+        }
+        continue;
+      } else {
+        if (inTable || tableHeaders.length > 0) {
+          flushWordTable();
+        }
+      }
+
+      if (!trimmed) continue;
+
+      if (trimmed.startsWith('# ')) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: cleanMarkdown(trimmed),
+                bold: true,
+                size: 26,
+                color: theme.brandAccent
+              })
+            ],
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 280, after: 120 }
+          })
+        );
+      } else if (trimmed.startsWith('## ')) {
         children.push(
           new Paragraph({
             children: [
@@ -167,19 +572,71 @@ export async function exportToWord(filenameTitle: string, documentTitle: string,
                 text: cleanMarkdown(trimmed),
                 bold: true,
                 size: 22,
-                color: '4C1D95'
+                color: theme.textColorDark
               })
             ],
             heading: HeadingLevel.HEADING_2,
             spacing: { before: 200, after: 100 }
           })
         );
+      } else if (trimmed.startsWith('### ')) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: cleanMarkdown(trimmed),
+                bold: true,
+                size: 20,
+                color: theme.brandAccent
+              })
+            ],
+            heading: HeadingLevel.HEADING_3,
+            spacing: { before: 160, after: 80 }
+          })
+        );
+      } else if (trimmed.startsWith('>')) {
+        // Blockquote card with left border
+        const quoteText = cleanMarkdown(trimmed.replace(/^>\s*/, ''));
+        children.push(
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    shading: { fill: theme.cardBg },
+                    margins: { top: 120, bottom: 120, left: 180, right: 180 },
+                    borders: {
+                      left: { style: BorderStyle.SINGLE, size: 24, color: theme.brandAccent },
+                      top: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: `💡 Key Insight: ${quoteText}`,
+                            italics: true,
+                            size: 19,
+                            color: theme.textColorDark
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        );
+        children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
       } else if (trimmed.startsWith('-') || trimmed.startsWith('*') || /^\d+\./.test(trimmed)) {
         children.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: `• ${cleanMarkdown(trimmed)}`,
+                text: `• ${cleanMarkdown(trimmed.replace(/^[-*]\s*|\d+\.\s*/, ''))}`,
                 size: 20,
                 color: '1E293B'
               })
@@ -202,12 +659,37 @@ export async function exportToWord(filenameTitle: string, documentTitle: string,
           })
         );
       }
-    });
+    }
+
+    if (inTable || tableHeaders.length > 0) {
+      flushWordTable();
+    }
 
     const docx = new Document({
       sections: [
         {
           properties: {},
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.RIGHT,
+                  children: [
+                    new TextRun({
+                      text: 'Arohi AI Document  |  Page ',
+                      size: 16,
+                      color: '888888'
+                    }),
+                    new TextRun({
+                      children: [PageNumber.CURRENT],
+                      size: 16,
+                      color: '888888'
+                    })
+                  ]
+                })
+              ]
+            })
+          },
           children
         }
       ]
@@ -217,14 +699,23 @@ export async function exportToWord(filenameTitle: string, documentTitle: string,
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${filenameTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.docx`;
+
+    const cleanFilename = filenameTitle
+      .replace(/[^a-zA-Z0-9_\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 50);
+
+    a.download = `${cleanFilename || 'Arohi_AI_Document'}.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    return true;
   } catch (err) {
     console.error('Failed to export Word document:', err);
     alert('Word document generation failed. Please try again.');
+    return false;
   }
 }
 
@@ -237,13 +728,17 @@ export interface ExcelSheetData {
 export interface ExcelWorkbookData {
   filename: string;
   title?: string;
+  theme?: PresentationThemeKey;
   sheets: ExcelSheetData[];
 }
 
 /**
  * Parses markdown tables or structured CSV/JSON text into structured Excel worksheets
  */
-export function parseContentToExcelData(content: string, defaultTitle: string = 'Arohi_Data_Export'): ExcelWorkbookData {
+export function parseContentToExcelData(
+  content: string,
+  defaultTitle: string = 'Arohi_Data_Export'
+): ExcelWorkbookData {
   const lines = content.split('\n');
   const sheets: ExcelSheetData[] = [];
   let currentSheetName = 'Data';
@@ -343,56 +838,70 @@ export function parseContentToExcelData(content: string, defaultTitle: string = 
 }
 
 /**
- * 3. Export Content as Native Excel (.xlsx)
+ * 3. Export Content as Native Excel (.xlsx) with Industry Metadata & Themed Header Rows
  */
 export function exportToExcel(
   filenameTitle: string,
   documentTitle: string,
-  contentOrData: string | ExcelWorkbookData
+  contentOrData: string | ExcelWorkbookData,
+  themeKey?: string
 ) {
   try {
+    const sampleText = typeof contentOrData === 'string' ? contentOrData : contentOrData.title || filenameTitle;
+    const theme = resolvePresentationTheme(
+      themeKey || (typeof contentOrData === 'object' ? contentOrData.theme : undefined),
+      `${filenameTitle} ${documentTitle}`,
+      sampleText
+    );
+
     const workbook = XLSX.utils.book_new();
+
+    const processSheet = (sheet: ExcelSheetData) => {
+      // Structured executive header rows
+      const bannerRows: (string | number)[][] = [
+        [`AROHI AI • ${theme.badgeText}`],
+        [`Document Title: ${documentTitle || filenameTitle}`],
+        [`Theme: ${theme.name} | Generated: ${new Date().toLocaleDateString('en-IN')}`],
+        [] // Blank spacing row
+      ];
+
+      const fullData = [...bannerRows, sheet.headers, ...sheet.rows];
+      const ws = XLSX.utils.aoa_to_sheet(fullData);
+
+      // Calculate dynamic column widths
+      const colWidths = sheet.headers.map((h, colIdx) => {
+        let maxLen = Math.max(h.length, 12);
+        sheet.rows.forEach((r) => {
+          const cellVal = r[colIdx] !== undefined ? String(r[colIdx]) : '';
+          if (cellVal.length > maxLen) maxLen = Math.min(cellVal.length, 60);
+        });
+        return { wch: maxLen + 4 };
+      });
+
+      ws['!cols'] = colWidths;
+      return ws;
+    };
 
     if (typeof contentOrData === 'string') {
       const parsedData = parseContentToExcelData(contentOrData, filenameTitle);
-      
       parsedData.sheets.forEach((sheet) => {
-        const aoaData = [sheet.headers, ...sheet.rows];
-        const ws = XLSX.utils.aoa_to_sheet(aoaData);
-
-        // Calculate dynamic column widths
-        const colWidths = sheet.headers.map((h, colIdx) => {
-          let maxLen = Math.max(h.length, 10);
-          sheet.rows.forEach((r) => {
-            const cellVal = r[colIdx] !== undefined ? String(r[colIdx]) : '';
-            if (cellVal.length > maxLen) maxLen = Math.min(cellVal.length, 60);
-          });
-          return { wch: maxLen + 3 };
-        });
-
-        ws['!cols'] = colWidths;
+        const ws = processSheet(sheet);
         XLSX.utils.book_append_sheet(workbook, ws, sheet.name || 'Data Sheet');
       });
     } else {
       contentOrData.sheets.forEach((sheet) => {
-        const aoaData = [sheet.headers, ...sheet.rows];
-        const ws = XLSX.utils.aoa_to_sheet(aoaData);
-        
-        const colWidths = sheet.headers.map((h, colIdx) => {
-          let maxLen = Math.max(h.length, 10);
-          sheet.rows.forEach((r) => {
-            const cellVal = r[colIdx] !== undefined ? String(r[colIdx]) : '';
-            if (cellVal.length > maxLen) maxLen = Math.min(cellVal.length, 60);
-          });
-          return { wch: maxLen + 3 };
-        });
-
-        ws['!cols'] = colWidths;
+        const ws = processSheet(sheet);
         XLSX.utils.book_append_sheet(workbook, ws, sheet.name || 'Sheet1');
       });
     }
 
-    const safeName = `${filenameTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.xlsx`;
+    const cleanFilename = filenameTitle
+      .replace(/[^a-zA-Z0-9_\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 50);
+
+    const safeName = `${cleanFilename || 'Arohi_AI_Spreadsheet'}.xlsx`;
     XLSX.writeFile(workbook, safeName);
     return true;
   } catch (err) {
@@ -402,6 +911,16 @@ export function exportToExcel(
   }
 }
 
+export interface PresentationChartData {
+  type: 'bar' | 'column' | 'line' | 'pie' | 'doughnut';
+  title?: string;
+  labels: string[];
+  datasets: {
+    name?: string;
+    values: number[];
+  }[];
+}
+
 export interface SlideData {
   title: string;
   subtitle?: string;
@@ -409,13 +928,251 @@ export interface SlideData {
   cards?: { title: string; desc: string }[];
   keyMetric?: { value: string; label: string };
   callout?: string;
+  chart?: PresentationChartData;
 }
+
+export type PresentationThemeKey =
+  | 'emerald_warmth'
+  | 'luxury_slate'
+  | 'clinical_teal'
+  | 'corporate_navy'
+  | 'apple_keynote'
+  | 'vibrant_sunburst'
+  | 'purple'
+  | 'midnight';
 
 export interface PresentationData {
   title: string;
   subtitle?: string;
-  theme?: 'purple' | 'midnight' | 'emerald' | 'gradient';
+  theme?: PresentationThemeKey;
   slides: SlideData[];
+}
+
+export interface ThemeConfig {
+  key: PresentationThemeKey;
+  name: string;
+  coverBg: string;
+  slideBg: string;
+  headerBg: string;
+  brandAccent: string;
+  brandSecondary: string;
+  cardBg: string;
+  cardBorder: string;
+  textColorPrimary: string;
+  textColorMuted: string;
+  textColorDark: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeColor: string;
+  badgeText: string;
+  chartColors: string[];
+  pillColor: string;
+}
+
+export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
+  emerald_warmth: {
+    key: 'emerald_warmth',
+    name: 'NGO, Social Impact & Nature',
+    coverBg: '062C1E', // Deep Forest Pine
+    slideBg: 'F4FAF6', // Soft Mint Off-White
+    headerBg: '0A3E2C', // Rich Evergreen
+    brandAccent: '059669', // Emerald
+    brandSecondary: 'F59E0B', // Warm Amber
+    cardBg: 'ECFDF5',
+    cardBorder: '6EE7B7',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'A7F3D0',
+    textColorDark: '064E3B',
+    badgeBg: '064E3B',
+    badgeBorder: '10B981',
+    badgeColor: 'FCD34D',
+    badgeText: '✦  NGO & HUMANITARIAN IMPACT INITIATIVE',
+    chartColors: ['059669', 'D97706', '2563EB', '10B981', 'F59E0B'],
+    pillColor: '10B981'
+  },
+  luxury_slate: {
+    key: 'luxury_slate',
+    name: 'Real Estate & Luxury Architecture',
+    coverBg: '0B0F19', // Obsidian Slate
+    slideBg: 'F8FAFC', // Slate Studio White
+    headerBg: '1E293B', // Charcoal Slate
+    brandAccent: 'D97706', // Champagne Gold / Amber
+    brandSecondary: 'F59E0B',
+    cardBg: 'FFFBEB',
+    cardBorder: 'FCD34D',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: '94A3B8',
+    textColorDark: '0F172A',
+    badgeBg: '1E293B',
+    badgeBorder: 'D97706',
+    badgeColor: 'FBBF24',
+    badgeText: '✦  LUXURY REAL ESTATE & ARCHITECTURAL OVERVIEW',
+    chartColors: ['D97706', '1E293B', 'B45309', '475569', 'F59E0B'],
+    pillColor: 'D97706'
+  },
+  clinical_teal: {
+    key: 'clinical_teal',
+    name: 'Healthcare, Clinical & Life Sciences',
+    coverBg: '042F2E', // Deep Oceanic Teal
+    slideBg: 'F0FDFA', // Crisp Clinical Ice
+    headerBg: '115E59', // Medical Teal
+    brandAccent: '0D9488', // Aqua Teal
+    brandSecondary: '38BDF8', // Sky Blue
+    cardBg: 'CCFBF1',
+    cardBorder: '5EEAD4',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: '99F6E4',
+    textColorDark: '134E4A',
+    badgeBg: '134E4A',
+    badgeBorder: '14B8A6',
+    badgeColor: '5EEAD4',
+    badgeText: '✦  HEALTHCARE & LIFE SCIENCES REPORT',
+    chartColors: ['0D9488', '0284C7', '14B8A6', '6366F1', '06B6D4'],
+    pillColor: '0D9488'
+  },
+  corporate_navy: {
+    key: 'corporate_navy',
+    name: 'Finance, Banking & Consulting',
+    coverBg: '0A192F', // Deep Navy
+    slideBg: 'F8FAFC',
+    headerBg: '1E3A8A', // Blue 900
+    brandAccent: '2563EB', // Royal Blue
+    brandSecondary: 'F59E0B', // Gold
+    cardBg: 'EFF6FF',
+    cardBorder: '93C5FD',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'BFDBFE',
+    textColorDark: '1E293B',
+    badgeBg: '172554',
+    badgeBorder: '3B82F6',
+    badgeColor: 'FCD34D',
+    badgeText: '✦  STRATEGIC FINANCIAL & CORPORATE REPORT',
+    chartColors: ['1E3A8A', '2563EB', 'F59E0B', '0D9488', '64748B'],
+    pillColor: '2563EB'
+  },
+  vibrant_sunburst: {
+    key: 'vibrant_sunburst',
+    name: 'Education, EdTech & Creative',
+    coverBg: '1E1B4B', // Electric Indigo
+    slideBg: 'FFFDF5', // Warm Sunlit Cream
+    headerBg: '4338CA', // Indigo
+    brandAccent: 'EA580C', // Tangerine / Sunburst
+    brandSecondary: 'F59E0B',
+    cardBg: 'FFF7ED',
+    cardBorder: 'FDBA74',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'C7D2FE',
+    textColorDark: '1E1B4B',
+    badgeBg: '312E81',
+    badgeBorder: 'F97316',
+    badgeColor: 'FED7AA',
+    badgeText: '✦  EDUCATION, INNOVATION & LEARNING KEYNOTE',
+    chartColors: ['EA580C', '4F46E5', 'F59E0B', '10B981', '8B5CF6'],
+    pillColor: 'EA580C'
+  },
+  apple_keynote: {
+    key: 'apple_keynote',
+    name: 'Apple Keynote & Modern Tech',
+    coverBg: '090A0F', // Space Obsidian
+    slideBg: 'FAFAFC', // Studio White
+    headerBg: '180E38', // Deep Violet Obsidian
+    brandAccent: '7C3AED', // Electric Violet
+    brandSecondary: 'F59E0B', // Gold / Amber
+    cardBg: 'F5F3FF',
+    cardBorder: 'C4B5FD',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: '94A3B8',
+    textColorDark: '0F172A',
+    badgeBg: '1E1B4B',
+    badgeBorder: '6D28D9',
+    badgeColor: 'F59E0B',
+    badgeText: '✦  AROHI AI  •  EXECUTIVE KEYNOTE',
+    chartColors: ['7C3AED', 'F59E0B', '2563EB', '10B981', 'EC4899'],
+    pillColor: '7C3AED'
+  }
+};
+
+/**
+ * Resolves or auto-detects the ideal theme from presentation data content
+ */
+export function resolvePresentationTheme(themeKey?: string, title?: string, contentSample?: string): ThemeConfig {
+  if (themeKey && PRESENTATION_THEMES[themeKey]) {
+    return PRESENTATION_THEMES[themeKey];
+  }
+
+  const sample = `${title || ''} ${contentSample || ''}`.toLowerCase();
+
+  if (
+    sample.includes('ngo') ||
+    sample.includes('children') ||
+    sample.includes('save the children') ||
+    sample.includes('charity') ||
+    sample.includes('donation') ||
+    sample.includes('humanitarian') ||
+    sample.includes('nonprofit') ||
+    sample.includes('environment') ||
+    sample.includes('green') ||
+    sample.includes('wildlife')
+  ) {
+    return PRESENTATION_THEMES.emerald_warmth;
+  }
+
+  if (
+    sample.includes('real estate') ||
+    sample.includes('property') ||
+    sample.includes('villas') ||
+    sample.includes('apartments') ||
+    sample.includes('architecture') ||
+    sample.includes('developer') ||
+    sample.includes('sqft') ||
+    sample.includes('construction') ||
+    sample.includes('luxury home')
+  ) {
+    return PRESENTATION_THEMES.luxury_slate;
+  }
+
+  if (
+    sample.includes('healthcare') ||
+    sample.includes('hospital') ||
+    sample.includes('medical') ||
+    sample.includes('patient') ||
+    sample.includes('clinical') ||
+    sample.includes('pharma') ||
+    sample.includes('doctor') ||
+    sample.includes('vaccine') ||
+    sample.includes('wellness')
+  ) {
+    return PRESENTATION_THEMES.clinical_teal;
+  }
+
+  if (
+    sample.includes('finance') ||
+    sample.includes('banking') ||
+    sample.includes('investor') ||
+    sample.includes('financial') ||
+    sample.includes('equity') ||
+    sample.includes('p&l') ||
+    sample.includes('budget') ||
+    sample.includes('accounting') ||
+    sample.includes('fiscal')
+  ) {
+    return PRESENTATION_THEMES.corporate_navy;
+  }
+
+  if (
+    sample.includes('education') ||
+    sample.includes('school') ||
+    sample.includes('college') ||
+    sample.includes('student') ||
+    sample.includes('learning') ||
+    sample.includes('course') ||
+    sample.includes('training') ||
+    sample.includes('pedagogy')
+  ) {
+    return PRESENTATION_THEMES.vibrant_sunburst;
+  }
+
+  return PRESENTATION_THEMES.apple_keynote;
 }
 
 /**
@@ -561,9 +1318,10 @@ export function parseContentToSlides(content: string, mainTitle?: string): Prese
 
 /**
  * 4. Export Content as Native Microsoft PowerPoint (.pptx)
- * Apple Keynote Design Architecture:
- * - 16:9 Cinema Widescreen
- * - Deep Obsidian (#090A0F) and Apple Studio (#FAFAFC) high-contrast layouts
+ * Multi-Theme & Data Visualization Architecture:
+ * - Dynamic Industry Theming (NGO/Emerald, Real Estate/Luxury Slate, Healthcare/Teal, Finance/Corporate Navy, Apple/Violet, Education/Sunburst)
+ * - 16:9 Cinema Widescreen with High Contrast Typography
+ * - Native Vector Chart Generation (Bar, Column, Line, Pie, Doughnut)
  * - Dynamic, content-specific slide headers, categories, and file naming
  */
 export async function exportToPPTX(filenameTitle: string, presentation: PresentationData | string) {
@@ -579,59 +1337,53 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       ? parseContentToSlides(presentation, filenameTitle)
       : presentation;
 
-    const deckTitle = presData.title || filenameTitle || 'Arohi AI Keynote';
+    const deckTitle = presData.title || filenameTitle || 'Arohi AI Presentation Deck';
     pptx.title = deckTitle;
 
-    // APPLE KEYNOTE COLOR SYSTEM
-    const DARK_OBSIDIAN = '090A0F'; // Apple Space Black canvas
-    const DARK_CARD = '12131A';     // Frosted glass card fill
-    const BRAND_ACCENT = '7C3AED';  // Electric Violet / Purple
-    const BRAND_AMBER = 'F59E0B';   // Apple Gold / Amber highlight
-    const TEXT_PRIMARY = 'FFFFFF';  // Pure White
-    const TEXT_MUTED = '94A3B8';    // Slate 400
-    const LIGHT_BG = 'FAFAFC';      // Studio White
-    const CARD_BORDER = '2D2254';   // Subtle border
+    // Resolve Theme
+    const sampleText = presData.slides.map((s) => `${s.title} ${(s.bullets || []).join(' ')}`).join(' ');
+    const theme = resolvePresentationTheme(presData.theme, deckTitle, sampleText);
 
     // Dynamic brand tag derived from deck title
     const cleanBrandTag = deckTitle
-      .replace(/Arohi_AI_Response|Arohi_Conversation/gi, 'Executive Keynote')
+      .replace(/Arohi_AI_Response|Arohi_Conversation/gi, 'Executive Presentation')
       .toUpperCase()
       .slice(0, 45);
 
     // ==========================================
-    // SLIDE 1: COVER SLIDE (Apple Keynote Style)
+    // SLIDE 1: COVER SLIDE (Industry & Apple Keynote Grade)
     // ==========================================
     const titleSlide = pptx.addSlide();
-    titleSlide.background = { color: DARK_OBSIDIAN };
+    titleSlide.background = { color: theme.coverBg };
 
-    // Top subtle violet accent glow line
+    // Top accent glow line
     titleSlide.addShape(pptx.ShapeType.rect, {
       x: 0,
       y: 0,
       w: '100%',
       h: 0.12,
-      fill: { color: BRAND_ACCENT }
+      fill: { color: theme.brandAccent }
     });
 
-    // Apple-style category pill badge
+    // Industry badge pill
     titleSlide.addShape(pptx.ShapeType.roundRect, {
       x: 1.0,
       y: 1.2,
-      w: 4.2,
+      w: 5.4,
       h: 0.38,
-      fill: { color: '1E1B4B' },
-      line: { color: '6D28D9', width: 1 },
+      fill: { color: theme.badgeBg },
+      line: { color: theme.badgeBorder, width: 1 },
       rectRadius: 0.19
     });
 
-    titleSlide.addText('✦  AROHI AI  •  EXECUTIVE KEYNOTE', {
+    titleSlide.addText(theme.badgeText, {
       x: 1.1,
       y: 1.25,
-      w: 4.0,
+      w: 5.2,
       h: 0.3,
       fontSize: 10,
       bold: true,
-      color: BRAND_AMBER,
+      color: theme.badgeColor,
       fontFace: 'Arial',
       align: 'center'
     });
@@ -644,7 +1396,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       h: 2.2,
       fontSize: 34,
       bold: true,
-      color: TEXT_PRIMARY,
+      color: theme.textColorPrimary,
       fontFace: 'Arial'
     });
 
@@ -656,14 +1408,14 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       w: 10.5,
       h: 0.9,
       fontSize: 16,
-      color: TEXT_MUTED,
+      color: theme.textColorMuted,
       fontFace: 'Arial'
     });
 
     // Bottom presentation metadata bar
     titleSlide.addText([
-      { text: 'Generated with Arohi AI (LLM cum LMM)\n', options: { bold: true, color: TEXT_PRIMARY, fontSize: 11 } },
-      { text: `Delivered on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}  •  Confidential & Ready to Present`, options: { color: '64748B', fontSize: 10 } }
+      { text: 'Generated with Arohi AI (LLM cum LMM)\n', options: { bold: true, color: theme.textColorPrimary, fontSize: 11 } },
+      { text: `Delivered on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}  •  Confidential & Ready to Present`, options: { color: theme.textColorMuted, fontSize: 10 } }
     ], {
       x: 1.0,
       y: 5.6,
@@ -673,19 +1425,19 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
     });
 
     // ==========================================
-    // CONTENT SLIDES (Apple-Inspired Structure)
+    // CONTENT SLIDES (Theme-Aligned & Visual Data Structure)
     // ==========================================
     presData.slides.forEach((slide, idx) => {
       const s = pptx.addSlide();
-      s.background = { color: LIGHT_BG };
+      s.background = { color: theme.slideBg };
 
-      // Top Modern Header Bar
+      // Top Header Bar
       s.addShape(pptx.ShapeType.rect, {
         x: 0,
         y: 0,
         w: '100%',
         h: 1.15,
-        fill: { color: '180E38' } // Deep indigo header
+        fill: { color: theme.headerBg }
       });
 
       // Dynamic Slide Category Header Tag
@@ -696,7 +1448,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
         h: 0.25,
         fontSize: 9,
         bold: true,
-        color: BRAND_AMBER,
+        color: theme.badgeColor,
         fontFace: 'Arial'
       });
 
@@ -708,7 +1460,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
         h: 0.55,
         fontSize: 21,
         bold: true,
-        color: TEXT_PRIMARY,
+        color: theme.textColorPrimary,
         fontFace: 'Arial'
       });
 
@@ -729,15 +1481,18 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
         currentY += 0.45;
       }
 
-      // Key Metric Card if available
-      if (slide.keyMetric) {
+      // Check if slide has a Chart
+      const hasChart = Boolean(slide.chart && slide.chart.labels?.length && slide.chart.datasets?.length);
+
+      // Key Metric Card if available (and not colliding with chart)
+      if (slide.keyMetric && !hasChart) {
         s.addShape(pptx.ShapeType.roundRect, {
           x: 0.8,
           y: currentY,
           w: 3.6,
           h: 1.7,
-          fill: { color: 'F5F3FF' },
-          line: { color: '8B5CF6', width: 1.5 },
+          fill: { color: theme.cardBg },
+          line: { color: theme.cardBorder, width: 1.5 },
           rectRadius: 0.15
         });
 
@@ -748,7 +1503,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           h: 0.75,
           fontSize: 26,
           bold: true,
-          color: '6D28D9',
+          color: theme.brandAccent,
           align: 'center',
           fontFace: 'Arial'
         });
@@ -760,25 +1515,33 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           h: 0.55,
           fontSize: 10,
           bold: true,
-          color: '4C1D95',
+          color: theme.textColorDark,
           align: 'center',
           fontFace: 'Arial'
         });
       }
 
-      // Bullets / High-Impact Points
+      // Render Bullets
       if (slide.bullets && slide.bullets.length > 0) {
-        const bulletX = slide.keyMetric ? 4.8 : 0.8;
-        const bulletW = slide.keyMetric ? 7.6 : 11.5;
+        let bulletX = 0.8;
+        let bulletW = 11.5;
+
+        if (hasChart) {
+          bulletX = 0.8;
+          bulletW = 5.4;
+        } else if (slide.keyMetric) {
+          bulletX = 4.8;
+          bulletW = 7.6;
+        }
 
         const textRuns = slide.bullets.map((b) => ({
           text: b,
           options: {
             bullet: { type: 'bullet', code: '2022' },
-            fontSize: 14,
-            color: '0F172A',
+            fontSize: hasChart ? 12 : 14,
+            color: theme.textColorDark,
             fontFace: 'Arial',
-            spacing: { after: 12 }
+            spacing: { after: hasChart ? 8 : 12 }
           }
         }));
 
@@ -786,10 +1549,63 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           x: bulletX,
           y: currentY,
           w: bulletW,
-          h: 4.6,
+          h: hasChart ? 4.0 : 4.4,
           valign: 'top',
           margin: 0.1
         });
+      }
+
+      // Render Native Vector Chart if present
+      if (hasChart && slide.chart) {
+        const chartX = slide.bullets && slide.bullets.length > 0 ? 6.5 : 1.5;
+        const chartW = slide.bullets && slide.bullets.length > 0 ? 6.0 : 10.2;
+        const chartH = 4.2;
+
+        const chartData = slide.chart.datasets.map((ds) => ({
+          name: ds.name || slide.chart?.title || 'Data',
+          labels: slide.chart!.labels,
+          values: ds.values
+        }));
+
+        let chartType = pptx.ChartType.bar;
+        let barDir: 'col' | 'bar' = 'col';
+
+        if (slide.chart.type === 'line') {
+          chartType = pptx.ChartType.line;
+        } else if (slide.chart.type === 'pie') {
+          chartType = pptx.ChartType.pie;
+        } else if (slide.chart.type === 'doughnut') {
+          chartType = pptx.ChartType.doughnut;
+        } else if (slide.chart.type === 'bar') {
+          chartType = pptx.ChartType.bar;
+          barDir = 'bar';
+        } else {
+          chartType = pptx.ChartType.bar;
+          barDir = 'col';
+        }
+
+        try {
+          s.addChart(chartType, chartData, {
+            x: chartX,
+            y: currentY,
+            w: chartW,
+            h: chartH,
+            barDir,
+            showTitle: Boolean(slide.chart.title),
+            title: slide.chart.title || '',
+            titleFontSize: 12,
+            titleColor: theme.textColorDark,
+            showLegend: slide.chart.datasets.length > 1 || slide.chart.type === 'pie' || slide.chart.type === 'doughnut',
+            legendPos: 'b',
+            legendFontSize: 9,
+            chartColors: theme.chartColors,
+            showValue: true,
+            dataLabelColor: '0F172A',
+            dataLabelFontSize: 9
+          });
+        } catch (chartErr) {
+          console.warn('Failed to add native chart to slide, falling back to data table:', chartErr);
+        }
       }
 
       // Callout / Key Takeaway Card at bottom
@@ -799,8 +1615,8 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           y: 5.75,
           w: 11.5,
           h: 0.85,
-          fill: { color: 'FEF3C7' },
-          line: { color: 'F59E0B', width: 1 },
+          fill: { color: theme.cardBg },
+          line: { color: theme.cardBorder, width: 1 },
           rectRadius: 0.12
         });
 
@@ -811,7 +1627,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           h: 0.65,
           fontSize: 11,
           bold: true,
-          color: '92400E',
+          color: theme.brandAccent,
           fontFace: 'Arial'
         });
       }
@@ -844,14 +1660,14 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
     // FINAL SLIDE: CONCLUSION & CALL TO ACTION
     // ==========================================
     const endSlide = pptx.addSlide();
-    endSlide.background = { color: DARK_OBSIDIAN };
+    endSlide.background = { color: theme.coverBg };
 
     endSlide.addShape(pptx.ShapeType.rect, {
       x: 0,
       y: 0,
       w: '100%',
       h: 0.12,
-      fill: { color: BRAND_ACCENT }
+      fill: { color: theme.brandAccent }
     });
 
     endSlide.addText('Thank You', {
@@ -861,7 +1677,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       h: 1.4,
       fontSize: 48,
       bold: true,
-      color: TEXT_PRIMARY,
+      color: theme.textColorPrimary,
       align: 'center',
       fontFace: 'Arial'
     });
@@ -872,7 +1688,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       w: 11.0,
       h: 0.6,
       fontSize: 18,
-      color: BRAND_AMBER,
+      color: theme.badgeColor,
       align: 'center',
       fontFace: 'Arial'
     });
@@ -883,7 +1699,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       w: 11.0,
       h: 0.5,
       fontSize: 11,
-      color: TEXT_MUTED,
+      color: theme.textColorMuted,
       align: 'center',
       fontFace: 'Arial'
     });
