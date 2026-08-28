@@ -1426,6 +1426,89 @@ app.post('/api/auth/update-activities', async (req, res) => {
   }
 });
 
+app.post('/api/auth/update-arena-stats', async (req, res) => {
+  const { uid, arenaStats } = req.body;
+  try {
+    if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    await safeUserDb.update(uid, {
+      arenaStats,
+      updatedAt: new Date().toISOString()
+    });
+    const updatedSnap = await safeUserDb.get(uid);
+    res.json({ success: true, userData: updatedSnap.data() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/update-mission87', async (req, res) => {
+  const { uid, mission87Enrollment } = req.body;
+  try {
+    if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    await safeUserDb.update(uid, {
+      mission87Enrollment,
+      updatedAt: new Date().toISOString()
+    });
+    const updatedSnap = await safeUserDb.get(uid);
+    res.json({ success: true, userData: updatedSnap.data() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/update-business-os', async (req, res) => {
+  const { uid, businessOsData } = req.body;
+  try {
+    if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    await safeUserDb.update(uid, {
+      businessOsData,
+      updatedAt: new Date().toISOString()
+    });
+    const updatedSnap = await safeUserDb.get(uid);
+    res.json({ success: true, userData: updatedSnap.data() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/record-mocktest', async (req, res) => {
+  const { uid, submission } = req.body;
+  try {
+    if (!uid) return res.status(400).json({ error: 'UID is required.' });
+    const userDoc = await safeUserDb.get(uid);
+    const existingHistory = userDoc.exists && Array.isArray(userDoc.data()?.mockTestHistory) 
+      ? userDoc.data()?.mockTestHistory 
+      : [];
+    const updatedHistory = [submission, ...existingHistory].slice(0, 50);
+
+    await safeUserDb.update(uid, {
+      mockTestHistory: updatedHistory,
+      lastExamDate: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    // Also persist in global mocktest_submissions collection for Admin analytics if adminDb is available
+    if (adminDb) {
+      try {
+        await adminDb.collection('mocktest_submissions').add({
+          uid,
+          userEmail: userDoc.exists ? (userDoc.data()?.email || '') : '',
+          userName: userDoc.exists ? (userDoc.data()?.displayName || '') : '',
+          ...submission,
+          submittedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('Failed to record global mocktest submission:', e);
+      }
+    }
+
+    const updatedSnap = await safeUserDb.get(uid);
+    res.json({ success: true, userData: updatedSnap.data() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/update-subscription', async (req, res) => {
   const { uid, isSubscribed, subscriptionPlanName, subscriptionEndDate, subscriptions, subscriptionDetails, paymentMethod, paymentId } = req.body;
   try {
@@ -2101,9 +2184,34 @@ app.get('/api/admin/users', async (req, res) => {
         voiceCallsCount: voiceCount,
         resumeScans: data.diagnostics?.atsScore ? 1 : (isPaid ? 3 : 0),
         mockInterviews: data.diagnostics?.interviewScore ? 1 : (isPaid ? 2 : 0),
-        testsAttempted: isPaid ? 4 : 1,
+        testsAttempted: isPaid ? 4 : (data.mockTestHistory ? data.mockTestHistory.length : 1),
         roadmapsCreated: isPaid ? 2 : 0
       },
+      arenaStats: data.arenaStats ? {
+        coins: data.arenaStats.coins || 0,
+        gems: data.arenaStats.gems || 0,
+        registeredTournaments: data.arenaStats.registeredTournaments || [],
+        classTrack: data.arenaStats.classTrack || 'Standard',
+        targetSubject: data.arenaStats.targetSubject || 'All Combined',
+        survivalHighScore: data.arenaStats.survivalHighScore || 0
+      } : undefined,
+      mission87: data.mission87Enrollment ? {
+        cadetId: data.mission87Enrollment.cadetId || 'M87-CADET',
+        name: data.mission87Enrollment.name || data.displayName || 'Cadet',
+        state: data.mission87Enrollment.state || '',
+        district: data.mission87Enrollment.district || '',
+        primaryTrack: data.mission87Enrollment.primaryTrack || 'Mission Track',
+        enrolledAt: data.mission87Enrollment.enrolledAt || '',
+        milestonesCount: (data.mission87Enrollment.milestones || []).length,
+        verifiedProjectsCount: (data.mission87Enrollment.verifiedProjects || []).length
+      } : undefined,
+      businessOs: data.businessOsData ? {
+        companyName: data.businessOsData.companyProfile?.name || 'Arohi Workspace',
+        leadsCount: (data.businessOsData.leads || []).length,
+        customersCount: (data.businessOsData.customers || []).length,
+        invoicesCount: (data.businessOsData.invoices || []).length,
+        lastSyncedAt: data.businessOsData.lastSyncedAt || ''
+      } : undefined,
       customizedSettings: data.customizedSettings || {
         tutoringSlot: data.profile?.location || 'New Delhi, India',
         priorityLevel: email.toLowerCase() === 'elitetraderjunoon@gmail.com' ? 'Critical' : isPaid ? 'High' : 'Standard',

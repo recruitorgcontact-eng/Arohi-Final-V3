@@ -44,6 +44,7 @@ import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
+import Mission87Portal from './components/mission87/Mission87Portal';
 import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
@@ -102,8 +103,9 @@ export default function App() {
       const p0 = pathParts[0];
       if (p0 === 'admin') return true;
       if (p0 === 'mocktests' || p0 === 'mocktest') return true;
+      if (p0 === 'mission87' || p0 === 'mission-87' || p0 === 'mission') return true;
       if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one'].includes(p0)) {
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission'].includes(p0)) {
         return true;
       }
     }
@@ -131,7 +133,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission'];
 
   const [selectedMockTestSlug, setSelectedMockTestSlug] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -2208,6 +2210,40 @@ export default function App() {
               setActiveTab('audience');
             }}
             onClose={() => setActiveTab('home')}
+          />
+        );
+      }
+      case 'mission87':
+      case 'mission-87':
+      case 'mission': {
+        return (
+          <Mission87Portal
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onOpenChatWithPrompt={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              setHasEntered(true);
+            }}
+            onShare={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: 'Mission 87 | Arohi AI',
+                  text: '87 Million are not waiting for India. India is waiting for what 87 Million can build. Join the sovereign youth activation movement 100% free with Arohi AI.',
+                  url: window.location.origin + '/mission87'
+                }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(window.location.origin + '/mission87');
+                setCopiedLink(true);
+                setTimeout(() => setCopiedLink(false), 3000);
+              }
+            }}
+            isDarkMode={isDarkMode}
           />
         );
       }

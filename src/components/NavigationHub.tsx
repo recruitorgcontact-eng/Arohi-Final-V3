@@ -34,6 +34,12 @@ interface NavigationHubProps {
 
 const navigationCategories = [
   {
+    title: 'National Movement',
+    items: [
+      { id: 'mission87', label: '🇮🇳 Mission 87 (National Movement)', icon: Sparkles, color: 'text-amber-300 bg-amber-500/10 border-amber-500/30', badge: '🇮🇳 87M FREE' },
+    ]
+  },
+  {
     title: 'Core Ecosystem',
     items: [
       { id: 'home', label: 'Ecosystem Home', icon: Home, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },

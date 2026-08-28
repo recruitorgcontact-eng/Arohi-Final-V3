@@ -111,6 +111,67 @@ export interface UserData {
   }>;
   mockTestHistory?: any[];
   lastExamDate?: string;
+  arenaStats?: {
+    coins: number;
+    gems: number;
+    registeredTournaments: string[];
+    classTrack?: string;
+    targetSubject?: string;
+    survivalHighScore?: number;
+    dailyClaimedDate?: string;
+    completedMatchesCount?: number;
+    rankTitle?: string;
+    trophiesCount?: number;
+    lastPlayedAt?: string;
+  };
+  mission87Enrollment?: {
+    cadetId: string;
+    name: string;
+    phone: string;
+    email: string;
+    state: string;
+    district: string;
+    townVillage: string;
+    ageGroup: string;
+    educationStatus: string;
+    primaryTrack: string;
+    hoursPerDay: string;
+    availableEquipment: string[];
+    enrolledAt: string;
+    milestones: string[];
+    verifiedProjects: Array<{
+      id: string;
+      title: string;
+      category: string;
+      description: string;
+      date: string;
+      valueGenerated?: number;
+    }>;
+    totalEarningsLogged?: number;
+    futureMap?: any;
+  };
+  businessOsData?: {
+    companyProfile?: any;
+    leads?: any[];
+    customers?: any[];
+    deals?: any[];
+    quotations?: any[];
+    invoices?: any[];
+    expenses?: any[];
+    vendors?: any[];
+    purchaseOrders?: any[];
+    inventory?: any[];
+    employees?: any[];
+    payroll?: any[];
+    projects?: any[];
+    tasks?: any[];
+    campaigns?: any[];
+    calls?: any[];
+    tickets?: any[];
+    documents?: any[];
+    automations?: any[];
+    lastSyncedAt?: string;
+  };
   examPass?: {
     tier: 'silver' | 'gold' | 'platinum';
     name: string;
@@ -335,6 +396,10 @@ interface AuthContextType {
     description: string;
     timestamp: string;
   }>) => Promise<void>;
+  updateArenaStats: (stats: any) => Promise<void>;
+  updateMission87Enrollment: (enrollment: any) => Promise<void>;
+  updateBusinessOsData: (data: any) => Promise<void>;
+  recordMockTestSubmission: (submission: any) => Promise<void>;
   updateUserSubscription: (subData: {
     isSubscribed: boolean;
     subscriptionPlanName?: string;
@@ -554,6 +619,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (data.subscriptionDetails) {
             localStorage.setItem('arohi_subscription_details', JSON.stringify(data.subscriptionDetails));
           }
+        } catch (e) {}
+      }
+
+      // Synchronize Arena Stats into client cache if present
+      if (data.arenaStats) {
+        try {
+          if (typeof data.arenaStats.coins === 'number') {
+            localStorage.setItem('arohi_arena_coins', String(data.arenaStats.coins));
+          }
+          if (typeof data.arenaStats.gems === 'number') {
+            localStorage.setItem('arohi_arena_gems', String(data.arenaStats.gems));
+          }
+          if (Array.isArray(data.arenaStats.registeredTournaments)) {
+            localStorage.setItem('arohi_registered_tournaments', JSON.stringify(data.arenaStats.registeredTournaments));
+          }
+          if (data.arenaStats.classTrack) {
+            localStorage.setItem('arohi_arena_class_track', data.arenaStats.classTrack);
+          }
+          if (data.arenaStats.targetSubject) {
+            localStorage.setItem('arohi_arena_subject', data.arenaStats.targetSubject);
+          }
+          if (typeof data.arenaStats.survivalHighScore === 'number') {
+            localStorage.setItem('arohi_arena_survival_best', String(data.arenaStats.survivalHighScore));
+          }
+        } catch (e) {}
+      }
+
+      // Synchronize Mission 87 enrollment into client cache
+      if (data.mission87Enrollment) {
+        try {
+          localStorage.setItem(`arohi_mission87_enrollment_${uid}`, JSON.stringify(data.mission87Enrollment));
+          localStorage.setItem('arohi_mission87_enrolled', 'true');
+        } catch (e) {}
+      }
+
+      // Synchronize Arohi ONE Business OS workspace into client cache
+      if (data.businessOsData) {
+        try {
+          const b = data.businessOsData;
+          if (b.companyProfile) localStorage.setItem('arohi_one_business_os_state_v1_company', JSON.stringify(b.companyProfile));
+          if (b.leads) localStorage.setItem('arohi_one_business_os_state_v1_leads', JSON.stringify(b.leads));
+          if (b.customers) localStorage.setItem('arohi_one_business_os_state_v1_customers', JSON.stringify(b.customers));
+          if (b.deals) localStorage.setItem('arohi_one_business_os_state_v1_deals', JSON.stringify(b.deals));
+          if (b.quotations) localStorage.setItem('arohi_one_business_os_state_v1_quotes', JSON.stringify(b.quotations));
+          if (b.invoices) localStorage.setItem('arohi_one_business_os_state_v1_invoices', JSON.stringify(b.invoices));
+          if (b.expenses) localStorage.setItem('arohi_one_business_os_state_v1_expenses', JSON.stringify(b.expenses));
+          if (b.vendors) localStorage.setItem('arohi_one_business_os_state_v1_vendors', JSON.stringify(b.vendors));
+          if (b.purchaseOrders) localStorage.setItem('arohi_one_business_os_state_v1_purchase_orders', JSON.stringify(b.purchaseOrders));
+          if (b.inventory) localStorage.setItem('arohi_one_business_os_state_v1_inventory', JSON.stringify(b.inventory));
+          if (b.employees) localStorage.setItem('arohi_one_business_os_state_v1_employees', JSON.stringify(b.employees));
+          if (b.payroll) localStorage.setItem('arohi_one_business_os_state_v1_payroll', JSON.stringify(b.payroll));
+          if (b.projects) localStorage.setItem('arohi_one_business_os_state_v1_projects', JSON.stringify(b.projects));
+          if (b.tasks) localStorage.setItem('arohi_one_business_os_state_v1_tasks', JSON.stringify(b.tasks));
+          if (b.campaigns) localStorage.setItem('arohi_one_business_os_state_v1_campaigns', JSON.stringify(b.campaigns));
+          if (b.calls) localStorage.setItem('arohi_one_business_os_state_v1_calls', JSON.stringify(b.calls));
+          if (b.tickets) localStorage.setItem('arohi_one_business_os_state_v1_tickets', JSON.stringify(b.tickets));
+          if (b.documents) localStorage.setItem('arohi_one_business_os_state_v1_documents', JSON.stringify(b.documents));
+          if (b.automations) localStorage.setItem('arohi_one_business_os_state_v1_automations', JSON.stringify(b.automations));
+        } catch (e) {}
+      }
+
+      // Synchronize Exam Pass into client cache
+      if (data.examPass) {
+        try {
+          localStorage.setItem('arohi_exam_pass', JSON.stringify(data.examPass));
         } catch (e) {}
       }
       return data;
@@ -1435,6 +1565,177 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateArenaStats = async (arenaStats: any) => {
+    if (!user) return;
+    const updatedUserData = userData ? { ...userData, arenaStats } : null;
+
+    // Optimistically update local state & cache
+    if (updatedUserData) {
+      setUserData(updatedUserData);
+      localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
+    }
+
+    // Layer 1: Server-side API
+    try {
+      const response = await fetch('/api/auth/update-arena-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, arenaStats })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.userData) {
+          setUserData(data.userData);
+          localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side arena-stats update failed, attempting direct client-side Firestore SDK:", err);
+    }
+
+    // Layer 2: Client-side Firestore SDK fallback
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        arenaStats,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Both server-side and client-side Firestore arena-stats updates failed. Changes saved locally.", err);
+    }
+  };
+
+  const updateMission87Enrollment = async (mission87Enrollment: any) => {
+    if (!user) return;
+    const updatedUserData = userData ? { ...userData, mission87Enrollment } : null;
+
+    // Optimistically update local state & cache
+    if (updatedUserData) {
+      setUserData(updatedUserData);
+      localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
+    }
+
+    // Layer 1: Server-side API
+    try {
+      const response = await fetch('/api/auth/update-mission87', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, mission87Enrollment })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.userData) {
+          setUserData(data.userData);
+          localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side mission87 update failed, attempting direct client-side Firestore SDK:", err);
+    }
+
+    // Layer 2: Client-side Firestore SDK fallback
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        mission87Enrollment,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Both server-side and client-side Firestore mission87 updates failed. Changes saved locally.", err);
+    }
+  };
+
+  const updateBusinessOsData = async (businessOsData: any) => {
+    if (!user) return;
+    const updatedUserData = userData ? { ...userData, businessOsData } : null;
+
+    // Optimistically update local state & cache
+    if (updatedUserData) {
+      setUserData(updatedUserData);
+      localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
+    }
+
+    // Layer 1: Server-side API
+    try {
+      const response = await fetch('/api/auth/update-business-os', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, businessOsData })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.userData) {
+          setUserData(data.userData);
+          localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side business-os update failed, attempting direct client-side Firestore SDK:", err);
+    }
+
+    // Layer 2: Client-side Firestore SDK fallback
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        businessOsData,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Both server-side and client-side Firestore business-os updates failed. Changes saved locally.", err);
+    }
+  };
+
+  const recordMockTestSubmission = async (submission: any) => {
+    if (!user) return;
+    const currentHistory = Array.isArray(userData?.mockTestHistory) ? [...userData.mockTestHistory] : [];
+    currentHistory.unshift(submission);
+    const updatedUserData = userData ? {
+      ...userData,
+      mockTestHistory: currentHistory.slice(0, 50),
+      lastExamDate: new Date().toISOString()
+    } : null;
+
+    // Optimistically update local state & cache
+    if (updatedUserData) {
+      setUserData(updatedUserData);
+      localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
+    }
+
+    // Layer 1: Server-side API
+    try {
+      const response = await fetch('/api/auth/record-mocktest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, submission })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.userData) {
+          setUserData(data.userData);
+          localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side record-mocktest update failed, attempting direct client-side Firestore SDK:", err);
+    }
+
+    // Layer 2: Client-side Firestore SDK fallback
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        mockTestHistory: currentHistory.slice(0, 50),
+        lastExamDate: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Both server-side and client-side Firestore record-mocktest updates failed. Changes saved locally.", err);
+    }
+  };
+
   const updateUserSubscription = async (subData: {
     isSubscribed: boolean;
     subscriptionPlanName?: string;
@@ -1690,6 +1991,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateArohiCalls,
       updateDiagnostics,
       updateActivities,
+      updateArenaStats,
+      updateMission87Enrollment,
+      updateBusinessOsData,
+      recordMockTestSubmission,
       updateUserSubscription,
       activateExamPass,
       consumeExamPassTest,

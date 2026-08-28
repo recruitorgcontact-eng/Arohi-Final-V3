@@ -972,7 +972,7 @@ export interface ThemeConfig {
 export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
   emerald_warmth: {
     key: 'emerald_warmth',
-    name: 'NGO, Social Impact & Nature',
+    name: 'Emerald Forest (Social Impact & Nature)',
     coverBg: '062C1E', // Deep Forest Pine
     slideBg: 'F4FAF6', // Soft Mint Off-White
     headerBg: '0A3E2C', // Rich Evergreen
@@ -986,13 +986,13 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '064E3B',
     badgeBorder: '10B981',
     badgeColor: 'FCD34D',
-    badgeText: '✦  NGO & HUMANITARIAN IMPACT INITIATIVE',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['059669', 'D97706', '2563EB', '10B981', 'F59E0B'],
     pillColor: '10B981'
   },
   luxury_slate: {
     key: 'luxury_slate',
-    name: 'Real Estate & Luxury Architecture',
+    name: 'Obsidian & Gold (Premium Elegance)',
     coverBg: '0B0F19', // Obsidian Slate
     slideBg: 'F8FAFC', // Slate Studio White
     headerBg: '1E293B', // Charcoal Slate
@@ -1006,13 +1006,13 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '1E293B',
     badgeBorder: 'D97706',
     badgeColor: 'FBBF24',
-    badgeText: '✦  LUXURY REAL ESTATE & ARCHITECTURAL OVERVIEW',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['D97706', '1E293B', 'B45309', '475569', 'F59E0B'],
     pillColor: 'D97706'
   },
   clinical_teal: {
     key: 'clinical_teal',
-    name: 'Healthcare, Clinical & Life Sciences',
+    name: 'Oceanic Teal (Sciences & Discovery)',
     coverBg: '042F2E', // Deep Oceanic Teal
     slideBg: 'F0FDFA', // Crisp Clinical Ice
     headerBg: '115E59', // Medical Teal
@@ -1026,13 +1026,13 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '134E4A',
     badgeBorder: '14B8A6',
     badgeColor: '5EEAD4',
-    badgeText: '✦  HEALTHCARE & LIFE SCIENCES REPORT',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['0D9488', '0284C7', '14B8A6', '6366F1', '06B6D4'],
     pillColor: '0D9488'
   },
   corporate_navy: {
     key: 'corporate_navy',
-    name: 'Finance, Banking & Consulting',
+    name: 'Corporate Navy (Strategic & Analysis)',
     coverBg: '0A192F', // Deep Navy
     slideBg: 'F8FAFC',
     headerBg: '1E3A8A', // Blue 900
@@ -1046,13 +1046,13 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '172554',
     badgeBorder: '3B82F6',
     badgeColor: 'FCD34D',
-    badgeText: '✦  STRATEGIC FINANCIAL & CORPORATE REPORT',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['1E3A8A', '2563EB', 'F59E0B', '0D9488', '64748B'],
     pillColor: '2563EB'
   },
   vibrant_sunburst: {
     key: 'vibrant_sunburst',
-    name: 'Education, EdTech & Creative',
+    name: 'Sunburst Indigo (Education & Innovation)',
     coverBg: '1E1B4B', // Electric Indigo
     slideBg: 'FFFDF5', // Warm Sunlit Cream
     headerBg: '4338CA', // Indigo
@@ -1066,13 +1066,13 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '312E81',
     badgeBorder: 'F97316',
     badgeColor: 'FED7AA',
-    badgeText: '✦  EDUCATION, INNOVATION & LEARNING KEYNOTE',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['EA580C', '4F46E5', 'F59E0B', '10B981', '8B5CF6'],
     pillColor: 'EA580C'
   },
   apple_keynote: {
     key: 'apple_keynote',
-    name: 'Apple Keynote & Modern Tech',
+    name: 'Apple Keynote (Modern High-Tech)',
     coverBg: '090A0F', // Space Obsidian
     slideBg: 'FAFAFC', // Studio White
     headerBg: '180E38', // Deep Violet Obsidian
@@ -1086,7 +1086,7 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeBg: '1E1B4B',
     badgeBorder: '6D28D9',
     badgeColor: 'F59E0B',
-    badgeText: '✦  AROHI AI  •  EXECUTIVE KEYNOTE',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['7C3AED', 'F59E0B', '2563EB', '10B981', 'EC4899'],
     pillColor: '7C3AED'
   }
@@ -1096,83 +1096,73 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
  * Resolves or auto-detects the ideal theme from presentation data content
  */
 export function resolvePresentationTheme(themeKey?: string, title?: string, contentSample?: string): ThemeConfig {
-  if (themeKey && PRESENTATION_THEMES[themeKey]) {
-    return PRESENTATION_THEMES[themeKey];
-  }
-
   const sample = `${title || ''} ${contentSample || ''}`.toLowerCase();
 
-  if (
-    sample.includes('ngo') ||
-    sample.includes('children') ||
-    sample.includes('save the children') ||
-    sample.includes('charity') ||
-    sample.includes('donation') ||
-    sample.includes('humanitarian') ||
-    sample.includes('nonprofit') ||
-    sample.includes('environment') ||
-    sample.includes('green') ||
-    sample.includes('wildlife')
-  ) {
-    return PRESENTATION_THEMES.emerald_warmth;
+  // If a specific valid theme key was explicitly requested and it's not the generic default, use it
+  let baseTheme: ThemeConfig;
+  if (themeKey && PRESENTATION_THEMES[themeKey] && themeKey !== 'apple_keynote') {
+    baseTheme = PRESENTATION_THEMES[themeKey];
+  } else {
+    // Topic-aware smart scoring: Count keyword occurrences for highest relevance
+    let educationScore = 0;
+    let realEstateScore = 0;
+    let healthcareScore = 0;
+    let financeScore = 0;
+    let ngoScore = 0;
+
+    const eduKeywords = ['education', 'academic', 'curriculum', 'school', 'college', 'university', 'student', 'learning', 'pedagogy', 'faculty', 'syllabus', 'course', 'training', 'degree', 'employability', 'accreditation', 'naac', 'nba', 'outcome-based', 'higher education'];
+    const reKeywords = ['real estate', 'property', 'villas', 'apartments', 'luxury homes', 'sqft', 'realtor', 'residential', 'commercial building', 'brokerage', 'architectural design'];
+    const healthKeywords = ['healthcare', 'hospital', 'medical', 'patient', 'clinical', 'pharma', 'doctor', 'vaccine', 'wellness', 'telehealth', 'therapy', 'oncology'];
+    const financeKeywords = ['finance', 'banking', 'investor', 'equity', 'p&l', 'budget', 'accounting', 'fiscal', 'valuation', 'roi', 'portfolio', 'venture capital'];
+    const ngoKeywords = ['ngo', 'humanitarian', 'charity', 'donation', 'nonprofit', 'social impact', 'volunteer', 'wildlife', 'conservation', 'climate change'];
+
+    eduKeywords.forEach(k => { if (sample.includes(k)) educationScore += 3; });
+    reKeywords.forEach(k => { if (sample.includes(k)) realEstateScore += 3; });
+    healthKeywords.forEach(k => { if (sample.includes(k)) healthcareScore += 3; });
+    financeKeywords.forEach(k => { if (sample.includes(k)) financeScore += 3; });
+    ngoKeywords.forEach(k => { if (sample.includes(k)) ngoScore += 3; });
+
+    const maxScore = Math.max(educationScore, realEstateScore, healthcareScore, financeScore, ngoScore);
+
+    if (maxScore > 0) {
+      if (maxScore === educationScore) {
+        baseTheme = PRESENTATION_THEMES.vibrant_sunburst;
+      } else if (maxScore === healthcareScore) {
+        baseTheme = PRESENTATION_THEMES.clinical_teal;
+      } else if (maxScore === financeScore) {
+        baseTheme = PRESENTATION_THEMES.corporate_navy;
+      } else if (maxScore === ngoScore) {
+        baseTheme = PRESENTATION_THEMES.emerald_warmth;
+      } else {
+        baseTheme = PRESENTATION_THEMES.luxury_slate;
+      }
+    } else if (themeKey && PRESENTATION_THEMES[themeKey]) {
+      baseTheme = PRESENTATION_THEMES[themeKey];
+    } else {
+      baseTheme = PRESENTATION_THEMES.apple_keynote;
+    }
   }
 
-  if (
-    sample.includes('real estate') ||
-    sample.includes('property') ||
-    sample.includes('villas') ||
-    sample.includes('apartments') ||
-    sample.includes('architecture') ||
-    sample.includes('developer') ||
-    sample.includes('sqft') ||
-    sample.includes('construction') ||
-    sample.includes('luxury home')
-  ) {
-    return PRESENTATION_THEMES.luxury_slate;
+  // Create a dynamic, topic-aligned badgeText based on the deck title / topic
+  let dynamicBadge = '✦  EXECUTIVE PRESENTATION DECK';
+  if (title && title.trim().length > 0 && !title.toLowerCase().includes('arohi') && !title.toLowerCase().includes('presentation')) {
+    dynamicBadge = `✦  ${title.trim().toUpperCase().slice(0, 42)}`;
+  } else if (sample.includes('education') || sample.includes('academic') || sample.includes('curriculum') || sample.includes('student')) {
+    dynamicBadge = '✦  EDUCATION & ACADEMIC TRANSFORMATION';
+  } else if (sample.includes('healthcare') || sample.includes('medical') || sample.includes('clinical')) {
+    dynamicBadge = '✦  HEALTHCARE & LIFE SCIENCES';
+  } else if (sample.includes('finance') || sample.includes('banking') || sample.includes('investor')) {
+    dynamicBadge = '✦  STRATEGIC FINANCIAL & CORPORATE REPORT';
+  } else if (sample.includes('ngo') || sample.includes('humanitarian') || sample.includes('charity')) {
+    dynamicBadge = '✦  HUMANITARIAN & SOCIAL IMPACT INITIATIVE';
+  } else if (sample.includes('real estate') || sample.includes('property') || sample.includes('architecture')) {
+    dynamicBadge = '✦  REAL ESTATE & ARCHITECTURAL OVERVIEW';
   }
 
-  if (
-    sample.includes('healthcare') ||
-    sample.includes('hospital') ||
-    sample.includes('medical') ||
-    sample.includes('patient') ||
-    sample.includes('clinical') ||
-    sample.includes('pharma') ||
-    sample.includes('doctor') ||
-    sample.includes('vaccine') ||
-    sample.includes('wellness')
-  ) {
-    return PRESENTATION_THEMES.clinical_teal;
-  }
-
-  if (
-    sample.includes('finance') ||
-    sample.includes('banking') ||
-    sample.includes('investor') ||
-    sample.includes('financial') ||
-    sample.includes('equity') ||
-    sample.includes('p&l') ||
-    sample.includes('budget') ||
-    sample.includes('accounting') ||
-    sample.includes('fiscal')
-  ) {
-    return PRESENTATION_THEMES.corporate_navy;
-  }
-
-  if (
-    sample.includes('education') ||
-    sample.includes('school') ||
-    sample.includes('college') ||
-    sample.includes('student') ||
-    sample.includes('learning') ||
-    sample.includes('course') ||
-    sample.includes('training') ||
-    sample.includes('pedagogy')
-  ) {
-    return PRESENTATION_THEMES.vibrant_sunburst;
-  }
-
-  return PRESENTATION_THEMES.apple_keynote;
+  return {
+    ...baseTheme,
+    badgeText: dynamicBadge
+  };
 }
 
 /**
@@ -1329,7 +1319,9 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
     const PptxGenJS = (await import('pptxgenjs')).default;
     const pptx = new PptxGenJS();
 
-    pptx.layout = 'LAYOUT_16x9';
+    // Define and set standard 16:9 HD Widescreen (13.333" x 7.5") to ensure full slide width
+    pptx.defineLayout({ name: 'LAYOUT_16x9_HD', width: 13.333, height: 7.5 });
+    pptx.layout = 'LAYOUT_16x9_HD';
     pptx.author = 'Arohi AI';
     pptx.company = 'Arohi AI Ecosystem';
 
@@ -1524,13 +1516,13 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       // Render Bullets
       if (slide.bullets && slide.bullets.length > 0) {
         let bulletX = 0.8;
-        let bulletW = 11.5;
+        let bulletW = 11.5; // Safe padding inside 13.333" widescreen
 
         if (hasChart) {
           bulletX = 0.8;
-          bulletW = 5.4;
+          bulletW = 5.2;
         } else if (slide.keyMetric) {
-          bulletX = 4.8;
+          bulletX = 4.7;
           bulletW = 7.6;
         }
 
@@ -1538,10 +1530,10 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           text: b,
           options: {
             bullet: { type: 'bullet', code: '2022' },
-            fontSize: hasChart ? 12 : 14,
+            fontSize: hasChart ? 12 : 13,
             color: theme.textColorDark,
             fontFace: 'Arial',
-            spacing: { after: hasChart ? 8 : 12 }
+            spacing: { after: hasChart ? 6 : 10 }
           }
         }));
 
@@ -1549,17 +1541,18 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           x: bulletX,
           y: currentY,
           w: bulletW,
-          h: hasChart ? 4.0 : 4.4,
+          h: hasChart ? 3.9 : 4.1,
           valign: 'top',
-          margin: 0.1
+          margin: 0.15,
+          wrap: true
         });
       }
 
       // Render Native Vector Chart if present
       if (hasChart && slide.chart) {
-        const chartX = slide.bullets && slide.bullets.length > 0 ? 6.5 : 1.5;
-        const chartW = slide.bullets && slide.bullets.length > 0 ? 6.0 : 10.2;
-        const chartH = 4.2;
+        const chartX = slide.bullets && slide.bullets.length > 0 ? 6.3 : 1.2;
+        const chartW = slide.bullets && slide.bullets.length > 0 ? 6.2 : 10.9;
+        const chartH = 3.9;
 
         const chartData = slide.chart.datasets.map((ds) => ({
           name: ds.name || slide.chart?.title || 'Data',
@@ -1601,7 +1594,9 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
             chartColors: theme.chartColors,
             showValue: true,
             dataLabelColor: '0F172A',
-            dataLabelFontSize: 9
+            dataLabelFontSize: 8,
+            catAxisLabelFontSize: 8,
+            valAxisLabelFontSize: 8
           });
         } catch (chartErr) {
           console.warn('Failed to add native chart to slide, falling back to data table:', chartErr);
@@ -1612,9 +1607,9 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       if (slide.callout) {
         s.addShape(pptx.ShapeType.roundRect, {
           x: 0.8,
-          y: 5.75,
-          w: 11.5,
-          h: 0.85,
+          y: 5.7,
+          w: 11.7,
+          h: 0.8,
           fill: { color: theme.cardBg },
           line: { color: theme.cardBorder, width: 1 },
           rectRadius: 0.12
@@ -1622,9 +1617,9 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
 
         s.addText(`💡 Key Takeaway: ${slide.callout}`, {
           x: 1.0,
-          y: 5.85,
-          w: 11.1,
-          h: 0.65,
+          y: 5.75,
+          w: 11.3,
+          h: 0.7,
           fontSize: 11,
           bold: true,
           color: theme.brandAccent,
@@ -1635,7 +1630,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       // Footer
       s.addText('Arohi AI • One AI. Infinite Opportunities.', {
         x: 0.8,
-        y: 6.9,
+        y: 6.85,
         w: 6.0,
         h: 0.3,
         fontSize: 9,
@@ -1644,9 +1639,9 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       });
 
       s.addText(`${idx + 1}`, {
-        x: 12.0,
-        y: 6.9,
-        w: 0.5,
+        x: 11.5,
+        y: 6.85,
+        w: 1.0,
         h: 0.3,
         fontSize: 10,
         bold: true,

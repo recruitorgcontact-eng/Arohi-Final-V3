@@ -39,6 +39,31 @@ export interface AdminUser {
     testsAttempted?: number;
     roadmapsCreated?: number;
   };
+  arenaStats?: {
+    coins: number;
+    gems: number;
+    registeredTournaments?: string[];
+    classTrack?: string;
+    targetSubject?: string;
+    survivalHighScore?: number;
+  };
+  mission87?: {
+    cadetId: string;
+    name: string;
+    state: string;
+    district: string;
+    primaryTrack: string;
+    enrolledAt: string;
+    milestonesCount?: number;
+    verifiedProjectsCount?: number;
+  };
+  businessOs?: {
+    companyName?: string;
+    leadsCount?: number;
+    customersCount?: number;
+    invoicesCount?: number;
+    lastSyncedAt?: string;
+  };
   lastActive?: string;
   joinedDate?: string;
   customizedSettings: {

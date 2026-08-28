@@ -231,9 +231,6 @@ export default function InChatMessagePresentation({
 }: InChatMessagePresentationProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
-  const [activeThemeKey, setActiveThemeKey] = useState<PresentationThemeKey>(
-    presentationData.theme || 'apple_keynote'
-  );
 
   const slides = presentationData.slides || [];
   const activeSlide: SlideData = slides[currentSlideIndex] || {
@@ -242,6 +239,9 @@ export default function InChatMessagePresentation({
   };
 
   const sampleText = slides.map((s) => `${s.title} ${(s.bullets || []).join(' ')}`).join(' ');
+  const initialTheme = resolvePresentationTheme(presentationData.theme, presentationData.title, sampleText);
+  const [activeThemeKey, setActiveThemeKey] = useState<PresentationThemeKey>(initialTheme.key);
+
   const currentTheme = resolvePresentationTheme(activeThemeKey, presentationData.title, sampleText);
 
   const handleDownloadPPTX = async () => {

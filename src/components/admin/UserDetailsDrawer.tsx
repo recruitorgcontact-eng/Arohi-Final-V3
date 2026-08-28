@@ -249,6 +249,64 @@ export default function UserDetailsDrawer({
                 </div>
               </div>
 
+              {/* Real-Time Synced Module Status */}
+              <div className="bg-[#110c2e]/60 border border-[#271954] p-4 rounded-2xl space-y-3">
+                <label className="block text-[10px] uppercase font-black text-slate-400">
+                  Cloud Synchronized Ecosystem State
+                </label>
+                
+                {/* Gaming Arena Status */}
+                <div className="p-2.5 rounded-xl bg-[#0c0822]/80 border border-[#221644] flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                      <span>🎮 Arohi Exams & Gaming Arena</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      {user.arenaStats 
+                        ? `${user.arenaStats.coins.toLocaleString('en-IN')} Coins • ${user.arenaStats.gems} Gems • ${user.arenaStats.targetSubject || 'Grand Clash'}`
+                        : 'Active player • Local progress tracking'}
+                    </div>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 font-mono font-bold">
+                    Synced
+                  </span>
+                </div>
+
+                {/* Mission 87 Status */}
+                <div className="p-2.5 rounded-xl bg-[#0c0822]/80 border border-[#221644] flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-emerald-300 flex items-center gap-1.5">
+                      <span>🚀 Mission 87 Bharat Cadet</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      {user.mission87 
+                        ? `Cadet ID: ${user.mission87.cadetId} • ${user.mission87.primaryTrack} (${user.mission87.district}, ${user.mission87.state})`
+                        : 'Cadet profile active & ready for state deployment'}
+                    </div>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-mono font-bold">
+                    Synced
+                  </span>
+                </div>
+
+                {/* Arohi ONE Business OS */}
+                <div className="p-2.5 rounded-xl bg-[#0c0822]/80 border border-[#221644] flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
+                      <span>💼 Arohi ONE Business OS</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      {user.businessOs 
+                        ? `${user.businessOs.companyName} • ${user.businessOs.leadsCount} Leads • ${user.businessOs.invoicesCount} Invoices`
+                        : 'Unified ERP & CRM Workspace initialized'}
+                    </div>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 font-mono font-bold">
+                    Synced
+                  </span>
+                </div>
+              </div>
+
             </div>
           )}
 

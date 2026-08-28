@@ -93,10 +93,10 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
     return (
       <div id="arohi-thought-accordion" className="mb-3.5 select-none max-w-2xl">
         <div 
-          className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
             isDarkMode 
-              ? 'bg-[#150d30]/80 hover:bg-[#1a113d]/90 border-violet-500/30 text-slate-200' 
-              : 'bg-gradient-to-r from-purple-50/80 to-indigo-50/80 hover:bg-purple-100/70 border-purple-200/80 text-slate-700'
+              ? 'bg-zinc-900/90 hover:bg-zinc-800/80 border-zinc-800 text-zinc-200' 
+              : 'bg-zinc-100 hover:bg-zinc-200/80 border-zinc-200 text-zinc-800'
           }`}
         >
           {/* Clickable Header */}
@@ -106,29 +106,33 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
             title="Click to view Arohi reasoning steps"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-5 h-5 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
-                <Brain className="w-3 h-3 text-violet-200" />
-              </div>
-              <span className={`text-xs font-semibold tracking-wide ${
-                isDarkMode ? 'text-violet-300' : 'text-purple-900'
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                isDarkMode ? 'bg-zinc-800 border-zinc-700/60 text-zinc-300' : 'bg-white border-zinc-300 text-zinc-700'
               }`}>
-                Thought for <span className="font-mono font-bold text-emerald-400">{displaySeconds}s</span>
+                <Brain className="w-3 h-3" />
+              </div>
+              <span className={`text-xs font-medium tracking-wide ${
+                isDarkMode ? 'text-zinc-200' : 'text-zinc-800'
+              }`}>
+                Thought for <span className="font-mono font-semibold text-emerald-400">{displaySeconds}s</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
+              <span className={`hidden sm:inline-flex items-center gap-1 text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full border ${
+                isDarkMode ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60' : 'bg-zinc-200/70 text-zinc-600 border-zinc-300'
+              }`}>
                 Reasoning Complete
               </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <span className={`text-[11px] font-medium hidden sm:inline ${
-                isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
               }`}>
                 {isExpanded ? 'Hide process' : 'Show reasoning'}
               </span>
               <motion.div
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-violet-400"
+                className={isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}
               >
                 <ChevronDown className="w-4 h-4" />
               </motion.div>
@@ -145,56 +149,58 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
                 transition={{ duration: 0.25, ease: 'easeOut' }}
                 className="overflow-hidden"
               >
-                <div className={`px-3.5 pb-3.5 pt-1.5 border-t ${
-                  isDarkMode ? 'border-violet-500/20 bg-[#0e0821]/60' : 'border-purple-200/60 bg-white/60'
+                <div className={`px-3.5 pb-3.5 pt-2 border-t ${
+                  isDarkMode ? 'border-zinc-800 bg-zinc-950/60' : 'border-zinc-200 bg-zinc-50'
                 }`}>
                   <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <div className={`flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider pb-1 mb-1 border-b ${
+                      isDarkMode ? 'border-zinc-800/80 text-zinc-400' : 'border-zinc-200 text-zinc-500'
+                    }`}>
                       <span>Reasoning Trace & Execution Pipeline</span>
-                      <span className="text-emerald-400 font-mono flex items-center gap-1">
+                      <span className="text-emerald-400 font-mono flex items-center gap-1 font-medium">
                         <CheckCircle2 className="w-3 h-3" /> Verified ({displaySeconds}s)
                       </span>
                     </div>
 
                     {/* Step Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div className={`p-2 rounded-xl border flex items-start gap-2 ${
-                        isDarkMode ? 'bg-[#180f38] border-violet-500/20 text-slate-300' : 'bg-purple-50 border-purple-100 text-slate-700'
+                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
                       }`}>
-                        <Search className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
+                        <Search className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
                         <div>
-                          <div className="font-semibold text-[11px]">Knowledge & Memory Stream</div>
-                          <div className="text-[10px] opacity-75">Cross-referenced chat history and context memory.</div>
+                          <div className="font-medium text-[11.5px] text-zinc-200">Knowledge & Memory Stream</div>
+                          <div className="text-[10.5px] text-zinc-400">Cross-referenced chat history and context memory.</div>
                         </div>
                       </div>
 
-                      <div className={`p-2 rounded-xl border flex items-start gap-2 ${
-                        isDarkMode ? 'bg-[#180f38] border-violet-500/20 text-slate-300' : 'bg-purple-50 border-purple-100 text-slate-700'
+                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
                       }`}>
-                        <Atom className="w-3.5 h-3.5 text-cyan-400 mt-0.5 shrink-0" />
+                        <Atom className="w-3.5 h-3.5 text-teal-400 mt-0.5 shrink-0" />
                         <div>
-                          <div className="font-semibold text-[11px]">Logic & Fact Alignment</div>
-                          <div className="text-[10px] opacity-75">Evaluated user intent and structured response schema.</div>
+                          <div className="font-medium text-[11.5px] text-zinc-200">Logic & Fact Alignment</div>
+                          <div className="text-[10.5px] text-zinc-400">Evaluated user intent and structured response schema.</div>
                         </div>
                       </div>
 
-                      <div className={`p-2 rounded-xl border flex items-start gap-2 ${
-                        isDarkMode ? 'bg-[#180f38] border-violet-500/20 text-slate-300' : 'bg-purple-50 border-purple-100 text-slate-700'
+                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
                       }`}>
-                        <Cpu className="w-3.5 h-3.5 text-teal-400 mt-0.5 shrink-0" />
+                        <Cpu className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
                         <div>
-                          <div className="font-semibold text-[11px]">Vector Calibrations</div>
-                          <div className="text-[10px] opacity-75">Applied formatting and language localization rules.</div>
+                          <div className="font-medium text-[11.5px] text-zinc-200">Vector Calibrations</div>
+                          <div className="text-[10.5px] text-zinc-400">Applied formatting and language localization rules.</div>
                         </div>
                       </div>
 
-                      <div className={`p-2 rounded-xl border flex items-start gap-2 ${
-                        isDarkMode ? 'bg-[#180f38] border-violet-500/20 text-slate-300' : 'bg-purple-50 border-purple-100 text-slate-700'
+                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
                       }`}>
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
                         <div>
-                          <div className="font-semibold text-[11px]">Arohi Tone & Clarity Polish</div>
-                          <div className="text-[10px] opacity-75">Structured actionable bullets, key terms, and visual cues.</div>
+                          <div className="font-medium text-[11.5px] text-zinc-200">Arohi Tone & Clarity Polish</div>
+                          <div className="text-[10.5px] text-zinc-400">Structured actionable bullets, key terms, and visual cues.</div>
                         </div>
                       </div>
                     </div>
@@ -210,54 +216,42 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
 
   // LIVE ANIMATED ACTIVE THINKING MODE (Counting live timer + animated stage)
   return (
-    <div id="arohi-thinking-indicator-live" className="py-2.5 max-w-2xl w-full select-none">
+    <div id="arohi-thinking-indicator-live" className="py-2 max-w-2xl w-full select-none">
       <div 
-        className={`relative overflow-hidden rounded-2xl p-3 sm:p-4 border transition-all duration-300 ${
+        className={`relative overflow-hidden rounded-2xl p-3 sm:p-3.5 border transition-all duration-200 ${
           isDarkMode 
-            ? 'bg-gradient-to-r from-[#160e33]/90 via-[#23124d]/80 to-[#120a2e]/90 border-violet-500/30 shadow-[0_4px_25px_rgba(139,92,246,0.15)]' 
-            : 'bg-gradient-to-r from-purple-50/95 via-indigo-50/90 to-violet-50/95 border-purple-200 shadow-md'
+            ? 'bg-zinc-900/90 border-zinc-800 text-zinc-200 shadow-sm' 
+            : 'bg-zinc-100 border-zinc-200 text-zinc-800 shadow-sm'
         }`}
       >
-        {/* Animated Background Shimmer Beam */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-          <motion.div 
-            className="w-1/2 h-full bg-gradient-to-r from-transparent via-violet-400/20 to-transparent skew-x-12"
-            animate={{ x: ['-100%', '250%'] }}
-            transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-          />
-        </div>
-
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          {/* Left: Animated Icon + Dynamic Grok-Style Thinking Stage */}
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Spinning/pulsing neon icon hub */}
-            <div className="relative shrink-0">
-              <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-violet-600 via-pink-500 to-cyan-400 opacity-70 blur-xs animate-pulse" />
-              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-700 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
-                <motion.div
-                  key={stageIndex}
-                  initial={{ scale: 0.6, rotate: -30, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  exit={{ scale: 0.6, rotate: 30, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 350, damping: 20 }}
-                >
-                  <CurrentIcon className={`w-4 h-4 ${currentStage.color}`} />
-                </motion.div>
-              </div>
+          {/* Left: Animated Icon + Dynamic Stage */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+              isDarkMode ? 'bg-zinc-800 border-zinc-700/60 text-zinc-300' : 'bg-white border-zinc-300 text-zinc-700'
+            }`}>
+              <motion.div
+                key={stageIndex}
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <CurrentIcon className={`w-3.5 h-3.5 ${currentStage.color}`} />
+              </motion.div>
             </div>
 
             {/* Rotating text with animated transitions */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-extrabold tracking-wider uppercase ${
-                  isDarkMode ? 'text-violet-400' : 'text-purple-600'
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-semibold tracking-wider uppercase ${
+                  isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
                 }`}>
                   Arohi Reasoning
                 </span>
                 <span className="flex gap-1 items-center">
-                  <span className="w-1 h-1 rounded-full bg-violet-400 animate-ping" />
-                  <span className="w-1 h-1 rounded-full bg-pink-400 animate-pulse delay-75" />
-                  <span className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse delay-150" />
+                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="w-1 h-1 rounded-full bg-zinc-400" />
                 </span>
               </div>
 
@@ -265,12 +259,12 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={currentStage.text}
-                    initial={{ y: 12, opacity: 0 }}
+                    initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -12, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className={`text-xs sm:text-sm font-semibold truncate ${
-                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className={`text-xs sm:text-[13px] font-medium truncate ${
+                      isDarkMode ? 'text-zinc-200' : 'text-zinc-800'
                     }`}
                   >
                     {currentStage.text}
@@ -281,29 +275,31 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
           </div>
 
           {/* Right: Live Stopwatch Badge */}
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pl-11 sm:pl-0">
-            <div className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 border shadow-xs ${
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pl-9 sm:pl-0">
+            <div className={`px-2.5 py-1 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 border shadow-xs ${
               isDarkMode 
-                ? 'bg-[#100926]/90 text-violet-300 border-violet-500/40' 
-                : 'bg-white text-purple-700 border-purple-200'
+                ? 'bg-zinc-950/80 text-zinc-300 border-zinc-800' 
+                : 'bg-white text-zinc-700 border-zinc-200'
             }`}>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>Thinking {displaySeconds}s</span>
             </div>
           </div>
         </div>
 
-        {/* Ambient progress line along the bottom border */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-violet-500/20 overflow-hidden">
+        {/* Ambient subtle progress line along the bottom border */}
+        <div className={`absolute bottom-0 left-0 right-0 h-[1.5px] overflow-hidden ${
+          isDarkMode ? 'bg-zinc-800' : 'bg-zinc-200'
+        }`}>
           <motion.div 
-            className="h-full bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-400"
+            className="h-full bg-emerald-400/80 w-1/3"
             animate={{ 
-              x: ['-100%', '0%', '100%']
+              x: ['-100%', '300%']
             }}
             transition={{ 
               repeat: Infinity, 
-              duration: 2, 
-              ease: 'linear' 
+              duration: 2.2, 
+              ease: 'easeInOut' 
             }}
           />
         </div>

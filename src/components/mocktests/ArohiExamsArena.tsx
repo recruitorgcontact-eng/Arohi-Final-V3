@@ -210,7 +210,7 @@ export default function ArohiExamsArena({
   onNavigateTab,
   onOpenAuth
 }: ArohiExamsArenaProps) {
-  const { user, userData } = useAuth();
+  const { user, userData, updateArenaStats } = useAuth();
 
   // User Profile in Arena
   const rawDisplayName = 
@@ -412,6 +412,25 @@ export default function ArohiExamsArena({
       arohiArenaVoice.stopSpeaking();
     };
   }, []);
+
+  // Sync Arena State to Firestore automatically for logged-in user
+  useEffect(() => {
+    if (user?.uid) {
+      const statsPayload = {
+        coins: goldCoins,
+        gems,
+        registeredTournaments: registeredTournamentIds,
+        classTrack: selectedClassTrack,
+        targetSubject: selectedSubject,
+        survivalHighScore: survivalBest,
+        dailyClaimedDate: localStorage.getItem('arohi_arena_daily_claimed') || '',
+        lastPlayedAt: new Date().toISOString()
+      };
+      updateArenaStats(statsPayload).catch(err => {
+        console.warn('Arena cloud sync note:', err);
+      });
+    }
+  }, [goldCoins, gems, registeredTournamentIds, selectedClassTrack, selectedSubject, survivalBest, user?.uid]);
 
   // CLAIM DAILY REWARD HANDLER
   const handleClaimDailyReward = () => {

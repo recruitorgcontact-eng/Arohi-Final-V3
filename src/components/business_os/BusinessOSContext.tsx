@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import {
   BusinessOSModule,
   CompanyProfile,
@@ -179,12 +180,14 @@ const BusinessOSContext = createContext<BusinessOSContextType | undefined>(undef
 const STORAGE_KEY = 'arohi_one_business_os_state_v1';
 
 export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, userData, updateBusinessOsData } = useAuth();
   const [activeModule, setActiveModule] = useState<BusinessOSModule>('overview');
   const [activeUserRole, setActiveUserRole] = useState<string>('Super Admin');
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [quickCreateType, setQuickCreateType] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Apple-grade Theme state: defaults to light (bright) theme first
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -272,7 +275,7 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [automations, setAutomations] = useState<AutomationRule[]>(() => safeLoad('automations', INITIAL_AUTOMATIONS));
   const [roles] = useState<RolePermission[]>(INITIAL_ROLES);
 
-  // Sync to local storage
+  // Sync to local storage & resilient cloud Firestore
   useEffect(() => {
     try {
       localStorage.setItem(`${STORAGE_KEY}_company`, JSON.stringify(companyProfile));
@@ -297,10 +300,42 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (e) {
       console.warn('Storage sync error:', e);
     }
+
+    // Debounced Firestore & server-side sync for logged-in user
+    if (user?.uid) {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        const payload = {
+          companyProfile,
+          leads,
+          customers,
+          deals,
+          quotations,
+          invoices,
+          expenses,
+          vendors,
+          purchaseOrders,
+          inventory,
+          employees,
+          payroll,
+          projects,
+          tasks,
+          campaigns,
+          calls,
+          tickets,
+          documents,
+          automations,
+          lastSyncedAt: new Date().toISOString()
+        };
+        updateBusinessOsData(payload).catch((err) => {
+          console.warn('Cloud sync error for Business OS:', err);
+        });
+      }, 1500);
+    }
   }, [
     companyProfile, leads, customers, deals, quotations, invoices, expenses,
     vendors, purchaseOrders, inventory, employees, payroll, projects, tasks,
-    campaigns, calls, tickets, documents, automations
+    campaigns, calls, tickets, documents, automations, user?.uid
   ]);
 
   const showToast = (msg: string) => {

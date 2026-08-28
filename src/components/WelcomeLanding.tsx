@@ -54,6 +54,7 @@ import ArohiAvatar from './ArohiAvatar';
 import HeaderNotifications from './HeaderNotifications';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
 import ArohiOneBusinessOSButtonBanner from './business_os/ArohiOneBusinessOSButtonBanner';
+import Mission87HeroBanner from './mission87/Mission87HeroBanner';
 
 interface WelcomeLandingProps {
   onEnter: () => void;
@@ -1213,8 +1214,16 @@ export default function WelcomeLanding({
             </button>
           </div>
 
-          {/* Official 3D Neon "Arohi Exams™" and "AROHI ONE Business OS" Compact Capsule Banners */}
+          {/* Official 3D Neon "Arohi Exams™", "AROHI ONE Business OS", and "Mission 87" Compact Capsule Banners */}
           <div className="mt-2.5 pt-2 border-t border-purple-500/20 space-y-2">
+            <Mission87HeroBanner
+              isDarkMode={isDarkMode}
+              onClick={() => {
+                setActiveTab('mission87');
+                onEnter();
+              }}
+            />
+
             <ArohiExamsButtonBanner
               isDarkMode={isDarkMode}
               onClick={() => {
@@ -1512,6 +1521,23 @@ export default function WelcomeLanding({
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Navigation</p>
                   
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setActiveTab('mission87');
+                      onEnter();
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-emerald-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🇮🇳</span>
+                      <span>Mission 87 (Youth Movement)</span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 px-1.5 py-0.5 rounded-md">
+                      Free Pass
+                    </span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);

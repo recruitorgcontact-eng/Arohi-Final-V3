@@ -2,7 +2,7 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "Represents an authenticated user in Arohi AI and stores their career progress, bookmarks, and mock application history.",
+      "description": "Represents an authenticated user in Arohi AI and stores their profile, subscription status, unified memory, chat history, voice call logs, CBT mock test submissions, Gaming Arena stats, Arohi ONE state, and Mission 87 progress.",
       "type": "object",
       "properties": {
         "uid": {
@@ -19,19 +19,19 @@
         },
         "profile": {
           "type": "object",
-          "description": "User profile details like phone, location, education, activeGoal"
+          "description": "User profile details like phone, location, education, activeGoal, resumeUrl"
         },
         "enrolledCourses": {
           "type": "array",
           "description": "List of courses user is enrolled in"
         },
         "completedModules": {
-          "type": "array",
-          "description": "List of completed module IDs from skills/courses"
+          "type": "object",
+          "description": "Dictionary of completed module IDs from skills/courses"
         },
         "checkedChecklist": {
-          "type": "array",
-          "description": "List of checked career progress checklist IDs"
+          "type": "object",
+          "description": "Dictionary of checked career progress checklist IDs"
         },
         "earnedCertificates": {
           "type": "array",
@@ -52,6 +52,58 @@
         "arohiCalls": {
           "type": "array",
           "description": "User's past voice call summaries with Arohi AI"
+        },
+        "mockTestHistory": {
+          "type": "array",
+          "description": "Historical records of completed CBT mock exams and diagnostic evaluations"
+        },
+        "lastExamDate": {
+          "type": "string",
+          "description": "ISO timestamp of the most recent exam completion"
+        },
+        "arenaStats": {
+          "type": "object",
+          "description": "Arohi Exams & Gaming Arena progress including coins, gems, tournaments, badges, rank, and subject masteries"
+        },
+        "mission87Enrollment": {
+          "type": "object",
+          "description": "Mission 87 cadet profile, track, milestones, blueprints, and verified earnings"
+        },
+        "businessOsData": {
+          "type": "object",
+          "description": "Arohi ONE Business OS workspace state including company profile, CRM, invoices, inventory, and telemetry"
+        },
+        "isSubscribed": {
+          "type": "boolean",
+          "description": "Whether the user has an active premium subscription"
+        },
+        "subscriptionPlanName": {
+          "type": "string",
+          "description": "Name of the subscribed tier"
+        },
+        "subscriptionEndDate": {
+          "type": "number",
+          "description": "Epoch timestamp of subscription expiration"
+        },
+        "examPass": {
+          "type": "object",
+          "description": "Active Arohi Exams Pass metadata and remaining test quota"
+        },
+        "freeExamAttemptsCount": {
+          "type": "number",
+          "description": "Number of free mock test attempts consumed"
+        },
+        "diagnostics": {
+          "type": "object",
+          "description": "ATS resume, mock interview, and business readiness diagnostic scores"
+        },
+        "activities": {
+          "type": "array",
+          "description": "Audit trail of user actions across Arohi modules"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last cloud synchronization"
         }
       },
       "required": ["uid", "email", "displayName"]
@@ -88,7 +140,7 @@
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "Active user profiles containing career progress, bookmarks, and application history."
+      "description": "Active user profiles containing career progress, bookmarks, chat history, exams, gaming arena stats, Arohi ONE, and Mission 87 progress."
     },
     "/voice_call_logs/{logId}": {
       "schema": "VoiceCallLog",
