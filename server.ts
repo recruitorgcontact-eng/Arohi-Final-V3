@@ -1,3 +1,4 @@
+// Arohi AI Production Server v3.0.1 - 2026-08-30T15:01:06.836Z
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -10159,7 +10160,7 @@ function logWsEvent(event: string, data: any) {
 
 const SEO_TRANSLATIONS: Record<string, { title: string; description: string; keywords: string }> = {
   en: {
-    title: "Arohi AI - World & India's #1 Multilingual Opportunity & Growth Engine | AI Voice Guide in 150+ Languages for Students, Teachers, Doctors, and Businesses",
+    title: "Arohi AI - World & India\x27s Sovereign Opportunity Engine | 150+ Languages (arohiai.com)",
     description: "Empowering Students, Teachers, Parents, Scientists, Researchers, Doctors, Engineers, Entrepreneurs, Job Seekers, Professionals, Businesses, MSMEs, Govt. Aspirants, Universities, Organizations, Aliens, Mars & Jupiter Citizens, Govt. & Private Officials, Humans. Connect with AI assistant Arohi via dynamic voice calling in 150+ regional languages (English, Hindi, Odia, etc.). Get resume analysis, mock interviews, job boards, business setups, and government schemes assistance.",
     keywords: "arohi ai, arohiai.com, career guidance India, AI career coach, resume score India, mock interview simulator, MSME Udyam registration, private sector jobs, student career advisor, opportunity portal, Sarkari job guide, voice call in Hindi, Odia, Bengali, Tamil, Telugu, Marathi, Kannada, Malayalam, Gujarati, Punjabi, Assamese, Urdu, 150 languages"
   },
