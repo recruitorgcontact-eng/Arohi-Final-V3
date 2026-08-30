@@ -6,3 +6,4 @@ export { default as Mission87EnrollmentModal } from './Mission87EnrollmentModal'
 export { default as Mission87IDCard } from './Mission87IDCard';
 export { default as Mission87HeroBanner } from './Mission87HeroBanner';
 export { default as Mission87AwakeningTicker } from './Mission87AwakeningTicker';
+export { default as Mission87RegionalSEOHub } from './Mission87RegionalSEOHub';

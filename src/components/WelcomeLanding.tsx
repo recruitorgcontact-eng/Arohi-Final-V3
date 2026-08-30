@@ -45,7 +45,8 @@ import {
   Palette,
   Box,
   Trophy,
-  Award
+  Award,
+  LogOut
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
@@ -107,7 +108,7 @@ export default function WelcomeLanding({
   onSetSubscriptionEndDate,
   currency = 'INR'
 }: WelcomeLandingProps) {
-  const { user, userData } = useAuth();
+  const { user, userData, signOutUser } = useAuth();
   
   // Local theme state fallback if parent props are not provided
   const [localIsDarkMode, setLocalIsDarkMode] = useState<boolean>(() => {
@@ -1504,17 +1505,49 @@ export default function WelcomeLanding({
                       <p className="text-[10px] text-purple-300 truncate">{user ? (user.email || 'Signed in') : 'Sign in to save your sessions'}</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      if (onOpenAuth) onOpenAuth();
-                      else if (setActiveTab) setActiveTab('profile');
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-extrabold shadow-md shrink-0 cursor-pointer"
-                  >
-                    {user ? 'Account' : 'Sign Up / Sign In'}
-                  </button>
+                  {user ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          if (setActiveTab) setActiveTab('profile');
+                          if (onEnter) onEnter();
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-extrabold shadow-sm shrink-0 cursor-pointer"
+                      >
+                        Account
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsMobileMenuOpen(false);
+                          try {
+                            await signOutUser();
+                          } catch (e) {
+                            console.warn('Sign out error:', e);
+                          }
+                        }}
+                        className="px-2 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[11px] font-extrabold shadow-sm shrink-0 cursor-pointer flex items-center gap-1"
+                        title="Log Out"
+                      >
+                        <LogOut className="w-3 h-3 text-rose-400" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        if (onOpenAuth) onOpenAuth();
+                        else if (setActiveTab) setActiveTab('profile');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-extrabold shadow-md shrink-0 cursor-pointer"
+                    >
+                      Sign Up / Sign In
+                    </button>
+                  )}
                 </div>
 
                 {/* Quick Navigation Links */}

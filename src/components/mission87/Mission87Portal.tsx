@@ -32,6 +32,7 @@ import FutureMapDiagnostic from './FutureMapDiagnostic';
 import ManufacturingExplorer from './ManufacturingExplorer';
 import Mission87IDCard from './Mission87IDCard';
 import Mission87AwakeningTicker from './Mission87AwakeningTicker';
+import Mission87RegionalSEOHub from './Mission87RegionalSEOHub';
 import { audioEngine } from '../../utils/audioEngine';
 
 interface Mission87PortalProps {
@@ -835,6 +836,15 @@ export default function Mission87Portal({
         </div>
 
       </section>
+
+      {/* ========================================================================= */}
+      {/* MEGA REGIONAL SEO & PAN-INDIA 28 STATES / 8 UTs ACTIVATION RADAR          */}
+      {/* ========================================================================= */}
+      <Mission87RegionalSEOHub
+        onOpenChatWithPrompt={onOpenChatWithPrompt}
+        onSelectState={(st) => setPledgeState(st)}
+        isDarkMode={isDarkMode}
+      />
 
       {/* ========================================================================= */}
       {/* ACT 6: THE MISSION 87 YOUTH PLEDGE & INSTANT PIONEER DIGITAL PASS         */}

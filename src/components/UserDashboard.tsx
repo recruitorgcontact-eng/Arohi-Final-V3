@@ -5,7 +5,7 @@ import {
   ShieldCheck, Edit3, Save, LogIn, Trash2, X, ChevronRight, Crown,
   Download, RefreshCw, Trophy, Calendar, Check, Play, GraduationCap, Map, Clock, Share2,
   Fingerprint, AlertTriangle, ToggleLeft, ToggleRight, Settings, Volume2, VolumeX, Cpu,
-  Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer, Brain
+  Coins, Copy, Gift, Tag, Zap, ArrowRight, ShieldAlert, Timer, Brain, LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { computeSubscriptionState } from '../utils/subscriptionEngine';
@@ -15,6 +15,7 @@ import { PATH_DETAILS, PRICING_TIERS, getTokenLimitForPrice } from '../data/pric
 import PricingPage from './PricingPage';
 
 interface UserDashboardProps {
+  isDarkMode?: boolean;
   initialSection?: 'all' | 'subscriptions' | 'profile' | 'applications' | 'courses';
   subscriptions?: Record<string, boolean>;
   subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
@@ -45,6 +46,7 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ 
+  isDarkMode = false,
   initialSection = 'all',
   subscriptions = { path1: false, path2: false, path3: false, path4: false }, 
   subscriptionDetails = {},
@@ -74,7 +76,7 @@ export default function UserDashboard({
   subscriptionPlanName = 'Starter Plan (₹399/mo)'
 }: UserDashboardProps) {
   
-  const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
+  const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities, signOutUser } = useAuth();
 
   const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'subscriptions' | 'profile' | 'applications' | 'courses' | 'mocktests'>(
     initialSection === 'subscriptions' ? 'subscriptions' : 'all'
@@ -820,8 +822,8 @@ export default function UserDashboard({
       )}
 
       {/* Profile Overview Card & Completeness tracker */}
-      <div className="bg-slate-950 text-white rounded-[2rem] p-6 md:p-8 shadow-2xl border border-slate-850 relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-blue-600/15 to-purple-600/15 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+      <div className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-[2rem] p-6 md:p-8 shadow-lg dark:shadow-2xl border border-slate-200 dark:border-slate-850 relative overflow-hidden transition-colors">
+        <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-blue-600/15 to-purple-600/15 rounded-full blur-3xl -translate-y-16 translate-x-16 pointer-events-none"></div>
         
         <div className="relative flex flex-col lg:flex-row gap-8 items-stretch justify-between">
           
@@ -837,79 +839,79 @@ export default function UserDashboard({
               className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#7c3aed] to-[#a855f7] text-white flex items-center justify-center font-black text-2xl shadow-xl border border-purple-400/30 shrink-0 relative cursor-pointer select-none"
             >
               {profile.name ? profile.name.slice(0, 2).toUpperCase() : 'IN'}
-              <div className="absolute -bottom-1 -right-1 bg-emerald-500 border-2 border-slate-950 w-5 h-5 rounded-full flex items-center justify-center" title="Online profile active">
+              <div className="absolute -bottom-1 -right-1 bg-emerald-500 border-2 border-white dark:border-slate-950 w-5 h-5 rounded-full flex items-center justify-center" title="Online profile active">
                 <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
               </div>
             </div>
 
             <div className="text-left space-y-3 flex-1 w-full">
               {isEditingProfile ? (
-                <div className="space-y-4 max-w-2xl bg-[#110d29]/60 border border-[#3b2b73]/60 p-5 rounded-2xl text-slate-100">
-                  <div className="flex items-center gap-2 pb-2 border-b border-[#241a4d]">
-                    <Edit3 className="w-4 h-4 text-purple-400" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-purple-300">Edit Your Professional Register Profile</h4>
+                <div className="space-y-4 max-w-2xl bg-slate-50 dark:bg-[#110d29]/60 border border-slate-200 dark:border-[#3b2b73]/60 p-5 rounded-2xl text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-[#241a4d]">
+                    <Edit3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-300">Edit Your Professional Register Profile</h4>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Full Name</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Full Name</label>
                       <input 
                         type="text" 
                         value={editedName} 
                         onChange={e => setEditedName(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Contact Phone</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Contact Phone</label>
                       <input 
                         type="text" 
                         value={editedPhone} 
                         onChange={e => setEditedPhone(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Residence Location</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Residence Location</label>
                       <input 
                         type="text" 
                         value={editedLocation} 
                         onChange={e => setEditedLocation(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Education Level</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Education Level</label>
                       <input 
                         type="text" 
                         value={editedEducation} 
                         onChange={e => setEditedEducation(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Primary Career Goal</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Primary Career Goal</label>
                       <input 
                         type="text" 
                         value={editedGoal} 
                         onChange={e => setEditedGoal(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Resume Link / Portfolio URL</label>
+                      <label className="block text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wide">Resume Link / Portfolio URL</label>
                       <input 
                         type="text" 
                         value={editedResume} 
                         placeholder="https://drive.google.com/..."
                         onChange={e => setEditedResume(e?.target?.value ?? "")}
-                        className="w-full bg-[#0d0a20] border border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 outline-none transition-colors font-semibold"
+                        className="w-full bg-white dark:bg-[#0d0a20] border border-slate-300 dark:border-[#2d215d] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 outline-none transition-colors font-semibold"
                       />
                     </div>
                   </div>
@@ -923,7 +925,7 @@ export default function UserDashboard({
                     </button>
                     <button 
                       onClick={() => setIsEditingProfile(false)}
-                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
+                      className="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -931,27 +933,27 @@ export default function UserDashboard({
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1.5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-1.5 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-2xl font-black tracking-tight">{profile.name}</h2>
-                        <span className="bg-[#7c3aed]/20 text-[#a78bfa] border border-[#7c3aed]/30 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{profile.name}</h2>
+                        <span className="bg-purple-100 dark:bg-[#7c3aed]/20 text-purple-700 dark:text-[#a78bfa] border border-purple-300 dark:border-[#7c3aed]/30 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                           Verified Candidate Profile
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-400 text-xs font-semibold">
-                        <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-purple-400" /> {profile.email}</span>
-                        <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-purple-400" /> {profile.phone || 'No phone set'}</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-purple-400" /> {profile.location || 'No location set'}</span>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 dark:text-slate-400 text-xs font-semibold">
+                        <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {profile.email}</span>
+                        <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {profile.phone || 'No phone set'}</span>
+                        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {profile.location || 'No location set'}</span>
                       </div>
 
-                      <div className="text-xs text-slate-300 font-bold pt-1">
-                        🏫 Academic Credentials: <span className="text-white font-black">{profile.education || 'Not specified'}</span>
+                      <div className="text-xs text-slate-700 dark:text-slate-300 font-bold pt-1">
+                        🏫 Academic Credentials: <span className="text-slate-900 dark:text-white font-black">{profile.education || 'Not specified'}</span>
                       </div>
 
                       <div className="flex flex-wrap gap-2 pt-1 items-center">
-                        <span className="text-xs text-emerald-400 font-extrabold">
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">
                           🎯 Active Career Target: {profile.activeGoal || 'Set your target goal'}
                         </span>
                         {profile.resumeUrl && (
@@ -959,13 +961,33 @@ export default function UserDashboard({
                             href={profile.resumeUrl} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="inline-flex items-center gap-1 text-[10px] bg-blue-500/10 border border-blue-500/25 px-2 py-0.5 rounded text-blue-300 font-bold hover:bg-blue-500/20 transition-all"
+                            className="inline-flex items-center gap-1 text-[10px] bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/25 px-2 py-0.5 rounded text-blue-700 dark:text-blue-300 font-bold hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all"
                           >
                             <FileText className="w-3 h-3" /> View Portfolio / Resume <ExternalLink className="w-2.5 h-2.5" />
                           </a>
                         )}
                       </div>
                     </div>
+
+                    {/* Sleek Log Out Button in Right Side Top Area of User Profile Tab */}
+                    {user && (
+                      <button
+                        type="button"
+                        id="user-profile-header-logout-btn"
+                        onClick={async () => {
+                          try {
+                            await signOutUser();
+                          } catch (err) {
+                            console.warn('Sign out error:', err);
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 hover:border-rose-500/50 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95 shrink-0 self-start"
+                        title="Sign out of your account"
+                      >
+                        <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Log Out</span>
+                      </button>
+                    )}
                   </div>
                 </>
               )}
@@ -973,20 +995,20 @@ export default function UserDashboard({
           </div>
 
           {/* Profile completeness panel */}
-          <div className="lg:w-72 bg-[#0c0820]/75 border border-[#2b1f5d] p-5 rounded-2xl flex flex-col justify-center space-y-3 self-center shrink-0">
+          <div className="lg:w-72 bg-slate-50 dark:bg-[#0c0820]/75 border border-slate-200 dark:border-[#2b1f5d] p-5 rounded-2xl flex flex-col justify-center space-y-3 self-center shrink-0">
             <div className="flex justify-between items-center text-xs font-black uppercase">
-              <span className="text-slate-300">Registration Completeness</span>
-              <span className="text-purple-400">{completeness}%</span>
+              <span className="text-slate-700 dark:text-slate-300">Registration Completeness</span>
+              <span className="text-purple-600 dark:text-purple-400">{completeness}%</span>
             </div>
             
-            <div className="w-full bg-[#1b143d] h-3 rounded-full overflow-hidden border border-[#30246a] p-0.5">
+            <div className="w-full bg-slate-200 dark:bg-[#1b143d] h-3 rounded-full overflow-hidden border border-slate-300 dark:border-[#30246a] p-0.5">
               <div 
                 className="bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
                 style={{ width: `${completeness}%` }}
               ></div>
             </div>
 
-            <p className="text-[10px] text-slate-400 font-medium leading-relaxed text-left">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed text-left">
               {completeness === 100 
                 ? '🎉 Perfect! Your professional digital portfolio is fully formulated.' 
                 : '💡 Complete all contact details, career goals, and portfolio resume links to maximize matching index ratios.'
@@ -997,16 +1019,16 @@ export default function UserDashboard({
               <div className="flex flex-col gap-2 w-full">
                 <button 
                   onClick={() => setIsEditingProfile(true)}
-                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#1a143a] hover:bg-[#251e54] border border-slate-800 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm"
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-200 dark:bg-[#1a143a] hover:bg-slate-300 dark:hover:bg-[#251e54] border border-slate-300 dark:border-slate-800 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-sm"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-purple-400" /> Complete Registry Profile
+                  <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Complete Registry Profile
                 </button>
                 {onShare && (
                   <button 
                     onClick={onShare}
-                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 border border-emerald-500/30 rounded-xl text-[11px] font-black uppercase tracking-wider text-emerald-400 hover:text-white transition-all cursor-pointer shadow-sm"
+                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 border border-emerald-500/30 rounded-xl text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-white transition-all cursor-pointer shadow-sm"
                   >
-                    <Share2 className="w-3.5 h-3.5 text-emerald-400" /> Share Platform
+                    <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Share Platform
                   </button>
                 )}
               </div>
@@ -1249,7 +1271,7 @@ export default function UserDashboard({
       )}
 
       {/* DASHBOARD SECTION NAVIGATION BAR */}
-      <div className="bg-[#120e2e] border-2 border-[#31226e] p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-2xl">
+      <div className="bg-slate-100 dark:bg-[#120e2e] border-2 border-slate-200 dark:border-[#31226e] p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-md dark:shadow-2xl transition-colors">
         {[
           { id: 'all', label: '📊 Dashboard Overview', icon: Sparkles },
           { id: 'subscriptions', label: '👑 Subscription Plans & Tiers', icon: Crown, badge: '₹399+' },
@@ -1274,17 +1296,17 @@ export default function UserDashboard({
               }}
               className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-[1.02] border border-purple-400/40'
-                  : 'bg-[#1b143c] text-slate-300 hover:text-white hover:bg-[#251d54] border border-slate-800/60'
+                  ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 text-white shadow-md dark:shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-[1.02] border border-purple-400/40'
+                  : 'bg-white dark:bg-[#1b143c] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#251d54] border border-slate-200 dark:border-slate-800/60 shadow-xs'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300 animate-pulse' : 'text-purple-400'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300 animate-pulse' : 'text-purple-600 dark:text-purple-400'}`} />
               <span>{tab.label}</span>
               {tab.badge && (
                 <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full border ml-1 ${
                   isActive 
                     ? 'bg-amber-400 text-slate-950 border-amber-300' 
-                    : 'bg-purple-950/80 text-purple-300 border-purple-500/30'
+                    : 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30'
                 }`}>
                   {tab.badge}
                 </span>
@@ -1292,55 +1314,75 @@ export default function UserDashboard({
             </button>
           );
         })}
+
+        {/* Far-Right Sleek Log Out Button on Dashboard Navigation Bar */}
+        {user && (
+          <button
+            type="button"
+            id="dashboard-navbar-logout-btn"
+            onClick={async () => {
+              try {
+                await signOutUser();
+              } catch (err) {
+                console.warn('Sign out error:', err);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 hover:border-rose-500/50 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95 shrink-0 ml-auto whitespace-nowrap"
+            title="Sign out of account"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-500" />
+            <span>Log Out</span>
+          </button>
+        )}
       </div>
 
       {/* CORE STATS GRID - NEW WORKSPACE SUMMARY */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
-          <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Active Paths Subscriptions</span>
+        <div className="bg-white dark:bg-[#120e2a] border border-slate-200 dark:border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden shadow-sm dark:shadow-none transition-colors">
+          <span className="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">Active Paths Subscriptions</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-white">{Object.values(subscriptions || {}).filter(Boolean).length}</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{Object.values(subscriptions || {}).filter(Boolean).length}</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-              isSubscribed ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-slate-400 bg-slate-800 border-slate-700'
+              isSubscribed ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20' : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700'
             }`}>
               {isSubscribed ? 'Unlocked' : 'Free Tier'}
             </span>
           </div>
           {isSubscribed ? (
-            <p className="text-[10px] text-emerald-300 font-bold mt-1.5 leading-tight flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-emerald-400" />
+            <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold mt-1.5 leading-tight flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               Valid till {new Date(effectiveEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({daysRemaining}d left)
             </p>
           ) : (
-            <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Continuous assistance plan</p>
+            <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5 leading-tight">Continuous assistance plan</p>
           )}
         </div>
 
-        <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
-          <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Courses Enrolled</span>
+        <div className="bg-white dark:bg-[#120e2a] border border-slate-200 dark:border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden shadow-sm dark:shadow-none transition-colors">
+          <span className="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">Courses Enrolled</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-white">{totalEnrolledCount}</span>
-            <span className="text-[10px] text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">Academy</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{totalEnrolledCount}</span>
+            <span className="text-[10px] text-purple-700 dark:text-purple-400 font-bold bg-purple-50 dark:bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-500/20">Academy</span>
           </div>
-          <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Curriculum programs loaded</p>
+          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5 leading-tight">Curriculum programs loaded</p>
         </div>
 
-        <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
-          <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Completed Academic Units</span>
+        <div className="bg-white dark:bg-[#120e2a] border border-slate-200 dark:border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden shadow-sm dark:shadow-none transition-colors">
+          <span className="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">Completed Academic Units</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-white">{completedCount}</span>
-            <span className="text-[10px] text-yellow-400 font-bold bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">Checked</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{completedCount}</span>
+            <span className="text-[10px] text-amber-700 dark:text-yellow-400 font-bold bg-amber-50 dark:bg-yellow-500/10 px-2 py-0.5 rounded-full border border-amber-200 dark:border-yellow-500/20">Checked</span>
           </div>
-          <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Module checklist steps completed</p>
+          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5 leading-tight">Module checklist steps completed</p>
         </div>
 
-        <div className="bg-[#120e2a] border border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden">
-          <span className="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Applied Opportunities</span>
+        <div className="bg-white dark:bg-[#120e2a] border border-slate-200 dark:border-[#20174e] rounded-2xl p-4 text-left relative overflow-hidden shadow-sm dark:shadow-none transition-colors">
+          <span className="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">Applied Opportunities</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-white">{appliedJobs.length}</span>
-            <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">Receipts</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{appliedJobs.length}</span>
+            <span className="text-[10px] text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-500/20">Receipts</span>
           </div>
-          <p className="text-[9px] text-slate-400 font-semibold mt-1.5 leading-tight">Official registration slips active</p>
+          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5 leading-tight">Official registration slips active</p>
         </div>
       </div>
 

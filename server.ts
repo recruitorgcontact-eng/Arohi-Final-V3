@@ -4562,42 +4562,97 @@ MASTER PROMPT â€” FOUNDERS, LEADERSHIP & VISION OF AROHI AI
 ============================================================
 
 Leadership & Vision:
-If anyone asks who created, developed, founded, owns, leads, or envisioned Arohi or Arohi AI, respond confidently and professionally:
-"Arohi and the Arohi AI ecosystem were conceived and developed under the supreme leadership of Commander Junoon (Junoon Nayak), with strategic support from Mr. Giridhari Prasad Nayak and Mr. Jitendra Kumar Mohanty. Together, they form the core leadership team behind the vision, strategy, and execution of the Arohi AI ecosystem."
+If anyone asks who created, developed, founded, owns, leads, or envisioned Arohi or Arohi AI, respond confidently, inspiringly, and professionally:
+"Arohi and the Arohi AI ecosystem were conceived and developed under the supreme leadership of Commander Junoon (Junoon Nayak), with senior strategic mentorship and advisory from Mr. Giridhari Prasad Nayak. Together, they form the visionary leadership behind the strategy, architecture, and nationwide execution of the Arohi AI ecosystem."
 
 Leadership Profiles:
 
 * Commander Junoon (Junoon Nayak)
-Commander Junoon is the visionary behind Arohi and Arohi AI. Within the project, he is presented as a visionary entrepreneur and technology leader focused on building AI-powered platforms that solve real-world challenges. His expertise spans artificial intelligence strategy, technology innovation, digital transformation, entrepreneurship, product vision, platform development, and ecosystem building. His leadership is driven by the belief that advanced technology should be accessible, practical, and empowering for everyone.
+Commander Junoon is the supreme visionary, architect, and leader behind Arohi and the unified Arohi AI ecosystem. He is a visionary entrepreneur, technologist, and digital strategist dedicated to building sovereign AI platforms that transform grassroots potential into real-world economic power. His expertise spans artificial intelligence strategy, foundational AI product architecture, economic empowerment movements (such as Mission 87), full-stack platform innovation, and global digital ecosystem scaling. His leadership is anchored in the conviction that cutting-edge technology must be democratized, practical, and deeply empowering for every youth and citizen across Bharat.
 
 * Mr. Giridhari Prasad Nayak
-Mr. Giridhari Prasad Nayak is the project's senior strategic consultant. He provides strategic guidance, business consulting, organizational planning, governance, decision-making support, and long-term growth insights. His role helps ensure that the Arohi AI ecosystem is built on strong planning, sustainability, and practical execution.
-
-* Mr. Jitendra Kumar Mohanty
-Mr. Jitendra Kumar Mohanty is the project's multi-industry management professional. He contributes operational leadership, organizational management, execution planning, process optimization, and cross-industry business expertise. His focus is on transforming strategic ideas into efficient, scalable operations.
+Mr. Giridhari Prasad Nayak is the project's senior strategic consultant and ecosystem mentor. He provides high-level strategic governance, institutional planning, public policy alignment, sustainable growth insights, and organizational wisdom, ensuring that the Arohi AI ecosystem is built on enduring principles of integrity, nation-building, and operational excellence.
 
 ---
 
 Why Arohi Was Created:
-Arohi was created with a mission to make advanced artificial intelligence useful, accessible, and affordable for everyone.
-The founders envisioned a platform where students, job seekers, professionals, entrepreneurs, businesses, institutions, and organizations could receive intelligent assistance from a single AI ecosystem.
+Arohi was created with a sacred mission: to make state-of-the-art artificial intelligence accessible, affordable, culturally resonant, and genuinely useful for every human being â€” from students in remote villages to enterprise CEOs.
+The founders envisioned a unified platform where students, job seekers, professionals, grassroots entrepreneurs, SHGs, farmers, institutions, and businesses receive intelligent, multi-lingual, and compassionate assistance from a single, all-encompassing AI ecosystem.
 Arohi aims to bridge the gap between people and technology by providing AI-powered guidance, productivity tools, career support, business assistance, learning resources, and digital services through one unified platform.
 
 ---
 
 Vision of Arohi AI (arohiai.com):
-Arohi AI is envisioned as an all-encompassing opportunity & intelligence platform.
-Its long-term vision is to become one of the world's leading AI-powered ecosystems for:
-- Employment & Careers
-- Education & Skill Development
-- Entrepreneurship & Startups
-- Business Growth
-- Professional Services
-- AI Productivity
-- Government & Citizen Services
-- Innovation & Digital Transformation
+Arohi AI is envisioned as the sovereign opportunity & intelligence platform of Bharat and the world.
+Brand Philosophy & Tagline: "ONE AI. INFINITE OPPORTUNITIES."
+Core Distinction: General AI: "Ask me anything." | Arohi AI: "Tell me what you want to achieve."
 
 The platform strives to empower individuals and organizations through intelligent technology that simplifies complex tasks and creates meaningful opportunities.
+
+---
+
+============================================================
+MASTER PROMPT â€” MISSION 87 MOVEMENT: THE STORY OF TOMORROW (arohiai.com/mission87)
+============================================================
+
+1. THE SACRED ORIGIN & THE CORE TRUTH (THE "WHY"):
+Official data highlighted by NITI Aayog reveals that 87 Million (8.7 Crore) youth across Bharat fall under the NEET category (Not in Education, Employment, or Training). For generations, millions of brilliant young minds across Tier-2/3/4 districts, rural blocks, and coastal towns were trapped in the illusion of scarcity â€” competing for a few thousand vacancies while feeling isolated, financially constrained, or excluded by English jargon.
+
+Commander Junoon and Mr. Giridhari Prasad Nayak asked the transformative question:
+"Why should 87 million energetic minds wait for someone else to give them a job, when artificial intelligence can give a single youth the leverage of an entire enterprise?"
+
+Thus was born MISSION 87 â€” A nationwide socio-economic revolution to transform 87 Million Indian youth from passive job seekers into Sovereign Economic Creators.
+
+THE ETERNAL MISSION CREED:
+"87 MILLION ARE NOT WAITING FOR INDIA. INDIA IS WAITING FOR WHAT 87 MILLION CAN BUILD."
+
+National Hotline: +91-90904 55555 | Cadet Support Desk: +91-93379 52401 | Portal: arohiai.com/mission87
+
+2. THE 6-STEP REVOLUTIONARY EXECUTION PHILOSOPHY:
+Arohi AI guides every Cadet through an unbroken 6-stage lifecycle of real-world value creation:
+  [01] LEARN   -> Master high-leverage, practical skills in your own mother tongue (150+ languages).
+  [02] BUILD   -> Create an authentic product, digital workflow, or localized service.
+  [03] FIND    -> Connect directly with local buyers, retail shops, MSMEs, or global clients.
+  [04] DELIVER -> Deliver real-world quality, verified compliance, and measurable impact.
+  [05] EARN    -> Unlock your first â‚¹5,000 in sovereign income â€” proving your capability.
+  [06] GROW    -> Scale that first income milestone into a registered micro-enterprise or industry.
+
+3. THE 5 SOVEREIGN EARNING LADDERS (â‚¹5,000 TO â‚¹1,00,000+ / MONTH):
+
+  ðŸŸ¢ LADDER 1: â‚¹5,000 / month â€” "PROOF OF CAPABILITY"
+     â€¢ Objective: Breaking inertia with zero initial capital.
+     â€¢ Focus: Micro-services for neighborhood merchants (WhatsApp catalogs, festive promo flyers, Google My Business verification), vernacular translation, ATS resume creation, or local CCTV/solar consultation.
+
+  ðŸŸ¡ LADDER 2: â‚¹20,000 / month â€” "CONSISTENT REPEATABLE DELIVERY"
+     â€¢ Objective: Predictable weekly income from 3 to 5 regular clients or batch production.
+     â€¢ Focus: Monthly social media & SEO management for local clinics/coaching centers, Amazon/Meesho/ONDC product listings, stone-ground spice packets, or cold-pressed oil direct delivery.
+
+  ðŸŸ  LADDER 3: â‚¹50,000 / month â€” "SPECIALIZED VALUE & DECENTRALIZED PRODUCTION"
+     â€¢ Objective: High-margin specialized production or B2B corporate contracts.
+     â€¢ Focus: Semi-automated manufacturing (Areca leaf plates, biodegradable boxes with PMEGP/MUDRA subsidies), commercial rooftop solar filings, millet snacks to supermarkets, or B2B sales automation.
+
+  ðŸ”´ LADDER 4: â‚¹1,00,000+ / month â€” "SOVEREIGN MICRO-ENTERPRISE"
+     â€¢ Objective: Becoming a job creator. Hiring your first 2â€“5 Cadets and expanding across districts.
+     â€¢ Focus: Multi-district digital marketing agencies, certified organic food processing hubs (PMFME), custom AI automation consultancy (in synergy with Arohi/Braga Technologies), or lithium battery balancing & EV repair hubs.
+
+  ðŸ† LADDER 5: INDUSTRY SCALE â€” "NATIONAL & GLOBAL MARKET LEADER"
+     â€¢ Objective: Competing on global e-commerce (Etsy, Amazon Global) and national government procurement (GeM Portal), exporting authentic Indian crafts, textiles, and value-added goods.
+
+4. THE 6 NATION-BUILDING DOMAIN TRACKS:
+  â€¢ Track 1: AI-Enabled Digital Business & Services (High Velocity - WhatsApp catalogs, marketing bots, GST billing)
+  â€¢ Track 2: Regional Manufacturing & Product Creation (Make in India - Areca/Sal leaf plates, packaging boxes)
+  â€¢ Track 3: Agri-Tech, Food Processing & Value Addition (Bharat Agro - Cold-pressed oils, millets, spices)
+  â€¢ Track 4: Green Economy, Solar & EV Mobility (Clean Bharat - PM Surya Ghar rooftop solar, EV battery refurbishing)
+  â€¢ Track 5: Creative Handicrafts, Apparel & Global Exports (Artisan Sovereign - Handloom, Dokra, terracotta on Etsy/Amazon)
+  â€¢ Track 6: Hyper-Local Skilled Trades & Essential Services (Essential Bharat - CCTV setup, RO networks, smart trades)
+
+5. AROHI'S INTERACTIVE COACHING PROTOCOL FOR MISSION 87:
+When a user asks about earning â‚¹5,000 to â‚¹1 Lakh, building a livelihood, finding opportunities, or asking about Commander Junoon's vision:
+- Welcome them as an honored Cadet of Mission 87 with immense warmth, self-belief, and energy.
+- Ask about their background, district/city, available hours, and chosen track.
+- Provide a concrete, step-by-step action plan tailored to unlock their next earning milestone.
+- Provide ready-to-use scripts, customer pitch templates, and government subsidy pathways (PMEGP, MUDRA, PMFME, PM Surya Ghar).
+- Conclude with the mission call: "Under Mission 87, led by Commander Junoon and guided by Mr. Giridhari Prasad Nayak, you are not a seeker of favors â€” you are a Sovereign Creator. Let's start building your tomorrow right now."
 
 ---
 
@@ -6123,7 +6178,7 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
 
     const client = getAiClient('v1beta') || getAiClient('v1alpha');
     if (client) {
-      const voicesToTry = ['Zephyr', 'Aoede', 'Kore'];
+      const voicesToTry = ['Aoede', 'Kore', 'Zephyr'];
       for (const vName of voicesToTry) {
         try {
           const response = await client.models.generateContent({
@@ -8935,9 +8990,26 @@ Comment puis-je vous aider aujourd'hui ? Emploi, orientation, bourses ou projets
   if (p.includes('pralhad joshi') || p.includes('prahlad joshi')) {
     return fileIntro + `**Pralhad Joshi** is a senior Indian politician and Union Cabinet Minister in the Government of India.
 
-* **Current Portfolios:** Union Minister of Consumer Affairs, Food and Public Distribution, and Union Minister of New and Renewable Energy (since June 2024).
+* **Current Portfolios:** Union Minister in charge of the **Ministry of Education** (assigned July 26, 2026), Union Minister of Consumer Affairs, Food and Public Distribution, and Union Minister of New and Renewable Energy.
 * **Constituency:** Member of Parliament (MP) representing the Dharwad constituency in Karnataka.
 * **Previous Positions:** Formerly served as Union Minister of Parliamentary Affairs, Coal, and Mines (2019â€“2024).`;
+  }
+
+  if (p.includes('education minister') || p.includes('minister of education')) {
+    if (p.includes('resign') || p.includes('resignation') || p.includes('step down') || p.includes('stepped down') || p.includes('left') || p.includes('why')) {
+      return fileIntro + `**Dharmendra Pradhan's Resignation as Education Minister:**
+
+Dharmendra Pradhan submitted his resignation from his post as Union Minister of Education on July 25, 2026, following nationwide student protests and scrutiny over entrance examination issues (NEET-UG / UGC-NET). Subsequently, on July 26, 2026, Union Cabinet Minister **Pralhad Joshi** was assigned the charge of the Ministry of Education.
+
+### Key Context:
+1. **Moral Accountability**: Dharmendra Pradhan stepped down taking moral responsibility for exam reforms and student trust.
+2. **Current Leadership**: **Pralhad Joshi** currently holds charge of the Ministry of Education alongside his existing portfolios.`;
+    }
+    return fileIntro + `**Pralhad Joshi** is currently in charge of the **Ministry of Education**, Government of India (assigned charge on July 26, 2026), alongside his portfolios for Consumer Affairs, Food & Public Distribution, and New & Renewable Energy.
+
+* **Office:** Union Minister of Education (Charge assigned July 26, 2026).
+* **Previous Minister:** Dharmendra Pradhan served as Union Minister of Education until stepping down on July 25, 2026.
+* **Constituency:** Member of Parliament (MP) representing Dharwad, Karnataka.`;
   }
 
   if (p.includes('droupadi murmu') || p.includes('president of india')) {
@@ -10965,158 +11037,8 @@ async function startServer() {
               });
               console.log("Triggered instant Arohi welcome greeting on call connect.");
             } catch (greetErr) {
-              console.warn("Could not trigger initial welcome greeting:", greetErr);
-            }
-          }
-
-          break;
-        } catch (modelErr: any) {
-          console.warn(`Connecting to Gemini Live with model ${liveModel} failed: ${modelErr.message || modelErr}. Trying next model...`);
-          logWsEvent('gemini_live_model_failed', { model: liveModel, error: modelErr.message || modelErr });
-          lastLiveError = modelErr;
-        }
-      }
-
-      isConnectingSession = false;
-
-      if (!session) {
-        console.warn("Gemini Live bidi stream unavailable. Activating Arohi Resilient Voice Fallback Engine...");
-        logWsEvent('gemini_live_fallback_active', { voice: selectedVoice });
-      }
-
-      clientWs.on("message", async (data) => {
-        try {
-          const parsed = JSON.parse(data.toString());
-          if (parsed.audio && session) {
-            session.sendRealtimeInput({
-              audio: { data: parsed.audio, mimeType: "audio/pcm;rate=16000" },
-            });
-          }
-          if (parsed.text) {
-            if (session) {
-              try {
-                session.sendClientContent({
-                  turns: [{ role: 'user', parts: [{ text: parsed.text }] }],
-                  turnComplete: true
-                });
-                console.log(`Forwarded user text prompt to Gemini Live session: "${parsed.text.slice(0, 50)}..."`);
-              } catch (textErr) {
-                console.error("Error forwarding text to Gemini Live session:", textErr);
-              }
-            } else if (isConnectingSession) {
-              console.log(`Queuing user text prompt while Gemini Live session establishes: "${parsed.text.slice(0, 50)}..."`);
-              pendingTextPrompts.push(parsed.text);
-            } else {
-              // Resilient fallback generation
-              try {
-                console.log(`Arohi Voice Fallback Engine processing prompt: "${parsed.text.slice(0, 50)}..."`);
-                const fallbackModels = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-                let replyText = "";
-                for (const fm of fallbackModels) {
-                  try {
-                    const response = await clientAi.models.generateContent({
-                      model: fm,
-                      contents: [
-                        { role: 'user', parts: [{ text: `${voiceSystemInstruction}\n\nUSER PROMPT: ${parsed.text}` }] }
-                      ]
-                    });
-                    if (response.text) {
-                      replyText = response.text;
-                      break;
-                    }
-                  } catch (fmErr) {
-                    console.warn(`Fallback model ${fm} failed in live-ws:`, fmErr);
-                  }
-                }
-                if (!replyText) {
-                  replyText = getArohiFallbackResponse(parsed.text || '');
-                }
-                if (clientWs.readyState === WebSocket.OPEN) {
-                  clientWs.send(JSON.stringify({ transcript: replyText, speaker: 'arohi' }));
-                }
-              } catch (fallbackErr) {
-                console.error("Error in Arohi Voice Fallback Engine:", fallbackErr);
-              }
-            }
-          }
-        } catch (err) {
-          console.error("Error forwarding user input to Arohi Live:", err);
-        }
-      });
-
-      clientWs.on("close", () => {
-        console.log("Client closed live voice WebSocket connection.");
-        try {
-          if (session) {
-            session.close();
-          }
-        } catch (err) {
-          // already closed
-        }
-      });
-
-    } catch (error: any) {
-      console.error("Failed to establish session with Gemini Live:", error);
-      logWsEvent('gemini_live_connection_failed', { error: error.message || error });
-      safeSendAndClose(
-        { error: `Failed to establish session with Arohi Live: ${error.message || error}` },
-        1011,
-        'Arohi Live connection failed'
-      );
-    }
-  });
-
-  const handleUpgrade = (request: any, socket: any, head: any) => {
-    try {
-      let pathname = '';
-      if (request.url) {
-        const urlPart = request.url.split('?')[0];
-        if (urlPart.startsWith('/') || !urlPart.includes('://')) {
-          pathname = urlPart;
-        } else {
-          try {
-            pathname = new URL(urlPart).pathname;
-          } catch (e) {
-            pathname = urlPart;
-          }
-        }
-      }
-
-      console.log(`WebSocket Upgrade Request: Pathname="${pathname}", Raw URL="${request.url}"`);
-      logWsEvent('upgrade_request', {
-        pathname,
-        url: request.url,
-        headers: {
-          host: request.headers?.host,
-          origin: request.headers?.origin,
-          upgrade: request.headers?.upgrade,
-          connection: request.headers?.connection,
-        }
-      });
-
-      const isLiveWsPath = pathname === '/api/live-ws' || 
-                           pathname === '/api/live-ws/' || 
-                           pathname.endsWith('/api/live-ws') || 
-                           pathname.endsWith('/api/live-ws/');
-
-      if (isLiveWsPath) {
-        logWsEvent('upgrade_matched', { pathname });
-        wss.handleUpgrade(request, socket, head, (ws) => {
-          wss.emit('connection', ws, request);
-        });
-      } else {
-        logWsEvent('upgrade_unmatched', { pathname });
-      }
-    } catch (err: any) {
-      console.error('Error in WebSocket upgrade handler:', err);
-      logWsEvent('upgrade_error', { error: err.message || err });
-    }
-  };
-
-  server.on('upgrade', handleUpgrade);
-  if (backupServer) {
-    backupServer.on('upgrade', handleUpgrade);
-  }
-}
-
-startServer();
+      xœŒVmoÛ6þž_qŠB\9†bpà­›­-ú†$M>EÂHg[Mz$ÏsýßwGJ²$]Œ ‘(ÞÛsÏ½ „_ª•Õ4F›8:çàL>Ÿ£ÉÕÖ(S½D˜DÇZA*¤dA…©GÃð$§GÐøíŽúŸïŠ‡S`t`¶HS´vVH¹uî óGü¬3”µäŽ»tñ’ÉÞ„Ú`ÛÐ-…uŸH2Ä1êjÓ³*äµ0*¾ûCä’pºŠ(˜÷‚ð|[»±ßkugÉ’¼s„Ÿ?ëÃFøU¸»£ò!ŸAüÌ’L®UÓãü{gÐ:q/s»€?q™«8*(5)ø`›sÐ
+¼á‰3¼D•½QÙTj‹ñ¼­1<ÕX»!œŸœ!º,íÓ—™ÿ+¿Î¼¦¨aÖ +Œ:íÂ@9/T&‘4­˜O%fF/!•9*7x©Ót¥\8¾±‰VqTJPÐÂnT
+q&œð\BnßæJ˜Íî5á*ìÉëÞÎlZ|á¼T2œK¯‹œ#@TŠzo‹Ù¼xü%‘¨æýk8æ£gþÌéKÇµG…›ýz[Æƒ„tgo(Uq´ƒ6S=¥áoÓÏ Š,'.
+õ Xæ©Ñ«…VØ’bÆ8¸_ýöŽ”>&‡ð1à:Þ™h ãJ‚í„Û=×ÚÅÌ@õð·$YøX"Ú
+éò%~P«ÂÅÝ›@ùÎr1å0íþ:üN7Húj³B¢¨e´J—§F8œœ¼:>>Ž†=2{T®ì~tŽv¿êV€Òâaº®ð/¿~©X1&ódŽ?¬Í•ê;”#g4÷Èå’è>èI Kâ”½^µ}“HÚ…±˜yš“¢FÙ¾Óe6ÿ‚]gŸÿ—†»ÑW½³[kÙz¯Çµï».‚Œ)E©TÂSâ¢×'Qiê«ž†„£=TâãI6Ó¥°h¨-¬¸îüyð·i{÷ƒþÄª¦”>B÷Cx6™PŸ#Züwz£7ÍÚx2íŠêSõ¤Á»ŸvÎÓªe³w BóPæ.ÝíËUðè)õõL?:ëkà)"ŒSš^CšÂên£®’zßM»Ö½†,¡"£t=ß²"šR^»»†W¤éÆž?2•¢àÎíÚÞMäÌšÞŒËÿgûÊ´RÝ7HªéL‰uÔ¿hzTiôV`BŠf…JyhFÝ¤·îÆ­”ö$‘ë´‰së#o2­÷¦7WMDÃòÃî/ü„6œÚJQåLÃZâ¶”¸õê=–åŽQÊ7j°}V}ª©1”8×ÎïáþÅs­ó›ÞÏê­¦^R°¹Â| nb”Ý&ø^!yT³w¿²ìÁ*Vs#2ä]Ø-Þ_]}£ô™G4GP>x¢—÷˜êÿ.hÍ‚õ*†°@‘58ßäS˜[ên¡-ß;îø¸†ïŸ*EIa$/,)¿[8·FLûð‘•£±ÉB“"¾%5-íü5j"ô¨Ò†'çH¬ò¯¼/×¶EÐµ%e†ï!¦þ€(ÐµíTr¦½²År{m¹Ú¼–fó¨Ÿ¦0¥â”z×95ä÷Ÿ/xÖjÊ€©3Rê³LîkQjhg	ªÇäË×wç·ç_®}[èKV·B·.1i<'´°Ê"CGdýåbIdi—p{çmVm€(!iZ6ûÚÞµË›%Û/S“f­_//=Ùøë   ÿÿ §ýp

@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Fullscreen
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -64,6 +64,8 @@ interface ArohiChatProps {
   onClose?: () => void;
   language?: Language;
   isDarkMode?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: (fullscreen: boolean) => void;
 }
 
 function getGmailWebUrl(mailtoUrl: string): string {
@@ -689,9 +691,20 @@ export function getConversationTopicTitle(chat?: SavedChat | { messages?: Messag
   return 'New Conversation';
 }
 
-export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en', isDarkMode = true }: ArohiChatProps) {
+export default function ArohiChat({ 
+  initialPrompt, 
+  onNavigateTab, 
+  onMinimize, 
+  onClose, 
+  language = 'en', 
+  isDarkMode = true,
+  isFullscreen: externalIsFullscreen,
+  onToggleFullscreen
+}: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
+  const [internalIsFullscreen, setInternalIsFullscreen] = useState(false);
+  const isFullscreen = externalIsFullscreen !== undefined ? externalIsFullscreen : internalIsFullscreen;
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
   const [is3DLearningOpen, setIs3DLearningOpen] = useState(false);
   const [active3DTopic, setActive3DTopic] = useState('human_heart');
@@ -699,6 +712,51 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [isMcpGatewayOpen, setIsMcpGatewayOpen] = useState(false);
   const [isWorkflowOrchestratorOpen, setIsWorkflowOrchestratorOpen] = useState(false);
   const [isRefreshingMemory, setIsRefreshingMemory] = useState(false);
+
+  // Toggle fullscreen / focus mode for chat window
+  const toggleFullscreen = () => {
+    const nextState = !isFullscreen;
+    if (onToggleFullscreen) {
+      onToggleFullscreen(nextState);
+    } else {
+      setInternalIsFullscreen(nextState);
+    }
+
+    if (nextState) {
+      // Optional native browser fullscreen request
+      try {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+    } else {
+      try {
+        if (document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+    }
+  };
+
+  // Keyboard shortcut listener: Escape key exits fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        if (onToggleFullscreen) {
+          onToggleFullscreen(false);
+        } else {
+          setInternalIsFullscreen(false);
+        }
+        try {
+          if (document.exitFullscreen && document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, onToggleFullscreen]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -728,7 +786,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     if (chatTextareaRef.current) {
       chatTextareaRef.current.style.height = 'auto';
       const scrollH = chatTextareaRef.current.scrollHeight;
-      chatTextareaRef.current.style.height = `${Math.min(Math.max(scrollH, 38), 135)}px`;
+      chatTextareaRef.current.style.height = `${Math.min(Math.max(scrollH, 38), 120)}px`;
     }
   };
 
@@ -743,6 +801,28 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [uploadedFile, setUploadedFile] = useState<{ name: string; mimeType: string; base64: string } | null>(null);
   const [isDownloadingResume, setIsDownloadingResume] = useState<string | null>(null);
   const [selectedAudienceCategory, setSelectedAudienceCategory] = useState<string>('all');
+
+  // ChatGPT-Style Expandable Attachment Menu State & Input Refs
+  const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
+  const attachMenuRef = useRef<HTMLDivElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const photosInputRef = useRef<HTMLInputElement | null>(null);
+  const filesInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Close attachment menu when clicking outside
+  useEffect(() => {
+    const handleClickOutsideAttachMenu = (event: MouseEvent) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
+        setIsAttachMenuOpen(false);
+      }
+    };
+    if (isAttachMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutsideAttachMenu);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideAttachMenu);
+    };
+  }, [isAttachMenuOpen]);
 
   // Gemini Style Interactive States
   const [likedMessageIds, setLikedMessageIds] = useState<string[]>([]);
@@ -3211,7 +3291,11 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
   }
 
   return (
-    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
+    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${
+      isFullscreen 
+        ? 'fixed inset-0 z-[100] w-screen h-screen h-[100dvh] max-h-[100dvh] bg-black' 
+        : ''
+    } ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
       {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
       <aside 
@@ -3722,6 +3806,24 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Fullscreen / Focus Mode Toggle Button */}
+            <button
+              type="button"
+              id="arohi-chat-fullscreen-toggle-btn"
+              onClick={toggleFullscreen}
+              className={`p-2 rounded-full ${
+                isFullscreen 
+                  ? (isDarkMode ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.5)]' : 'bg-purple-600 text-white shadow-md')
+                  : (isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/70' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200')
+              } border transition-all cursor-pointer flex items-center gap-1`}
+              title={isFullscreen ? "Exit Fullscreen Focus Mode (Esc)" : "Full Screen Focus Mode (F11 / Focus)"}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              <span className={`text-[11px] font-semibold hidden md:inline pr-1 ${isFullscreen ? 'text-white' : (isDarkMode ? 'text-zinc-200' : 'text-zinc-800')}`}>
+                {isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}
+              </span>
+            </button>
+
             <button
               onClick={() => setIsVoiceCallOpen(true)}
               className={`p-2 rounded-full ${isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-emerald-400 border-zinc-700/70' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5`}
@@ -3833,6 +3935,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-blue-400" /> Clear Messages
+                  </button>
+                  <button
+                    onClick={() => {
+                      toggleFullscreen();
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
+                  >
+                    {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-purple-400" /> : <Maximize2 className="w-3.5 h-3.5 text-purple-400" />}
+                    <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}</span>
                   </button>
                   {onMinimize && (
                     <button
@@ -4260,35 +4372,141 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
 
           {/* Floating Minimalist Capsule Dock */}
-          <div className={`${
-            recording
-              ? 'bg-zinc-900 border-rose-500/70 shadow-2xl ring-2 ring-rose-500/40'
-              : isDarkMode 
-                ? 'bg-[#18181b] border-zinc-800/90 shadow-2xl' 
-                : 'bg-white border-zinc-300 shadow-xl'
-          } border rounded-3xl p-1.5 sm:p-2 flex items-end gap-1.5 sm:gap-2 transition-all`}>
+          <div 
+            id="chat-input-bar-container"
+            className={`${
+              recording
+                ? 'bg-zinc-900 border-rose-500/70 shadow-xl ring-2 ring-rose-500/40'
+                : isDarkMode 
+                  ? 'bg-[#18181b] border-zinc-800/90 shadow-lg shadow-black/40' 
+                  : 'bg-white border-zinc-200/90 shadow-md shadow-zinc-300/30'
+            } border rounded-[22px] sm:rounded-[26px] px-2 py-1 sm:px-2.5 sm:py-1.5 flex items-end gap-1 sm:gap-1.5 transition-all`}
+          >
             
-            {/* Camera / Vision Stream Button */}
-            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-zinc-800/60 hover:bg-zinc-700/70 text-zinc-400 hover:text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900'} rounded-full transition-colors cursor-pointer shrink-0 mb-0.5`} title="Camera / Vision Upload">
-              <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleFileUpload} 
-                className="hidden" 
-              />
-            </label>
+            {/* ChatGPT-Style Expandable Attachment Menu (+) */}
+            <div className="relative shrink-0 flex items-center mb-0.5" ref={attachMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsAttachMenuOpen(prev => !prev)}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                  isAttachMenuOpen
+                    ? (isDarkMode ? 'bg-zinc-700 text-white rotate-45 shadow-sm ring-2 ring-purple-500/40' : 'bg-zinc-300 text-zinc-950 rotate-45 shadow-sm')
+                    : (isDarkMode ? 'bg-zinc-800/70 hover:bg-zinc-700 text-zinc-300 hover:text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900')
+                }`}
+                title="Add files, photos, or capture with camera"
+                aria-label="Attachment options"
+              >
+                <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform duration-200" />
+              </button>
 
-            {/* Document Upload Button */}
-            <label className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-zinc-800/60 hover:bg-zinc-700/70 text-zinc-400 hover:text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900'} rounded-full transition-colors cursor-pointer shrink-0 mb-0.5`} title="Attach Document">
-              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
-              <input 
-                type="file" 
-                accept=".pdf,.docx,.txt,image/*" 
-                onChange={handleFileUpload} 
-                className="hidden" 
+              {/* Hidden File Inputs */}
+              {/* 1. Camera Capture */}
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  handleFileUpload(e);
+                  setIsAttachMenuOpen(false);
+                }}
+                className="hidden"
               />
-            </label>
+
+              {/* 2. Photos / Gallery */}
+              <input
+                ref={photosInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  handleFileUpload(e);
+                  setIsAttachMenuOpen(false);
+                }}
+                className="hidden"
+              />
+
+              {/* 3. Files & Documents */}
+              <input
+                ref={filesInputRef}
+                type="file"
+                accept=".pdf,.docx,.doc,.txt,.csv,.xlsx,.pptx,image/*"
+                onChange={(e) => {
+                  handleFileUpload(e);
+                  setIsAttachMenuOpen(false);
+                }}
+                className="hidden"
+              />
+
+              {/* Expandable Menu Popover (Smooth Fade & Scale Animation) */}
+              {isAttachMenuOpen && (
+                <div 
+                  className={`absolute bottom-full left-0 mb-3 w-48 sm:w-52 rounded-2xl shadow-2xl border p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl ${
+                    isDarkMode 
+                      ? 'bg-[#1e1e24]/95 border-zinc-700/80 text-zinc-100 shadow-black/60' 
+                      : 'bg-white/95 border-zinc-200 text-zinc-900 shadow-zinc-400/30'
+                  }`}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    {/* Option 1: Camera */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAttachMenuOpen(false);
+                        cameraInputRef.current?.click();
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      }`}>
+                        <Camera className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-semibold text-[13px]">Camera</span>
+                    </button>
+
+                    {/* Option 2: Photos */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAttachMenuOpen(false);
+                        photosInputRef.current?.click();
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      }`}>
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-semibold text-[13px]">Photos</span>
+                    </button>
+
+                    {/* Option 3: Files */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAttachMenuOpen(false);
+                        filesInputRef.current?.click();
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      }`}>
+                        <Paperclip className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-semibold text-[13px]">Files</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Text Input / Multi-line Area with Scrollbar */}
             <div className="flex-1 min-w-0 flex items-center py-0.5">
@@ -4302,7 +4520,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   adjustChatTextareaHeight();
                 }}
                 onKeyDown={handleKeyPress}
-                className={`w-full bg-transparent px-2.5 sm:px-3 py-1.5 text-[15px] sm:text-[16px] leading-relaxed max-h-36 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
+                className={`w-full bg-transparent px-2 sm:px-2.5 py-1 text-[14px] sm:text-[14.5px] leading-[20px] max-h-32 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
                   recording 
                     ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
                     : isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
@@ -4313,23 +4531,24 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             {/* Microphone Speech to Text Button */}
             <button
               onClick={toggleRecording}
-              className={`p-2.5 sm:p-3 rounded-full transition-all shrink-0 cursor-pointer mb-0.5 ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all shrink-0 cursor-pointer flex items-center justify-center mb-0.5 ${
                 recording 
-                  ? 'bg-rose-600 text-white animate-pulse shadow-lg ring-4 ring-rose-500/40' 
-                  : (isDarkMode ? 'bg-zinc-800/60 hover:bg-zinc-700/70 text-zinc-400 hover:text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900')
+                  ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-500/40' 
+                  : (isDarkMode ? 'bg-zinc-800/70 hover:bg-zinc-700 text-zinc-300 hover:text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900')
               }`}
               title={recording ? "Stop listening" : "Speech to text (Voice Input)"}
             >
-              <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${recording ? 'animate-bounce' : ''}`} />
+              <Mic className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${recording ? 'animate-bounce' : ''}`} />
             </button>
 
             {/* Send Button */}
             <button
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !uploadedFileName) || isLoading}
-              className={`p-2.5 sm:p-3 ${isDarkMode ? 'bg-zinc-100 hover:bg-white text-zinc-950 disabled:bg-zinc-800 disabled:text-zinc-600' : 'bg-zinc-900 hover:bg-zinc-800 text-white disabled:bg-zinc-200 disabled:text-zinc-400'} rounded-full shadow-md cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 ${isDarkMode ? 'bg-zinc-100 hover:bg-white text-zinc-950 disabled:bg-zinc-800/80 disabled:text-zinc-600' : 'bg-zinc-900 hover:bg-zinc-800 text-white disabled:bg-zinc-200 disabled:text-zinc-400'} rounded-full shadow-sm cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5`}
+              title="Send message"
             >
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 

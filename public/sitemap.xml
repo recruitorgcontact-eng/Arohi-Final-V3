@@ -8,7 +8,7 @@
   <!-- ============================================================ -->
   <url>
     <loc>https://arohiai.com/</loc>
-    <lastmod>2026-08-27</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/" />
@@ -28,6 +28,60 @@
     <xhtml:link rel="alternate" hreflang="fr" href="https://arohiai.com/?lang=fr" />
     <xhtml:link rel="alternate" hreflang="de" href="https://arohiai.com/?lang=de" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship 2: Mission 87 — National Economic Activation Portal -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/mission-87</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.99</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/mission-87?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/mission-87?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/mission-87?lang=or" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://arohiai.com/mission-87?lang=bn" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://arohiai.com/mission-87?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://arohiai.com/mission-87?lang=te" />
+    <xhtml:link rel="alternate" hreflang="mr" href="https://arohiai.com/mission-87?lang=mr" />
+    <xhtml:link rel="alternate" hreflang="kn" href="https://arohiai.com/mission-87?lang=kn" />
+    <xhtml:link rel="alternate" hreflang="ml" href="https://arohiai.com/mission-87?lang=ml" />
+    <xhtml:link rel="alternate" hreflang="gu" href="https://arohiai.com/mission-87?lang=gu" />
+    <xhtml:link rel="alternate" hreflang="pa" href="https://arohiai.com/mission-87?lang=pa" />
+    <xhtml:link rel="alternate" hreflang="as" href="https://arohiai.com/mission-87?lang=as" />
+    <xhtml:link rel="alternate" hreflang="ur" href="https://arohiai.com/mission-87?lang=ur" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/mission-87" />
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87/tracks/ai-digital-business</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87/tracks/green-economy-agritech</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87/tracks/micro-manufacturing</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87/tracks/hyperlocal-commerce</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87/futuremap-diagnostic</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
   </url>
 
   <!-- ============================================================ -->
@@ -241,11 +295,215 @@
   </url>
 
   <!-- ============================================================ -->
-  <!-- Regional State & City Deep SEO Portals -->
+  <!-- Regional State & City Deep SEO Portals (All 28 States & 8 UTs) -->
   <!-- ============================================================ -->
   <url>
+    <loc>https://arohiai.com/mission-87?state=uttar-pradesh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=maharashtra</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=odisha</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=bihar</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=tamil-nadu</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=karnataka</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=gujarat</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=rajasthan</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=madhya-pradesh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=west-bengal</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=telangana</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=andhra-pradesh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=punjab</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=haryana</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=kerala</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=assam</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=jharkhand</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=chhattisgarh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=uttarakhand</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=himachal-pradesh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=goa</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=tripura</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=meghalaya</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=manipur</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=nagaland</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=arunachal-pradesh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=mizoram</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=sikkim</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=delhi-ncr</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=jammu-and-kashmir</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=ladakh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=chandigarh</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=puducherry</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/mission-87?state=andaman-and-nicobar</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+  </url>
+  <url>
     <loc>https://arohiai.com/?seo_region=odisha</loc>
-    <lastmod>2026-08-27</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>

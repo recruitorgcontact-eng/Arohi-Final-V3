@@ -29,7 +29,31 @@ class ArohiArenaVoiceEngine {
       window.addEventListener('pointerdown', unlockAudio, { once: true });
       window.addEventListener('touchstart', unlockAudio, { once: true });
       window.addEventListener('click', unlockAudio, { once: true });
+
+      // Preload Flagship Arohi Zypher welcome audio into cache for instant HD playback
+      this.preloadWelcomeAudio();
     }
+  }
+
+  private async preloadWelcomeAudio() {
+    const welcomeText = "Welcome to Arohi Exams Gaming Arena! I am Arohi. Compete in live One v One duels, conquer Boss Battles, master your weak concepts, and climb the National Leaderboard to win real cash prizes!";
+    const cacheKey = welcomeText.toLowerCase();
+    try {
+      const response = await fetch('/api/tts/arohi-zypher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: welcomeText, voice: 'Zypher' })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.audioBase64) {
+          const buffer = this.createBufferFromPcm(data.audioBase64, data.sampleRate || 24000);
+          if (buffer) {
+            this.audioCache.set(cacheKey, buffer);
+          }
+        }
+      }
+    } catch {}
   }
 
   private initAudioContext(): AudioContext | null {
@@ -559,7 +583,7 @@ class ArohiArenaVoiceEngine {
   // Pre-crafted announcements voiced with natural Arohi encouragement
   public announceArenaWelcome() {
     this.speak(
-      "Welcome to Arohi Exams Gaming Arena! Compete in live One v One duels, conquer Boss Battles, master weak concepts, and climb the National Leaderboard to win real cash prizes!"
+      "Welcome to Arohi Exams Gaming Arena! I am Arohi. Compete in live One v One duels, conquer Boss Battles, master your weak concepts, and climb the National Leaderboard to win real cash prizes!"
     );
   }
 
