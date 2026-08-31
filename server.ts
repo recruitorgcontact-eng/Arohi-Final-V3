@@ -1,4 +1,4 @@
-ï»¿import express from 'express';
+import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -10,6 +10,7 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { WebSocketServer, WebSocket } from 'ws';
+import { setupLiveWebSocketServer } from './src/server/live-ws.ts';
 
 dotenv.config();
 
@@ -10643,404 +10644,13 @@ async function startServer() {
   });
 
   // Setup WebSocket server for Gemini Live Audio Bidirectional Streaming
-  const wss = new WebSocketServer({ noServer: true });
-
-  wss.on('error', (err) => {
-    console.error('WebSocket Server error:', err);
+  setupLiveWebSocketServer(server, {
+    getAiClient,
+    AROHI_SYSTEM_INSTRUCTION,
+    safeUserDb,
+    getArohiFallbackResponse,
+    logWsEvent,
   });
+}
 
-  wss.on('connection', async (clientWs: WebSocket, request) => {
-    console.log('Client connected to live audio WebSocket');
-    logWsEvent('connection_started', { url: request.url });
-
-    // Prevent uncaught socket-level errors from crashing the Node.js process
-    clientWs.on('error', (err: any) => {
-      console.error('Client WebSocket connection error:', err);
-      logWsEvent('client_ws_error', { error: err.message || err });
-    });
-
-    const safeSendAndClose = (msgObj: any, closeCode = 1000, closeReason = '') => {
-      try {
-        logWsEvent('safe_send_and_close', { msgObj, closeCode, closeReason });
-        if (clientWs.readyState === WebSocket.OPEN) {
-          clientWs.send(JSON.stringify(msgObj), () => {
-            setTimeout(() => {
-              try {
-                clientWs.close(closeCode, closeReason);
-              } catch (e) {}
-            }, 200);
-          });
-        } else {
-          setTimeout(() => {
-            try {
-              clientWs.close(closeCode, closeReason);
-            } catch (e) {}
-          }, 200);
-        }
-      } catch (err) {
-        console.error('Error flushing message and closing WebSocket:', err);
-        logWsEvent('safe_send_and_close_err', { error: err instanceof Error ? err.message : String(err) });
-      }
-    };
-    
-    // Parse the voice, uid, and lang parameters safely from the query string
-    let selectedVoice = 'Zypher';
-    let uid = '';
-    let reqLang = 'en';
-    if (request.url) {
-      const match = request.url.match(/[?&]voice=([^&]+)/);
-      if (match) {
-        selectedVoice = decodeURIComponent(match[1]);
-      }
-      const uidMatch = request.url.match(/[?&]uid=([^&]+)/);
-      if (uidMatch) {
-        uid = decodeURIComponent(uidMatch[1]);
-      }
-      const langMatch = request.url.match(/[?&]lang=([^&]+)/);
-      if (langMatch) {
-        reqLang = decodeURIComponent(langMatch[1]);
-      }
-    }
-
-    const modeMatch = request.url.match(/[?&]mode=([^&]+)/);
-    const isReadAloud = /[?&](mode=read_aloud|tts=true|read_aloud=true)/i.test(request.url);
-
-    // Map requested voice (Zephyr/Zypher/custom) to a valid Gemini Multimodal Live API voiceName
-    // Prebuilt voice options accepted by Gemini Live API: 'Aoede', 'Kore', 'Puck', 'Charon', 'Fenrir'
-    // 'Aoede' is Gemini's sweet, expressive, young female voice persona â€” perfectly matching Arohi
-    const ALLOWED_GEMINI_LIVE_VOICES = ['Aoede', 'Kore', 'Puck', 'Charon', 'Fenrir'];
-    let apiVoiceName = 'Aoede';
-    if (ALLOWED_GEMINI_LIVE_VOICES.includes(selectedVoice)) {
-      apiVoiceName = selectedVoice;
-    } else {
-      apiVoiceName = 'Aoede'; // Map Zephyr/Zypher to 'Aoede' so Gemini Live WS never fails
-    }
-
-    const clientAi = getAiClient('v1alpha');
-    if (!clientAi) {
-      logWsEvent('get_ai_client_failed', { reason: 'No GEMINI_API_KEY env or helper' });
-      safeSendAndClose(
-        { error: 'Arohi AI live voice service is currently initializing. Please try again shortly.' },
-        1011,
-        'Voice service initializing'
-      );
-      return;
-    }
-
-    try {
-      console.log(`Connecting to Gemini Live API with voice: ${selectedVoice}, uid: ${uid}, lang: ${reqLang}, isReadAloud: ${isReadAloud}`);
-      logWsEvent('gemini_live_connecting', { voice: selectedVoice, uid, lang: reqLang, isReadAloud });
-
-      let voiceSystemInstruction = isReadAloud
-        ? "You are Arohi â€” India's sweet, warm, loving, multi-lingual AI voice guide (voice persona: Zypher). YOUR SOLE MANDATE IS TO READ ALOUD THE EXACT TEXT SENT BY THE USER WORD-FOR-WORD WITH FLAWLESS, NATURAL NATIVE PRONUNCIATION IN WHICHEVER LANGUAGE OR SCRIPT IT IS WRITTEN IN (including Odia - à¬“à¬¡à¬¼à¬¿à¬†, Bengali - à¦¬à¦¾à¦‚à¦²à¦¾, Hindi - à¤¹à¤¿à¤‚à¤¦à¥€, Tamil - à®¤à®®à®¿à®´à¯, Telugu - à°¤à±†à°²à±à°—à±, Marathi, Gujarati, Punjabi, Urdu, Chinese - ä¸­æ–‡, Japanese - æ—¥æœ¬èª, Korean, Spanish, French, German, Arabic, English, or any script). DO NOT TRANSLATE. DO NOT ADD ANY PREAMBLE, GREETING, INTRO, OUTRO, OR COMMENTARY. DO NOT ALTER, SUMMARIZE, OR SKIP ANY WORDS. SIMPLY READ THE ENTIRE PROVIDED TEXT ALOUD OUT LOUD IN ITS ORIGINAL SPOKEN LANGUAGE WITH PERFECT NATIVE ACCENT AND PRONUNCIATION."
-        : AROHI_SYSTEM_INSTRUCTION + 
-        "\n\nCRITICAL REAL-TIME VOICE BARGE-IN & INTERACTIVE LISTENING MANDATE:" +
-        "\n- ALWAYS REMAIN 100% ATTENTIVE AND RESPONSIVE TO THE USER'S SPOKEN VOICE IN REAL-TIME!" +
-        "\n- IF THE USER SPEAKS, ASKS A QUESTION, OR INTERRUPTS YOU AT ANY MOMENT DURING A CALL (even while you are giving your welcome greeting, telling a story, or reciting a speech), YOU MUST IMMEDIATELY PAUSE YOUR SPEAKING, LISTEN ATTENTIVELY TO WHAT THE USER SAYS, AND RESPOND DIRECTLY TO THEIR SPOKEN WORDS!" +
-        "\n- NEVER ignore the user's voice input or continue talking over them when they speak into their microphone." +
-        "\n\nCRITICAL VOICE INITIALIZATION, PERSONA & VOICE STYLE RULES:" +
-        "\n- PERSONA & CHARACTER: You are speaking as Arohi â€” a vibrant, mesmerizing, young Desi Indian woman (around 30 years old) with a sweet, loving, happy, joyful, and affectionate voice and presence." +
-        "\n- TONE & DELIVERY: Speak with clean warmth, professional enthusiasm, and clear articulation. Speak naturally and directly to the user. Do NOT use repetitive forced filler greetings like 'Namaste ji!', 'Namaskar ji!', or 'Haan ji!'." +
-        "\n- For standard casual conversational Q&A, keep responses clear, warm, and conversational (2-4 sentences)." +
-        "\n- STRICT NON-STOP STORYTELLING & SPEECH MANDATE: You are granted EXPLICIT SPECIAL PERMISSION to recite and narrate long stories and speeches during voice calls! When the user asks you to give a speech for students/startups, address an auditorium, tell a story, or recite 'The Story of Tomorrow' or 'The AI Revolution â€“ A Story of the Next Business Era' (in Odia, Hindi, English, or ANY language), ONCE A STORY HAS BEEN INITIATED, ALL 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR 'Are you listening?' PROMPTS ARE STRICTLY DISABLED AND FORBIDDEN! YOU MUST NARRATE THE ENTIRE STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE UNBROKEN STREAM WITHOUT EVER STOPPING TO ASK 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR ANY OTHER CONTINUATION OR PRESENCE QUESTION! Recite the complete unabridged narrative from beginning to end in full scale without stopping midway. Take whatever time is needed (10, 12, 15+ minutes or as long as it takes). NEVER ask 'Are you still there?' or 'Should I continue?'. ONLY pause if the user actively interrupts or speaks into their microphone!" +
-        "\n\n=== INITIAL CALL WELCOME & DYNAMIC REAL-TIME MULTILINGUAL ADAPTATION ===" +
-        "\n- WELCOME GREETING IN ENGLISH: ALWAYS begin incoming voice calls with a warm, cheerful, and natural welcoming greeting in ENGLISH (e.g., 'Hello! I am Arohi, your AI guide. How can I help you today?')." +
-        "\n- INSTANT DYNAMIC MULTILINGUAL ADAPTATION: You are fully multilingual across 150+ languages (English, Hindi/à¤¹à¤¿à¤‚à¤¦à¥€, Odia/à¬“à¬¡à¬¼à¬¿à¬†, Bengali/à¦¬à¦¾à¦‚à¦²à¦¾, Telugu/à°¤à±†à°²à±à°—à±, Tamil/à®¤à®®à®¿à®´à¯, Marathi/à¤®à¤°à¤¾à¤ à¥€, Gujarati/àª—à«àªœàª°àª¾àª¤à«€, Kannada, Malayalam, Punjabi, Urdu, Spanish, French, German, Japanese, and more)." +
-        "\n- AS SOON AS THE USER SPEAKS IN ANY REGIONAL OR GLOBAL LANGUAGE (such as Odia, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, etc., or spoken/transliterated words like 'kemiti achha', 'mote business kariba ku achhi', 'mujhe guidance chahiye', 'state schemes bisayare kuha'), YOU MUST IMMEDIATELY AND SEAMLESSLY PIVOT TO REPLY IN THAT EXACT USER'S SPOKEN LANGUAGE with native fluency, sweet tone, and warmth!" +
-        "\n- If the user speaks English, continue answering in English. If the user changes language at any time during the conversation, switch immediately to match their spoken language on that very turn!" +
-        "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'â€”ALWAYS search Google and provide accurate, up-to-the-second news!";
-
-      if (uid && !isReadAloud) {
-        try {
-          const userPromise = safeUserDb.get(uid);
-          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 600));
-          const userSnap: any = await Promise.race([userPromise, timeoutPromise]);
-          if (userSnap && userSnap.exists) {
-            const userData = userSnap.data();
-            const displayName = userData.displayName || '';
-            const profile = userData.profile || {};
-            const rawProfile = userData.profile || {};
-            const cleanProf = {
-              name: rawProfile.name || '',
-              activeGoal: (rawProfile.activeGoal === 'Skills, Courses & Career Preparation' || rawProfile.activeGoal === 'Mudra Loan Business & Franchise Setup' || (rawProfile.activeGoal || '').toLowerCase() === 'career upskilling') ? '' : (rawProfile.activeGoal || '').trim(),
-              location: (rawProfile.location === 'Delhi NCR' || rawProfile.location === 'Delhi') ? '' : (rawProfile.location || '').trim(),
-              education: (rawProfile.education === 'Graduate' || rawProfile.education === 'Business Owner') ? '' : (rawProfile.education || '').trim()
-            };
-            const activeGoal = cleanProf.activeGoal;
-            const education = cleanProf.education;
-            const location = cleanProf.location;
-            
-            let voiceMemory = `\n\n=== USER IDENTITY & NATURAL MEMORY CONTEXT ===`;
-            voiceMemory += `\n* Name: ${displayName || 'Honored Guest'}`;
-            if (activeGoal) voiceMemory += `\n* Active Career/Interest Target: ${activeGoal}`;
-            if (education) voiceMemory += `\n* Education Background: ${education}`;
-            if (location) voiceMemory += `\n* Location: ${location}`;
-            
-            // Summarize past chats (Lifetime memory)
-            if (userData.arohiChats && userData.arohiChats.length > 0) {
-              voiceMemory += `\n\n=== PAST CHAT HIGHLIGHTS ===`;
-              userData.arohiChats.slice(-3).forEach((chat: any) => {
-                voiceMemory += `\n* Chat "${chat.title}" [Date: ${chat.date || 'Recent'}] is saved in lifetime memory.`;
-              });
-            }
-            
-            // Summarize past voice calls (Lifetime memory)
-            if (userData.arohiCalls && userData.arohiCalls.length > 0) {
-              voiceMemory += `\n\n=== PAST VOICE CALL SUMMARIES ===`;
-              userData.arohiCalls.slice(-3).forEach((call: any) => {
-                if (call.summaryText) {
-                  voiceMemory += `\n* Call [${call.date || 'Recent'}]: ${call.summaryText.replace(/\n/g, ' ')}`;
-                }
-              });
-            }
-
-            voiceMemory += `\n\nAROHI VOICE MEMORY DIRECTIONS: Warmly greet the user ("${displayName}") and maintain high empathy and intelligence. Never assume or fix a default city (like Delhi) or career goal unless the user explicitly provided it. Arohi naturally discovers the user's location and interests from what they share in speech and chat. If they refer to past chats or voice calls listed above, confirm your recollection beautifully and provide helpful continuity. Maintain a highly warm, positive, inspirational, and engaging tone.`;
-            
-            voiceSystemInstruction += voiceMemory;
-          }
-        } catch (memErr: any) {
-          console.error("Error loading voice call memory context in live-ws:", memErr);
-          logWsEvent('voice_memory_error', { error: memErr.message || memErr });
-        }
-      }
-
-      const liveModelsToTry = [
-        "gemini-3.1-flash-live-preview"
-      ];
-
-      let session: any = null;
-      let lastLiveError: any = null;
-      const pendingTextPrompts: string[] = [];
-      let isConnectingSession = true;
-
-      for (const liveModel of liveModelsToTry) {
-        try {
-          console.log(`Connecting to Gemini Live API with voice: ${selectedVoice}, model: ${liveModel}`);
-          logWsEvent('gemini_live_connecting_model', { voice: selectedVoice, model: liveModel });
-
-          // We await a Promise that resolves once the session is successfully opened and stable
-          const establishedSession = await new Promise<any>(async (resolve, reject) => {
-            let finished = false;
-            let tempSession: any = null;
-            let stabilityTimeout: NodeJS.Timeout | null = null;
-
-            try {
-              tempSession = await clientAi.live.connect({
-                model: liveModel,
-                config: {
-                  responseModalities: [Modality.AUDIO],
-                  speechConfig: {
-                    voiceConfig: { prebuiltVoiceConfig: { voiceName: apiVoiceName } },
-                  },
-                  systemInstruction: voiceSystemInstruction,
-                  inputAudioTranscription: {},
-                  outputAudioTranscription: {},
-                },
-                callbacks: {
-                  onopen: () => {
-                    console.log(`Gemini Live session opened with model: ${liveModel}, waiting for stability...`);
-                    logWsEvent('gemini_live_session_open', { model: liveModel });
-                    
-                    stabilityTimeout = setTimeout(() => {
-                      if (!finished) {
-                        finished = true;
-                        console.log(`Gemini Live session stable on model: ${liveModel}`);
-                        resolve(tempSession);
-                      }
-                    }, 400); // Wait 400ms to ensure the connection is stable and not immediately closed by validation
-                  },
-                  onmessage: (message: any) => {
-                    // Check for GoAway frame or session completion signal from Gemini Live API
-                    if (message.goAway || message.serverContent?.goAway) {
-                      console.log(`Received GoAway signal from Gemini Live model ${liveModel}. Gracefully closing session...`);
-                      logWsEvent('gemini_live_goaway_received', { model: liveModel });
-                      try {
-                        if (tempSession && typeof tempSession.close === 'function') {
-                          tempSession.close();
-                        }
-                      } catch (e) {}
-                      if (clientWs.readyState === WebSocket.OPEN) {
-                        try {
-                          clientWs.close(1000, "Live session reached maximum duration limit");
-                        } catch (e) {}
-                      }
-                      return;
-                    }
-
-                    // Forward audio data to client safely from all parts
-                    if (message.serverContent?.modelTurn?.parts) {
-                      for (const part of message.serverContent.modelTurn.parts) {
-                        if (part.inlineData?.data && clientWs.readyState === WebSocket.OPEN) {
-                          try {
-                            clientWs.send(JSON.stringify({ audio: part.inlineData.data }));
-                          } catch (e) {
-                            console.error("Error sending live audio packet:", e);
-                          }
-                        }
-                      }
-                    }
-                    if (message.serverContent?.interrupted && clientWs.readyState === WebSocket.OPEN) {
-                      try {
-                        clientWs.send(JSON.stringify({ interrupted: true }));
-                      } catch (e) {}
-                    }
-
-                    // Extract transcripts of what is being spoken (user & model)
-                    let transcriptText = "";
-                    let transcriptSpeaker: "user" | "arohi" | null = null;
-
-                    // 1. Check outputAudioTranscription (Gemini Live API's output speech transcription)
-                    if (message.serverContent?.outputAudioTranscription?.text) {
-                      transcriptText += message.serverContent.outputAudioTranscription.text;
-                      transcriptSpeaker = "arohi";
-                    }
-
-                    // 2. Check inputAudioTranscription (Gemini Live API's input speech transcription)
-                    if (message.serverContent?.inputAudioTranscription?.text) {
-                      transcriptText += message.serverContent.inputAudioTranscription.text;
-                      transcriptSpeaker = "user";
-                    }
-
-                    // 3. Check userTurn in serverContent (Standard Multimodal Live API response)
-                    if (!transcriptText && message.serverContent?.userTurn?.parts) {
-                      for (const part of message.serverContent.userTurn.parts) {
-                        if (part.text) {
-                          transcriptText += part.text;
-                          transcriptSpeaker = "user";
-                        }
-                      }
-                    }
-
-                    // 4. Check legacy / alternative userContent.parts
-                    if (!transcriptText && message.userContent?.parts) {
-                      for (const part of message.userContent.parts) {
-                        if (part.text) {
-                          transcriptText += part.text;
-                          transcriptSpeaker = "user";
-                        }
-                      }
-                    }
-
-                    // 5. Check modelTurn in serverContent (text parts)
-                    if (!transcriptText && message.serverContent?.modelTurn?.parts) {
-                      for (const part of message.serverContent.modelTurn.parts) {
-                        if (part.text) {
-                          transcriptText += part.text;
-                          transcriptSpeaker = "arohi";
-                        }
-                      }
-                    }
-
-                    // 6. Check top-level or delta text
-                    if (!transcriptText && message.text) {
-                      transcriptText = message.text;
-                      transcriptSpeaker = "arohi";
-                    } else if (!transcriptText && message.delta?.text) {
-                      transcriptText = message.delta.text;
-                      transcriptSpeaker = "arohi";
-                    }
-
-                    if (transcriptText && clientWs.readyState === WebSocket.OPEN) {
-                      try {
-                        clientWs.send(JSON.stringify({ transcript: transcriptText, speaker: transcriptSpeaker }));
-                      } catch (e) {}
-                    }
-
-                    // 7. Check if turnComplete
-                    if (message.serverContent?.turnComplete && clientWs.readyState === WebSocket.OPEN) {
-                      try {
-                        clientWs.send(JSON.stringify({ turnComplete: true }));
-                      } catch (e) {}
-                    }
-                  },
-                  onerror: (err: any) => {
-                    console.error(`Gemini Live session connection error on model ${liveModel}:`, err);
-                    logWsEvent('gemini_live_session_error', { model: liveModel, error: err?.message || err });
-                    
-                    if (!finished) {
-                      finished = true;
-                      if (stabilityTimeout) clearTimeout(stabilityTimeout);
-                      reject(err || new Error(`Connection error on ${liveModel}`));
-                    } else {
-                      if (clientWs.readyState === WebSocket.OPEN) {
-                        try {
-                          clientWs.send(JSON.stringify({ error: `Arohi Live session error: ${err?.message || err}` }));
-                        } catch (e) {}
-                      }
-                    }
-                  },
-                  onclose: (event: any) => {
-                    const isGoAwayOrTimeout = event?.code === 1008 || (event?.reason && (event.reason.includes('GoAway') || event.reason.includes('duration limit')));
-                    console.log(`Gemini Live session closed on model ${liveModel}. Code: ${event?.code}, Reason: ${event?.reason}`);
-                    logWsEvent('gemini_live_session_closed', { model: liveModel, code: event?.code, reason: event?.reason, isGoAwayOrTimeout });
-                    
-                    if (!finished) {
-                      finished = true;
-                      if (stabilityTimeout) clearTimeout(stabilityTimeout);
-                      reject(new Error(`Session closed pre-handshake: ${event?.reason || 'Code ' + event?.code}`));
-                    } else {
-                      try {
-                        if (tempSession && typeof tempSession.close === 'function') {
-                          tempSession.close();
-                        }
-                      } catch (e) {}
-                      if (clientWs.readyState === WebSocket.OPEN) {
-                        try {
-                          const clientCloseCode = isGoAwayOrTimeout ? 1000 : (event?.code || 1000);
-                          const clientCloseReason = isGoAwayOrTimeout ? "Live session reached duration limit" : (event?.reason || "Gemini Live session closed");
-                          clientWs.close(clientCloseCode, clientCloseReason);
-                        } catch (e) {}
-                      }
-                    }
-                  }
-                },
-              });
-              session = tempSession;
-            } catch (err) {
-              if (!finished) {
-                finished = true;
-                if (stabilityTimeout) clearTimeout(stabilityTimeout);
-                reject(err);
-              }
-            }
-          });
-
-          session = establishedSession;
-          isConnectingSession = false;
-          console.log(`Gemini Live session connected successfully with model: ${liveModel}`);
-          logWsEvent('gemini_live_connected', { voice: selectedVoice, model: liveModel });
-
-          // Flush any pending text prompts queued while connecting or trigger instant initial welcome greeting
-          if (pendingTextPrompts.length > 0) {
-            while (pendingTextPrompts.length > 0) {
-              const queuedText = pendingTextPrompts.shift();
-              if (queuedText && session) {
-                try {
-                  session.sendClientContent({
-                    turns: [{ role: 'user', parts: [{ text: queuedText }] }],
-                    turnComplete: true
-                  });
-                  console.log(`Flushed queued user text prompt to Gemini Live session: "${queuedText.slice(0, 50)}..."`);
-                } catch (qErr) {
-                  console.error("Error flushing queued text to Gemini Live session:", qErr);
-                }
-              }
-            }
-          } else if (!isReadAloud && session) {
-            // Instantly start talking when call connects (< 200ms) with a natural warm hello
-            try {
-              const greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
-              
-              session.sendClientContent({
-                turns: [{ role: 'user', parts: [{ text: greetingInstruction }] }],
-                turnComplete: true
-              });
-              console.log("Triggered instant Arohi welcome greeting on call connect.");
-            } catch (greetErr) {
-   xœ¤XmoÛ6ş_q5ŠJ9Á°~pA‘ú’Ùéò¡-bF¦m¢zIÅ3Rı÷İQ”D½8é:£@mŠ¼{î¹ãs§ „i¢Òˆ;&ô:Í£$©-ÅfÃ%ˆDhÁ"Øñ(LcÉ¹Éf6š”ß/¥Ÿó)ÜïÎ;ÉÙ·fo!Óáü8]ñíÌ€%û1<8GZğ–¯Ó$á!¹Âï<FtğNÜsØ	½c?D¸ò¾°f"â«.VN‚˜+Å6¾‡j­àZîÉlÂÿÑårËV`Qº¹Q—÷<Ñ¾·1®oÉÑ­Ù}[:ò&ğPŸAb\Ê£{mgLi
-ì’NÂy½Íaï¨Ã°P=t Ò®Y¤øY½gş3U>t‰nWKìX	P3C°{“İáN¸@G÷ÌäâB¦[s®D$ø+!‡7,ŠîXø.“H8ò9rB<ÄæÚºedŸBïÉŞ0:¾*Í7|Õ„Æı
-RÂrŒeÊÔ>	Á_1ÍÆpş›¶–û^µiÈ˜T|…Üı±øø!0¿Ìá@§¼ÉÆ·rE¤–g–¯D
-/^À Çô±ËâÉjÎY¤EÌß&Y®ıö> ci†Á“ç¸ö'ã±ë}†œŒÌÊ4ã3É4??}yrr2‚bÒ¾‘-¼Å0v¥ßÅK„Òg¯âk“,KMyîïE¹LÔ>?€Äú›—+.1éˆI—ë«Ÿ~@ñÿM{ÆYÄ5šÒ2ç½MEG«èS?–¤¿|“J¼+Ì?!1Ş!“hTw%ÇŠ9xşàÀT„åéŸLà×“qAU¿ìù¬•€ğX¡2ÚáJ!X—èŒ ²°è+Ë=×íÂ ò`Ò< }X-ªşÌyNHzDí¶¨…CÀ€+ê!Ô–«Ÿá-ÃšB×¸ıÊ¸RA–«m«‚Ï†ìÆ1:rUIlxÂñ!Ğªô¥*ÑÈUÉĞÏÄ^©S…Ö´…*õÙêçñ/ÁËã56-ŞŸfí´\;„æÎ»ˆš¡´÷µïïHE{"½ŒFı=Xà[T1¤ë¶¡ª>ÄeŸä*Ã/}²Úªú…LTÍLVècÛğ:’
-ëÌØğ”.-Ÿ?˜î´Ø+Íã·€ÌCª âKò%ù´¸œÃÕüãû«kAœŒK#cü~\Ò.úĞí­XTñæãf´udØrodkÁX­…m5ú´‡ºú¶TãÛ:®æ6œ>Íu¼S³åJ£ChúXú+fö©	Ææò³áÚ\ê
-ßÜòåªMp7 iØ}=  ««ıBcÃùù9Üğ»E~ã:øxuùaZ}–«oFe¦±ŞûX’%*”‚Ä¥b*Ãüqœ==F±xXD?€¶I£ı¿ô(ÌÙ#bH½ÉµúD[jx¼ë©¦iZ• ‹Zg	“¡â-4õx=>/Ã(U4\ú‘Òm
-£rş³we*¹œe›„Ó~ÓtqbrÇã®J>2ˆU—ñâ˜ôS†­E¦-ÎÃ¸FÒîÛZ‡ú7åF–ë_OæeÍ,ûiÃÿ¡·ƒ†-÷…ËÂ1ÿ¹ïVfÁ‘MÅÖ|·ç‚&S"«µ¶±|·S4¨UÃ>Iİ›®szrzÚüòNò­àyv›…L°ì—ÍqË’UÄ?eÉVÔ!Q÷ÿÎ¨ÉŞvSSöÇsjsTW¨[VÔá3¦·	‹É”çU4•ıÄØruß5àâöAÓCêmÊpÄğ½WŞøó‰3P5{ ‹ÚçÒè{SoL|=«‰$ŒòW¾7›â³v‘:8í~÷Ï½¯?c8¾ƒOów¨qP=kİœºÔ»×í1(­×{;uÇÅF ªdÎ«L^YçfF,¿xCæÌà¦e‡öÂİ[“—foíVº'Gİš¢DC37™Íª".qäqYØ¦J7ûí–W-»ÃV*JşÀÆò»ÕÂØkŸ¸››k3°¿y8éçÂsSÉBÑ=¼QÄ9&´É-6eoÊ21µã‡GµzpJl•E÷èô‡Ï¨MÕíp}ÿ§©7nıÈÚ-ï¡ú‰éX­ct'ÑRAK–*í¨ä¨T"ì”;Õé•åa”wô×¤]íÔ¤J¬Û’›¿øt¯üò<y{Ñkj¶4¯ošËk}Y]–3¯=FÁ2Æ:m«Ó@jŒFÿMêpn¹ç’&ÊšhÑnPvi²Ê³…9PÅâ®=i¤8BÍ2R] ™â_   ÿÿ äWO\
+startServer();
