@@ -4240,7 +4240,7 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   };
 }
 
-// Ultra-fast Groq API Fallback Engine (DeepSeek R1 / Llama 3.3 70B)
+// Ultra-fast Groq API Fallback Engine (Llama 3.3 70B / Llama 3.1 8B)
 async function callGroqChatFallback(
   contents: any[],
   systemInstruction?: string
@@ -4249,9 +4249,9 @@ async function callGroqChatFallback(
   if (!apiKey || !apiKey.trim()) return null;
 
   const groqModels = [
-    'deepseek-r1-distill-llama-70b',
     'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant'
+    'llama-3.1-8b-instant',
+    'deepseek-r1-distill-llama-70b'
   ];
 
   const chatMessages: Array<{ role: string; content: string }> = [];
@@ -4325,9 +4325,9 @@ async function callGroqChatStreamFallback(
   if (!apiKey || !apiKey.trim()) return null;
 
   const groqModels = [
-    'deepseek-r1-distill-llama-70b',
     'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant'
+    'llama-3.1-8b-instant',
+    'deepseek-r1-distill-llama-70b'
   ];
 
   const chatMessages: Array<{ role: string; content: string }> = [];
@@ -5310,9 +5310,14 @@ function requiresRealtimeSearch(text: string): boolean {
   
   if (isGreetingOrSmallTalk(p)) return false;
 
+  // Never do web search for Arohi identity, ecosystem, Mission 87, founders, PwD, or built-in core topics
+  if (/\b(mission 87|arohi|arohi ai|xaldra|junoon|giridhari|braga|oditree|divyang|disability|udid|adip|pwd|swavlamban|who are you|what are you|who created|who made|who founded|what is mission 87)\b/i.test(p)) {
+    return false;
+  }
+
   // Pure coding, UI development, 3D graphics, or script generation requests do not need live search unless news/real-world context is mentioned
-  const isCodingOrDesignQuery = /\b(write a program|write a script|write a function|write html|write css|write react|create a component|build an app|create a website|threejs|three\.js|3d interior|3d lounge|write code for a)\b/i.test(p);
-  const hasExplicitNewsOrFactWord = /\b(news|latest|today|breaking|current|recent|score|price|update|election|resign|resigned|resignation|minister|politics|government|exam|scorecard|cut off|result)\b/i.test(p);
+  const isCodingOrDesignQuery = /\b(write a program|write a script|write a function|write html|write css|write react|create a component|build an app|create a website|threejs|three\.js|3d interior|3d lounge|write code for a|generate code|react component)\b/i.test(p);
+  const hasExplicitNewsOrFactWord = /\b(news today|breaking news|live score|stock price today|election result 202|resigned today|current weather|live update|today's weather|cricket score)\b/i.test(p);
   
   if (isCodingOrDesignQuery && !hasExplicitNewsOrFactWord) {
     return false;
@@ -5323,8 +5328,8 @@ function requiresRealtimeSearch(text: string): boolean {
     return false;
   }
 
-  // Real-time search triggers: Questions about people, resignations, current events, appointments, controversies, politics, news, exams, schemes, or general knowledge
-  return true;
+  // Only trigger real-time search if user explicitly asks for current news, today's events, live scores, or recent announcements
+  return /\b(news|latest news|today|breaking|current affairs|live score|stock price|gold rate|silver rate|weather in|who won|election 202|current minister|new appointment|recently appointed|resigned|resignation)\b/i.test(p);
 }
 
 // 1. Chat with AROHI Endpoint
