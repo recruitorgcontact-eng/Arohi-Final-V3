@@ -35,6 +35,7 @@ import UserActivityTelemetryViewer from './admin/UserActivityTelemetryViewer';
 import CbtMockTestAnalyticsHub from './admin/CbtMockTestAnalyticsHub';
 import UserDetailsDrawer from './admin/UserDetailsDrawer';
 import TaxInvoiceModal from './admin/TaxInvoiceModal';
+import PartnersManagerTab from './admin/PartnersManagerTab';
 
 interface AdminPanelProps {
   postings: Posting[];
@@ -159,7 +160,7 @@ export default function AdminPanel({
   const [upiUpdateSuccess, setUpiUpdateSuccess] = useState(false);
 
   // UI state variables
-  const [activeSubTab, setActiveSubTab] = useState<'telemetry' | 'users' | 'finance' | 'cbt_tests' | 'chats' | 'voice' | 'postings' | 'creator' | 'analytics' | 'seo'>('telemetry');
+  const [activeSubTab, setActiveSubTab] = useState<'telemetry' | 'users' | 'finance' | 'cbt_tests' | 'chats' | 'voice' | 'postings' | 'creator' | 'analytics' | 'seo' | 'partners'>('telemetry');
   const [userTelemetryLogs, setUserTelemetryLogs] = useState<UserActivityTelemetry[]>(() => {
     const saved = localStorage.getItem('recruit_admin_telemetry_logs');
     return saved ? JSON.parse(saved) : INITIAL_USER_TELEMETRY;
@@ -1923,6 +1924,18 @@ export default function AdminPanel({
           >
             <Globe className="w-4 h-4 text-teal-400 animate-spin-slow" />
             <span>SEO Scorecard & Pulse</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('partners')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'partners' 
+                ? 'bg-amber-950/40 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]' 
+                : 'text-slate-300 hover:bg-[#110d29]'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-amber-400" />
+            <span>Partners & 15% Influencers</span>
           </button>
         </div>
 
@@ -4967,6 +4980,13 @@ export default function AdminPanel({
 
             </div>
 
+          </div>
+        )}
+
+        {/* TAB 9: PARTNERS & 15% INFLUENCER PORTAL */}
+        {activeSubTab === 'partners' && (
+          <div className="animate-in fade-in duration-300">
+            <PartnersManagerTab onNavigateTab={onNavigateTab} />
           </div>
         )}
 

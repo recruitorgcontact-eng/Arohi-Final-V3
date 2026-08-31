@@ -22,7 +22,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
   const wss = new WebSocketServer({ noServer: true });
 
   wss.on('error', (err) => {
-    console.error('WebSocket Server error:', err);
+    console.warn('[WebSocket Server Notice]:', err?.message || String(err));
   });
 
   wss.on('connection', async (clientWs: WebSocket, request) => {
@@ -31,7 +31,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
 
     // Prevent uncaught socket-level errors from crashing the Node.js process
     clientWs.on('error', (err: any) => {
-      console.error('Client WebSocket connection error:', err);
+      console.warn('[Client WebSocket Notice]:', err?.message || String(err));
       logWsEvent('client_ws_error', { error: err.message || err });
     });
 
@@ -54,7 +54,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
           }, 200);
         }
       } catch (err) {
-        console.error('Error flushing message and closing WebSocket:', err);
+        console.warn('[WebSocket Flush Notice]:', err instanceof Error ? err.message : String(err));
         logWsEvent('safe_send_and_close_err', { error: err instanceof Error ? err.message : String(err) });
       }
     };
@@ -244,7 +244,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                     }
                   },
                   onerror: (err: any) => {
-                    console.error(`Gemini Live session error on model ${liveModel}:`, err);
+                    console.warn(`[Gemini Live Session Notice] Error on model ${liveModel}:`, err?.message || String(err));
                     logWsEvent('gemini_live_session_error', { model: liveModel, error: err.message || err });
                     if (stabilityTimeout) clearTimeout(stabilityTimeout);
                     if (!finished) {
@@ -288,7 +288,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                   });
                   console.log(`Flushed queued user text prompt to Gemini Live session: "${queuedText.slice(0, 50)}..."`);
                 } catch (qErr) {
-                  console.error("Error flushing queued text to Gemini Live session:", qErr);
+                  console.warn("[Gemini Live Notice] Text flush issue:", qErr instanceof Error ? qErr.message : String(qErr));
                 }
               }
             }
@@ -400,6 +400,11 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
   });
 
   const handleUpgrade = (request: any, socket: any, head: any) => {
+    if (socket && typeof socket.on === "function") {
+      socket.on("error", (err: any) => {
+        console.warn("[WebSocket Upgrade Socket Notice]:", err?.message || String(err));
+      });
+    }
     try {
       let pathname = '';
       if (request.url) {

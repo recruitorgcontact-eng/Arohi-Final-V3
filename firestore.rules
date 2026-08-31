@@ -14,5 +14,17 @@ service cloud.firestore {
     match /voice_call_logs/{logId} {
       allow read, write: if false; // Only accessible server-side via Firebase Admin SDK
     }
+
+    match /partners/{partnerId} {
+      allow read, write: if false; // Managed securely server-side
+    }
+
+    match /partner_conversions/{conversionId} {
+      allow read, write: if false; // Managed securely server-side
+    }
+
+    match /partner_payouts/{payoutId} {
+      allow read, write: if false; // Managed securely server-side
+    }
   }
 }

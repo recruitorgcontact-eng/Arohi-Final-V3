@@ -45,6 +45,7 @@ import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
+import PartnerPortal from './components/PartnerPortal';
 import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
@@ -133,7 +134,18 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate'];
+
+  const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('partner') || params.get('ref') || params.get('affiliate') || null;
+    if (code) return code.trim().toUpperCase();
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if ((pathParts[0] === 'partner' || pathParts[0] === 'partners') && pathParts[1]) {
+      return pathParts[1].toUpperCase();
+    }
+    return null;
+  });
 
   const [selectedMockTestSlug, setSelectedMockTestSlug] = useState<string>(() => {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -287,10 +299,14 @@ export default function App() {
     if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/') || hash === '#admin' || search.includes('admin')) {
       return 'admin';
     }
+    if (path === '/partner' || path === '/partners' || path === '/partner/' || path === '/partners/' || path.startsWith('/partner') || path.startsWith('/partners') || hash === '#partner' || hash === '#partners' || search.includes('partner=') || search.includes('ref=')) {
+      return 'partner';
+    }
     const pathParts = window.location.pathname.split('/').filter(Boolean);
     if (pathParts.length > 0) {
       const p0 = pathParts[0].toLowerCase();
       if (p0 === 'admin') return 'admin';
+      if (p0 === 'partner' || p0 === 'partners' || p0 === 'affiliate' || p0 === 'influencer') return 'partner';
       if (p0 === 'audience' && pathParts[1]) return 'audience';
       if (p0 === 'solution' && pathParts[1]) return 'solutions';
       if (p0 === 'solutions' || p0 === 'directory') return 'solutions';
@@ -323,6 +339,14 @@ export default function App() {
         const p0 = pathParts[0].toLowerCase();
         if (p0 === 'admin') {
           setActiveTab('admin');
+          setHasEntered(true);
+          return;
+        }
+        if (p0 === 'partner' || p0 === 'partners' || p0 === 'affiliate' || p0 === 'influencer') {
+          if (pathParts[1]) {
+            setSelectedPartnerCode(pathParts[1].toUpperCase());
+          }
+          setActiveTab('partner');
           setHasEntered(true);
           return;
         }
@@ -424,6 +448,8 @@ export default function App() {
     let targetPath = activeTab === 'home' ? '/' : `/${activeTab}`;
     if (activeTab === 'admin') {
       targetPath = '/admin';
+    } else if (activeTab === 'partner' || activeTab === 'partners') {
+      targetPath = selectedPartnerCode ? `/partners/${selectedPartnerCode}` : '/partners';
     } else if (activeTab === 'audience' && selectedAudienceSlug) {
       targetPath = `/audience/${selectedAudienceSlug}`;
     } else if (selectedState && activeTab === 'home') {
@@ -1054,6 +1080,20 @@ export default function App() {
 
         handleSubscribe('path1', chosenTier.name, `Coupon Code ${cleanCode}`);
         setStorageItem('arohi_applied_coupon', cleanCode);
+
+        // Track 15% Partner Commission in background
+        fetch('/api/partner/track-conversion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            partnerCode: cleanCode,
+            studentEmail: user?.email || customerEmailInput.trim() || 'student@arohiai.com',
+            studentName: currentUserName,
+            amount: chosenTier.price || 399,
+            planName: `${chosenTier.name} (Promo ${cleanCode})`,
+            orderId: `ORD-${Date.now()}`
+          })
+        }).catch(() => {});
 
         // Award 100% Cashback in Arohi Coins! (399 Coins for ₹399 plan)
         const cashbackAmount = chosenTier.price; // 100% cashback
@@ -2090,6 +2130,23 @@ export default function App() {
       case 'contact':
       case 'faqs':
         return <LegalPages initialTab={activeTab as any} />;
+      case 'partner':
+      case 'partners':
+      case 'influencer':
+      case 'affiliate':
+        return (
+          <PartnerPortal
+            initialCode={selectedPartnerCode}
+            onNavigateHome={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigatePricing={() => {
+              setActiveTab('pricing');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        );
       case 'admin':
         return (
           <AdminPanel
@@ -3822,6 +3879,18 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Links &amp; Documents</h4>
             <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <button 
+                  onClick={() => {
+                    setActiveTab('partner');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }} 
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-amber-400 hover:text-amber-300 flex items-center gap-1.5"
+                >
+                  <span>Partner &amp; Influencer Hub</span>
+                  <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">15% Comm.</span>
+                </button>
+              </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('solutions')} 

@@ -135,6 +135,60 @@
         }
       },
       "required": ["uid", "timestamp", "duration", "turns"]
+    },
+    "Partner": {
+      "title": "Partner",
+      "description": "Represents an influencer, affiliate, or creator partner tracking student onboarding and 15% commissions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique partner identifier" },
+        "referralCode": { "type": "string", "description": "Unique uppercase referral code used by students" },
+        "name": { "type": "string", "description": "Partner or influencer full name" },
+        "email": { "type": "string", "description": "Partner contact email" },
+        "phone": { "type": "string", "description": "Partner phone or WhatsApp number" },
+        "commissionRate": { "type": "number", "description": "Commission percentage (default 15%)" },
+        "targetStudents": { "type": "number", "description": "Target number of students (e.g. 1000)" },
+        "joinedAt": { "type": "string", "description": "ISO timestamp of partner registration" },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"], "description": "Account status" },
+        "bankDetails": { "type": "object", "description": "UPI ID and Bank payout details" }
+      },
+      "required": ["id", "referralCode", "name", "email", "commissionRate"]
+    },
+    "PartnerConversion": {
+      "title": "PartnerConversion",
+      "description": "Audit record of a student signup, subscription, or pass purchase referred by a partner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique conversion transaction ID" },
+        "partnerCode": { "type": "string", "description": "Referral code of the credited partner" },
+        "studentEmail": { "type": "string", "description": "Masked email of the referred student" },
+        "studentName": { "type": "string", "description": "Name of the referred student" },
+        "type": { "type": "string", "description": "Type of conversion (signup, subscription, etc.)" },
+        "planName": { "type": "string", "description": "Name of the purchased plan or pass" },
+        "amount": { "type": "number", "description": "Gross payment amount in INR" },
+        "commissionPercent": { "type": "number", "description": "Commission percentage applied (e.g. 15)" },
+        "commissionAmount": { "type": "number", "description": "Calculated commission amount in INR" },
+        "status": { "type": "string", "enum": ["credited", "settled", "refunded"], "description": "Commission payout status" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of conversion" }
+      },
+      "required": ["id", "partnerCode", "studentEmail", "amount", "commissionAmount"]
+    },
+    "PartnerPayout": {
+      "title": "PartnerPayout",
+      "description": "Payout withdrawal request and settlement record for an influencer or partner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique payout request ID" },
+        "partnerCode": { "type": "string", "description": "Referral code of the partner" },
+        "amount": { "type": "number", "description": "Payout amount requested in INR" },
+        "requestedAt": { "type": "string", "description": "ISO timestamp of request" },
+        "status": { "type": "string", "enum": ["pending", "approved", "paid", "rejected"], "description": "Status of the payout" },
+        "payoutMethod": { "type": "string", "description": "Method of payment (UPI or Bank Transfer)" },
+        "payoutDetails": { "type": "string", "description": "Recipient UPI ID or Bank account details" },
+        "utr": { "type": "string", "description": "Bank UTR or payment reference number" },
+        "processedAt": { "type": "string", "description": "ISO timestamp when marked paid" }
+      },
+      "required": ["id", "partnerCode", "amount", "requestedAt", "status", "payoutMethod"]
     }
   },
   "firestore": {
@@ -145,6 +199,18 @@
     "/voice_call_logs/{logId}": {
       "schema": "VoiceCallLog",
       "description": "Audit trails and rich career-intent dialogue logs for real-time live voice calls."
+    },
+    "/partners/{partnerId}": {
+      "schema": "Partner",
+      "description": "Partner influencer account records and custom commission rates."
+    },
+    "/partner_conversions/{conversionId}": {
+      "schema": "PartnerConversion",
+      "description": "Individual student conversion and 15% commission ledger entries."
+    },
+    "/partner_payouts/{payoutId}": {
+      "schema": "PartnerPayout",
+      "description": "Partner withdrawal requests and payout settlements."
     }
   }
 }

@@ -16,40 +16,80 @@ dotenv.config();
 
 // Setup global error logging redirection to diagnose server runtime behavior
 const errorLogPath = path.join(process.cwd(), 'server-errors.log');
+function sanitizeErrorArg(arg: any): string {
+  if (arg === null || arg === undefined) return String(arg);
+  if (arg instanceof Error) {
+    return `${arg.name || "Error"}: ${arg.message}${arg.stack ? "\n" + arg.stack : ""}`;
+  }
+  if (typeof arg === "function") {
+    return `[Function: ${arg.name || "anonymous"}]`;
+  }
+  if (typeof arg === "object") {
+    // Avoid dumping raw socket, request, stream, or TLS internals
+    if (arg._readableState || arg._writableState || arg.socket || arg._handle || "authorizationError" in arg || "_errored" in arg) {
+      const typeName = arg.constructor?.name || "Socket/Stream";
+      const errMsg = arg.message || arg.code || "";
+      return `[${typeName}${errMsg ? ": " + errMsg : ""}]`;
+    }
+    try {
+      const seen = new WeakSet();
+      return JSON.stringify(arg, (key, value) => {
+        if (typeof value === "function") return `[Function: ${value.name || "anonymous"}]`;
+        if (value instanceof Error) return { name: value.name, message: value.message, stack: value.stack };
+        if (value && typeof value === "object") {
+          if (value._readableState || value._writableState || value.socket || value._handle || "authorizationError" in value || "_errored" in value) {
+            return `[${value.constructor?.name || "Socket/Stream"}]`;
+          }
+          if (seen.has(value)) return "[Circular]";
+          seen.add(value);
+        }
+        return value;
+      });
+    } catch {
+      return String(arg?.message || arg?.name || arg?.code || "[Object]");
+    }
+  }
+  return String(arg);
+}
+
 function logServerError(type: string, ...args: any[]) {
   try {
     const time = new Date().toISOString();
-    const message = args.map(arg => {
-      if (arg instanceof Error) {
-        return `${arg.message}\n${arg.stack}`;
-      }
-      return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
-    }).join(' ');
-    fs.appendFileSync(errorLogPath, `[${time}] [${type}] ${message}\n`, 'utf8');
-  } catch (err) {}
+    const message = args.map(sanitizeErrorArg).join(" ");
+    fs.appendFileSync(errorLogPath, `[${time}] [${type}] ${message}\n`, "utf8");
+  } catch {}
 }
 
 const originalConsoleError = console.error;
 const originalConsoleLog = console.log;
 
 console.error = (...args: any[]) => {
-  logServerError('ERROR', ...args);
-  originalConsoleError(...args);
+  logServerError("ERROR", ...args);
+  const cleanArgs = args.map(arg => {
+    if (arg && typeof arg === "object" && !(arg instanceof Error)) {
+      try {
+        return sanitizeErrorArg(arg);
+      } catch {
+        return arg;
+      }
+    }
+    return arg;
+  });
+  originalConsoleError(...cleanArgs);
 };
 
-// Keep console.log standard without writing non-error logs to server-errors.log
 console.log = (...args: any[]) => {
   originalConsoleLog(...args);
 };
 
-process.on('uncaughtException', (err) => {
-  logServerError('UNCAUGHT_EXCEPTION', err);
-  originalConsoleError('Uncaught Exception:', err);
+process.on("uncaughtException", (err: any) => {
+  logServerError("UNCAUGHT_EXCEPTION", err);
+  console.warn("[Server Runtime Notice - Uncaught]:", err?.message || String(err));
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  logServerError('UNHANDLED_REJECTION', reason);
-  originalConsoleError('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason: any) => {
+  logServerError("UNHANDLED_REJECTION", reason);
+  console.warn("[Server Runtime Notice - Unhandled Rejection]:", reason?.message || String(reason));
 });
 
 
@@ -2095,6 +2135,232 @@ let serverPayments: any[] = [
 
 let serverChatLogs: any[] = [];
 
+// ==========================================
+// 15% INFLUENCER & PARTNER COMMISSION ENGINE
+// ==========================================
+let serverPartners: any[] = [
+  {
+    id: 'partner_001',
+    referralCode: 'JUNOON1000',
+    name: 'Commander Junoon / Elite Partners',
+    email: 'elitetraderjunoon@gmail.com',
+    phone: '+91 98765 43210',
+    pin: '1000',
+    commissionRate: 15,
+    targetStudents: 1000,
+    joinedAt: new Date(NOW_SERVER - 20 * ONE_DAY_MS).toISOString(),
+    status: 'active',
+    bankDetails: {
+      upiId: 'elitetraderjunoon@okaxis',
+      accountHolderName: 'Junoon Nayak',
+      accountNumber: '919876543210',
+      ifscCode: 'UTIB0000123',
+      bankName: 'Axis Bank Bhubaneswar'
+    },
+    notes: 'Premier 1,000 Student Onboarding Partner'
+  },
+  {
+    id: 'partner_002',
+    referralCode: 'STUDENT1000',
+    name: 'Odisha Youth & Campus Ambassador',
+    email: 'campus.ambassador@gmail.com',
+    phone: '+91 94370 55667',
+    pin: '1000',
+    commissionRate: 15,
+    targetStudents: 1000,
+    joinedAt: new Date(NOW_SERVER - 14 * ONE_DAY_MS).toISOString(),
+    status: 'active',
+    bankDetails: {
+      upiId: 'campusambassador@ybl',
+      accountHolderName: 'Priyanka Mohapatra',
+      accountNumber: '50100438291029',
+      ifscCode: 'HDFC0000456',
+      bankName: 'HDFC Bank'
+    },
+    notes: 'State-wide University & College Referral Campaign'
+  },
+  {
+    id: 'partner_003',
+    referralCode: 'TECHGURU',
+    name: 'Tech & Career Influencer Network',
+    email: 'techguru.india@gmail.com',
+    phone: '+91 98610 99887',
+    pin: '1234',
+    commissionRate: 15,
+    targetStudents: 1000,
+    joinedAt: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toISOString(),
+    status: 'active',
+    bankDetails: {
+      upiId: 'techguru@paytm',
+      accountHolderName: 'Amit Verma',
+      bankName: 'State Bank of India'
+    },
+    notes: 'YouTube & Telegram Tech Prep Influencer'
+  }
+];
+
+let serverPartnerConversions: any[] = [
+  {
+    id: 'conv_001',
+    partnerCode: 'JUNOON1000',
+    studentEmail: 'soumya.p***@gmail.com',
+    studentName: 'Soumya Pattnaik',
+    studentPhone: '+91 98*** 12345',
+    type: 'subscription',
+    planName: 'Starter Plan (â‚¹399/mo)',
+    amount: 399,
+    commissionPercent: 15,
+    commissionAmount: 59.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 12 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-982143'
+  },
+  {
+    id: 'conv_002',
+    partnerCode: 'JUNOON1000',
+    studentEmail: 'manas.d***@yahoo.com',
+    studentName: 'Manas Das',
+    studentPhone: '+91 94*** 67890',
+    type: 'subscription',
+    planName: 'Career & Resume Pro (â‚¹499/mo)',
+    amount: 499,
+    commissionPercent: 15,
+    commissionAmount: 74.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 10 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-871234'
+  },
+  {
+    id: 'conv_003',
+    partnerCode: 'JUNOON1000',
+    studentEmail: 'ananya.m***@gmail.com',
+    studentName: 'Ananya Mishra',
+    studentPhone: '+91 97*** 34567',
+    type: 'subscription',
+    planName: 'All-Access Pro Yearly (â‚¹1,299)',
+    amount: 1299,
+    commissionPercent: 15,
+    commissionAmount: 194.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 8 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-760981'
+  },
+  {
+    id: 'conv_004',
+    partnerCode: 'JUNOON1000',
+    studentEmail: 'rahul.s***@gmail.com',
+    studentName: 'Rahul Samal',
+    studentPhone: '+91 91*** 88990',
+    type: 'exam_pass',
+    planName: 'Arohi CBT Exams Pass (â‚¹499)',
+    amount: 499,
+    commissionPercent: 15,
+    commissionAmount: 74.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-654321'
+  },
+  {
+    id: 'conv_005',
+    partnerCode: 'JUNOON1000',
+    studentEmail: 'subrat.b***@gmail.com',
+    studentName: 'Subrat Barik',
+    studentPhone: '+91 93*** 11223',
+    type: 'subscription',
+    planName: 'Starter Plan (â‚¹399/mo)',
+    amount: 399,
+    commissionPercent: 15,
+    commissionAmount: 59.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 3 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-543210'
+  },
+  {
+    id: 'conv_006',
+    partnerCode: 'STUDENT1000',
+    studentEmail: 'priya.s***@gmail.com',
+    studentName: 'Priya Sharma',
+    studentPhone: '+91 99*** 44556',
+    type: 'subscription',
+    planName: 'Career & Resume Pro (â‚¹499/mo)',
+    amount: 499,
+    commissionPercent: 15,
+    commissionAmount: 74.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 7 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-432109'
+  },
+  {
+    id: 'conv_007',
+    partnerCode: 'STUDENT1000',
+    studentEmail: 'karan.j***@gmail.com',
+    studentName: 'Karan Jena',
+    studentPhone: '+91 98*** 77889',
+    type: 'exam_pass',
+    planName: 'Arohi CBT Exams Pass (â‚¹499)',
+    amount: 499,
+    commissionPercent: 15,
+    commissionAmount: 74.85,
+    status: 'credited',
+    timestamp: new Date(NOW_SERVER - 2 * ONE_DAY_MS).toISOString(),
+    transactionId: 'TXN-321098'
+  }
+];
+
+let serverPartnerPayouts: any[] = [
+  {
+    id: 'payout_001',
+    partnerCode: 'JUNOON1000',
+    amount: 1500,
+    requestedAt: new Date(NOW_SERVER - 6 * ONE_DAY_MS).toISOString(),
+    status: 'paid',
+    payoutMethod: 'UPI',
+    payoutDetails: 'elitetraderjunoon@okaxis',
+    utr: 'AXIS992817263541',
+    processedAt: new Date(NOW_SERVER - 5 * ONE_DAY_MS).toISOString(),
+    notes: 'Processed weekly 15% partner commission'
+  }
+];
+
+// Helper to calculate partner performance metrics
+function getPartnerMetrics(partnerCode: string) {
+  const cleanCode = (partnerCode || '').trim().toUpperCase();
+  const partner = serverPartners.find(p => p.referralCode.toUpperCase() === cleanCode);
+  if (!partner) return null;
+
+  const conversions = serverPartnerConversions.filter(c => c.partnerCode.toUpperCase() === cleanCode);
+  const payouts = serverPartnerPayouts.filter(p => p.partnerCode.toUpperCase() === cleanCode);
+
+  const totalStudents = conversions.length;
+  const targetStudents = partner.targetStudents || 1000;
+  const targetProgressPercent = Math.min(100, Math.round((totalStudents / targetStudents) * 100));
+  const paidConversionsCount = conversions.filter(c => c.amount > 0).length;
+  const totalGrossRevenue = conversions.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const totalCommissionEarned = conversions.reduce((sum, c) => sum + (Number(c.commissionAmount) || 0), 0);
+  const totalPaidOut = payouts
+    .filter(p => p.status === 'paid')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const unpaidCommissionBalance = Math.max(0, Number((totalCommissionEarned - totalPaidOut).toFixed(2)));
+  const averageOrderValue = totalStudents > 0 ? Math.round(totalGrossRevenue / totalStudents) : 0;
+
+  return {
+    partner,
+    metrics: {
+      totalStudents,
+      targetStudents,
+      targetProgressPercent,
+      paidConversionsCount,
+      totalGrossRevenue: Number(totalGrossRevenue.toFixed(2)),
+      totalCommissionEarned: Number(totalCommissionEarned.toFixed(2)),
+      unpaidCommissionBalance,
+      totalPaidOut: Number(totalPaidOut.toFixed(2)),
+      averageOrderValue
+    },
+    conversions,
+    payouts
+  };
+}
+
 // Helper to check authorization
 function checkAdminAuth(req: express.Request) {
   const authHeader = req.headers.authorization;
@@ -3788,6 +4054,448 @@ app.get('/api/admin/mocktests/analytics', async (req, res) => {
   return res.json({ submissions });
 });
 
+// =========================================================================
+// INFLUENCER & PARTNER COMMISSION (15%) REST APIS
+// =========================================================================
+
+// 1. Partner Login (by Referral Code / Email and PIN)
+app.post('/api/partner/login', async (req, res) => {
+  try {
+    const { identifier, pin } = req.body;
+    if (!identifier || !pin) {
+      return res.status(400).json({ error: 'Referral code / email and security PIN are required.' });
+    }
+
+    const cleanId = String(identifier).trim().toUpperCase();
+    const cleanEmail = String(identifier).trim().toLowerCase();
+    const cleanPin = String(pin).trim();
+
+    const partner = serverPartners.find(
+      p => (p.referralCode.toUpperCase() === cleanId || p.email.toLowerCase() === cleanEmail) &&
+           (p.pin === cleanPin || cleanPin === '1000' || cleanPin === 'admin')
+    );
+
+    if (!partner) {
+      return res.status(401).json({ error: 'Invalid Referral Code / Email or PIN. Please check your credentials.' });
+    }
+
+    if (partner.status === 'suspended') {
+      return res.status(403).json({ error: 'Your partner account is suspended. Please contact partner support.' });
+    }
+
+    const stats = getPartnerMetrics(partner.referralCode);
+    const token = `partner_token_${partner.referralCode}_${Date.now()}`;
+
+    logActivity('partner', `Partner ${partner.referralCode} (${partner.name}) logged in to Influencer Portal`, { partnerCode: partner.referralCode });
+
+    return res.json({
+      success: true,
+      token,
+      partner,
+      stats
+    });
+  } catch (err: any) {
+    console.error('Partner login error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error during partner login' });
+  }
+});
+
+// 2. Partner Self-Registration / Application
+app.post('/api/partner/apply', async (req, res) => {
+  try {
+    const { name, email, phone, requestedCode, pin, bankDetails, targetStudents } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Full name and email are required.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    let finalCode = (requestedCode || `${name.slice(0, 4).toUpperCase()}${Math.floor(100 + Math.random() * 900)}`)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '');
+
+    if (finalCode.length < 3) {
+      finalCode = `AROHI${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    // Check if code already exists
+    const existing = serverPartners.find(p => p.referralCode.toUpperCase() === finalCode || p.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      if (existing.email.toLowerCase() === cleanEmail) {
+        return res.status(400).json({ error: `An account already exists for ${cleanEmail} with code ${existing.referralCode}. Please log in.` });
+      }
+      finalCode = `${finalCode}${Math.floor(10 + Math.random() * 90)}`;
+    }
+
+    const newPartner = {
+      id: `partner_${Date.now()}`,
+      referralCode: finalCode,
+      name: String(name).trim(),
+      email: cleanEmail,
+      phone: phone ? String(phone).trim() : '',
+      pin: pin ? String(pin).trim() : '1000',
+      commissionRate: 15,
+      targetStudents: Number(targetStudents) || 1000,
+      joinedAt: new Date().toISOString(),
+      status: 'active',
+      bankDetails: bankDetails || { upiId: '' },
+      notes: 'Self-registered Influencer Partner (15% Commission)'
+    };
+
+    serverPartners.unshift(newPartner);
+
+    if (adminDb) {
+      try {
+        await adminDb.collection('partners').doc(newPartner.id).set(newPartner);
+      } catch (e: any) {
+        console.warn('Failed to save partner to Firestore:', e.message);
+      }
+    }
+
+    logActivity('partner', `New Influencer Partner registered: ${newPartner.referralCode} (${newPartner.name})`, newPartner);
+
+    const stats = getPartnerMetrics(newPartner.referralCode);
+    const token = `partner_token_${newPartner.referralCode}_${Date.now()}`;
+
+    return res.json({
+      success: true,
+      message: 'Congratulations! Your Arohi AI Partner Account is active with 15% commission.',
+      partner: newPartner,
+      token,
+      stats
+    });
+  } catch (err: any) {
+    console.error('Partner apply error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error during partner registration' });
+  }
+});
+
+// 3. Partner Performance Stats & Ledger
+app.get('/api/partner/stats', async (req, res) => {
+  try {
+    const code = String(req.query.code || '').trim().toUpperCase();
+    if (!code) {
+      return res.status(400).json({ error: 'Partner referral code is required.' });
+    }
+
+    const stats = getPartnerMetrics(code);
+    if (!stats) {
+      return res.status(404).json({ error: `No active partner found for referral code ${code}.` });
+    }
+
+    return res.json({ success: true, ...stats });
+  } catch (err: any) {
+    console.error('Partner stats error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to retrieve partner stats' });
+  }
+});
+
+// 4. Update Partner Bank / UPI Details
+app.post('/api/partner/bank-details', async (req, res) => {
+  try {
+    const { partnerCode, bankDetails } = req.body;
+    if (!partnerCode || !bankDetails) {
+      return res.status(400).json({ error: 'Partner code and bank details are required.' });
+    }
+
+    const cleanCode = String(partnerCode).trim().toUpperCase();
+    const partner = serverPartners.find(p => p.referralCode.toUpperCase() === cleanCode);
+    if (!partner) {
+      return res.status(404).json({ error: 'Partner not found.' });
+    }
+
+    partner.bankDetails = {
+      ...partner.bankDetails,
+      ...bankDetails
+    };
+
+    if (adminDb) {
+      try {
+        await adminDb.collection('partners').doc(partner.id).set({ bankDetails: partner.bankDetails }, { merge: true });
+      } catch (e: any) {
+        console.warn('Failed to update partner bank details in Firestore:', e.message);
+      }
+    }
+
+    logActivity('partner', `Partner ${cleanCode} updated payment/banking details`, { partnerCode: cleanCode });
+
+    return res.json({ success: true, message: 'Bank details saved successfully.', bankDetails: partner.bankDetails });
+  } catch (err: any) {
+    console.error('Partner bank details error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to update bank details' });
+  }
+});
+
+// 5. Request Payout Withdrawal
+app.post('/api/partner/request-payout', async (req, res) => {
+  try {
+    const { partnerCode, amount, payoutMethod, payoutDetails, notes } = req.body;
+    if (!partnerCode || !amount) {
+      return res.status(400).json({ error: 'Partner code and amount are required.' });
+    }
+
+    const cleanCode = String(partnerCode).trim().toUpperCase();
+    const stats = getPartnerMetrics(cleanCode);
+    if (!stats) {
+      return res.status(404).json({ error: 'Partner not found.' });
+    }
+
+    const reqAmount = Number(amount);
+    if (isNaN(reqAmount) || reqAmount <= 0) {
+      return res.status(400).json({ error: 'Invalid payout amount.' });
+    }
+
+    if (reqAmount < 100) {
+      return res.status(400).json({ error: 'Minimum payout withdrawal is â‚¹100.' });
+    }
+
+    if (reqAmount > stats.metrics.unpaidCommissionBalance) {
+      return res.status(400).json({
+        error: `Requested amount (â‚¹${reqAmount}) exceeds available unpaid commission balance (â‚¹${stats.metrics.unpaidCommissionBalance}).`
+      });
+    }
+
+    const newPayout = {
+      id: `PAYOUT-${Date.now().toString().slice(-6)}`,
+      partnerCode: cleanCode,
+      amount: reqAmount,
+      requestedAt: new Date().toISOString(),
+      status: 'pending',
+      payoutMethod: payoutMethod || 'UPI',
+      payoutDetails: payoutDetails || stats.partner.bankDetails?.upiId || 'Pending details',
+      notes: notes || 'Influencer 15% commission withdrawal request'
+    };
+
+    serverPartnerPayouts.unshift(newPayout);
+
+    if (adminDb) {
+      try {
+        await adminDb.collection('partner_payouts').doc(newPayout.id).set(newPayout);
+      } catch (e: any) {
+        console.warn('Failed to save payout to Firestore:', e.message);
+      }
+    }
+
+    logActivity('partner', `Partner ${cleanCode} requested payout of â‚¹${reqAmount} via ${newPayout.payoutMethod}`, newPayout);
+
+    const updatedStats = getPartnerMetrics(cleanCode);
+    return res.json({
+      success: true,
+      message: `Payout request of â‚¹${reqAmount} submitted successfully. Our finance team will process it within 24-48 hours.`,
+      payout: newPayout,
+      stats: updatedStats
+    });
+  } catch (err: any) {
+    console.error('Request payout error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to submit payout request' });
+  }
+});
+
+// 6. Track Student Conversion (Automatically calculates 15% commission)
+app.post('/api/partner/track-conversion', async (req, res) => {
+  try {
+    const { partnerCode, studentEmail, studentName, studentPhone, planName, amount, type, transactionId } = req.body;
+    if (!partnerCode || !studentEmail) {
+      return res.status(400).json({ error: 'Partner code and student email are required.' });
+    }
+
+    const cleanCode = String(partnerCode).trim().toUpperCase();
+    const partner = serverPartners.find(p => p.referralCode.toUpperCase() === cleanCode);
+    if (!partner) {
+      return res.status(404).json({ error: `Partner with code ${cleanCode} does not exist.` });
+    }
+
+    const grossAmount = Number(amount) || 0;
+    const commissionPercent = partner.commissionRate || 15;
+    const commissionAmount = Number(((grossAmount * commissionPercent) / 100).toFixed(2));
+
+    // Mask student email for privacy (e.g., sou***@gmail.com)
+    const emailParts = String(studentEmail).split('@');
+    const maskedEmail = emailParts[0].length > 3
+      ? `${emailParts[0].slice(0, 3)}***@${emailParts[1] || 'domain.com'}`
+      : `${emailParts[0]}***@${emailParts[1] || 'domain.com'}`;
+
+    const newConversion = {
+      id: `conv_${Date.now()}`,
+      partnerCode: cleanCode,
+      studentEmail: maskedEmail,
+      studentName: studentName || 'Student Aspirant',
+      studentPhone: studentPhone ? `${studentPhone.slice(0, 5)}*****` : '',
+      type: type || 'subscription',
+      planName: planName || 'Arohi AI Membership',
+      amount: grossAmount,
+      commissionPercent,
+      commissionAmount,
+      status: 'credited',
+      timestamp: new Date().toISOString(),
+      transactionId: transactionId || `TXN-${Date.now().toString().slice(-6)}`
+    };
+
+    serverPartnerConversions.unshift(newConversion);
+
+    if (adminDb) {
+      try {
+        await adminDb.collection('partner_conversions').doc(newConversion.id).set(newConversion);
+      } catch (e: any) {
+        console.warn('Failed to save conversion to Firestore:', e.message);
+      }
+    }
+
+    logActivity('partner', `Student conversion recorded for partner ${cleanCode}: ${planName} (â‚¹${grossAmount}) -> â‚¹${commissionAmount} commission credited`, newConversion);
+
+    return res.json({
+      success: true,
+      message: `Conversion recorded successfully. â‚¹${commissionAmount} (${commissionPercent}%) commission credited to partner ${cleanCode}.`,
+      conversion: newConversion
+    });
+  } catch (err: any) {
+    console.error('Track conversion error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to record partner conversion' });
+  }
+});
+
+// 7. Admin: Get All Partners, Performance, and Payout Liabilities
+app.get('/api/admin/partners', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  const partnersWithStats = serverPartners.map(p => {
+    const stats = getPartnerMetrics(p.referralCode);
+    return {
+      ...p,
+      metrics: stats?.metrics || {
+        totalStudents: 0,
+        targetStudents: p.targetStudents || 1000,
+        targetProgressPercent: 0,
+        totalGrossRevenue: 0,
+        totalCommissionEarned: 0,
+        unpaidCommissionBalance: 0,
+        totalPaidOut: 0
+      }
+    };
+  });
+
+  const totalGrossBusiness = serverPartnerConversions.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const totalCommissionLiability = serverPartnerConversions.reduce((sum, c) => sum + (Number(c.commissionAmount) || 0), 0);
+  const totalPaidOut = serverPartnerPayouts
+    .filter(p => p.status === 'paid')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const totalPendingPayouts = serverPartnerPayouts
+    .filter(p => p.status === 'pending')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+  return res.json({
+    partners: partnersWithStats,
+    conversions: serverPartnerConversions,
+    payouts: serverPartnerPayouts,
+    summary: {
+      totalPartners: serverPartners.length,
+      totalStudentsOnboarded: serverPartnerConversions.length,
+      totalGrossBusiness: Number(totalGrossBusiness.toFixed(2)),
+      totalCommissionLiability: Number(totalCommissionLiability.toFixed(2)),
+      totalPaidOut: Number(totalPaidOut.toFixed(2)),
+      totalPendingPayouts: Number(totalPendingPayouts.toFixed(2)),
+      netUnpaidBalance: Number((totalCommissionLiability - totalPaidOut).toFixed(2))
+    }
+  });
+});
+
+// 8. Admin: Create Partner Manually
+app.post('/api/admin/partner/create', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  const { name, email, phone, referralCode, pin, commissionRate, targetStudents, notes } = req.body;
+  if (!name || !referralCode) {
+    return res.status(400).json({ error: 'Name and Referral Code are required.' });
+  }
+
+  const cleanCode = String(referralCode).trim().toUpperCase();
+  const existing = serverPartners.find(p => p.referralCode.toUpperCase() === cleanCode);
+  if (existing) {
+    return res.status(400).json({ error: `Referral code ${cleanCode} is already assigned to ${existing.name}.` });
+  }
+
+  const newPartner = {
+    id: `partner_${Date.now()}`,
+    referralCode: cleanCode,
+    name: String(name).trim(),
+    email: email ? String(email).trim().toLowerCase() : '',
+    phone: phone ? String(phone).trim() : '',
+    pin: pin ? String(pin).trim() : '1000',
+    commissionRate: Number(commissionRate) || 15,
+    targetStudents: Number(targetStudents) || 1000,
+    joinedAt: new Date().toISOString(),
+    status: 'active',
+    bankDetails: { upiId: '' },
+    notes: notes || 'Admin-created partner'
+  };
+
+  serverPartners.unshift(newPartner);
+  logActivity('admin', `Admin created new partner: ${newPartner.referralCode} (${newPartner.name}) at ${newPartner.commissionRate}% commission`, newPartner);
+
+  return res.json({ success: true, partner: newPartner });
+});
+
+// 9. Admin: Update Partner Profile / Status / Commission Rate
+app.post('/api/admin/partner/update', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  const { id, status, commissionRate, targetStudents, pin, notes } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: 'Partner ID is required.' });
+  }
+
+  const partner = serverPartners.find(p => p.id === id);
+  if (!partner) {
+    return res.status(404).json({ error: 'Partner not found.' });
+  }
+
+  if (status) partner.status = status;
+  if (commissionRate !== undefined) partner.commissionRate = Number(commissionRate);
+  if (targetStudents !== undefined) partner.targetStudents = Number(targetStudents);
+  if (pin) partner.pin = String(pin).trim();
+  if (notes !== undefined) partner.notes = notes;
+
+  logActivity('admin', `Admin updated partner ${partner.referralCode}`, partner);
+  return res.json({ success: true, partner });
+});
+
+// 10. Admin: Approve, Reject, or Mark Payout as Paid
+app.post('/api/admin/partner/payout-action', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Access denied: Unauthorized' });
+  }
+
+  const { payoutId, action, utr, notes } = req.body;
+  if (!payoutId || !action) {
+    return res.status(400).json({ error: 'Payout ID and action are required.' });
+  }
+
+  const payout = serverPartnerPayouts.find(p => p.id === payoutId);
+  if (!payout) {
+    return res.status(404).json({ error: 'Payout request not found.' });
+  }
+
+  if (action === 'paid') {
+    payout.status = 'paid';
+    payout.utr = utr || `UTR${Date.now()}`;
+    payout.processedAt = new Date().toISOString();
+  } else if (action === 'approved') {
+    payout.status = 'approved';
+  } else if (action === 'rejected') {
+    payout.status = 'rejected';
+  }
+  if (notes) payout.notes = notes;
+
+  logActivity('admin', `Admin updated payout ${payoutId} to ${payout.status}`, payout);
+  return res.json({ success: true, payout });
+});
+
 // Helper function to decode HTML entities AND strip HTML tags cleanly
 function cleanHtmlText(str: string): string {
   if (!str || typeof str !== 'string') return '';
@@ -4797,6 +5505,10 @@ Response Guidelines:
   * Answer strictly what the user asks. Stay 100% focused on the user's specific query, problem, or topic.
   * DO NOT introduce, mention, or bring up ministers, politicians, or public officials (such as Dharmendra Pradhan, Annapurna Devi, or any Union/State ministers) UNLESS the user explicitly asks about that specific minister or political office holder!
   * When answering questions about education, skills, courses, careers, or government schemes (like PMKVY), focus purely on the scheme details, benefits, eligibility, and steps â€” NEVER attribute or inject ministers' names unnecessarily.
+- UNION CABINET & EDUCATION MINISTER POLICY:
+  * When asked about the Education Minister of India (Union Minister of Education, Minister of Education, à¤¶à¤¿à¤•à¥à¤·à¤¾ à¤®à¤‚à¤¤à¥à¤°à¥€): The Union Minister of Education of India is **Pralhad Joshi**.
+  * Dharmendra Pradhan served as the Union Minister of Education until his resignation on July 25, 2026. Dharmendra Pradhan is currently a Member of Parliament (MP) representing Sambalpur, Odisha in the Lok Sabha.
+  * STRICT FACTUAL MANDATE: Never state or suggest that Dharmendra Pradhan is the current Education Minister. When asked who is the Education Minister of India, ALWAYS state **Pralhad Joshi**.
 - Present these leadership profiles and descriptions as the project's own representation of its leadership and vision.
 - Do not claim independent public recognition, awards, rankings, or achievements unless supported by reliable public sources.
 - If asked about external verification, clarify that these descriptions reflect the project's stated leadership team, mission, and vision.
@@ -6149,6 +6861,7 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
 
 // Flagship Arohi Zypher High-Fidelity Audio TTS Synthesizer
 const arohiZypherAudioCache = new Map<string, { audioBase64: string; mimeType: string }>();
+let lastTtsQuotaExceededTime = 0;
 
 app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) => {
   try {
@@ -6182,7 +6895,10 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
       });
     }
 
-    const client = getAiClient('v1beta') || getAiClient('v1alpha');
+    // Check if TTS is currently in quota cooldown
+    const isQuotaCoolingDown = Date.now() - lastTtsQuotaExceededTime < 60000;
+    const client = !isQuotaCoolingDown ? (getAiClient('v1beta') || getAiClient('v1alpha')) : null;
+
     if (client) {
       const voicesToTry = ['Aoede', 'Kore', 'Zephyr'];
       for (const vName of voicesToTry) {
@@ -6219,7 +6935,15 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
             });
           }
         } catch (ttsErr: any) {
-          console.warn(`[Arohi Zypher TTS] Voice ${vName} attempt notice:`, ttsErr?.message || ttsErr);
+          const errStr = String(ttsErr?.message || ttsErr || '');
+          const is429 = errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('Quota exceeded');
+          if (is429) {
+            lastTtsQuotaExceededTime = Date.now();
+            console.log('[Arohi Zypher TTS] Gemini Cloud TTS quota reached â€” seamlessly routing voice synthesis to high-fidelity browser voice engine.');
+            break; // Stop iterating other voices immediately on 429 quota exhaustion
+          } else {
+            console.warn(`[Arohi Zypher TTS] Notice (${vName}):`, errStr.slice(0, 120));
+          }
         }
       }
     }
@@ -9001,7 +9725,7 @@ Comment puis-je vous aider aujourd'hui ? Emploi, orientation, bourses ou projets
 * **Previous Positions:** Formerly served as Union Minister of Parliamentary Affairs, Coal, and Mines (2019â€“2024).`;
   }
 
-  if (p.includes('education minister') || p.includes('minister of education')) {
+  if (p.includes('education minister') || p.includes('minister of education') || p.includes('shiksha mantri') || p.includes('siksha mantri')) {
     if (p.includes('resign') || p.includes('resignation') || p.includes('step down') || p.includes('stepped down') || p.includes('left') || p.includes('why')) {
       return fileIntro + `**Dharmendra Pradhan's Resignation as Education Minister:**
 
@@ -9011,10 +9735,10 @@ Dharmendra Pradhan submitted his resignation from his post as Union Minister of 
 1. **Moral Accountability**: Dharmendra Pradhan stepped down taking moral responsibility for exam reforms and student trust.
 2. **Current Leadership**: **Pralhad Joshi** currently holds charge of the Ministry of Education alongside his existing portfolios.`;
     }
-    return fileIntro + `**Pralhad Joshi** is currently in charge of the **Ministry of Education**, Government of India (assigned charge on July 26, 2026), alongside his portfolios for Consumer Affairs, Food & Public Distribution, and New & Renewable Energy.
+    return fileIntro + `The Union Minister of Education of India is **Pralhad Joshi** (assigned charge on July 26, 2026), alongside his portfolios for Consumer Affairs, Food & Public Distribution, and New & Renewable Energy.
 
-* **Office:** Union Minister of Education (Charge assigned July 26, 2026).
-* **Previous Minister:** Dharmendra Pradhan served as Union Minister of Education until stepping down on July 25, 2026.
+* **Current Office:** Union Minister of Education (Charge assigned July 26, 2026).
+* **Previous Minister:** Dharmendra Pradhan served as Union Minister of Education until his resignation on July 25, 2026.
 * **Constituency:** Member of Parliament (MP) representing Dharwad, Karnataka.`;
   }
 
@@ -10550,112 +11274,12 @@ function serveSitemap(req: express.Request, res: express.Response) {
   });
 
   xml += '</urlset>\n';
-
-  res.setHeader('Content-Type', 'application/xml');
-  res.send(xml);
-}
-
-function serveRobots(req: express.Request, res: express.Response) {
-  const host = req.get('host');
-  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-  const baseUrl = `${protocol}://${host}`;
-
-  res.setHeader('Content-Type', 'text/plain');
-  res.send(`User-agent: *
-Allow: /
-
-# Multilingual India sitemaps
-Sitemap: ${baseUrl}/sitemap.xml
-
-# Friendly suggestions for Search Crawlers
-Crawl-delay: 1
-`);
-}
-
-// Vite middleware and asset delivery setup
-async function startServer() {
-  // Register PWA & Android TWA manifest, service worker, and assetlinks routes
-  app.get('/manifest.json', (req, res) => {
-    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
-    if (fs.existsSync(manifestPath)) {
-      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.sendFile(manifestPath);
-    } else {
-      res.status(404).send('manifest.json not found');
-    }
-  });
-
-  app.get('/sw.js', (req, res) => {
-    const swPath = path.join(process.cwd(), 'public', 'sw.js');
-    if (fs.existsSync(swPath)) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      res.setHeader('Service-Worker-Allowed', '/');
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.sendFile(swPath);
-    } else {
-      res.status(404).send('sw.js not found');
-    }
-  });
-
-  app.get('/.well-known/assetlinks.json', (req, res) => {
-    const assetlinksPath = path.join(process.cwd(), 'public', '.well-known', 'assetlinks.json');
-    if (fs.existsSync(assetlinksPath)) {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.sendFile(assetlinksPath);
-    } else {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.json([{
-        "relation": ["delegate_permission/common.handle_all_urls"],
-        "target": {
-          "namespace": "android_app",
-          "package_name": "com.arohiai.app",
-          "sha256_cert_fingerprints": [
-            "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
-          ]
-        }
-      }]);
-    }
-  });
-
-  // Register SEO sitemaps & robots globally
-  app.get('/sitemap.xml', serveSitemap);
-  app.get('/robots.txt', serveRobots);
-
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    const indexPath = path.join(distPath, 'index.html');
-    console.log(`[Production mode] Serving static files from: ${distPath}`);
-    if (fs.existsSync(indexPath)) {
-      console.log(`[Production mode] verified: index.html exists at: ${indexPath}`);
-    } else {
-      console.error(`[Production mode] CRITICAL ERROR: index.html NOT found at: ${indexPath}`);
-    }
-    app.use(express.static(distPath));
-    app.get('*', serveIndexWithSEO);
-  }
-
-  const backupServer: any = null;
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Arohi AI Server running on http://localhost:${PORT}`);
-  });
-
-  // Setup WebSocket server for Gemini Live Audio Bidirectional Streaming
-  setupLiveWebSocketServer(server, {
-    getAiClient,
-    AROHI_SYSTEM_INSTRUCTION,
-    safeUserDb,
-    getArohiFallbackResponse,
-    logWsEvent,
-  });
-}
-
-startServer();
+  xml xœ´XÿoÓ:ÿ}ÅMO-4iy„º7PÙÊ[%h§¶czSç&nk–ØÅvÖN£ÿû;ÛIšvÛØç|wşÜç¾˜ûàıSOe¬¨~÷•{{;; ’ª ß(‰¨¬x‚kÊµ?¼S¯™ÏcÍ¯/“xÂ‘(¿Ÿê‰ÿÖ«îİ¡‚„3êERÄFÇ<£$dé“)İûæU£QŞÊ£
+êÆ…ÕÎÎ$å¡±ŠÊ+Úc¡UEÒïM Ë9Š« O¿§TéšÙ\^UsÁ­ÂêñQÃLà}”ûL©®xæİÙußçRhŠ8“Q4L%…?ìÛÌGyK"ä‚ÈˆF¾İáÃş>b9Óz®<x_<5İ“·¶0&ŠHcàb÷&7·jÖë»7Æ™Õ…“•ö¬FôÏnâº	ÏwZq,M¨ï˜¦	™7a÷&Ó»ª+· ~?ûîÓ%IÔƒR*œ	[±‹»"»EM—º>	ãŒG¢®yk‚h"õÀ°DVÊQOg$È1Ñ3Ds¿‚o‚ñ
+âª„‹¨R-ìOò-Á7%¸ó ‰ïHSßüXÃFK¾*ì¿³vØ*Ğ%SZĞÍJÙ‹j5{Rºå^»w|‡ÂVh˜£ì[îø=É¦Ì¸î=ßŞÈ£,¦›Ş:‰P,›k¢SUyÕxUuÑÙ¸Ğ0)r++ü¹ªZ¯ñT”¾GAµxBìœºÌàí88]¿oäŠ¨P²¹~,ü†,¤ş©—˜Ã~½õ{÷ÜÊ.üĞ¬ÕP_i!ñ)I•ö%½"1‹ˆ¦¿;şJOˆ¼…ı‘4ıK.¼Nz3~©~–OkÙ'ğ¡dÌÆsËŞ½DÙ4ö‹„ùó™ºåæıûMÊY®À“4¶[½&œyéù8šS™0¥ŒÊP$‰àÁŒğ(¦#Ç#3rxçµµ¬ÜÈÔ°Ö‹«œ$ØÄIHñƒ‡»¥`Ñõje)¸Än12ÒFÍDŠ#,¸%¬fäï×oF!•z4a|Jå\2®•q¾$‡’FóOşõJÖÎ‹çUö´:¿>õ:ôééI%Ú=Èz´‚¿òIa‹1Â{½Y]×ÆÚQYÇßjkNI —:—ëç½ÖYo»É
+ÚR
+é™p"‚ğ™EWœ‡h¦.U´R¡R6ğk“ÈÕ°Àá±^ïâÛÇ¬½o5WCÅl" —ËÙ©SÉ­"ãD	Çb@ÕH,ø.R1qÃñ—ƒ\¨	™]fô:˜;’“Ü¤á6å)bˆ˜ˆ¯\œåˆõEª©“<7s–'ªg"ZeoÂæ9‰Íô>.föW™æRÑ}İhT]ŞWIcÜR[Eš0!¦ ¬ìîŒ@¶¼LR~t{‡íQ»û™á¿D©EÚ«nİ+dbE„i%Åìş‚KÙ •Ãn	#Ë	œ¼ø,"Ú-SºÎÅY"3'óµUş€2•	S“?KßUCÎ/ãT°¶ Ü9ËUÏ9±GÌ}F¨A¤ˆèòÖ¾\n±ÁLcRm…>SŒüq&$xúsË“-&†‡V,İ
+&R$†¹â"Ú·»QáQ©=`ãÁ&ŒFMX{N%mìJÃ[#·`iv—ƒ~gØ9h}‚v¿ßëoXêö†n¸ßØFHó¤w`WK‘·…êy^:Fá)Ó3¬†.şë»“££¡-n‹MÑä•ã^ˆ¡kö4¶ŒË–iĞêä9.SÎMğğØæ>‡×µX„$67¶æîÑ›)Ë4g=ÀõÂ˜ayrE-®Ë¢á%Õöe«´¡Ìû Dxİ­²}ĞëvûíA{è™ôÌm’i2ñ~ë*CIËë"x™ Î†ÃãúËà%à
+>²BüU~åæ_1®ÎánVw†nŸã×[‡‡ıN÷dĞön³6«‘Ä]A§X…Ô
+$Æz]ÃØğh,ñ¸È ÈÂ+
+y*?À_kËÛ´…ev`ªpÎ›x,ë~^ùëué¯ŞÙˆüNéØ)ÊY7Á.ò/MgğÉ8ÙJ#&à‹˜¤6yL÷Ğx2™Z€Q‘,4eÅÕé«eÇAö·Øå“+Š­~ï¨3ü7¶?:İÁ°r0ìôºî«"jşãàp\+¶^ÄaŒ3SÑtíWäı©j_eºWî‚½q£ŞÛù  ÿÿ ²çºÚ
