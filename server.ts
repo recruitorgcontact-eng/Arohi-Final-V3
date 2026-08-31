@@ -16,80 +16,40 @@ dotenv.config();
 
 // Setup global error logging redirection to diagnose server runtime behavior
 const errorLogPath = path.join(process.cwd(), 'server-errors.log');
-function sanitizeErrorArg(arg: any): string {
-  if (arg === null || arg === undefined) return String(arg);
-  if (arg instanceof Error) {
-    return `${arg.name || "Error"}: ${arg.message}${arg.stack ? "\n" + arg.stack : ""}`;
-  }
-  if (typeof arg === "function") {
-    return `[Function: ${arg.name || "anonymous"}]`;
-  }
-  if (typeof arg === "object") {
-    // Avoid dumping raw socket, request, stream, or TLS internals
-    if (arg._readableState || arg._writableState || arg.socket || arg._handle || "authorizationError" in arg || "_errored" in arg) {
-      const typeName = arg.constructor?.name || "Socket/Stream";
-      const errMsg = arg.message || arg.code || "";
-      return `[${typeName}${errMsg ? ": " + errMsg : ""}]`;
-    }
-    try {
-      const seen = new WeakSet();
-      return JSON.stringify(arg, (key, value) => {
-        if (typeof value === "function") return `[Function: ${value.name || "anonymous"}]`;
-        if (value instanceof Error) return { name: value.name, message: value.message, stack: value.stack };
-        if (value && typeof value === "object") {
-          if (value._readableState || value._writableState || value.socket || value._handle || "authorizationError" in value || "_errored" in value) {
-            return `[${value.constructor?.name || "Socket/Stream"}]`;
-          }
-          if (seen.has(value)) return "[Circular]";
-          seen.add(value);
-        }
-        return value;
-      });
-    } catch {
-      return String(arg?.message || arg?.name || arg?.code || "[Object]");
-    }
-  }
-  return String(arg);
-}
-
 function logServerError(type: string, ...args: any[]) {
   try {
     const time = new Date().toISOString();
-    const message = args.map(sanitizeErrorArg).join(" ");
-    fs.appendFileSync(errorLogPath, `[${time}] [${type}] ${message}\n`, "utf8");
-  } catch {}
+    const message = args.map(arg => {
+      if (arg instanceof Error) {
+        return `${arg.message}\n${arg.stack}`;
+      }
+      return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
+    }).join(' ');
+    fs.appendFileSync(errorLogPath, `[${time}] [${type}] ${message}\n`, 'utf8');
+  } catch (err) {}
 }
 
 const originalConsoleError = console.error;
 const originalConsoleLog = console.log;
 
 console.error = (...args: any[]) => {
-  logServerError("ERROR", ...args);
-  const cleanArgs = args.map(arg => {
-    if (arg && typeof arg === "object" && !(arg instanceof Error)) {
-      try {
-        return sanitizeErrorArg(arg);
-      } catch {
-        return arg;
-      }
-    }
-    return arg;
-  });
-  originalConsoleError(...cleanArgs);
+  logServerError('ERROR', ...args);
+  originalConsoleError(...args);
 };
 
+// Keep console.log standard without writing non-error logs to server-errors.log
 console.log = (...args: any[]) => {
   originalConsoleLog(...args);
 };
 
-process.on("uncaughtException", (err: any) => {
-  logServerError("UNCAUGHT_EXCEPTION", err);
-  console.warn("[Server Runtime Notice - Uncaught]:", err?.message || String(err));
+process.on('uncaughtException', (err) => {
+  logServerError('UNCAUGHT_EXCEPTION', err);
+  originalConsoleError('Uncaught Exception:', err);
 });
 
-process.on("unhandledRejection", (reason: any) => {
-  logServerError("UNHANDLED_REJECTION", reason);
-  console.warn("[Server Runtime Notice - Unhandled Rejection]:", reason?.message || String(reason));
+process.on('unhandledRejection', (reason, promise) => {
+  logServerError('UNHANDLED_REJECTION', reason);
+  originalConsoleError('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 
@@ -6861,7 +6821,6 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
 
 // Flagship Arohi Zypher High-Fidelity Audio TTS Synthesizer
 const arohiZypherAudioCache = new Map<string, { audioBase64: string; mimeType: string }>();
-let lastTtsQuotaExceededTime = 0;
 
 app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) => {
   try {
@@ -6895,10 +6854,7 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
       });
     }
 
-    // Check if TTS is currently in quota cooldown
-    const isQuotaCoolingDown = Date.now() - lastTtsQuotaExceededTime < 60000;
-    const client = !isQuotaCoolingDown ? (getAiClient('v1beta') || getAiClient('v1alpha')) : null;
-
+    const client = getAiClient('v1beta') || getAiClient('v1alpha');
     if (client) {
       const voicesToTry = ['Aoede', 'Kore', 'Zephyr'];
       for (const vName of voicesToTry) {
@@ -6935,15 +6891,7 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
             });
           }
         } catch (ttsErr: any) {
-          const errStr = String(ttsErr?.message || ttsErr || '');
-          const is429 = errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('Quota exceeded');
-          if (is429) {
-            lastTtsQuotaExceededTime = Date.now();
-            console.log('[Arohi Zypher TTS] Gemini Cloud TTS quota reached â€” seamlessly routing voice synthesis to high-fidelity browser voice engine.');
-            break; // Stop iterating other voices immediately on 429 quota exhaustion
-          } else {
-            console.warn(`[Arohi Zypher TTS] Notice (${vName}):`, errStr.slice(0, 120));
-          }
+          console.warn(`[Arohi Zypher TTS] Voice ${vName} attempt notice:`, ttsErr?.message || ttsErr);
         }
       }
     }
@@ -11274,12 +11222,112 @@ function serveSitemap(req: express.Request, res: express.Response) {
   });
 
   xml += '</urlset>\n';
-  xml xœ´XÿoÓ:ÿ}ÅMO-4iy„º7PÙÊ[%h§¶czSç&nk–ØÅvÖN£ÿû;ÛIšvÛØç|wşÜç¾˜ûàıSOe¬¨~÷•{{;; ’ª ß(‰¨¬x‚kÊµ?¼S¯™ÏcÍ¯/“xÂ‘(¿Ÿê‰ÿÖ«îİ¡‚„3êERÄFÇ<£$dé“)İûæU£QŞÊ£
-êÆ…ÕÎÎ$å¡±ŠÊ+Úc¡UEÒïM Ë9Š« O¿§TéšÙ\^UsÁ­ÂêñQÃLà}”ûL©®xæİÙußçRhŠ8“Q4L%…?ìÛÌGyK"ä‚ÈˆF¾İáÃş>b9Óz®<x_<5İ“·¶0&ŠHcàb÷&7·jÖë»7Æ™Õ…“•ö¬FôÏnâº	ÏwZq,M¨ï˜¦	™7a÷&Ó»ª+· ~?ûîÓ%IÔƒR*œ	[±‹»"»EM—º>	ãŒG¢®yk‚h"õÀ°DVÊQOg$È1Ñ3Ds¿‚o‚ñ
-âª„‹¨R-ìOò-Á7%¸ó ‰ïHSßüXÃFK¾*ì¿³vØ*Ğ%SZĞÍJÙ‹j5{Rºå^»w|‡ÂVh˜£ì[îø=É¦Ì¸î=ßŞÈ£,¦›Ş:‰P,›k¢SUyÕxUuÑÙ¸Ğ0)r++ü¹ªZ¯ñT”¾GAµxBìœºÌàí88]¿oäŠ¨P²¹~,ü†,¤ş©—˜Ã~½õ{÷ÜÊ.üĞ¬ÕP_i!ñ)I•ö%½"1‹ˆ¦¿;şJOˆ¼…ı‘4ıK.¼Nz3~©~–OkÙ'ğ¡dÌÆsËŞ½DÙ4ö‹„ùó™ºåæıûMÊY®À“4¶[½&œyéù8šS™0¥ŒÊP$‰àÁŒğ(¦#Ç#3rxçµµ¬ÜÈÔ°Ö‹«œ$ØÄIHñƒ‡»¥`Ñõje)¸Än12ÒFÍDŠ#,¸%¬fäï×oF!•z4a|Jå\2®•q¾$‡’FóOşõJÖÎ‹çUö´:¿>õ:ôééI%Ú=Èz´‚¿òIa‹1Â{½Y]×ÆÚQYÇßjkNI —:—ëç½ÖYo»É
-ÚR
-é™p"‚ğ™EWœ‡h¦.U´R¡R6ğk“ÈÕ°Àá±^ïâÛÇ¬½o5WCÅl" —ËÙ©SÉ­"ãD	Çb@ÕH,ø.R1qÃñ—ƒ\¨	™]fô:˜;’“Ü¤á6å)bˆ˜ˆ¯\œåˆõEª©“<7s–'ªg"ZeoÂæ9‰Íô>.föW™æRÑ}İhT]ŞWIcÜR[Eš0!¦ ¬ìîŒ@¶¼LR~t{‡íQ»û™á¿D©EÚ«nİ+dbE„i%Åìş‚KÙ •Ãn	#Ë	œ¼ø,"Ú-SºÎÅY"3'óµUş€2•	S“?KßUCÎ/ãT°¶ Ü9ËUÏ9±GÌ}F¨A¤ˆèòÖ¾\n±ÁLcRm…>SŒüq&$xúsË“-&†‡V,İ
-&R$†¹â"Ú·»QáQ©=`ãÁ&ŒFMX{N%mìJÃ[#·`iv—ƒ~gØ9h}‚v¿ßëoXêö†n¸ßØFHó¤w`WK‘·…êy^:Fá)Ó3¬†.şë»“££¡-n‹MÑä•ã^ˆ¡kö4¶ŒË–iĞêä9.SÎMğğØæ>‡×µX„$67¶æîÑ›)Ë4g=ÀõÂ˜ayrE-®Ë¢á%Õöe«´¡Ìû Dxİ­²}ĞëvûíA{è™ôÌm’i2ñ~ë*CIËë"x™ Î†ÃãúËà%à
->²BüU~åæ_1®ÎánVw†nŸã×[‡‡ıN÷dĞön³6«‘Ä]A§X…Ô
-$Æz]ÃØğh,ñ¸È ÈÂ+
-y*?À_kËÛ´…ev`ªpÎ›x,ë~^ùëué¯ŞÙˆüNéØ)ÊY7Á.ò/MgğÉ8ÙJ#&à‹˜¤6yL÷Ğx2™Z€Q‘,4eÅÕé«eÇAö·Øå“+Š­~ï¨3ü7¶?:İÁ°r0ìôºî«"jşãàp\+¶^ÄaŒ3SÑtíWäı©j_eºWî‚½q£ŞÛù  ÿÿ ²çºÚ
+
+  res.setHeader('Content-Type', 'application/xml');
+  res.send(xml);
+}
+
+function serveRobots(req: express.Request, res: express.Response) {
+  const host = req.get('host');
+  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+  const baseUrl = `${protocol}://${host}`;
+
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(`User-agent: *
+Allow: /
+
+# Multilingual India sitemaps
+Sitemap: ${baseUrl}/sitemap.xml
+
+# Friendly suggestions for Search Crawlers
+Crawl-delay: 1
+`);
+}
+
+// Vite middleware and asset delivery setup
+async function startServer() {
+  // Register PWA & Android TWA manifest, service worker, and assetlinks routes
+  app.get('/manifest.json', (req, res) => {
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(manifestPath);
+    } else {
+      res.status(404).send('manifest.json not found');
+    }
+  });
+
+  app.get('/sw.js', (req, res) => {
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    if (fs.existsSync(swPath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(swPath);
+    } else {
+      res.status(404).send('sw.js not found');
+    }
+  });
+
+  app.get('/.well-known/assetlinks.json', (req, res) => {
+    const assetlinksPath = path.join(process.cwd(), 'public', '.well-known', 'assetlinks.json');
+    if (fs.existsSync(assetlinksPath)) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(assetlinksPath);
+    } else {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.json([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+          "namespace": "android_app",
+          "package_name": "com.arohiai.app",
+          "sha256_cert_fingerprints": [
+            "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+          ]
+        }
+      }]);
+    }
+  });
+
+  // Register SEO sitemaps & robots globally
+  app.get('/sitemap.xml', serveSitemap);
+  app.get('/robots.txt', serveRobots);
+
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    const indexPath = path.join(distPath, 'index.html');
+    console.log(`[Production mode] Serving static files from: ${distPath}`);
+    if (fs.existsSync(indexPath)) {
+      console.log(`[Production mode] verified: index.html exists at: ${indexPath}`);
+    } else {
+      console.error(`[Production mode] CRITICAL ERROR: index.html NOT found at: ${indexPath}`);
+    }
+    app.use(express.static(distPath));
+    app.get('*', serveIndexWithSEO);
+  }
+
+  const backupServer: any = null;
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Arohi AI Server running on http://localhost:${PORT}`);
+  });
+
+  // Setup WebSocket server for Gemini Live Audio Bidirectional Streaming
+  setupLiveWebSocketServer(server, {
+    getAiClient,
+    AROHI_SYSTEM_INSTRUCTION,
+    safeUserDb,
+    getArohiFallbackResponse,
+    logWsEvent,
+  });
+}
+
+startServer();
