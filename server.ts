@@ -1,4 +1,3 @@
-// Arohi AI Production Server v3.0.1 - 2026-08-30T15:01:06.836Z
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -10160,7 +10159,7 @@ function logWsEvent(event: string, data: any) {
 
 const SEO_TRANSLATIONS: Record<string, { title: string; description: string; keywords: string }> = {
   en: {
-    title: "Arohi AI - World & India\x27s Sovereign Opportunity Engine | 150+ Languages (arohiai.com)",
+    title: "Arohi AI - World & India's #1 Multilingual Opportunity & Growth Engine | AI Voice Guide in 150+ Languages for Students, Teachers, Doctors, and Businesses",
     description: "Empowering Students, Teachers, Parents, Scientists, Researchers, Doctors, Engineers, Entrepreneurs, Job Seekers, Professionals, Businesses, MSMEs, Govt. Aspirants, Universities, Organizations, Aliens, Mars & Jupiter Citizens, Govt. & Private Officials, Humans. Connect with AI assistant Arohi via dynamic voice calling in 150+ regional languages (English, Hindi, Odia, etc.). Get resume analysis, mock interviews, job boards, business setups, and government schemes assistance.",
     keywords: "arohi ai, arohiai.com, career guidance India, AI career coach, resume score India, mock interview simulator, MSME Udyam registration, private sector jobs, student career advisor, opportunity portal, Sarkari job guide, voice call in Hindi, Odia, Bengali, Tamil, Telugu, Marathi, Kannada, Malayalam, Gujarati, Punjabi, Assamese, Urdu, 150 languages"
   },
@@ -11038,8 +11037,9 @@ async function startServer() {
               });
               console.log("Triggered instant Arohi welcome greeting on call connect.");
             } catch (greetErr) {
-      xœŒVmoÛ6þž_qŠB\9†bpà­›­-ú†$M>EÂHg[Mz$ÏsýßwGJ²$]Œ ‘(ÞÛsÏ½ „_ª•Õ4F›8:çàL>Ÿ£ÉÕÖ(S½D˜DÇZA*¤dA…©GÃð$§GÐøíŽúŸïŠ‡S`t`¶HS´vVH¹uî óGü¬3”µäŽ»tñ’ÉÞ„Ú`ÛÐ-…uŸH2Ä1êjÓ³*äµ0*¾ûCä’pºŠ(˜÷‚ð|[»±ßkugÉ’¼s„Ÿ?ëÃFøU¸»£ò!ŸAüÌ’L®UÓãü{gÐ:q/s»€?q™«8*(5)ø`›sÐ
-¼á‰3¼D•½QÙTj‹ñ¼­1<ÕX»!œŸœ!º,íÓ—™ÿ+¿Î¼¦¨aÖ +Œ:íÂ@9/T&‘4­˜O%fF/!•9*7x©Ót¥\8¾±‰VqTJPÐÂnT
-q&œð\BnßæJ˜Íî5á*ìÉëÞÎlZ|á¼T2œK¯‹œ#@TŠzo‹Ù¼xü%‘¨æýk8æ£gþÌéKÇµG…›ýz[Æƒ„tgo(Uq´ƒ6S=¥áoÓÏ Š,'.
-õ Xæ©Ñ«…VØ’bÆ8¸_ýöŽ”>&‡ð1à:Þ™h ãJ‚í„Û=×ÚÅÌ@õð·$YøX"Ú
-éò%~P«ÂÅÝ›@ùÎr1å0íþ:üN7Húj³B¢¨e´J—§F8œœ¼:>>Ž†=2{T®ì~tŽv¿êV€Òâaº®ð/¿~©X1&ódŽ?¬Í•ê;”#g4÷Èå’è>èI Kâ”½^µ}“HÚ…±˜yš“¢FÙ¾Óe6ÿ‚]gŸÿ—†»ÑW½³[kÙz¯Çµï».‚Œ)E©TÂSâ¢×'Qiê«ž†„£=TâãI6Ó¥°h¨-¬¸îüyð·i{÷ƒþÄª¦”>B÷Cx6™PŸ#Züwz£7ÍÚx2íŠêSõ¤Á»ŸvÎÓªe³w BóPæ.ÝíËUðè)õõL?:ëkà)"ŒSš^CšÂên£®’zßM»Ö½†,¡"£t=ß²"šR^»»†W¤éÆž?2•¢àÎíÚÞMäÌšÞŒËÿgûÊ´RÝ7HªéL‰uÔ¿hzTiôV`BŠf…JyhFÝ¤·îÆ­”ö$‘ë´‰së#o2­÷¦7WMDÃòÃî/ü„6œÚJQåLÃZâ¶”¸õê=–åŽQÊ7j°}V}ª©1”8×ÎïáþÅs­ó›ÞÏê­¦^R°¹Â| nb”Ý&ø^!yT³w¿²ìÁ*Vs#2ä]Ø-Þ_]}£ô™G4GP>x¢—÷˜êÿ.hÍ‚õ*†°@‘58ßäS˜[ên¡-ß;îø¸†ïŸ*EIa$/,)¿[8·FLûð‘•£±ÉB“"¾%5-íü5j"ô¨Ò†'çH¬ò¯¼/×¶EÐµ%e†ï!¦þ€(ÐµíTr¦½²År{m¹Ú¼–fó¨Ÿ¦0¥â”z×95ä÷Ÿ/xÖjÊ€©3Rê³LîkQjhg	ªÇäË×wç·ç_®}[èKV·B·.1i<'´°Ê"CGdýåbIdi—p{çmVm€(!iZ6ûÚÞµË›%Û/S“f­_//=Ùøë   ÿÿ §ýp
+      xœ¤XmoÛ6þž_q5ŠJ9Á°~pA‘ú’Ùéò¡-bF¦m¢zIÅ3Rý÷ÝQ”D½8é:¡@mŠ¼{î¹ãsç ”O˜&*x°c2ñG¯Ó<ZA’jÐRl6\‚H„,‚Â4æ°‘œk‘lf£IùùRÊñÙ8Oqä~v¾ÜIÎ¾5{™·àÇéŠGhg,ÙáÁ9Ò‚·|&	É=è~ç1¢ƒwâžÃNè-;ðü!Â•÷ô¹€5_Íp±rÄ\)¶áðý;TkE ×rOfþ.—ƒ X¶‹ÒÍº¼ç‰ö½q}KŽnÍîÛÒ‘7‡òøjàR¦Ýc h;cJS`—tÎëm{G†…jèY ‘&xpÍ"ÅÏê=kðŸ©ò¥Kt»
+\bïÄJ€Ò˜¹ò„Ýc˜ìwÂ:ºg&2Ý
+˜s%"ôÀ_©9¼aQtÇÂop™lDÂ‘Ï‘â!6×öÔ-#ûÜzOöf x„ÑñUi¾á«f 4îoTb–c,S¦öIþŠi6†óßœ°µÜ÷ªMCÆ¤â+äîÅÇùf:]àµH6þ¸•+"µ<°|%Rxñ8¦Ç.Š'«9g‘1›d¹öÛû Œ¥OžgàÚŸ@ŒÇ®÷r22+Ó,ŒÏ$ÓüüôåÉÉÉŠIûF¶ðÃØ5–~/½>JŸ½~ˆ¯MB°,5å¹¿mä2Q3øü ëo^®¸Ä¤#&]®¬:~úÅWü79`ìug×hJËœ÷6­¢§*~,Iù&•x	V˜Bb¼C&Ñ¨îJŽsðüÁ¨ËÓ?™À¯'ã‚ª~ÙóY+ à±Be´Ã•B°.Ñ$d aÑW–{®Û…åÁ¤y@>ú°ZTý™óœôˆÚmQ‡€WÕC¨-W?Ã[†5…¯qû•q¥‚,WÛVŸØc:uäª’Øð„ã-B ?Té-2JT>¢%$«’¡Ÿ‰½R§
+­i-
+Uê³ÕÏã_‚—Çkl[¼?ÍÚi¹v	Ív5CiïkßÞ!<‹öD6zú{°Á·¨bH×lCU}ˆË&>ÉU†8úd;&´Uõ˜¨›%þ˜¬ÐcÛð:’
+ëÌØð”.-Ÿ?˜î´Ø+Íã·€ÌCª âKò%ù´¸œÃÕüãû«kAœŒK#cü~\Ò.zèöV¬ªxó¸m¶ÜÙZpVka[ÇdžöPWß–j|[ÇÕÜ†Ó§£Žwj¶œ@itMKÅÌ>5ÃØ\~6\›K]á›[¾\µ¡	Îó »¯duµ_h¬b8??‡~·HÃo\¯.?C«ÏRcõÍh¢Ì4"Ö{ËQ²D…R¸ÔQL@e˜?Ž³§Ç(‹èÐ6i´±ÿ—…9{D©7¹VŸèOƒcKwa=Õ4M«4pQë,aRƒ"T¼…¦¯Çgƒãe¥Š†K¿3RºMaTÎ?`ö®L%—³l“pÚoš.NLîxÜUÉG±jà2^ü“ÞaÊ°²ÈÔ£Åy˜×HÚýµÖ¡þMy‘åºç×S€ù±æŒ–ý´áÿÐ¯ƒ†-÷—…cþs[™G6[óÞžšL‰¬:ÔÚÆòIÜNÑ Vû$uoºÎéÉéióÍk8É·‚çÙm2eÀ²_6Ç-KVÿ”m$[Q‡DÝÿ;G &xÛMMÙ/[Ì©ÍQ]¡nYQ‡Ï˜Þ&,&SžWÑTöc7ÈeÔý¨¯°šRoT†#†ï½òÆŸOœ‚¬Ù(XÔ>oFß›zcâëYõN$a”¯¸ò½Ùßµ‹ÔÁi÷»FèxýÃ1ð|š¿«@ƒê]ëæÔ¥Þ½nAiÝ¸Þ¯Sw\l Jæ¼Êä•upnfÄòs7dÎnZvh/œQÑ½5yiöÖn¥{rÔ¡)J44s“Ù¼¡*âG—…mªt³ßnyÐ²;l¥R äl,_¸[-Ü½ö»¹¹6û›—“~.17•,ÝÃEœcB›ÜbSö¦,S;~xT«§ÄVYtNøl€ÚTÝ×÷ø˜zãÖ_€Ü¨ÝòªŸ˜®ÕÙ:FwÝ)´d©ÒŽJŽJ%ÂN¹S^YFyGMÚÐÕNMªÄº-¹ù‹O÷Ê!Ï“'°½¦öhKóêñ¦¹¼Ö—Õe9óÚcÄ,c¬Ó¶:¤Æhôß¤ç–{.iò¨¡‰íæe—&«<[˜U,îÚ“FŠ#Ô,#Õåš)þ  ÿÿ †¼P

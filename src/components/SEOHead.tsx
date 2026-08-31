@@ -14,8 +14,8 @@ interface SEOHeadProps {
 
 const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   chat: {
-    title: "Arohi AI - World & India's Sovereign Opportunity Engine | 150+ Languages (arohiai.com)",
-    desc: "Arohi AI — World & India's Sovereign Opportunity Engine. Built by Bharat, Built for Bharat. Live multilingual voice AI & LLM cum LMM solving 100+ real-life problems across exams, business, careers, and welfare in 150+ languages."
+    title: "Arohi AI: ONE AI. INFINITE OPPORTUNITIES. | Sovereign AI Ecosystem in 150+ Languages (arohiai.com)",
+    desc: "Arohi AI — ONE AI. INFINITE OPPORTUNITIES. Built by Bharat, Built for Bharat. Live multilingual voice AI & LLM cum LMM solving 100+ real-life problems across exams, business, careers, and welfare in 150+ languages."
   },
   mocktests: {
     title: "Arohi Exams - National CBT Mock Test Series & Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",

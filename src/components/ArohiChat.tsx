@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Fullscreen
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -64,8 +64,6 @@ interface ArohiChatProps {
   onClose?: () => void;
   language?: Language;
   isDarkMode?: boolean;
-  isFullscreen?: boolean;
-  onToggleFullscreen?: (fullscreen: boolean) => void;
 }
 
 function getGmailWebUrl(mailtoUrl: string): string {
@@ -691,20 +689,9 @@ export function getConversationTopicTitle(chat?: SavedChat | { messages?: Messag
   return 'New Conversation';
 }
 
-export default function ArohiChat({ 
-  initialPrompt, 
-  onNavigateTab, 
-  onMinimize, 
-  onClose, 
-  language = 'en', 
-  isDarkMode = true,
-  isFullscreen: externalIsFullscreen,
-  onToggleFullscreen
-}: ArohiChatProps) {
+export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en', isDarkMode = true }: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
-  const [internalIsFullscreen, setInternalIsFullscreen] = useState(false);
-  const isFullscreen = externalIsFullscreen !== undefined ? externalIsFullscreen : internalIsFullscreen;
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
   const [is3DLearningOpen, setIs3DLearningOpen] = useState(false);
   const [active3DTopic, setActive3DTopic] = useState('human_heart');
@@ -712,51 +699,6 @@ export default function ArohiChat({
   const [isMcpGatewayOpen, setIsMcpGatewayOpen] = useState(false);
   const [isWorkflowOrchestratorOpen, setIsWorkflowOrchestratorOpen] = useState(false);
   const [isRefreshingMemory, setIsRefreshingMemory] = useState(false);
-
-  // Toggle fullscreen / focus mode for chat window
-  const toggleFullscreen = () => {
-    const nextState = !isFullscreen;
-    if (onToggleFullscreen) {
-      onToggleFullscreen(nextState);
-    } else {
-      setInternalIsFullscreen(nextState);
-    }
-
-    if (nextState) {
-      // Optional native browser fullscreen request
-      try {
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
-      } catch (e) {}
-    } else {
-      try {
-        if (document.exitFullscreen && document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        }
-      } catch (e) {}
-    }
-  };
-
-  // Keyboard shortcut listener: Escape key exits fullscreen
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        if (onToggleFullscreen) {
-          onToggleFullscreen(false);
-        } else {
-          setInternalIsFullscreen(false);
-        }
-        try {
-          if (document.exitFullscreen && document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-          }
-        } catch (err) {}
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, onToggleFullscreen]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -3291,11 +3233,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
   }
 
   return (
-    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${
-      isFullscreen 
-        ? 'fixed inset-0 z-[100] w-screen h-screen h-[100dvh] max-h-[100dvh] bg-black' 
-        : ''
-    } ${isVoiceCallOpen ? 'hidden' : ''}`}>
+    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
       {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
       <aside 
@@ -3806,24 +3744,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Fullscreen / Focus Mode Toggle Button */}
-            <button
-              type="button"
-              id="arohi-chat-fullscreen-toggle-btn"
-              onClick={toggleFullscreen}
-              className={`p-2 rounded-full ${
-                isFullscreen 
-                  ? (isDarkMode ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.5)]' : 'bg-purple-600 text-white shadow-md')
-                  : (isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/70' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200')
-              } border transition-all cursor-pointer flex items-center gap-1`}
-              title={isFullscreen ? "Exit Fullscreen Focus Mode (Esc)" : "Full Screen Focus Mode (F11 / Focus)"}
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              <span className={`text-[11px] font-semibold hidden md:inline pr-1 ${isFullscreen ? 'text-white' : (isDarkMode ? 'text-zinc-200' : 'text-zinc-800')}`}>
-                {isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}
-              </span>
-            </button>
-
             <button
               onClick={() => setIsVoiceCallOpen(true)}
               className={`p-2 rounded-full ${isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-emerald-400 border-zinc-700/70' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5`}
@@ -3935,16 +3855,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-blue-400" /> Clear Messages
-                  </button>
-                  <button
-                    onClick={() => {
-                      toggleFullscreen();
-                      setActiveMessageMenuId(null);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
-                  >
-                    {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-purple-400" /> : <Maximize2 className="w-3.5 h-3.5 text-purple-400" />}
-                    <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}</span>
                   </button>
                   {onMinimize && (
                     <button
