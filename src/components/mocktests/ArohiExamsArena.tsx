@@ -6,13 +6,11 @@ import {
   ArrowLeft, RefreshCw, X, Play, Volume2, VolumeX,
   Timer, HelpCircle, Gift, ShoppingBag, Lock, Check,
   TrendingUp, BarChart3, BookOpen, AlertCircle, Share2,
-  Heart, Compass, Search, Filter, Layers, ChevronDown,
-  CreditCard
+  Heart, Compass, Search, Filter, Layers, ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { audioEngine } from '../../utils/audioEngine';
 import { arohiArenaVoice } from '../../utils/arohiArenaVoice';
-import { openRazorpayCheckout } from '../../lib/razorpay';
 import { 
   ARENA_CLASS_TRACKS, 
   ARENA_SUBJECTS_LIST, 
@@ -241,11 +239,6 @@ export default function ArohiExamsArena({
   const [dailyRewardClaimed, setDailyRewardClaimed] = useState<boolean>(() => {
     return localStorage.getItem('arohi_arena_daily_claimed') === new Date().toISOString().slice(0, 10);
   });
-
-  // Shop & Real-Money Vault States
-  const [shopCategory, setShopCategory] = useState<'vault' | 'boosters'>('vault');
-  const [isPurchasingBundle, setIsPurchasingBundle] = useState<string | null>(null);
-  const [purchaseSuccessMsg, setPurchaseSuccessMsg] = useState<string | null>(null);
 
   // Active Navigation & Modals State
   const [activeTab, setActiveTab] = useState<string>('home');
@@ -1065,34 +1058,22 @@ export default function ArohiExamsArena({
 
             {/* Gold Coins Pill */}
             <div 
-              onClick={() => {
-                setShopCategory('vault');
-                setActiveModal('shop');
-              }}
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.8 rounded-full bg-[#201305] border border-amber-500/40 text-amber-300 text-[10px] sm:text-[11px] font-black shadow-inner cursor-pointer hover:border-amber-400 hover:scale-105 transition-all active:scale-95 group"
-              title="Arena Gold Coins (Click to Top-up)"
+              onClick={() => setActiveModal('shop')}
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-0.8 rounded-full bg-[#201305] border border-amber-500/40 text-amber-300 text-[10px] sm:text-[11px] font-black shadow-inner cursor-pointer hover:border-amber-400 transition-all active:scale-95"
+              title="Arena Gold Coins"
             >
               <Coins className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
               <span className="font-mono">{goldCoins.toLocaleString('en-IN')}</span>
-              <span className="w-3.5 h-3.5 rounded-full bg-amber-500/30 text-amber-300 flex items-center justify-center text-[9px] font-black group-hover:bg-amber-500 group-hover:text-black transition-colors">
-                +
-              </span>
             </div>
 
             {/* Gems Pill */}
             <div 
-              onClick={() => {
-                setShopCategory('vault');
-                setActiveModal('shop');
-              }}
-              className="hidden xs:flex items-center gap-1.5 px-2 sm:px-2.5 py-0.8 rounded-full bg-[#05172b] border border-cyan-500/40 text-cyan-300 text-[10px] sm:text-[11px] font-black shadow-inner cursor-pointer hover:border-cyan-400 hover:scale-105 transition-all active:scale-95 group"
-              title="Arena Gems (Click to Top-up)"
+              onClick={() => setActiveModal('shop')}
+              className="hidden xs:flex items-center gap-1 px-2 sm:px-2.5 py-0.8 rounded-full bg-[#05172b] border border-cyan-500/40 text-cyan-300 text-[10px] sm:text-[11px] font-black shadow-inner cursor-pointer hover:border-cyan-400 transition-all active:scale-95"
+              title="Arena Gems"
             >
               <Gem className="w-3 h-3 text-cyan-400 fill-cyan-400 shrink-0" />
               <span className="font-mono">{gems}</span>
-              <span className="w-3.5 h-3.5 rounded-full bg-cyan-500/30 text-cyan-300 flex items-center justify-center text-[9px] font-black group-hover:bg-cyan-500 group-hover:text-black transition-colors">
-                +
-              </span>
             </div>
 
             {/* Notification Bell */}
@@ -2865,7 +2846,7 @@ export default function ArohiExamsArena({
       {/* ============================================================== */}
       {activeModal === 'shop' && (
         <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain animate-in fade-in duration-200">
-          <div className="w-full max-w-xl rounded-3xl bg-[#0f0a28]/98 border border-purple-500/50 shadow-2xl p-5 sm:p-6 relative my-auto max-h-[88vh] sm:max-h-[92vh] overflow-y-auto flex flex-col space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-[#0f0a28]/98 border border-purple-500/50 shadow-2xl p-5 sm:p-6 relative my-auto max-h-[86vh] sm:max-h-[90vh] overflow-y-auto flex flex-col space-y-4 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setActiveModal('none')}
               className="absolute top-3.5 right-3.5 p-2 rounded-xl bg-purple-950/90 hover:bg-purple-900 text-slate-300 hover:text-white border border-purple-800/60 z-30 cursor-pointer active:scale-95"
@@ -2873,253 +2854,42 @@ export default function ArohiExamsArena({
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center justify-between pr-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
-                  <ShoppingBag className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">ARENA POWER & VAULT STORE</h3>
-                  <p className="text-xs text-purple-300">Gems, Gold bundles, Boosters & Golden Tickets</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+                <ShoppingBag className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white">ARENA POWER SHOP</h3>
+                <p className="text-xs text-purple-300">Boosters, rings & tournament golden passes</p>
               </div>
             </div>
 
-            {/* Success Toast */}
-            {purchaseSuccessMsg && (
-              <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-center text-emerald-300 font-black text-xs animate-in zoom-in-95 flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>{purchaseSuccessMsg}</span>
-              </div>
-            )}
-
-            {/* Category Navigation Tabs */}
-            <div className="grid grid-cols-2 gap-2 bg-[#160d36] p-1.5 rounded-2xl border border-purple-900/50 text-xs font-black">
-              <button
-                onClick={() => setShopCategory('vault')}
-                className={`py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  shopCategory === 'vault'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Gem className="w-3.5 h-3.5 text-cyan-300" />
-                <span>💎 Real Gem & Coin Bundles</span>
-              </button>
-              <button
-                onClick={() => setShopCategory('boosters')}
-                className={`py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  shopCategory === 'boosters'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-300" />
-                <span>⚡ Power Boosters & Aura</span>
-              </button>
-            </div>
-
-            {/* TAB 1: REAL-MONEY RAZORPAY VAULT BUNDLES */}
-            {shopCategory === 'vault' && (
-              <div className="space-y-3">
-                <div className="bg-[#181138] border border-purple-900/40 rounded-2xl p-3 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-emerald-400" />
-                    <span className="font-bold text-slate-200">Official Razorpay Gateway</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                { name: '2X XP Booster (24h)', cost: '500 Coins', icon: Zap },
+                { name: 'Cyber Avatar Aura', cost: '1,500 Coins', icon: Crown },
+                { name: 'AI Hint Compass', cost: '25 Gems', icon: Sparkles },
+                { name: 'Tournament Golden Ticket', cost: '50 Gems', icon: Trophy }
+              ].map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div key={idx} className="p-3 rounded-2xl bg-[#170e3c] border border-purple-900/50 space-y-1.5 text-center">
+                    <Icon className="w-5 h-5 mx-auto text-amber-400" />
+                    <div className="text-xs font-bold text-white">{item.name}</div>
+                    <div className="text-[11px] font-mono text-amber-300 font-bold">{item.cost}</div>
+                    <button
+                      onClick={() => {
+                        try { audioEngine.playSuccess(); } catch {}
+                        arohiArenaVoice.announceItemEquipped(item.name);
+                      }}
+                      className="w-full py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[10px] cursor-pointer active:scale-95"
+                    >
+                      BUY & EQUIP
+                    </button>
                   </div>
-                  <span className="text-[10px] text-purple-300 font-mono bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800/60">
-                    Instant Wallet Credit
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    {
-                      id: 'starter_pouch',
-                      title: 'Starter Gem Pouch',
-                      price: 29,
-                      priceLabel: '₹29',
-                      gems: 250,
-                      coins: 1000,
-                      bonus: 'Instant Boost',
-                      badge: '⚡ Quick Pick',
-                      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-                      btnGradient: 'from-cyan-600 to-blue-600'
-                    },
-                    {
-                      id: 'gladiator_vault',
-                      title: 'Gladiator Power Vault',
-                      price: 59,
-                      priceLabel: '₹59',
-                      gems: 750,
-                      coins: 5000,
-                      bonus: '2X XP (24h) Included',
-                      badge: '🔥 Best Value',
-                      badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
-                      btnGradient: 'from-pink-600 to-purple-600'
-                    },
-                    {
-                      id: 'tournament_master',
-                      title: 'Tournament Master',
-                      price: 149,
-                      priceLabel: '₹149',
-                      gems: 2000,
-                      coins: 15000,
-                      bonus: '5 Golden Tournament Passes',
-                      badge: '🏆 Pro Gamer',
-                      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-                      btnGradient: 'from-amber-600 to-orange-600'
-                    },
-                    {
-                      id: 'champion_treasury',
-                      title: 'All-India Champion',
-                      price: 299,
-                      priceLabel: '₹299',
-                      gems: 5000,
-                      coins: 50000,
-                      bonus: 'All Avatar Auras & Hints',
-                      badge: '👑 Grand Treasury',
-                      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-                      btnGradient: 'from-emerald-600 to-teal-600'
-                    }
-                  ].map((bundle) => {
-                    const isProcessing = isPurchasingBundle === bundle.id;
-                    return (
-                      <div
-                        key={bundle.id}
-                        className="p-3.5 rounded-2xl bg-[#170e3c] border border-purple-800/50 hover:border-purple-500/70 transition-all flex flex-col justify-between space-y-3 relative group"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${bundle.badgeColor}`}>
-                              {bundle.badge}
-                            </span>
-                            <h4 className="text-sm font-black text-white mt-1.5">{bundle.title}</h4>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-base font-black text-emerald-400">{bundle.priceLabel}</span>
-                          </div>
-                        </div>
-
-                        <div className="bg-[#0f0928] p-2.5 rounded-xl border border-purple-950 space-y-1.5">
-                          <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="flex items-center gap-1 text-cyan-300">
-                              <Gem className="w-3.5 h-3.5 fill-cyan-400" />
-                              <span>+{bundle.gems.toLocaleString()} Gems</span>
-                            </span>
-                            <span className="flex items-center gap-1 text-amber-300">
-                              <Coins className="w-3.5 h-3.5 fill-amber-400" />
-                              <span>+{bundle.coins.toLocaleString()} Coins</span>
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-purple-300 font-semibold flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-                            <span>{bundle.bonus}</span>
-                          </div>
-                        </div>
-
-                        <button
-                          disabled={isProcessing}
-                          onClick={async () => {
-                            setIsPurchasingBundle(bundle.id);
-                            try {
-                              await openRazorpayCheckout({
-                                amountInRupees: bundle.price,
-                                currency: 'INR',
-                                planName: `Arena: ${bundle.title}`,
-                                userEmail: user?.email || 'student@arohiai.com',
-                                userName: playerName,
-                                notes: {
-                                  bundleId: bundle.id,
-                                  bundleTitle: bundle.title,
-                                  gems: String(bundle.gems),
-                                  coins: String(bundle.coins),
-                                  userId: user?.uid || 'guest'
-                                },
-                                onSuccess: (res) => {
-                                  setIsPurchasingBundle(null);
-                                  const newCoins = goldCoins + bundle.coins;
-                                  const newGems = gems + bundle.gems;
-                                  setGoldCoins(newCoins);
-                                  setGems(newGems);
-                                  try {
-                                    localStorage.setItem('arohi_arena_coins', String(newCoins));
-                                    localStorage.setItem('arohi_arena_gems', String(newGems));
-                                  } catch {}
-                                  try {
-                                    audioEngine.playSuccess();
-                                  } catch {}
-                                  try {
-                                    arohiArenaVoice.speak(`Payment verified! ${bundle.gems} Gems and ${bundle.coins.toLocaleString()} Gold Coins credited to your arena vault!`);
-                                  } catch {}
-                                  setPurchaseSuccessMsg(`+${bundle.gems} Gems & +${bundle.coins.toLocaleString()} Coins Credited!`);
-                                  setTimeout(() => setPurchaseSuccessMsg(null), 6000);
-                                },
-                                onError: (err) => {
-                                  setIsPurchasingBundle(null);
-                                  alert(`Payment Note: ${err.message || 'Payment could not be completed.'}`);
-                                },
-                                onDismiss: () => {
-                                  setIsPurchasingBundle(null);
-                                }
-                              });
-                            } catch (err: any) {
-                              setIsPurchasingBundle(null);
-                              alert(`Arena Checkout Error: ${err.message || 'Failed to initialize checkout'}`);
-                            }
-                          }}
-                          className={`w-full py-2.5 rounded-xl bg-gradient-to-r ${bundle.btnGradient} hover:brightness-110 text-white font-black text-[11px] uppercase tracking-wider cursor-pointer transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50`}
-                        >
-                          {isProcessing ? (
-                            <>
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Processing...</span>
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="w-3.5 h-3.5" />
-                              <span>Buy {bundle.priceLabel} with Razorpay</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: IN-GAME BOOSTERS & AURA SHOP (COINS / GEMS) */}
-            {shopCategory === 'boosters' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {[
-                  { name: '2X XP Booster (24h)', cost: '500 Coins', icon: Zap },
-                  { name: 'Cyber Avatar Aura', cost: '1,500 Coins', icon: Crown },
-                  { name: 'AI Hint Compass', cost: '25 Gems', icon: Sparkles },
-                  { name: 'Tournament Golden Ticket', cost: '50 Gems', icon: Trophy }
-                ].map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={idx} className="p-3 rounded-2xl bg-[#170e3c] border border-purple-900/50 space-y-1.5 text-center">
-                      <Icon className="w-5 h-5 mx-auto text-amber-400" />
-                      <div className="text-xs font-bold text-white">{item.name}</div>
-                      <div className="text-[11px] font-mono text-amber-300 font-bold">{item.cost}</div>
-                      <button
-                        onClick={() => {
-                          try { audioEngine.playSuccess(); } catch {}
-                          arohiArenaVoice.announceItemEquipped(item.name);
-                          setPurchaseSuccessMsg(`Equipped: ${item.name}!`);
-                          setTimeout(() => setPurchaseSuccessMsg(null), 3000);
-                        }}
-                        className="w-full py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[10px] cursor-pointer active:scale-95"
-                      >
-                        BUY & EQUIP
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

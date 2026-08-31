@@ -2033,7 +2033,6 @@ export default function App() {
       case 'account':
         return (
           <UserDashboard 
-            isDarkMode={isDarkMode}
             initialSection="all"
             subscriptions={subscriptions} 
             subscriptionDetails={subscriptionDetails}

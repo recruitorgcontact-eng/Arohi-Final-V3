@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
-import { openRazorpayCheckout } from '../lib/razorpay';
 import { 
   Sparkles, 
   BookOpen, 
@@ -35,8 +34,7 @@ import {
   Lock,
   Search,
   History,
-  Trash2,
-  RefreshCw
+  Trash2
 } from 'lucide-react';
 import { initialCourses, Course } from '../data/coursesData';
 import ArohiAvatar from './ArohiAvatar';
@@ -437,7 +435,7 @@ function renderMarkdown(content: string) {
   return <div className="space-y-1 text-slate-100">{elements}</div>;
 }
 
-export default function CoursesPage({ isDarkMode = false, onOpenAuth, onNavigateTab }: { isDarkMode?: boolean, onOpenAuth?: () => void, onNavigateTab?: (tab: string) => void }) {
+export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?: () => void, onNavigateTab?: (tab: string) => void }) {
   const { user, userData, updateCareerProgress } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -452,7 +450,6 @@ export default function CoursesPage({ isDarkMode = false, onOpenAuth, onNavigate
   const [courses, setCourses] = useState<Course[]>(initialCourses);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isProcessingRazorpay, setIsProcessingRazorpay] = useState(false);
   const [candidateName, setCandidateName] = useState(() => user?.displayName || localStorage.getItem('recruit_user_name') || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>(() => {
@@ -2476,16 +2473,15 @@ Keep in mind:
                 </div>
               </>
             ) : (
-              /* REAL SECURE PAYMENT GATEWAY MODAL */
-              <div className="space-y-5">
+              /* SECURE PAYMENT SIMULATOR */
+              <div className="space-y-6">
                 <div className="text-center space-y-2">
-                  <div className="bg-[#fbbf24]/10 text-[#fcd34d] border border-[#fbbf24]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Official Razorpay Payment Gateway</span>
+                  <div className="bg-[#fbbf24]/10 text-[#fcd34d] border border-[#fbbf24]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Secure Odisha Education Gateway
                   </div>
-                  <h3 className="text-xl font-black text-white">Course Purchase & Certification</h3>
-                  <p className="text-xs text-slate-300 font-semibold leading-relaxed max-w-md mx-auto">
-                    Activate your certification track with instant verification via UPI, NetBanking, Debit/Credit Cards, and Wallets.
+                  <h3 className="text-xl font-black text-white">Course Purchase Checkout</h3>
+                  <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-md mx-auto">
+                    Activate your certification track. All learning modules, interactive mock exams, and Arohi AI mentor guidelines are unlocked immediately.
                   </p>
                 </div>
 
@@ -2495,107 +2491,61 @@ Keep in mind:
                       <span className="text-[10px] text-[#a78bfa] font-black uppercase tracking-wider block">Course Title</span>
                       <p className="text-sm font-black text-white mt-0.5">{selectedCourse.title}</p>
                     </div>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg font-black shrink-0">
+                    <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded font-bold shrink-0">
                       {selectedCourse.price}
                     </span>
                   </div>
 
                   <div className="border-t border-[#231a4f] pt-2.5 grid grid-cols-2 gap-4 text-xs font-bold text-slate-300">
                     <div>
-                      <span className="block text-[9px] uppercase text-slate-400">Instructor Support</span>
+                      <span className="block text-[9px] uppercase text-slate-500">Instructor Support</span>
                       <span className="text-slate-200">Continuous via Arohi AI</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] uppercase text-slate-400">Credential Status</span>
+                      <span className="block text-[9px] uppercase text-slate-500">Credential Status</span>
                       <span className="text-slate-200">ISO Verified Certificate</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="space-y-1.5 text-left">
-                    <label className="text-[10px] uppercase font-black tracking-wider text-slate-300">Candidate Name on Certificate</label>
+                    <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Mock Payment Interface</label>
+                    <div className="bg-[#19143d] border border-[#3b2b73] rounded-xl p-3.5 flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span className="flex items-center gap-2">🇮🇳 UPI / Direct Net Banking Mockway</span>
+                      <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Active</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Candidate Name on Certificate</label>
                     <input 
                       type="text" 
                       value={candidateName}
                       onChange={(e) => setCandidateName(e?.target?.value ?? "")}
-                      placeholder="Enter full name for ISO Certificate"
                       className="w-full bg-[#19143d] border border-[#3b2b73] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed]"
                     />
                   </div>
 
-                  <div className="p-3 bg-[#110c2e] border border-[#2b1f5c] rounded-xl flex items-center justify-between text-xs text-slate-300">
-                    <span className="flex items-center gap-2 font-bold">
-                      <CreditCard className="w-4 h-4 text-purple-400" />
-                      <span>Razorpay Standard Checkout</span>
-                    </span>
-                    <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                      UPI, Cards & NetBanking
-                    </span>
-                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium text-center leading-normal">
+                    This is a sandbox educational simulation. Clicking "Authorize Payment" charges no real money but immediately updates your workspace dashboard and assigns your enrolled course track.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <button
                     onClick={() => setIsCheckoutOpen(false)}
-                    disabled={isProcessingRazorpay}
-                    className="w-full bg-[#1a153b] hover:bg-[#251e54] text-white border border-[#2b215e] font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl cursor-pointer transition-all disabled:opacity-50"
+                    className="w-full bg-[#1a153b] hover:bg-[#251e54] text-white border border-[#2b215e] font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl cursor-pointer transition-all"
                   >
-                    Cancel
+                    Go Back
                   </button>
                   <button
-                    disabled={isProcessingRazorpay}
-                    onClick={async () => {
-                      const numericPrice = Number(selectedCourse.price.replace(/[^0-9]/g, '')) || 0;
-                      if (numericPrice <= 0 || selectedCourse.price.toLowerCase().includes('free')) {
-                        handleAuthorizePaymentAndAutoLaunch(selectedCourse);
-                        return;
-                      }
-
-                      setIsProcessingRazorpay(true);
-                      try {
-                        await openRazorpayCheckout({
-                          amountInRupees: numericPrice,
-                          currency: 'INR',
-                          planName: `Course: ${selectedCourse.title}`,
-                          userEmail: user?.email || 'student@arohiai.com',
-                          userName: candidateName.trim() || user?.displayName || 'Arohi AI Scholar',
-                          notes: {
-                            courseId: selectedCourse.id,
-                            courseTitle: selectedCourse.title,
-                            candidateName: candidateName.trim() || user?.displayName || 'Scholar',
-                            userId: user?.uid || 'guest'
-                          },
-                          onSuccess: (res) => {
-                            setIsProcessingRazorpay(false);
-                            handleAuthorizePaymentAndAutoLaunch(selectedCourse);
-                          },
-                          onError: (err) => {
-                            setIsProcessingRazorpay(false);
-                            alert(`Payment Note: ${err.message || 'Transaction could not be completed.'}`);
-                          },
-                          onDismiss: () => {
-                            setIsProcessingRazorpay(false);
-                          }
-                        });
-                      } catch (err: any) {
-                        setIsProcessingRazorpay(false);
-                        alert(`Checkout Error: ${err.message || 'Failed to launch checkout'}`);
-                      }
+                    onClick={() => {
+                      handleAuthorizePaymentAndAutoLaunch(selectedCourse);
                     }}
-                    className="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] text-white font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] text-white font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    {isProcessingRazorpay ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Launching Razorpay...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>Pay {selectedCourse.price} via Razorpay</span>
-                      </>
-                    )}
+                    Authorize Payment
                   </button>
                 </div>
               </div>
