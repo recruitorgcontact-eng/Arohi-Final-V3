@@ -71,6 +71,10 @@ export interface UserData {
   savedItems: Array<{ id: string; title: string; type: string; desc: string }>;
   applications: Application[];
   isSubscribed?: boolean;
+  appliedCoupon?: string;
+  lastCouponUsed?: string;
+  trialStartTime?: number;
+  createdAt?: string | number;
   subscriptionPlanName?: string;
   subscriptionEndDate?: number;
   subscriptions?: Record<string, boolean>;
@@ -408,6 +412,7 @@ interface AuthContextType {
     subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
     paymentMethod?: string;
     paymentId?: string;
+    appliedCoupon?: string;
   }) => Promise<void>;
   activateExamPass: (tier: 'silver' | 'gold' | 'platinum', paymentMethod?: string, transactionId?: string) => Promise<void>;
   consumeExamPassTest: () => Promise<{ success: boolean; testsRemaining: number; expired?: boolean }>;
@@ -604,22 +609,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           customEndDate: Date.now() + LIFETIME_MS,
           paymentMethod: 'Founder VIP Exemption'
         });
-      } else if (data && (data.isSubscribed || (data.subscriptionEndDate && data.subscriptionEndDate > Date.now()))) {
+      } else {
+        const localCoupon = typeof window !== 'undefined' ? localStorage.getItem('arohi_applied_coupon') : null;
+        const validCoupons = ['JUNOON', 'JUNOON399', 'AROHI399', 'PRO399', 'FREE399', 'VIP399', 'ELITE399', 'FOUNDER399'];
+        const hasValidLocalCoupon = localCoupon && (
+          validCoupons.includes(localCoupon.toUpperCase()) ||
+          localCoupon.toUpperCase().startsWith('AROHI-') ||
+          localCoupon.toUpperCase().startsWith('VIP-') ||
+          localCoupon.toUpperCase().startsWith('PRO-') ||
+          localCoupon.toUpperCase().startsWith('JUNOON-')
+        );
+
+        const isUserSubscribed = Boolean(
+          data.isSubscribed || 
+          (data.subscriptionEndDate && data.subscriptionEndDate > Date.now()) ||
+          data.appliedCoupon || 
+          data.lastCouponUsed ||
+          hasValidLocalCoupon
+        );
+
+        if (isUserSubscribed) {
+          try {
+            const now = Date.now();
+            const resolvedCoupon = data.appliedCoupon || data.lastCouponUsed || (hasValidLocalCoupon ? localCoupon?.toUpperCase() : null);
+            const endDate = (data.subscriptionEndDate && data.subscriptionEndDate > now)
+              ? data.subscriptionEndDate
+              : now + (30 * 24 * 60 * 60 * 1000);
+            const subs = data.subscriptions || { path1: true, path2: false, path3: false, path4: false };
+            const planName = data.subscriptionPlanName || (resolvedCoupon ? `Starter Plan (Coupon ${resolvedCoupon})` : 'Starter Plan (₹399/mo)');
+            
+            data.isSubscribed = true;
+            data.subscriptionEndDate = endDate;
+            data.subscriptions = subs;
+            data.subscriptionPlanName = planName;
+            if (resolvedCoupon) {
+              data.appliedCoupon = resolvedCoupon;
+              data.lastCouponUsed = resolvedCoupon;
+            }
+
+            localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
+            localStorage.setItem('arohi_subscription_end_date', endDate.toString());
+            localStorage.setItem('arohi_subscription_plan_name', planName);
+            if (resolvedCoupon) {
+              localStorage.setItem('arohi_applied_coupon', resolvedCoupon);
+            }
+            if (data.subscriptionDetails) {
+              localStorage.setItem('arohi_subscription_details', JSON.stringify(data.subscriptionDetails));
+            }
+
+            // If Firestore doc was missing the coupon or subscription, sync to server in background
+            if (!data.isSubscribed || !data.subscriptionEndDate || !data.appliedCoupon) {
+              fetch('/api/auth/update-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  uid,
+                  isSubscribed: true,
+                  subscriptionPlanName: planName,
+                  subscriptionEndDate: endDate,
+                  subscriptions: subs,
+                  appliedCoupon: resolvedCoupon
+                })
+              }).catch(() => {});
+            }
+          } catch (e) {}
+        }
+      }
+
+      // Synchronize trial start time
+      if (data.trialStartTime) {
         try {
-          const now = Date.now();
-          const endDate = (data.subscriptionEndDate && data.subscriptionEndDate > now)
-            ? data.subscriptionEndDate
-            : now + (30 * 24 * 60 * 60 * 1000);
-          const subs = data.subscriptions || { path1: true, path2: false, path3: false, path4: false };
-          localStorage.setItem('arohi_subscriptions', JSON.stringify(subs));
-          localStorage.setItem('arohi_subscription_end_date', endDate.toString());
-          if (data.subscriptionPlanName) {
-            localStorage.setItem('arohi_subscription_plan_name', data.subscriptionPlanName);
-          }
-          if (data.subscriptionDetails) {
-            localStorage.setItem('arohi_subscription_details', JSON.stringify(data.subscriptionDetails));
-          }
+          localStorage.setItem('arohi_trial_start', String(data.trialStartTime));
         } catch (e) {}
+      } else {
+        const savedTrial = typeof window !== 'undefined' ? localStorage.getItem('arohi_trial_start') : null;
+        if (savedTrial) {
+          data.trialStartTime = parseInt(savedTrial, 10) || Date.now();
+        }
       }
 
       // Synchronize Arena Stats into client cache if present
@@ -694,7 +760,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/me', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, entrySource })
+        body: JSON.stringify({ uid, email, entrySource })
       });
       if (response.ok) {
         const resData = await response.json();
@@ -964,6 +1030,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, role?: 'candidate' | 'recruiter', phone?: string) => {
+    const localCoupon = typeof window !== 'undefined' ? localStorage.getItem('arohi_applied_coupon') : null;
+    const validCoupons = ['JUNOON', 'JUNOON399', 'AROHI399', 'PRO399', 'FREE399', 'VIP399', 'ELITE399', 'FOUNDER399'];
+    const hasValidLocalCoupon = localCoupon && (
+      validCoupons.includes(localCoupon.toUpperCase()) ||
+      localCoupon.toUpperCase().startsWith('AROHI-') ||
+      localCoupon.toUpperCase().startsWith('VIP-') ||
+      localCoupon.toUpperCase().startsWith('PRO-') ||
+      localCoupon.toUpperCase().startsWith('JUNOON-')
+    );
+    const now = Date.now();
+    const trialStart = typeof window !== 'undefined' ? parseInt(localStorage.getItem('arohi_trial_start') || '0', 10) || now : now;
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -996,8 +1074,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           interviewScore: 0,
           businessScore: 0
         },
-        activities: []
+        activities: [],
+        trialStartTime: trialStart,
+        createdAt: new Date().toISOString()
       };
+
+      if (hasValidLocalCoupon) {
+        const cleanCoupon = localCoupon.toUpperCase();
+        initialData.isSubscribed = true;
+        initialData.appliedCoupon = cleanCoupon;
+        initialData.lastCouponUsed = cleanCoupon;
+        initialData.subscriptionPlanName = `Starter Plan (Coupon ${cleanCoupon})`;
+        initialData.subscriptionEndDate = now + (30 * 24 * 60 * 60 * 1000);
+        initialData.subscriptions = { path1: true, path2: false, path3: false, path4: false };
+        initialData.subscriptionDetails = { path1: { tierName: 'Starter Plan', price: 399, margin: 199.5 } };
+        initialData.paymentMethod = `Coupon Code ${cleanCoupon}`;
+        initialData.subscribedAt = now;
+      }
 
       // Attempt registration/sync via server-side first
       try {
@@ -1010,7 +1103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             displayName: name,
             role: role || 'candidate',
             mobile: phone || '',
-            entrySource: getEntrySource()
+            entrySource: getEntrySource(),
+            appliedCoupon: hasValidLocalCoupon ? localCoupon.toUpperCase() : undefined,
+            trialStartTime: trialStart
           })
         });
         if (response.ok) {
@@ -1049,7 +1144,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim(), password, name, role: role || 'candidate', mobile: phone || '', entrySource: getEntrySource() })
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+            name,
+            role: role || 'candidate',
+            mobile: phone || '',
+            entrySource: getEntrySource(),
+            appliedCoupon: hasValidLocalCoupon ? localCoupon.toUpperCase() : undefined,
+            trialStartTime: trialStart
+          })
         });
         
         const resData = await response.json();
@@ -1744,6 +1848,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
     paymentMethod?: string;
     paymentId?: string;
+    appliedCoupon?: string;
   }) => {
     if (!user) return;
     const now = Date.now();
@@ -1752,8 +1857,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const planName = subData.subscriptionPlanName || 'Starter Plan (₹399/mo)';
     const subs = subData.subscriptions || { path1: true, path2: false, path3: false, path4: false };
     const details = subData.subscriptionDetails || { path1: { tierName: planName, price: 399, margin: 199.5 } };
+    const cleanCoupon = subData.appliedCoupon ? subData.appliedCoupon.trim().toUpperCase() : undefined;
     
-    const subPayload = {
+    const subPayload: any = {
       isSubscribed: Boolean(subData.isSubscribed),
       subscriptionPlanName: planName,
       subscriptionEndDate: endDate,
@@ -1764,6 +1870,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       paymentId: subData.paymentId || `pay_${now}`,
       updatedAt: new Date().toISOString()
     };
+
+    if (cleanCoupon) {
+      subPayload.appliedCoupon = cleanCoupon;
+      subPayload.lastCouponUsed = cleanCoupon;
+      localStorage.setItem('arohi_applied_coupon', cleanCoupon);
+    }
 
     const updatedUserData = userData ? { ...userData, ...subPayload } : null;
 
@@ -1776,7 +1888,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       planName,
       price: details.path1?.price || 399,
       paymentMethod: subData.paymentMethod || 'Razorpay / UPI',
-      customEndDate: endDate
+      customEndDate: endDate,
+      couponCode: cleanCoupon
     });
 
     // Layer 1: Server-side API

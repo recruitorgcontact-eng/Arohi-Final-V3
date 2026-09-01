@@ -490,6 +490,84 @@ export const NURSING_MEDICAL_TEMPLATES: QuestionTemplate[] = [
     ],
     correctAnswer: 'A',
     explanation: 'CDC protocol for donning PPE: 1. Gown, 2. Mask or Respirator, 3. Goggles or Face Shield, 4. Gloves.'
+  },
+  {
+    subject: 'Medical Surgical Nursing',
+    topic: 'Arterial Blood Gas (ABG) Analysis',
+    text: 'An ICU patient with Diabetic Ketoacidosis (DKA) has the following ABG results: pH 7.24, PaCO2 30 mmHg, HCO3- 14 mEq/L. How is this acid-base imbalance interpreted?',
+    options: [
+      { id: 'A', text: 'Partially compensated Metabolic Acidosis' },
+      { id: 'B', text: 'Uncompensated Respiratory Acidosis' },
+      { id: 'C', text: 'Fully compensated Metabolic Alkalosis' },
+      { id: 'D', text: 'Uncompensated Metabolic Acidosis' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'pH < 7.35 indicates acidosis; HCO3- < 22 mEq/L confirms primary metabolic origin; PaCO2 < 35 mmHg shows the respiratory system is actively hyperventilating (Kussmaul breathing) to compensate partially.'
+  },
+  {
+    subject: 'Medical Surgical Nursing',
+    topic: 'Burns Assessment & Parkland Formula',
+    text: 'A 60 kg adult sustains second and third-degree flame burns across the entire anterior torso (18%) and both anterior arms (4.5% + 4.5% = 9%). Using the Parkland Formula (4 mL × kg × % TBSA), what is the total IV fluid volume required in the first 24 hours?',
+    options: [
+      { id: 'A', text: '6,480 mL of Ringer’s Lactate (with 3,240 mL infused in first 8 hours)' },
+      { id: 'B', text: '4,500 mL of Normal Saline' },
+      { id: 'C', text: '8,200 mL of Dextrose 5%' },
+      { id: 'D', text: '5,000 mL of Albumin' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'Total TBSA burned = 18% + 9% = 27%. Parkland formula = 4 mL × 60 kg × 27 = 6,480 mL Ringer’s Lactate. Half (3,240 mL) is given in the first 8 hours from time of injury, and remaining half over the next 16 hours.'
+  },
+  {
+    subject: 'Neurological Nursing',
+    topic: 'Glasgow Coma Scale (GCS) Assessment',
+    text: 'A trauma victim opens eyes to verbal speech (3), utters inappropriate/confused words (3), and localizes to painful stimulus (5). What is the patient’s total Glasgow Coma Scale (GCS) score?',
+    options: [
+      { id: 'A', text: '11 (Moderate Head Injury)' },
+      { id: 'B', text: '9 (Severe Head Injury)' },
+      { id: 'C', text: '13 (Mild Head Injury)' },
+      { id: 'D', text: '7 (Comatose)' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'Eye Opening to speech = 3; Verbal Response (confused/inappropriate) = 3; Motor Response (localizes pain) = 5. Total GCS = 3 + 3 + 5 = 11 (Moderate injury: GCS 9-12).'
+  },
+  {
+    subject: 'Critical Care Nursing',
+    topic: 'Cushing’s Triad in Raised ICP',
+    text: 'Which clinical triad of vital signs is a classic late sign of dangerously elevated Intracranial Pressure (ICP) indicating impending brain herniation?',
+    options: [
+      { id: 'A', text: 'Severe Hypertension with Widening Pulse Pressure, Bradycardia, and Irregular Respirations' },
+      { id: 'B', text: 'Hypotension, Tachycardia, and Tachypnea' },
+      { id: 'C', text: 'Hypertension, Tachycardia, and Hyperthermia' },
+      { id: 'D', text: 'Hypotension, Bradycardia, and Bradypnea' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'Cushing’s Triad consists of: 1. Systolic hypertension with widening pulse pressure, 2. Bradycardia (slow bounding pulse), and 3. Irregular, bradypneic respirations (Cheyne-Stokes or ataxic breathing).'
+  },
+  {
+    subject: 'Pharmacology in Nursing',
+    topic: 'Blood Transfusion Reactions',
+    text: 'Ten minutes after initiating a Packed Red Blood Cell (PRBC) transfusion, the patient complains of chills, back/flank pain, fever, and dyspnea. What is the immediate first action the nurse must take?',
+    options: [
+      { id: 'A', text: 'Stop the blood transfusion immediately and maintain IV access with 0.9% Normal Saline using fresh tubing' },
+      { id: 'B', text: 'Slow down the infusion rate and administer oral Paracetamol' },
+      { id: 'C', text: 'Administer IV Diphenhydramine and continue blood infusion' },
+      { id: 'D', text: 'Flush the existing blood administration set with Heparin' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'Acute hemolytic transfusion reaction is a life-threatening emergency. The nurse must immediately stop the infusion, disconnect the blood tubing at the cannula hub, flush and infuse Normal Saline through a new IV line, notify the doctor and blood bank.'
+  },
+  {
+    subject: 'Mental Health & Psychiatric Nursing',
+    topic: 'Lithium Carbonate Toxicity',
+    text: 'A patient with Bipolar Affective Disorder on Lithium therapy presents with coarse hand tremors, ataxia, persistent nausea, and blurred vision. What serum lithium level indicates acute clinical toxicity?',
+    options: [
+      { id: 'A', text: 'Serum Lithium > 1.5 mEq/L (Therapeutic range: 0.6 - 1.2 mEq/L)' },
+      { id: 'B', text: 'Serum Lithium between 0.4 and 0.6 mEq/L' },
+      { id: 'C', text: 'Serum Lithium < 0.2 mEq/L' },
+      { id: 'D', text: 'Serum Lithium exactly 0.8 mEq/L' }
+    ],
+    correctAnswer: 'A',
+    explanation: 'The therapeutic level of lithium is 0.6–1.2 mEq/L (acute mania 0.8–1.2 mEq/L). Levels > 1.5 mEq/L produce toxic signs like coarse tremors, vomiting, drowsiness, and ataxia.'
   }
 ];
 

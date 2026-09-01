@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown, Wand2, Upload
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -183,7 +183,12 @@ export async function shareArohiImage(url: string, title = 'Arohi AI Generated I
   }
 }
 
-function renderMarkdown(content: string, isDarkMode = true, onNavigateTab?: (tab: string) => void) {
+function renderMarkdown(
+  content: string, 
+  isDarkMode = true, 
+  onNavigateTab?: (tab: string) => void,
+  onEditImage?: (src: string, alt: string) => void
+) {
   const preprocessed = preprocessMarkdownLinks(content);
 
   // Helper to parse inline styles: [text](url), **bold**, *italic*, `code` and raw URLs
@@ -346,7 +351,60 @@ function renderMarkdown(content: string, isDarkMode = true, onNavigateTab?: (tab
     const trimmed = line.trim();
     
     // Check for Headers & Media
-    if (trimmed.startsWith('![')) {
+    if (trimmed.includes('<video') || trimmed.startsWith('@[video]') || trimmed.startsWith('![video]')) {
+      pushList(index);
+      const srcMatch = trimmed.match(/src=["']([^"']+)["']/) || trimmed.match(/\((.*?)\)/);
+      const videoSrc = srcMatch ? srcMatch[1] : '';
+      if (videoSrc) {
+        elements.push(
+          <div key={index} className={`my-3.5 rounded-2xl overflow-hidden border ${isDarkMode ? 'border-zinc-800 bg-zinc-950/80 shadow-2xl' : 'border-zinc-200 bg-zinc-50 shadow-lg'} p-2.5 max-w-2xl mx-auto group relative`}>
+            <div className="relative overflow-hidden rounded-xl bg-black flex items-center justify-center">
+              <video
+                src={videoSrc}
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="w-full h-auto max-h-[460px] object-contain rounded-xl shadow-md mx-auto"
+              />
+            </div>
+            <div className="mt-2.5 flex items-center justify-between px-1.5">
+              <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5" /> Arohi AI Video
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(videoSrc);
+                      const blob = await res.blob();
+                      const blobUrl = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = blobUrl;
+                      link.download = `arohi-video-${Date.now()}.mp4`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+                    } catch (e) {
+                      const link = document.createElement('a');
+                      link.href = videoSrc;
+                      link.download = `arohi-video-${Date.now()}.mp4`;
+                      link.target = '_blank';
+                      link.click();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download MP4
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    } else if (trimmed.startsWith('![')) {
       pushList(index);
       const match = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
       if (match) {
@@ -361,8 +419,25 @@ function renderMarkdown(content: string, isDarkMode = true, onNavigateTab?: (tab
                 className="w-full h-auto max-h-[460px] object-cover rounded-xl shadow-md transition-all duration-300 group-hover:scale-[1.008]" 
                 referrerPolicy="no-referrer" 
               />
-              {/* Floating Action Overlay on Image: Instant Download & Share */}
+              {/* Floating Action Overlay on Image: Instant Edit with AI, Download & Share */}
               <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onEditImage) {
+                      onEditImage(src, alt);
+                    } else {
+                      window.dispatchEvent(new CustomEvent('arohi_open_image_studio_edit', { detail: { src, alt } }));
+                    }
+                  }}
+                  className="text-amber-300 hover:text-amber-200 flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-md transition-colors cursor-pointer"
+                  title="Edit & Transform with AI (gemini-3.1-flash-image-preview)"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Edit with AI</span>
+                </button>
+                <div className="w-[1px] h-3 bg-white/25" />
                 <button
                   type="button"
                   onClick={(e) => {
@@ -613,17 +688,8 @@ function parseMessageSpreadsheet(content: string) {
     }
   }
 
-  // Also auto-detect if the message contains markdown tables with headers & data
-  const hasMarkdownTable = content.includes('|') && content.split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|')).length >= 3;
-  if (hasMarkdownTable) {
-    const autoParsed = parseContentToExcelData(content, 'Arohi_Data_Model');
-    if (autoParsed.sheets.length > 0 && autoParsed.sheets[0].rows.length >= 2) {
-      return {
-        cleanedContent: content,
-        spreadsheetData: autoParsed
-      };
-    }
-  }
+  // NOTE: Do NOT auto-convert normal markdown comparison tables into full-blown interactive Excel workbooks
+  // unless the user explicitly requested an Excel sheet, XLSX, CSV, or spreadsheet model via [SPREADSHEET_DATA_START] tags.
 
   return {
     cleanedContent: content,
@@ -788,6 +854,19 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
   const [isStudioGenerating, setIsStudioGenerating] = useState(false);
   const [studioEditInstruction, setStudioEditInstruction] = useState('');
   const [studioHistory, setStudioHistory] = useState<Array<{ prompt: string; imageUrl: string; aspectRatio: string; style: string }>>([]);
+  const studioFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleStudioImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setStudioGeneratedImage(result);
+      setStudioPrompt(file.name.replace(/\.[^/.]+$/, ''));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleGenerateStudioImage = async (customPrompt?: string) => {
     const promptToUse = customPrompt || studioPrompt;
@@ -901,7 +980,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     }
   };
 
-  // Video Studio States (Veo 3 Video & Animation Engine)
+  // Video Studio States (Arohi AI Video & Animation Studio)
   const [isVideoStudioOpen, setIsVideoStudioOpen] = useState(false);
   const [videoMode, setVideoMode] = useState<'text_to_video' | 'image_to_video'>('text_to_video');
   const [videoPrompt, setVideoPrompt] = useState('');
@@ -927,14 +1006,14 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
     setIsVideoGenerating(true);
     try {
-      const res = await fetch('/api/animate-image', {
+      const res = await fetch('/api/generate-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: promptToUse,
           imageUrl: uploadedVideoImage,
           animationStyle: videoAnimationStyle,
-          aspectRatio: videoAspectRatio,
+          aspectRatio: videoAspectRatio === '9:16' ? '9:16' : '16:9',
           duration: videoDuration,
         })
       });
@@ -946,7 +1025,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
           animationStyle: data.animationStyle,
           aspectRatio: data.aspectRatio,
           duration: data.duration,
-          provider: data.provider,
+          provider: data.provider || 'Arohi AI Video Engine',
           prompt: promptToUse,
         };
         setVideoGeneratedTrack(vidObj);
@@ -2384,6 +2463,87 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       return;
     }
 
+    // Image Editing Request Detection (Edit/Transform existing or uploaded image)
+    const isImageEditRequest = 
+      (/\b(edit|modify|change|transform|alter|update|retouch|enhance|re-edit)\b.*?\b(image|picture|photo|illustration|drawing|portrait|background|colors|style|lighting)\b/i.test(text) ||
+      /\b(add|remove|replace|change|turn|make)\b.*?\b(to this image|in this image|from this image|in this photo|on this image|in the picture|to the picture)\b/i.test(text) ||
+      (uploadedFile && uploadedFile.mimeType.startsWith('image/') && /\b(edit|modify|change|turn|make|transform|add|remove|draw|style|apply|convert)\b/i.test(text)) ||
+      lowerText.startsWith('edit image') || 
+      lowerText.startsWith('/edit-image')) &&
+      !lowerText.startsWith('generate image') &&
+      !lowerText.startsWith('create image');
+
+    if (isImageEditRequest) {
+      let promptText = text
+        .replace(/^(edit image|modify image|change image|transform image|\/edit-image|edit this image to|edit this picture to|modify this image to|change this image to)/i, '')
+        .trim();
+      if (!promptText) promptText = text;
+
+      // Check for last image in chat or uploaded image
+      const lastImageMsg = [...messages].reverse().find(m => m.content.includes('!['));
+      const lastImageUrlMatch = lastImageMsg?.content.match(/!\[(.*?)\]\((.*?)\)/);
+      const lastImagePrompt = lastImageUrlMatch ? lastImageUrlMatch[1] : '';
+      const lastImageUrl = lastImageUrlMatch ? lastImageUrlMatch[2] : '';
+
+      const loadingMsgId = (Date.now() + 1).toString();
+      const loadingAssistantMessage: Message = {
+        id: loadingMsgId,
+        role: 'assistant',
+        content: `🎨 *Editing image with gemini-3.1-flash-image-preview...*`,
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages((prev) => [...prev, loadingAssistantMessage]);
+      setIsLoading(true);
+
+      try {
+        const res = await fetch('/api/edit-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originalPrompt: lastImagePrompt,
+            editInstruction: promptText,
+            sourceImageUrl: uploadedFile?.base64 ? undefined : lastImageUrl,
+            sourceImageData: uploadedFile?.base64,
+            mimeType: uploadedFile?.mimeType,
+            aspectRatio: '16:9',
+            style: 'photorealistic'
+          })
+        });
+        const data = await res.json();
+
+        if (data.success && data.imageUrl) {
+          const formattedResponse = `![${promptText}](${data.imageUrl})`;
+          setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
+
+          fetch('/api/admin/sync-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: uEmail,
+              userName: uName,
+              sender: 'arohi',
+              text: `[Image Edited: ${promptText}]`,
+              topic: activeTopic
+            })
+          }).catch(() => {});
+        } else {
+          setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
+            ...m, 
+            content: `⚠️ Image editing returned an issue: ${data.error || 'Please try again with a different instruction.'}` 
+          } : m));
+        }
+      } catch (err: any) {
+        setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
+          ...m, 
+          content: `⚠️ Could not complete image editing. Please check your network connection.` 
+        } : m));
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     const isImageRequest = 
       /^\/image\b/i.test(text) ||
       /\b(generate|create|make|draw|render|paint|design)\b.*?\b(image|picture|photo|logo|illustration|artwork|wallpaper|avatar|robot|portrait|workspace|office|interior)\b/i.test(text) ||
@@ -2548,24 +2708,34 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
     const isVideoRequest = lowerText.startsWith('/video') || 
                            lowerText.includes('generate video') || 
+                           lowerText.includes('make a video') || 
+                           lowerText.includes('make video') || 
+                           lowerText.includes('create video') || 
+                           lowerText.includes('create a video') || 
                            lowerText.includes('animate image') || 
                            lowerText.includes('animate photo') || 
                            lowerText.includes('create video ad') || 
                            lowerText.includes('make a video ad') || 
                            lowerText.includes('image to video') || 
-                           lowerText.includes('veo video');
+                           lowerText.includes('text to video') || 
+                           lowerText.includes('arohi video') || 
+                           lowerText.includes('ai video');
 
     if (isVideoRequest) {
       let promptText = text
-        .replace(/^(generate video for|create video ad for|animate image of|animate photo of|animate image|animate photo|generate video|create video ad|image to video|veo video|\/video)/i, '')
+        .replace(/^(generate video for|create video ad for|make a video for|make a video of|make video of|make video for|create video of|create video for|animate image of|animate photo of|animate image|animate photo|generate video|create video ad|image to video|text to video|arohi video|ai video|veo video|veo 3|\/video)/i, '')
         .trim();
       if (!promptText) promptText = text;
+
+      // Detect desired aspect ratio from user prompt
+      const isPortrait = lowerText.includes('9:16') || lowerText.includes('portrait') || lowerText.includes('vertical') || lowerText.includes('reel') || lowerText.includes('shorts') || lowerText.includes('tiktok') || lowerText.includes('story');
+      const targetAspectRatio: '16:9' | '9:16' = isPortrait ? '9:16' : '16:9';
 
       const loadingMsgId = (Date.now() + 1).toString();
       const loadingAssistantMessage: Message = {
         id: loadingMsgId,
         role: 'assistant',
-        content: `🎬 *Arohi Veo 3 Video Engine is generating your video clip for: "${promptText}"...*`,
+        content: `🎬 *Arohi AI Video Engine is rendering your ${targetAspectRatio} video clip for: "${promptText}"...*`,
         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -2573,29 +2743,29 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       setIsLoading(true);
 
       try {
-        const res = await fetch('/api/animate-image', {
+        const res = await fetch('/api/generate-video', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: promptText,
-            animationStyle: 'ad_product',
-            aspectRatio: '16:9',
+            animationStyle: 'cinematic_pan',
+            aspectRatio: targetAspectRatio,
             duration: '5s'
           })
         });
         const data = await res.json();
 
         if (data.success && data.videoUrl) {
-          const formattedResponse = `🎬 **Veo 3 AI Video Created!**
+          const formattedResponse = `🎬 **Arohi AI Video Generated!**
 
 **Title**: ${data.title}
 **Prompt**: "${promptText}"
-**Motion Style**: ${data.animationStyle.toUpperCase()} | **Engine**: ${data.provider}
+**Aspect Ratio**: ${data.aspectRatio} (${data.aspectRatio === '9:16' ? 'Portrait / Reels / Shorts' : 'Landscape 16:9'})
 
-📹 **Watch animated video**:
-<video controls autoplay loop src="${data.videoUrl}" class="w-full rounded-2xl my-2 border border-purple-800 shadow-xl"></video>
+📹 **Watch video clip**:
+<video controls autoplay loop src="${data.videoUrl}" class="w-full rounded-2xl my-2 border border-rose-800 shadow-xl"></video>
 
-*Generated using Arohi AI: Generate video from text (Veo 3 Engine).*`;
+*Generated by Arohi AI Studio.*`;
 
           setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { ...m, content: formattedResponse } : m));
 
@@ -2619,7 +2789,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       } catch (err: any) {
         setMessages((prev) => prev.map(m => m.id === loadingMsgId ? { 
           ...m, 
-          content: `⚠️ Could not animate video. Please check your network connection.` 
+          content: `⚠️ Could not generate video. Please check your network connection.` 
         } : m));
       } finally {
         setIsLoading(false);
@@ -3758,7 +3928,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               className={`p-2 rounded-full ${isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/70' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200'} border transition-all cursor-pointer`}
               title="Camera Stream"
             >
-              <Video className="w-4 h-4" />
+              <Camera className="w-4 h-4" />
             </button>
 
             {/* 3D Learning Button hidden as requested by user */}
@@ -3969,7 +4139,11 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                             duration={msg.thinkingDuration || 2.4} 
                           />
                         )}
-                        {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab)}
+                        {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab, (src, alt) => {
+                          setStudioGeneratedImage(src);
+                          setStudioPrompt(alt);
+                          setIsImageStudioOpen(true);
+                        })}
                         {msg.role === 'assistant' && msg.isStreaming && (
                           <span className="inline-block w-2 h-4 ml-1 bg-amber-400 animate-pulse rounded-xs align-middle" />
                         )}
@@ -4584,11 +4758,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
       )}
 
-      {/* IMAGE CREATION & EDITING STUDIO MODAL */}
+      {/* IMAGE CREATION & EDITING STUDIO MODAL (Powered by gemini-3.1-flash-image-preview) */}
       {isImageStudioOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
           <div className="bg-[#0e0924] border border-[#2e2163] rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
             
+            {/* Hidden File Input for Image Uploading in Studio */}
+            <input
+              type="file"
+              ref={studioFileInputRef}
+              onChange={handleStudioImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+
             {/* Header */}
             <div className="bg-[#140e32] px-6 py-4 flex items-center justify-between border-b border-[#2a1d59]">
               <div className="flex items-center gap-3">
@@ -4599,20 +4782,31 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    Control image aspect ratios
+                    Create & Edit Images
                     <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider border border-purple-500/30 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-purple-300" /> Active
+                      <Sparkles className="w-3 h-3 text-purple-300" /> gemini-3.1-flash-image-preview
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-300">Customize generated image dimensions for vertical wallpapers or horizontal banners.</p>
+                  <p className="text-xs text-slate-300">Create new visuals or upload & edit existing artwork using natural language prompts.</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsImageStudioOpen(false)}
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => studioFileInputRef.current?.click()}
+                  className="bg-[#22174d] hover:bg-[#2e2066] text-purple-200 border border-[#3e2c84] text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
+                  title="Upload any image from your device to edit"
+                >
+                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Upload Image</span>
+                </button>
+                <button
+                  onClick={() => setIsImageStudioOpen(false)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Studio Body Grid */}
@@ -4819,38 +5013,70 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     </div>
                   ) : (
                     <div className="text-center py-12 px-4 space-y-3">
-                      <div className="w-16 h-16 rounded-full bg-[#1b1242] border border-[#3b2680] flex items-center justify-center mx-auto text-purple-400">
+                      <div className="w-16 h-16 rounded-full bg-[#1b1242] border border-[#3b2680] flex items-center justify-center mx-auto text-purple-400 shadow-inner">
                         <ImageIcon className="w-8 h-8" />
                       </div>
-                      <h4 className="text-sm font-bold text-white">No Image Generated Yet</h4>
+                      <h4 className="text-sm font-bold text-white">Create or Upload Image to Edit</h4>
                       <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                        Type a detailed description on the left and click "Generate Image" to create artwork using Arohi AI.
+                        Type a description on the left to generate fresh artwork, or upload an image from your device to modify and transform.
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => studioFileInputRef.current?.click()}
+                        className="mt-2 bg-[#2a1b63] hover:bg-[#382485] text-purple-200 border border-[#4830a1] text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-2 cursor-pointer transition-all shadow-md"
+                      >
+                        <Upload className="w-4 h-4 text-cyan-400" />
+                        <span>Upload Photo to Edit</span>
+                      </button>
                     </div>
                   )}
                 </div>
 
                 {/* Edit Existing Image Section */}
                 {studioGeneratedImage && (
-                  <div className="bg-[#100a2b] border border-[#2c1d5c] p-3.5 rounded-2xl space-y-2">
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit & Transform Generated Image
-                    </label>
+                  <div className="bg-[#100a2b] border border-[#2c1d5c] p-3.5 rounded-2xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit & Transform Image (gemini-3.1-flash-image-preview)
+                      </label>
+                      <span className="text-[10px] text-purple-300 font-semibold bg-purple-900/40 px-2 py-0.5 rounded-full border border-purple-500/20">
+                        Prompt-Based Editing
+                      </span>
+                    </div>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={studioEditInstruction}
                         onChange={(e) => setStudioEditInstruction(e?.target?.value ?? "")}
-                        placeholder="e.g. 'Add golden sunset in background', 'Change colors to cyan and violet', 'Add snow'"
+                        placeholder="e.g. 'Add golden sunset glow', 'Change background to futuristic cyberpunk city', 'Add sunglasses'"
                         className="flex-1 bg-[#180f3d] border border-[#34226e] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#7c3aed]"
                       />
                       <button
                         onClick={handleEditStudioImage}
                         disabled={isStudioGenerating || !studioEditInstruction.trim()}
-                        className="bg-[#3b82f6] hover:bg-[#2563eb] disabled:opacity-50 text-white font-extrabold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0"
+                        className="bg-[#3b82f6] hover:bg-[#2563eb] disabled:opacity-50 text-white font-extrabold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md"
                       >
                         <Sparkles className="w-3.5 h-3.5" /> Transform
                       </button>
+                    </div>
+
+                    {/* Quick Transform Chips */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {[
+                        "🌅 Golden sunset lighting",
+                        "🌌 Cyberpunk neon aesthetic",
+                        "🎨 Watercolor Anime art style",
+                        "🏔️ Mountain backdrop",
+                        "✨ Ultra-detailed 8K render"
+                      ].map((preset, pIdx) => (
+                        <button
+                          key={pIdx}
+                          onClick={() => setStudioEditInstruction(preset.replace(/^[^\s]+\s/, ''))}
+                          className="text-[10px] bg-[#1a123f] hover:bg-[#281b5c] text-purple-300 border border-[#3b2780] px-2 py-0.5 rounded-full cursor-pointer transition-all"
+                        >
+                          {preset}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -5199,7 +5425,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
       )}
 
-      {/* AI VEO 3 IMAGE & TEXT-TO-VIDEO STUDIO MODAL */}
+      {/* AI VIDEO & TEXT-TO-VIDEO STUDIO MODAL */}
       {isVideoStudioOpen && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
           <div className="bg-[#0f0718] border border-[#381a4d] rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
@@ -5214,9 +5440,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    Generate video from text
+                    Arohi Video Studio
                     <span className="text-[10px] bg-rose-500/20 text-rose-300 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider border border-rose-500/30 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-300" /> Veo 3 Active
+                      <Sparkles className="w-3 h-3 text-amber-300" /> Arohi AI Active
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">Generate short video clips from text, scripts, or descriptions.</p>
@@ -5301,7 +5527,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       {uploadedVideoImage && (
                         <div className="mt-2 flex items-center gap-2 bg-[#1a0a2a] p-2 rounded-xl border border-rose-900/40">
                           <img src={uploadedVideoImage} alt="Source preview" className="w-12 h-12 object-cover rounded-lg border border-rose-500/30" />
-                          <span className="text-[11px] text-rose-200 font-medium truncate">Ready for Veo 3 animation</span>
+                          <span className="text-[11px] text-rose-200 font-medium truncate">Ready for video rendering</span>
                         </div>
                       )}
                     </div>
@@ -5379,20 +5605,31 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Aspect Ratio</label>
-                      <div className="flex gap-1">
-                        {['16:9', '9:16', '1:1', '21:9'].map((ar) => (
-                          <button
-                            key={ar}
-                            onClick={() => setVideoAspectRatio(ar as any)}
-                            className={`flex-1 py-1.5 text-[10px] font-extrabold rounded-lg border text-center transition-all cursor-pointer ${
-                              videoAspectRatio === ar
-                                ? 'bg-rose-600 text-white border-rose-400'
-                                : 'bg-[#160829] text-slate-400 border-[#31164a]'
-                            }`}
-                          >
-                            {ar}
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          key="16:9"
+                          onClick={() => setVideoAspectRatio('16:9')}
+                          className={`py-2 px-2 text-[10px] font-extrabold rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                            videoAspectRatio === '16:9'
+                              ? 'bg-rose-600 text-white border-rose-400 shadow-md shadow-rose-950/50'
+                              : 'bg-[#160829] text-slate-400 border-[#31164a] hover:text-white'
+                          }`}
+                        >
+                          <span>16:9</span>
+                          <span className="text-[8.5px] opacity-80">Landscape</span>
+                        </button>
+                        <button
+                          key="9:16"
+                          onClick={() => setVideoAspectRatio('9:16')}
+                          className={`py-2 px-2 text-[10px] font-extrabold rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                            videoAspectRatio === '9:16'
+                              ? 'bg-rose-600 text-white border-rose-400 shadow-md shadow-rose-950/50'
+                              : 'bg-[#160829] text-slate-400 border-[#31164a] hover:text-white'
+                          }`}
+                        >
+                          <span>9:16</span>
+                          <span className="text-[8.5px] opacity-80">Portrait</span>
+                        </button>
                       </div>
                     </div>
 
@@ -5427,12 +5664,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   {isVideoGenerating ? (
                     <>
                       <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                      <span>Generating Video Clip (Veo 3)...</span>
+                      <span>Rendering Video Clip...</span>
                     </>
                   ) : (
                     <>
                       <Video className="w-4 h-4 text-amber-200" />
-                      <span>Generate Video from Text (Veo 3)</span>
+                      <span>Generate Video from Text</span>
                     </>
                   )}
                 </button>
@@ -5451,7 +5688,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         <Video className="w-10 h-10 text-rose-400 absolute inset-0 m-auto animate-pulse" />
                       </div>
                       <div className="text-center space-y-1">
-                        <p className="text-xs font-bold text-rose-300 animate-pulse">Veo 3 Engine rendering video frames & physics...</p>
+                        <p className="text-xs font-bold text-rose-300 animate-pulse">Arohi AI Video Engine rendering video frames...</p>
                         <p className="text-[11px] text-slate-500">Style: {videoAnimationStyle.toUpperCase()} | Aspect Ratio: {videoAspectRatio} | Duration: {videoDuration}</p>
                       </div>
                     </div>
@@ -5478,9 +5715,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                           <span className="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-bold uppercase">
                             {videoGeneratedTrack.animationStyle}
                           </span>
-                          <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-bold">
-                            Engine: {videoGeneratedTrack.provider}
-                          </span>
                         </div>
                       </div>
 
@@ -5490,7 +5724,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                           onClick={() => {
                             const link = document.createElement('a');
                             link.href = videoGeneratedTrack.videoUrl;
-                            link.download = `veo-video-${Date.now()}.mp4`;
+                            link.download = `arohi-video-${Date.now()}.mp4`;
                             link.click();
                           }}
                           className="bg-[#240e38] hover:bg-[#361554] text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 border border-[#4a1f73] cursor-pointer transition-all"
@@ -5500,7 +5734,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
                         <button
                           onClick={() => {
-                            const formattedVideoMarkdown = `\n\n🎬 **Veo 3 AI Video**: ${videoGeneratedTrack.title}\n**Prompt**: ${videoGeneratedTrack.prompt}\n<video controls autoplay loop src="${videoGeneratedTrack.videoUrl}" class="w-full rounded-2xl my-2 border border-purple-800 shadow-xl"></video>\n`;
+                            const formattedVideoMarkdown = `\n\n🎬 **Arohi AI Video**: ${videoGeneratedTrack.title}\n**Prompt**: ${videoGeneratedTrack.prompt}\n<video controls autoplay loop src="${videoGeneratedTrack.videoUrl}" class="w-full rounded-2xl my-2 border border-purple-800 shadow-xl"></video>\n`;
                             handleSendMessage(formattedVideoMarkdown);
                             setIsVideoStudioOpen(false);
                           }}
@@ -5540,7 +5774,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                               animationStyle: item.animationStyle,
                               aspectRatio: '16:9',
                               duration: '5s',
-                              provider: 'veo-3-studio',
+                              provider: 'Arohi AI Video Studio',
                               prompt: item.prompt,
                             });
                           }}
@@ -5562,7 +5796,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
             {/* Footer */}
             <div className="bg-[#12081d] px-6 py-3 border-t border-[#381a4d] flex items-center justify-between text-xs text-slate-400">
-              <span>Arohi AI: Generate video from text (Veo 3 Engine)</span>
+              <span>Arohi AI Video Studio</span>
               <button
                 onClick={() => setIsVideoStudioOpen(false)}
                 className="bg-[#27113e] hover:bg-[#39195a] text-slate-200 font-bold px-4 py-1.5 rounded-xl transition-all cursor-pointer"

@@ -720,32 +720,39 @@ export default function App() {
     // Only initialize an end date if the user has an active subscription recorded
     try {
       const savedSubs = getStorageItem('arohi_subscriptions');
-      if (savedSubs) {
-        const parsedSubs = JSON.parse(savedSubs);
-        if (Object.values(parsedSubs).some(Boolean)) {
-          const defaultEnd = Date.now() + THIRTY_DAYS_MS;
-          setStorageItem('arohi_subscription_end_date', defaultEnd.toString());
-          return defaultEnd;
-        }
+      const savedCoupon = getStorageItem('arohi_applied_coupon');
+      if (savedCoupon || (savedSubs && Object.values(JSON.parse(savedSubs)).some(Boolean))) {
+        const defaultEnd = Date.now() + THIRTY_DAYS_MS;
+        setStorageItem('arohi_subscription_end_date', defaultEnd.toString());
+        return defaultEnd;
       }
     } catch (e) {}
     return 0;
   });
 
-  // Sync user's real Firestore subscription to local state on login / user profile update
+  // Sync user's real Firestore subscription & trial to local state on login / user profile update
   useEffect(() => {
     if (userData) {
       const now = Date.now();
       const userSubscribed = Boolean(
         userData.isSubscribed ||
-        (userData.subscriptionEndDate && userData.subscriptionEndDate > now)
+        (userData.subscriptionEndDate && userData.subscriptionEndDate > now) ||
+        userData.appliedCoupon ||
+        userData.lastCouponUsed
       );
 
+      if (userData.trialStartTime && userData.trialStartTime > 0) {
+        setTrialStartTime(userData.trialStartTime);
+        setStorageItem('arohi_trial_start', userData.trialStartTime.toString());
+      }
+
       if (userSubscribed) {
+        const resolvedCoupon = userData.appliedCoupon || userData.lastCouponUsed || getStorageItem('arohi_applied_coupon');
         const endDate = (userData.subscriptionEndDate && userData.subscriptionEndDate > now)
           ? userData.subscriptionEndDate
           : now + THIRTY_DAYS_MS;
         const subs = userData.subscriptions || { path1: true, path2: false, path3: false, path4: false };
+        const planName = userData.subscriptionPlanName || (resolvedCoupon ? `Starter Plan (Coupon ${resolvedCoupon})` : 'Starter Plan (₹399/mo)');
         
         setSubscriptions(prev => {
           if (JSON.stringify(prev) === JSON.stringify(subs)) return prev;
@@ -758,6 +765,11 @@ export default function App() {
           setStorageItem('arohi_subscription_end_date', endDate.toString());
           return endDate;
         });
+
+        if (resolvedCoupon) {
+          setStorageItem('arohi_applied_coupon', resolvedCoupon.toUpperCase());
+        }
+        setStorageItem('arohi_subscription_plan_name', planName);
         
         if (userData.subscriptionDetails && Object.keys(userData.subscriptionDetails).length > 0) {
           setSubscriptionDetails(prev => {
@@ -768,7 +780,7 @@ export default function App() {
         }
       }
     }
-  }, [userData?.isSubscribed, userData?.subscriptionEndDate, JSON.stringify(userData?.subscriptions), JSON.stringify(userData?.subscriptionDetails)]);
+  }, [userData?.isSubscribed, userData?.subscriptionEndDate, userData?.appliedCoupon, userData?.lastCouponUsed, userData?.trialStartTime, JSON.stringify(userData?.subscriptions), JSON.stringify(userData?.subscriptionDetails)]);
 
   const [subscriptionDetails, setSubscriptionDetails] = useState<Record<string, { tierName: string; price: number; margin: number }>>(() => {
     const saved = getStorageItem('arohi_subscription_details');
@@ -1053,7 +1065,7 @@ export default function App() {
   const [couponSuccess, setCouponSuccess] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     const cleanCode = couponInput.trim().toUpperCase();
     if (!cleanCode) {
       setCouponError('Please enter a valid coupon code.');
@@ -1064,67 +1076,87 @@ export default function App() {
     setCouponError('');
     setCouponSuccess('');
 
-    setTimeout(() => {
-      setIsApplyingCoupon(false);
-      // Valid Coupon Codes verified via centralized subscriptionEngine
-      if (isValidCouponCode(cleanCode)) {
-        const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
-        
-        // Atomically persist and subscribe
-        persistSubscriptionActivation({
-          planName: chosenTier.name,
-          price: chosenTier.price,
-          couponCode: cleanCode,
-          paymentMethod: `Coupon Code ${cleanCode}`
-        });
+    // Valid Coupon Codes verified via centralized subscriptionEngine
+    if (isValidCouponCode(cleanCode)) {
+      const chosenTier = PRICING_TIERS[selectedModalPlan] || PRICING_TIERS[0];
+      const now = Date.now();
+      const newEndDate = now + THIRTY_DAYS_MS;
+      
+      // 1. Atomically persist and subscribe locally
+      persistSubscriptionActivation({
+        planName: chosenTier.name,
+        price: chosenTier.price,
+        couponCode: cleanCode,
+        paymentMethod: `Coupon Code ${cleanCode}`,
+        customEndDate: newEndDate
+      });
 
-        handleSubscribe('path1', chosenTier.name, `Coupon Code ${cleanCode}`);
-        setStorageItem('arohi_applied_coupon', cleanCode);
+      handleSubscribe('path1', chosenTier.name, `Coupon Code ${cleanCode}`, true);
+      setStorageItem('arohi_applied_coupon', cleanCode);
+      setStorageItem('arohi_subscription_end_date', newEndDate.toString());
 
-        // Track 15% Partner Commission in background
-        fetch('/api/partner/track-conversion', {
+      // 2. Persist directly to backend database
+      try {
+        await fetch('/api/auth/apply-coupon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            partnerCode: cleanCode,
-            studentEmail: user?.email || customerEmailInput.trim() || 'student@arohiai.com',
-            studentName: currentUserName,
-            amount: chosenTier.price || 399,
-            planName: `${chosenTier.name} (Promo ${cleanCode})`,
-            orderId: `ORD-${Date.now()}`
+            uid: user?.uid,
+            email: user?.email,
+            couponCode: cleanCode,
+            planName: chosenTier.name
           })
-        }).catch(() => {});
-
-        // Award 100% Cashback in Arohi Coins! (399 Coins for ₹399 plan)
-        const cashbackAmount = chosenTier.price; // 100% cashback
-        addCoinTransaction(
-          'earned_cashback',
-          cashbackAmount,
-          `100% First Month Cashback Bonus via promo code "${cleanCode}" (${chosenTier.name})`
-        );
-
-        setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! ${chosenTier.name} unlocked + 🪙 ${cashbackAmount} Arohi Coins (100% Cashback) credited!`);
-        setCouponInput('');
-
-        // Display celebration confirmation modal
-        setLottieSuccessData({
-          isOpen: true,
-          title: "Coupon & 100% Cashback Activated!",
-          message: `Congratulations! Your promo code "${cleanCode}" has been validated and applied. You unlocked ${chosenTier.name} at ₹0, and 🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} 100% Cashback Value) have been added to your wallet!`,
-          details: [
-            { label: "Coupon Code", value: `${cleanCode} (Verified)` },
-            { label: "Plan Activated", value: chosenTier.name },
-            { label: "Original Price", value: `₹${chosenTier.price}/mo` },
-            { label: "Final Payment", value: "₹0 / Month (Unlocked)" },
-            { label: "100% Cashback Reward", value: `🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} Value)` }
-          ],
-          buttonText: "Start Exploring Arohi AI",
-          badgeText: "100% CASHBACK UNLOCKED"
         });
-      } else {
-        setCouponError('Invalid coupon code. Please check and try again.');
+      } catch (err) {
+        console.warn('Backend apply-coupon sync error:', err);
       }
-    }, 400);
+
+      // Track 15% Partner Commission in background
+      fetch('/api/partner/track-conversion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerCode: cleanCode,
+          studentEmail: user?.email || customerEmailInput.trim() || 'student@arohiai.com',
+          studentName: currentUserName,
+          amount: chosenTier.price || 399,
+          planName: `${chosenTier.name} (Promo ${cleanCode})`,
+          orderId: `ORD-${Date.now()}`
+        })
+      }).catch(() => {});
+
+      // Award 100% Cashback in Arohi Coins! (399 Coins for ₹399 plan)
+      const cashbackAmount = chosenTier.price; // 100% cashback
+      addCoinTransaction(
+        'earned_cashback',
+        cashbackAmount,
+        `100% First Month Cashback Bonus via promo code "${cleanCode}" (${chosenTier.name})`
+      );
+
+      setIsApplyingCoupon(false);
+      setCouponSuccess(`🎉 Coupon "${cleanCode}" applied! ${chosenTier.name} unlocked + 🪙 ${cashbackAmount} Arohi Coins (100% Cashback) credited!`);
+      setCouponInput('');
+
+      // Display celebration confirmation modal
+      setLottieSuccessData({
+        isOpen: true,
+        title: "Coupon & 100% Cashback Activated!",
+        message: `Congratulations! Your promo code "${cleanCode}" has been validated and applied. You unlocked ${chosenTier.name} for 1 Month (30 Days) at ₹0, and 🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} 100% Cashback Value) have been added to your wallet!`,
+        details: [
+          { label: "Coupon Code", value: `${cleanCode} (Verified)` },
+          { label: "Plan Activated", value: chosenTier.name },
+          { label: "Duration", value: "30 Days Full Access" },
+          { label: "Original Price", value: `₹${chosenTier.price}/mo` },
+          { label: "Final Payment", value: "₹0 / Month (Unlocked)" },
+          { label: "100% Cashback Reward", value: `🪙 ${cashbackAmount} Arohi Coins (₹${cashbackAmount} Value)` }
+        ],
+        buttonText: "Start Exploring Arohi AI",
+        badgeText: "100% CASHBACK UNLOCKED"
+      });
+    } else {
+      setIsApplyingCoupon(false);
+      setCouponError('Invalid coupon code. Please check and try again.');
+    }
   };
 
   useEffect(() => {
@@ -1145,11 +1177,11 @@ export default function App() {
     }
   }, [checkoutPath]);
 
-  const handleSubscribe = (pathId: string, planName?: string, paymentMethod?: string) => {
-    const isSubscribed = !subscriptions[pathId];
+  const handleSubscribe = (pathId: string, planName?: string, paymentMethod?: string, forceActive?: boolean) => {
+    const isSubscribed = forceActive !== undefined ? forceActive : (planName || paymentMethod ? true : !subscriptions[pathId]);
     
     // Intercept subscription start to prompt for tier selection
-    if (isSubscribed && !planName) {
+    if (isSubscribed && !planName && forceActive === undefined) {
       setTierSelectPathId(pathId);
       return;
     }
@@ -1173,6 +1205,7 @@ export default function App() {
       }
       
       const activeUserEmail = user?.email || customerEmailInput.trim() || 'user@arohiai.com';
+      const appliedCode = getStorageItem('arohi_applied_coupon') || undefined;
       
       // Update persistent user subscription in database
       if (updateUserSubscription) {
@@ -1182,7 +1215,8 @@ export default function App() {
           subscriptionEndDate: newEndDate,
           subscriptions: updated,
           subscriptionDetails: updatedDetails,
-          paymentMethod: paymentMethod || 'Web Gateway'
+          paymentMethod: paymentMethod || 'Web Gateway',
+          appliedCoupon: appliedCode
         }).catch(err => console.warn('Database subscription update notice:', err));
       }
 

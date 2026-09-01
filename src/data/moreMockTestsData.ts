@@ -1,4 +1,6 @@
 import { MockTest } from '../types/examTypes';
+import { generateFull100NorcetQuestions } from './nursingExamsMasterBank';
+import { getNeetUg100DistinctQuestions, getSscCgl100DistinctQuestions } from './masterGrandCbtQuestionBanks';
 
 export const ADDITIONAL_MOCK_TESTS: MockTest[] = [
   // ==========================================
@@ -1026,84 +1028,7 @@ export const ADDITIONAL_MOCK_TESTS: MockTest[] = [
       { id: 'sec_neet_phy_100', name: 'Section C: Physics (Mechanics & Optics)', totalQuestions: 25, totalMarks: 100, positiveMarksPerQuestion: 4.0, negativeMarksPerQuestion: 1.0 },
       { id: 'sec_neet_che_100', name: 'Section D: Chemistry (Organic & Physical)', totalQuestions: 25, totalMarks: 100, positiveMarksPerQuestion: 4.0, negativeMarksPerQuestion: 1.0 }
     ],
-    questions: Array.from({ length: 100 }).map((_, i) => {
-      const qNum = i + 1;
-      let secId = 'sec_neet_bot_100';
-      let secName = 'Section A: Botany & Plant Physiology';
-      let subj = 'Botany';
-      let topic = 'Plant Diversity, Anatomy & Physiology';
-      let text = `[NEET Q${qNum}] During the light reaction of photosynthesis in chloroplasts, non-cyclic photophosphorylation results in the continuous formation of which energy-rich molecules?`;
-      let opts = [
-        { id: 'A', text: 'ATP, NADPH + H+, and molecular Oxygen (O2)' },
-        { id: 'B', text: 'ATP only, without NADPH formation' },
-        { id: 'C', text: 'Sugar glucose and Water directly' },
-        { id: 'D', text: 'NADP+ and ADP only' }
-      ];
-      let ans: 'A' | 'B' | 'C' | 'D' = 'A';
-      let expl = 'NCERT Class 11 Biology: Non-cyclic photophosphorylation (Z-scheme involving PS-II and PS-I) produces both ATP and NADPH alongside the photolysis of water releasing O2.';
-
-      if (qNum > 25 && qNum <= 50) {
-        secId = 'sec_neet_zoo_100';
-        secName = 'Section B: Zoology & Human Physiology';
-        subj = 'Zoology';
-        topic = 'Human Physiology, Genetics & Evolution';
-        text = `[NEET Q${qNum}] In the human cardiac cycle, what causes the second heart sound ("DUB") during ventricular diastole?`;
-        opts = [
-          { id: 'A', text: 'Closure of the Semilunar (Aortic & Pulmonary) valves at the onset of ventricular diastole' },
-          { id: 'B', text: 'Closure of the Atrioventricular (Tricuspid & Bicuspid) valves' },
-          { id: 'C', text: 'Rapid rush of blood into the ventricles during atrial systole' },
-          { id: 'D', text: 'Contraction of the papillary muscles and chordae tendineae' }
-        ];
-        ans = 'A';
-        expl = 'NCERT Class 11 Biology (Body Fluids and Circulation): The second heart sound (dub) is associated with the closure of the semilunar valves.';
-      } else if (qNum > 50 && qNum <= 75) {
-        secId = 'sec_neet_phy_100';
-        secName = 'Section C: Physics (Mechanics & Optics)';
-        subj = 'Physics';
-        topic = 'Mechanics, Electrodynamics & Optics';
-        text = `[NEET Q${qNum}] A ray of light passes from a denser medium (refractive index μ = √2) into air. What is the critical angle (θc) for total internal reflection at the interface?`;
-        opts = [
-          { id: 'A', text: '45° (since sin θc = 1 / μ = 1 / √2)' },
-          { id: 'B', text: '30°' },
-          { id: 'C', text: '60°' },
-          { id: 'D', text: '90°' }
-        ];
-        ans = 'A';
-        expl = 'NCERT Class 12 Physics (Ray Optics): Critical angle θc = arcsin(1/μ) = arcsin(1/√2) = 45°.';
-      } else if (qNum > 75) {
-        secId = 'sec_neet_che_100';
-        secName = 'Section D: Chemistry (Organic & Physical)';
-        subj = 'Chemistry';
-        topic = 'Chemical Bonding, Organic & Coordination';
-        text = `[NEET Q${qNum}] Which of the following carbocations exhibits the highest thermodynamic stability due to resonance and hyperconjugation?`;
-        opts = [
-          { id: 'A', text: 'Tertiary carbocation (CH3)3C+ with 9 α-hydrogens' },
-          { id: 'B', text: 'Secondary carbocation (CH3)2CH+ with 6 α-hydrogens' },
-          { id: 'C', text: 'Primary carbocation CH3CH2+ with 3 α-hydrogens' },
-          { id: 'D', text: 'Methyl carbocation +CH3' }
-        ];
-        ans = 'A';
-        expl = 'NCERT Class 11 Chemistry: Stability of carbocations follows 3° > 2° > 1° > methyl due to hyperconjugation and +I inductive effects.';
-      }
-
-      return {
-        id: `neet100_q${qNum}`,
-        questionNumber: qNum,
-        sectionId: secId,
-        sectionName: secName,
-        subject: subj,
-        topic: topic,
-        type: 'single_choice' as const,
-        text: text,
-        options: opts,
-        correctAnswer: ans,
-        positiveMarks: 4.0,
-        negativeMarks: 1.0,
-        difficulty: (qNum % 3 === 0 ? 'hard' : qNum % 2 === 0 ? 'medium' : 'easy') as any,
-        explanation: expl,
-        referenceNotes: 'NTA NEET UG Official NCERT Syllabus Handbook 2026'
-      };
-    })
+    questions: getNeetUg100DistinctQuestions()
   },
 
   // ==========================================
@@ -1213,84 +1138,7 @@ export const ADDITIONAL_MOCK_TESTS: MockTest[] = [
       { id: 'sec_ssc100_qa', name: 'Quantitative Aptitude', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 },
       { id: 'sec_ssc100_eng', name: 'English Comprehension & Grammar', totalQuestions: 25, totalMarks: 50, positiveMarksPerQuestion: 2.0, negativeMarksPerQuestion: 0.5 }
     ],
-    questions: Array.from({ length: 100 }).map((_, i) => {
-      const qNum = i + 1;
-      let secId = 'sec_ssc100_gi';
-      let secName = 'General Intelligence & Reasoning';
-      let subj = 'Logical Reasoning';
-      let topic = 'Coding-Decoding, Series & Analogy';
-      let text = `[SSC CGL Q${qNum}] In a certain code language, if 'DELHI' is coded as 'EDMGI', how will 'MUMBAI' be coded in that same system?`;
-      let opts = [
-        { id: 'A', text: 'NTNAZJ (+1, -1, +1, -1, +1, -1 pattern)' },
-        { id: 'B', text: 'OVNABI' },
-        { id: 'C', text: 'NTMBZJ' },
-        { id: 'D', text: 'LTLABH' }
-      ];
-      let ans: 'A' | 'B' | 'C' | 'D' = 'A';
-      let expl = 'Reasoning Pattern: Consecutive alternate (+1, -1) alphabetical position shift.';
-
-      if (qNum > 25 && qNum <= 50) {
-        secId = 'sec_ssc100_ga';
-        secName = 'General Awareness & Science';
-        subj = 'General Awareness';
-        topic = 'Indian Polity, Economy & Science';
-        text = `[SSC CGL Q${qNum}] Under Article 72 of the Constitution of India, who possesses the exclusive constitutional power to grant pardons and commute death sentences?`;
-        opts = [
-          { id: 'A', text: 'The President of India' },
-          { id: 'B', text: 'The Chief Justice of India' },
-          { id: 'C', text: 'The Union Law Minister' },
-          { id: 'D', text: 'The Prime Minister of India' }
-        ];
-        ans = 'A';
-        expl = 'Polity: Article 72 empowers the President of India to grant pardons, reprieves, respites or remissions of punishment.';
-      } else if (qNum > 50 && qNum <= 75) {
-        secId = 'sec_ssc100_qa';
-        secName = 'Quantitative Aptitude';
-        subj = 'Mathematics';
-        topic = 'Arithmetic & Advanced Trigonometry';
-        text = `[SSC CGL Q${qNum}] If sin θ + cos θ = √2 cos θ, then what is the value of (cos θ - sin θ)?`;
-        opts = [
-          { id: 'A', text: '√2 sin θ' },
-          { id: 'B', text: '√2 cos θ' },
-          { id: 'C', text: 'sin θ' },
-          { id: 'D', text: '1 / √2' }
-        ];
-        ans = 'A';
-        expl = 'Quantitative Aptitude: sin θ = (√2 - 1) cos θ => cos θ = sin θ / (√2 - 1) = (√2 + 1) sin θ => cos θ - sin θ = √2 sin θ.';
-      } else if (qNum > 75) {
-        secId = 'sec_ssc100_eng';
-        secName = 'English Comprehension & Grammar';
-        subj = 'English';
-        topic = 'Idioms, Synonyms & Error Spotting';
-        text = `[SSC CGL Q${qNum}] Select the most appropriate idiom that means "to make a bad situation even worse":`;
-        opts = [
-          { id: 'A', text: 'To add fuel to the fire' },
-          { id: 'B', text: 'To burn the midnight oil' },
-          { id: 'C', text: 'To bite the bullet' },
-          { id: 'D', text: 'To see eye to eye' }
-        ];
-        ans = 'A';
-        expl = 'English Vocabulary: "To add fuel to the fire" means to aggravate an already difficult or conflict situation.';
-      }
-
-      return {
-        id: `ssc100_q${qNum}`,
-        questionNumber: qNum,
-        sectionId: secId,
-        sectionName: secName,
-        subject: subj,
-        topic: topic,
-        type: 'single_choice' as const,
-        text: text,
-        options: opts,
-        correctAnswer: ans,
-        positiveMarks: 2.0,
-        negativeMarks: 0.5,
-        difficulty: 'medium' as any,
-        explanation: expl,
-        referenceNotes: 'Staff Selection Commission CGL Previous Year Question Bank'
-      };
-    })
+    questions: getSscCgl100DistinctQuestions()
   },
 
   // ==========================================
@@ -1327,41 +1175,7 @@ export const ADDITIONAL_MOCK_TESTS: MockTest[] = [
       { id: 'sec_norcet100_core', name: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)', totalQuestions: 80, totalMarks: 80, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 },
       { id: 'sec_norcet100_apt', name: 'Section B: General Awareness & Logical Aptitude', totalQuestions: 20, totalMarks: 20, positiveMarksPerQuestion: 1.0, negativeMarksPerQuestion: 0.33 }
     ],
-    questions: Array.from({ length: 100 }).map((_, i) => {
-      const qNum = i + 1;
-      const isCore = qNum <= 80;
-      return {
-        id: `norcet100_q${qNum}`,
-        questionNumber: qNum,
-        sectionId: isCore ? 'sec_norcet100_core' : 'sec_norcet100_apt',
-        sectionName: isCore ? 'Section A: Nursing Core Clinical Modules' : 'Section B: General Aptitude & GK',
-        subject: isCore ? 'Clinical Nursing' : 'General Aptitude & Reasoning',
-        topic: isCore ? 'Cardiovascular, OBG, Pharmacology & Patient Safety' : 'General Knowledge & Reasoning',
-        type: 'single_choice' as const,
-        text: isCore 
-          ? `[AIIMS NORCET Q${qNum}] A patient receiving IV Heparin infusion for Deep Vein Thrombosis (DVT) exhibits active epistaxis. Which specific antidote should the nurse ensure is immediately available at the bedside?`
-          : `[AIIMS NORCET Q${qNum}] Which international day is officially observed across the world on 12th May to commemorate the birth anniversary of Florence Nightingale?`,
-        options: isCore ? [
-          { id: 'A', text: 'Protamine Sulfate (1 mg neutralizes ~100 units of active Heparin)' },
-          { id: 'B', text: 'Vitamin K (Phytonadione) - Specific for Warfarin reversal' },
-          { id: 'C', text: 'Calcium Gluconate - Specific for Magnesium toxicity' },
-          { id: 'D', text: 'Flumazenil - Specific for Benzodiazepine overdose' }
-        ] : [
-          { id: 'A', text: 'International Nurses Day' },
-          { id: 'B', text: 'World Health Day (7th April)' },
-          { id: 'C', text: 'World Red Cross Day (8th May)' },
-          { id: 'D', text: 'World Heart Day (29th September)' }
-        ],
-        correctAnswer: 'A' as const,
-        positiveMarks: 1.0,
-        negativeMarks: 0.33,
-        difficulty: 'medium' as any,
-        explanation: isCore 
-          ? 'Protamine Sulfate is the specific chemical antidote that binds with strongly acidic Heparin to form an inactive salt complex.'
-          : 'International Nurses Day is celebrated annually worldwide on May 12, marking Florence Nightingale\'s birthday.',
-        referenceNotes: 'AIIMS NORCET Clinical Nursing Handbook 2026'
-      };
-    })
+    questions: generateFull100NorcetQuestions()
   },
 
   // ==========================================

@@ -108,8 +108,8 @@ export function computeSubscriptionState(input: SubscriptionEngineInput): Subscr
   const email = input.email || input.userData?.email || null;
   const isVip = isLifetimeVipEmail(email);
 
-  // Check saved coupon from input or localStorage
-  let activeCoupon = input.appliedCoupon || null;
+  // Check saved coupon from input, Firestore userData, or localStorage
+  let activeCoupon = input.appliedCoupon || input.userData?.appliedCoupon || input.userData?.lastCouponUsed || null;
   if (!activeCoupon && typeof window !== 'undefined') {
     try {
       activeCoupon = localStorage.getItem('arohi_applied_coupon');
@@ -173,23 +173,30 @@ export function computeSubscriptionState(input: SubscriptionEngineInput): Subscr
   // 2. Resolve Firestore & Local Storage Subscriptions
   const firestoreSubscribed = Boolean(input.userData?.isSubscribed);
   const firestoreEndDate = input.userData?.subscriptionEndDate || 0;
-  const isFirestoreActive = firestoreSubscribed || (firestoreEndDate > currentTime);
+  const isFirestoreActive = firestoreSubscribed && (firestoreEndDate === 0 || firestoreEndDate > currentTime);
 
   const isLocalEndDateValid = storedEndDate > currentTime;
   const hasActiveLocalPaths = Object.values(storedSubs).some(Boolean);
+  const isCouponActive = hasValidCoupon && (storedEndDate === 0 || storedEndDate > currentTime || firestoreEndDate === 0 || firestoreEndDate > currentTime);
 
-  // User is subscribed if Firestore indicates so, local end date is valid, active paths exist, or valid coupon is active
+  // User is subscribed if Firestore indicates active status, local end date is valid, active paths exist, or valid coupon is active
   const isSubscribed = Boolean(
     isFirestoreActive || 
     isLocalEndDateValid || 
-    (hasActiveLocalPaths && storedEndDate > currentTime) ||
-    hasValidCoupon
+    (hasActiveLocalPaths && (storedEndDate === 0 || storedEndDate > currentTime)) ||
+    isCouponActive
   );
 
-  // Compute effective end date
+  // Compute effective end date (preserving 30 days full validity for coupons)
   let effectiveEndDate = 0;
   if (isSubscribed) {
-    if (firestoreEndDate > 0) {
+    if (firestoreEndDate > currentTime) {
+      effectiveEndDate = firestoreEndDate;
+    } else if (storedEndDate > currentTime) {
+      effectiveEndDate = storedEndDate;
+    } else if (isCouponActive) {
+      effectiveEndDate = (storedEndDate > 0 ? storedEndDate : (firestoreEndDate > 0 ? firestoreEndDate : currentTime + THIRTY_DAYS_MS));
+    } else if (firestoreEndDate > 0) {
       effectiveEndDate = firestoreEndDate;
     } else if (storedEndDate > 0) {
       effectiveEndDate = storedEndDate;
@@ -206,7 +213,14 @@ export function computeSubscriptionState(input: SubscriptionEngineInput): Subscr
   const secondsRemaining = Math.floor((subMsRemaining % (1000 * 60)) / 1000);
 
   // 3. Resolve Trial State (Strictly for non-subscribed users)
-  let resolvedTrialStart = input.trialStartTime || 0;
+  let resolvedTrialStart = input.trialStartTime || input.userData?.trialStartTime || 0;
+  if (!resolvedTrialStart && input.userData?.subscribedAt && !isSubscribed) {
+    resolvedTrialStart = input.userData.subscribedAt;
+  }
+  if (!resolvedTrialStart && input.userData?.createdAt && !isSubscribed) {
+    const parsed = typeof input.userData.createdAt === 'number' ? input.userData.createdAt : Date.parse(String(input.userData.createdAt));
+    if (!isNaN(parsed) && parsed > 0) resolvedTrialStart = parsed;
+  }
   if (!resolvedTrialStart && typeof window !== 'undefined') {
     try {
       const savedTrial = localStorage.getItem('arohi_trial_start');
@@ -225,10 +239,10 @@ export function computeSubscriptionState(input: SubscriptionEngineInput): Subscr
   const isTrialExpired = !isSubscribed && !isTrialTimeRemaining;
 
   const trialMsRemaining = isTrialActive ? Math.max(0, TWO_DAYS_MS - trialElapsed) : 0;
-  const trialDaysRemaining = Math.floor(trialMsRemaining / (1000 * 60 * 60 * 24));
-  const trialHoursRemaining = Math.floor(trialMsRemaining / (1000 * 60 * 60));
-  const trialMinutesRemaining = Math.floor((trialMsRemaining % (1000 * 60 * 60)) / (1000 * 60));
-  const trialSecondsRemaining = Math.floor((trialMsRemaining % (1000 * 60)) / 1000);
+  const trialDaysRemaining = isSubscribed ? 0 : Math.floor(trialMsRemaining / (1000 * 60 * 60 * 24));
+  const trialHoursRemaining = isSubscribed ? 0 : Math.floor(trialMsRemaining / (1000 * 60 * 60));
+  const trialMinutesRemaining = isSubscribed ? 0 : Math.floor((trialMsRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  const trialSecondsRemaining = isSubscribed ? 0 : Math.floor((trialMsRemaining % (1000 * 60)) / 1000);
 
   const planName = input.userData?.subscriptionPlanName || 
     storedPlanName || 
