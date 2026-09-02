@@ -791,259 +791,1449 @@ export const AIIMS_NORCET_100_DISTINCT_QUESTIONS: ExamQuestion[] = [
     difficulty: 'easy',
     explanation: 'Displacement involves transferring emotional reactions or hostile feelings from the primary threatening source (professor) onto a safer, less threatening substitute (roommate).',
     referenceNotes: 'Psychiatric-Mental Health Nursing: Concepts of Care'
+  },
+  // --- PEDIATRIC & NEONATAL NURSING (Questions 36-55) ---
+  {
+    id: 'norcet100_q36',
+    questionNumber: 36,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'IMNCI Dehydration Classification',
+    type: 'single_choice',
+    text: 'A 14-month-old child presents with acute watery diarrhea. On assessment: child is lethargic, eyes are deeply sunken, unable to drink, and skin pinch goes back very slowly (> 2 seconds). According to IMNCI guidelines, how should the nurse classify and manage this child?',
+    options: [
+      { id: 'A', text: 'Severe Dehydration — Initiate Plan C: Immediate IV Ringer Lactate 100 mL/kg' },
+      { id: 'B', text: 'Some Dehydration — Initiate Plan B: Oral Rehydration Salts (ORS) 75 mL/kg over 4 hours' },
+      { id: 'C', text: 'No Dehydration — Initiate Plan A: Home fluids and continue feeding' },
+      { id: 'D', text: 'Dysentery — Administer oral Ciprofloxacin without rehydration' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Under IMNCI, any two of: lethargy/unconsciousness, sunken eyes, unable to drink/drinking poorly, and skin pinch going back very slowly (>2s) classifies as Severe Dehydration. Treatment requires Plan C: Rapid IV rehydration with Ringer Lactate (100 mL/kg total).',
+    referenceNotes: 'WHO/UNICEF Integrated Management of Neonatal and Childhood Illness (IMNCI)'
+  },
+  {
+    id: 'norcet100_q37',
+    questionNumber: 37,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Neonatal Resuscitation Program (NRP)',
+    type: 'single_choice',
+    text: 'A full-term newborn is delivered with apnea and a heart rate of 70 bpm after initial warming, drying, and tactile stimulation. What is the immediate next priority action under NRP guidelines?',
+    options: [
+      { id: 'A', text: 'Initiate Positive Pressure Ventilation (PPV) with room air (21% O2) at 40-60 breaths/min and attach pulse oximeter' },
+      { id: 'B', text: 'Perform chest compressions at 3:1 ratio immediately' },
+      { id: 'C', text: 'Administer IV Epinephrine via umbilical venous catheter' },
+      { id: 'D', text: 'Administer 100% free-flow oxygen via mask for 5 minutes' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'According to NRP (8th edition), if the newborn remains apneic/gasping or has HR < 100 bpm after 30 seconds of initial steps, immediate Positive Pressure Ventilation (PPV) must be initiated using 21% O2 (for ≥35 weeks) at 40–60 breaths/min. Chest compressions are only started if HR remains < 60 bpm after 30 seconds of effective PPV.',
+    referenceNotes: 'AHA/AAP Neonatal Resuscitation Guidelines'
+  },
+  {
+    id: 'norcet100_q38',
+    questionNumber: 38,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Congenital Heart Disease (Tetralogy of Fallot)',
+    type: 'single_choice',
+    text: 'A 2-year-old child with Tetralogy of Fallot (TOF) experiences a hypercyanotic "Tet spell" during crying. Which immediate nursing position reduces right-to-left shunting and improves pulmonary blood flow?',
+    options: [
+      { id: 'A', text: 'Knee-Chest (squatting) position' },
+      { id: 'B', text: 'Trendelenburg position' },
+      { id: 'C', text: 'Prone position with head elevated' },
+      { id: 'D', text: 'High Fowler’s position with legs straight' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Placing the child in a knee-chest position increases systemic vascular resistance (SVR) by kinking the femoral arteries, reducing right-to-left ventricular shunting and forcing more deoxygenated blood into the pulmonary artery for oxygenation.',
+    referenceNotes: 'Pediatric Cardiac Nursing Protocols'
+  },
+  {
+    id: 'norcet100_q39',
+    questionNumber: 39,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Gastrointestinal Conditions (Hirschsprung Disease)',
+    type: 'single_choice',
+    text: 'What classic stool characteristic should the nurse expect to observe in an infant diagnosed with Hirschsprung’s Disease (Congenital Aganglionic Megacolon)?',
+    options: [
+      { id: 'A', text: 'Pellet-like or Ribbon-like foul-smelling stools' },
+      { id: 'B', text: 'Currant-jelly red mucoid stools' },
+      { id: 'C', text: 'Rice-water watery diarrhea' },
+      { id: 'D', text: 'Frothy, bulky, greasy, foul-smelling steatorrhea' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Ribbon-like or pellet-like stools are classic in Hirschsprung disease due to passage through the narrowed aganglionic segment. Red currant-jelly stool is classic for Intussusception; Rice-water stool for Cholera; Steatorrhea for Celiac/Cystic Fibrosis.',
+    referenceNotes: 'Nelson Textbook of Pediatrics'
+  },
+  {
+    id: 'norcet100_q40',
+    questionNumber: 40,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Gastrointestinal Conditions (Hypertrophic Pyloric Stenosis)',
+    type: 'single_choice',
+    text: 'A 4-week-old male infant presents with non-bilious projectile vomiting immediately after bottle feeding, persistent hunger, and an olive-shaped palpable mass in the right upper quadrant. What is the diagnosis?',
+    options: [
+      { id: 'A', text: 'Hypertrophic Pyloric Stenosis (HPS)' },
+      { id: 'B', text: 'Intussusception' },
+      { id: 'C', text: 'Gastroesophageal Reflux Disease (GERD)' },
+      { id: 'D', text: 'Tracheoesophageal Fistula' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The classic triad of Infantile Hypertrophic Pyloric Stenosis: 1) Non-bilious projectile vomiting, 2) Palpable olive-shaped epigastric mass, and 3) Visible peristaltic waves from left to right. It leads to hypochloremic hypokalemic metabolic alkalosis.',
+    referenceNotes: 'Pediatric Surgical Nursing Manual'
+  },
+  {
+    id: 'norcet100_q41',
+    questionNumber: 41,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Oncology Nursing (Wilms Tumor / Nephroblastoma)',
+    type: 'single_choice',
+    text: 'A 3-year-old child is admitted for surgical workup of suspected Wilms tumor (Nephroblastoma). Which critical warning sign MUST the nurse place conspicuously over the child’s bed?',
+    options: [
+      { id: 'A', text: '"DO NOT PALPATE ABDOMEN"' },
+      { id: 'B', text: '"Strict Airborne Isolation"' },
+      { id: 'C', text: '"Keep in Trendelenburg Position"' },
+      { id: 'D', text: '"Maintain NPO for 48 hours continuously"' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Abdominal palpation in Wilms tumor must be strictly avoided because manipulation can rupture the encapsulated renal tumor and cause seeding of malignant cells throughout the peritoneal cavity.',
+    referenceNotes: 'Pediatric Oncology Nursing Standards'
+  },
+  {
+    id: 'norcet100_q42',
+    questionNumber: 42,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Vaccination & Cold Chain (National Immunization Schedule)',
+    type: 'single_choice',
+    text: 'At what anatomical site, route, and needle angle is the BCG (Bacillus Calmette-Guérin) vaccine administered to a newborn?',
+    options: [
+      { id: 'A', text: 'Left Upper Arm (over deltoid), Intradermal (ID) at 10-15° angle (0.05 mL dose at birth)' },
+      { id: 'B', text: 'Anterolateral aspect of mid-thigh, Intramuscular (IM) at 90° angle' },
+      { id: 'C', text: 'Right deltoid, Subcutaneous (SC) at 45° angle' },
+      { id: 'D', text: 'Oral mucosa, 2 drops orally' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'BCG vaccine is given strictly Intradermally (ID) on the left upper arm over insertion of the deltoid at a dose of 0.05 mL (up to 1 month of age) or 0.1 mL (after 1 month) using a tuberculin/insulin syringe.',
+    referenceNotes: 'National Immunization Schedule (NIS) Ministry of Health & Family Welfare'
+  },
+  {
+    id: 'norcet100_q43',
+    questionNumber: 43,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Vaccine Sensitivity & Storage Temperature',
+    type: 'single_choice',
+    text: 'Which vaccine in the Universal Immunization Programme (UIP) is the MOST heat-sensitive vaccine requiring strict -20°C deep freezing storage in the deep freezer?',
+    options: [
+      { id: 'A', text: 'Oral Polio Vaccine (OPV)' },
+      { id: 'B', text: 'Tetanus Toxoid (TT / Td)' },
+      { id: 'C', text: 'Hepatitis B vaccine' },
+      { id: 'D', text: 'DPT vaccine' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'OPV is the most heat-sensitive vaccine and is stored at -20°C in the deep freezer. TT/Td and Hepatitis B are the most freeze-sensitive (must never be frozen and kept at +2°C to +8°C in the ILR).',
+    referenceNotes: 'Government of India Cold Chain Handbook'
+  },
+  {
+    id: 'norcet100_q44',
+    questionNumber: 44,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Developmental Milestones',
+    type: 'single_choice',
+    text: 'By what age is an infant expected to sit steadily without support and transfer objects from one hand to another?',
+    options: [
+      { id: 'A', text: '7 to 8 months' },
+      { id: 'B', text: '3 to 4 months' },
+      { id: 'C', text: '12 to 14 months' },
+      { id: 'D', text: '18 months' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Developmental milestones: Head control (3 months), Roll over (5 months), Sit with support (6 months), Sit without support (7-8 months), Hand-to-hand transfer (7 months), Pincer grasp (9-10 months), Stand alone & walk (12-15 months).',
+    referenceNotes: 'Ghai Essential Pediatrics'
+  },
+  {
+    id: 'norcet100_q45',
+    questionNumber: 45,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Respiratory Emergency (Acute Epiglottitis)',
+    type: 'single_choice',
+    text: 'A 4-year-old child presents with high fever, severe inspiratory stridor, drooling of saliva, and sits upright leaning forward with neck hyperextended (tripod position). What action is strictly CONTRAINDICATED?',
+    options: [
+      { id: 'A', text: 'Examining the throat with a tongue depressor or inserting an oral swab' },
+      { id: 'B', text: 'Administering humidified oxygen' },
+      { id: 'C', text: 'Keeping emergency intubation equipment at the bedside' },
+      { id: 'D', text: 'Allowing the child to remain in the parent’s lap for comfort' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'In suspected acute epiglottitis (Hib infection), inspecting the throat with a tongue depressor or taking an oral swab can trigger complete laryngospasm and catastrophic sudden airway obstruction. Any invasive throat examination should only be performed in the OR under general anesthesia.',
+    referenceNotes: 'Pediatric Airway Emergency Protocols'
+  },
+  {
+    id: 'norcet100_q46',
+    questionNumber: 46,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Cleft Lip & Cleft Palate Care (Rule of 10s)',
+    type: 'single_choice',
+    text: 'According to Millard’s "Rule of 10s", what clinical criteria should a neonate meet before undergoing surgical repair of Cleft Lip (Cheiloplasty)?',
+    options: [
+      { id: 'A', text: '10 weeks of age, 10 lbs (4.5 kg) body weight, and Hb ≥ 10 g/dL' },
+      { id: 'B', text: '10 months of age, 10 kg weight, and WBC < 10,000' },
+      { id: 'C', text: '10 days of age, 10 lbs weight, and Platelet count > 100,000' },
+      { id: 'D', text: '10 weeks of age, 10 kg weight, and Serum Albumin > 10 g/dL' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Rule of 10s for cleft lip repair: Age ≥ 10 weeks, Body weight ≥ 10 pounds (4.5 kg), and Hemoglobin ≥ 10 g/dL (with WBC < 10,000). Cleft palate repair is typically scheduled around 9 to 18 months before speech development.',
+    referenceNotes: 'Pediatric Surgical Nursing Principles'
+  },
+  {
+    id: 'norcet100_q47',
+    questionNumber: 47,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Neonatal Care (Kangaroo Mother Care)',
+    type: 'single_choice',
+    text: 'What are the two core essential components of Kangaroo Mother Care (KMC) recommended by WHO for Low Birth Weight (LBW) and premature infants?',
+    options: [
+      { id: 'A', text: 'Continuous skin-to-skin contact (in frog position) and exclusive breastfeeding' },
+      { id: 'B', text: 'Radiant warmer placement and formula bottle feeding' },
+      { id: 'C', text: 'Swaddling in thick blankets and total parenteral nutrition' },
+      { id: 'D', text: 'Incubator isolation and intermittent phototherapy' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'KMC has two fundamental components: 1) Early, continuous, and prolonged skin-to-skin contact between mother (or caregiver) and infant, and 2) Exclusive, frequent breastfeeding. Minimum KMC duration per session should be at least 1 hour.',
+    referenceNotes: 'WHO Guidelines on Kangaroo Mother Care'
+  },
+  {
+    id: 'norcet100_q48',
+    questionNumber: 48,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Neonatal Prophylaxis (Vitamin K)',
+    type: 'single_choice',
+    text: 'Why is Vitamin K1 (Phytomenadione) administered Intramuscularly to every newborn within 1 hour of birth, and what is the standard dose for term infants (> 1000g)?',
+    options: [
+      { id: 'A', text: 'To prevent Hemorrhagic Disease of the Newborn (HDN) due to sterile gut flora; Dose: 1.0 mg IM' },
+      { id: 'B', text: 'To accelerate bilirubin conjugation; Dose: 5.0 mg IM' },
+      { id: 'C', text: 'To prevent neonatal rickets; Dose: 0.1 mg IM' },
+      { id: 'D', text: 'To stimulate surfactant synthesis; Dose: 2.5 mg oral' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Newborns have a sterile intestine lacking bacterial flora that synthesizes Vitamin K, leading to deficiency of clotting factors II, VII, IX, and X. Vitamin K1 (1.0 mg IM for >1kg or 0.5 mg IM for <1kg in vastus lateralis) prevents early and late Hemorrhagic Disease of the Newborn (HDN).',
+    referenceNotes: 'Neonatology Clinical Protocols & AIIMS Care Guidelines'
+  },
+  {
+    id: 'norcet100_q49',
+    questionNumber: 49,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Fluid Management & Low Osmolarity ORS',
+    type: 'single_choice',
+    text: 'What is the total osmolarity (in mOsm/L) and Sodium concentration (in mmol/L) of the standard WHO Low Osmolarity Oral Rehydration Salt (ORS) formulation?',
+    options: [
+      { id: 'A', text: 'Total Osmolarity = 245 mOsm/L; Sodium = 75 mmol/L' },
+      { id: 'B', text: 'Total Osmolarity = 311 mOsm/L; Sodium = 90 mmol/L' },
+      { id: 'C', text: 'Total Osmolarity = 200 mOsm/L; Sodium = 50 mmol/L' },
+      { id: 'D', text: 'Total Osmolarity = 290 mOsm/L; Sodium = 135 mmol/L' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'WHO/UNICEF Low Osmolarity ORS composition (245 mOsm/L): Sodium 75 mmol/L, Chloride 65 mmol/L, Glucose 75 mmol/L, Potassium 20 mmol/L, Citrate 10 mmol/L. This reduced osmolarity reduces stool output by 20% and vomiting by 30%.',
+    referenceNotes: 'WHO/UNICEF Diarrhea Management Guidelines'
+  },
+  {
+    id: 'norcet100_q50',
+    questionNumber: 50,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pediatric Nursing',
+    topic: 'Febrile Seizures in Children',
+    type: 'single_choice',
+    text: 'A 2-year-old child experiences a generalized tonic-clonic seizure during a rapid spike in body temperature to 39.5°C lasting 3 minutes. What is the immediate nursing priority during the active seizure episode?',
+    options: [
+      { id: 'A', text: 'Ensure airway patency, turn child to lateral recovery position, and protect head from trauma without forcing objects into the mouth' },
+      { id: 'B', text: 'Restrain the limbs firmly to arrest physical convulsions' },
+      { id: 'C', text: 'Force a padded wooden tongue blade between the teeth' },
+      { id: 'D', text: 'Immerse child in an ice-water bath immediately' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'During an active seizure: 1) Maintain patent airway and position child on their side (lateral) to prevent aspiration, 2) Loosen tight clothing and cushion head, 3) Do NOT restrain movements, and 4) NEVER insert any object into the mouth. Note duration and administer rectal/nasal Diazepam/Midazolam if seizure > 5 mins.',
+    referenceNotes: 'Pediatric Neurology Seizure Management Protocol'
+  },
+  // --- OBSTETRIC & GYNAECOLOGICAL NURSING (Questions 51-65) ---
+  {
+    id: 'norcet100_q51',
+    questionNumber: 51,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'APGAR Score Calculation',
+    type: 'single_choice',
+    text: 'At 1 minute after birth, a newborn has: Heart Rate 115 bpm (2), weak slow irregular cry (1), some flexion of extremities (1), grimace upon catheter suctioning (1), and pink body with blue hands and feet/acrocyanosis (1). What is the newborn’s APGAR score?',
+    options: [
+      { id: 'A', text: 'APGAR = 6 (Mild / Moderate Depression)' },
+      { id: 'B', text: 'APGAR = 8 (Normal)' },
+      { id: 'C', text: 'APGAR = 4 (Severe Depression)' },
+      { id: 'D', text: 'APGAR = 9 (Excellent)' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'APGAR scoring: Appearance (Acrocyanosis = 1), Pulse (HR > 100 = 2), Grimace (Grimace = 1), Activity (Some flexion = 1), Respiration (Slow/irregular = 1). Total APGAR Score = 1 + 2 + 1 + 1 + 1 = 6. Scores 4-6 require immediate airway clearance and oxygen/stimulation.',
+    referenceNotes: 'Virginia Apgar Neonatal Evaluation System'
+  },
+  {
+    id: 'norcet100_q52',
+    questionNumber: 52,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Active Management of Third Stage of Labor (AMTSL)',
+    type: 'single_choice',
+    text: 'Which three interlinked interventions constitute the WHO-standard Active Management of the Third Stage of Labor (AMTSL) to prevent Postpartum Hemorrhage (PPH)?',
+    options: [
+      { id: 'A', text: 'Prophylactic Uterotonic (Oxytocin 10 IU IM), Controlled Cord Traction (CCT), and Uterine Fundal Massage' },
+      { id: 'B', text: 'Immediate manual removal of placenta, episiotomy repair, and IV Ergometrine' },
+      { id: 'C', text: 'Fundal pressure (Kristeller maneuver), early cord clamping, and ice pack application' },
+      { id: 'D', text: 'Oxytocin infusion only after spontaneous delivery of the placenta' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'AMTSL triad recommended by WHO & MoHFW: 1) Administration of a uterotonic (Oxytocin 10 IU IM) within 1 minute of fetal delivery, 2) Controlled Cord Traction (Brandt-Andrews technique) with counter-traction to deliver the placenta, and 3) Immediate and periodic uterine fundal massage.',
+    referenceNotes: 'WHO Recommendations for the Prevention and Treatment of Postpartum Haemorrhage'
+  },
+  {
+    id: 'norcet100_q53',
+    questionNumber: 53,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Pre-Eclampsia & Magnesium Sulfate Toxicity',
+    type: 'single_choice',
+    text: 'A pregnant patient with Severe Pre-eclampsia receives IV Magnesium Sulfate (Pritchard regimen). Which assessment findings indicate acute Magnesium toxicity, and which specific antidote should the nurse administer immediately?',
+    options: [
+      { id: 'A', text: 'Loss of Deep Tendon Reflexes (Patellar knee-jerk), Bradypnea (RR < 12/min), Oliguria (< 30 mL/hr); Antidote: 10% Calcium Gluconate (10 mL IV over 10 mins)' },
+      { id: 'B', text: 'Hyperreflexia, Tachycardia, Polyuria; Antidote: Protamine Sulfate' },
+      { id: 'C', text: 'Hypertension, Hyperkalemia; Antidote: Sodium Polystyrene Sulfonate' },
+      { id: 'D', text: 'Pupillary constriction, Hypothermia; Antidote: Naloxone' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Signs of MgSO4 toxicity: 1) Loss of patellar reflex (serum Mg 8-10 mEq/L), 2) Respiratory depression < 12/min (10-12 mEq/L), 3) Cardiac arrest (>15 mEq/L). The specific antidote is Calcium Gluconate 10% (1 gram / 10 mL IV administered slowly over 10 minutes).',
+    referenceNotes: 'National Guidelines for Diagnosis & Management of Gestational Hypertension & Preeclampsia'
+  },
+  {
+    id: 'norcet100_q54',
+    questionNumber: 54,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Antepartum Hemorrhage (Placenta Previa vs Abruptio Placentae)',
+    type: 'single_choice',
+    text: 'A 32-week primigravida presents with sudden painless, bright-red vaginal bleeding without abdominal tenderness or uterine rigidity. What condition should the nurse suspect, and what procedure is STRICTLY CONTRAINDICATED?',
+    options: [
+      { id: 'A', text: 'Placenta Previa; Digital Vaginal Examination (PV) is strictly contraindicated' },
+      { id: 'B', text: 'Abruptio Placentae; Transabdominal ultrasound is contraindicated' },
+      { id: 'C', text: 'Uterine Rupture; External fetal monitoring is contraindicated' },
+      { id: 'D', text: 'Cervical Incompetence; Bed rest is contraindicated' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Placenta Previa is characterized by painless, causeless, recurrent bright-red vaginal bleeding. Digital vaginal examination (PV) is strictly prohibited as it can directly dislodge the low-lying placenta and cause catastrophic torrential hemorrhage.',
+    referenceNotes: 'DC Dutta Textbook of Obstetrics'
+  },
+  {
+    id: 'norcet100_q55',
+    questionNumber: 55,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Fetal Heart Rate Decelerations (VEAL CHOP)',
+    type: 'single_choice',
+    text: 'During intrapartum CTG monitoring, the nurse notes repetitive late decelerations (fetal heart rate drops after the peak of uterine contractions and recovers slowly). What does this pattern indicate, and what is the primary nursing action?',
+    options: [
+      { id: 'A', text: 'Uteroplacental Insufficiency; Turn mother to Left Lateral position, apply 10L O2 via non-rebreather, stop Oxytocin infusion, and hydrate with IV fluids' },
+      { id: 'B', text: 'Umbilical Cord Compression; Place mother in Trendelenburg position' },
+      { id: 'C', text: 'Fetal Head Compression; Prepare for immediate vacuum delivery' },
+      { id: 'D', text: 'Normal physiological variation requiring no intervention' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'VEAL CHOP mnemonic: Variable decels = Cord compression; Early decels = Head compression; Accelerations = Okay; Late decels = Placental insufficiency. Late decelerations reflect fetal hypoxia/acidosis requiring immediate intrauterine resuscitation (Left lateral position, O2, IV bolus, stop uterotonics).',
+    referenceNotes: 'ACOG / RCOG Electronic Fetal Monitoring Guidelines'
+  },
+  {
+    id: 'norcet100_q56',
+    questionNumber: 56,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Obstetric Emergencies (Cord Prolapse)',
+    type: 'single_choice',
+    text: 'Following spontaneous rupture of membranes, the nurse sees a pulsating umbilical cord protruding through the introitus. What is the immediate life-saving nursing action while summoning the surgical team for emergency cesarean section?',
+    options: [
+      { id: 'A', text: 'Insert sterile gloved hand into the vagina and push the fetal presenting part upward off the cord, placing mother in Knee-Chest or exaggerated Trendelenburg position' },
+      { id: 'B', text: 'Attempt to gently push the umbilical cord back inside the uterine cavity' },
+      { id: 'C', text: 'Clamp and cut the cord immediately' },
+      { id: 'D', text: 'Have the mother ambulate briskly to accelerate descent' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'In overt umbilical cord prolapse, the immediate priority is relieving mechanical pressure on the cord to prevent fetal asphyxia. The nurse inserts a gloved hand to elevate the presenting part off the cord, positions the mother in knee-chest/Trendelenburg, covers exposed cord with warm saline-soaked sterile gauze, and preps for stat C-section. Never attempt to push the cord back inside.',
+    referenceNotes: 'RCOG Cord Prolapse Green-top Guideline'
+  },
+  {
+    id: 'norcet100_q57',
+    questionNumber: 57,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Rh Incompatibility & Anti-D Immunoglobulin',
+    type: 'single_choice',
+    text: 'An Rh-negative mother delivers an Rh-positive Coombs-negative infant. What standard dose of Anti-D Immunoglobulin (RhoGAM) must be administered Intramuscularly, and within what maximum timeframe following delivery?',
+    options: [
+      { id: 'A', text: '300 mcg (1500 IU) IM within 72 hours of delivery' },
+      { id: 'B', text: '50 mcg IM within 24 hours of delivery' },
+      { id: 'C', text: '500 mcg IV within 1 week of delivery' },
+      { id: 'D', text: '100 mcg oral within 48 hours' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Standard postpartum Anti-D prophylaxis is 300 mcg (1500 IU) IM administered within 72 hours of birth to unsensitized Rh-negative mothers delivering Rh-positive infants to clear fetal red cells and prevent isoimmunization in subsequent pregnancies.',
+    referenceNotes: 'ACOG Practice Bulletin - Prevention of Rh D Alloimmunization'
+  },
+  {
+    id: 'norcet100_q58',
+    questionNumber: 58,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Lochia Characteristics & Timeline',
+    type: 'single_choice',
+    text: 'What is the correct sequential progression and timeline of normal postpartum lochial discharge during the puerperium?',
+    options: [
+      { id: 'A', text: 'Lochia Rubra (Days 1-4, red) -> Lochia Serosa (Days 5-9, pinkish-brown) -> Lochia Alba (Days 10-14+, yellowish-white)' },
+      { id: 'B', text: 'Lochia Alba -> Lochia Serosa -> Lochia Rubra' },
+      { id: 'C', text: 'Lochia Serosa -> Lochia Rubra -> Lochia Alba' },
+      { id: 'D', text: 'Lochia Rubra -> Lochia Alba -> Lochia Serosa' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Lochia progression: 1) Lochia rubra (Days 1-4: dark red, blood/decidua), 2) Lochia serosa (Days 5-9: pink/brown, serous exudate/leukocytes), 3) Lochia alba (Days 10-14 up to 3-6 weeks: white/cream, leukocytes/mucus). Persistence of rubra beyond day 4 suggests subinvolution or retained placental fragments.',
+    referenceNotes: 'Myles Textbook for Midwives'
+  },
+  {
+    id: 'norcet100_q59',
+    questionNumber: 59,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Fundal Height Landmarks during Pregnancy',
+    type: 'single_choice',
+    text: 'At which gestational week does the uterine fundus typically become palpable exactly at the level of the maternal Umbilicus?',
+    options: [
+      { id: 'A', text: '20 to 22 weeks of gestation' },
+      { id: 'B', text: '12 weeks of gestation' },
+      { id: 'C', text: '16 weeks of gestation' },
+      { id: 'D', text: '36 weeks of gestation' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Obstetric fundal height milestones: 12 weeks (pubic symphysis), 16 weeks (midway between symphysis and umbilicus), 20-22 weeks (at the umbilicus), 36 weeks (xiphoid process), 40 weeks (drops slightly due to lightening).',
+    referenceNotes: 'DC Dutta Textbook of Obstetrics'
+  },
+  {
+    id: 'norcet100_q60',
+    questionNumber: 60,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Obstetrics & Gynaecological Nursing',
+    topic: 'Neural Tube Defects Prevention (Folic Acid)',
+    type: 'single_choice',
+    text: 'What is the recommended preconception Folic Acid dose for a woman planning pregnancy with no previous history of neural tube defects to prevent spina bifida and anencephaly?',
+    options: [
+      { id: 'A', text: '400 mcg (0.4 mg) daily starting at least 1 month before conception and continued through the first trimester' },
+      { id: 'B', text: '5.0 mg daily starting in the third trimester' },
+      { id: 'C', text: '100 mcg once weekly' },
+      { id: 'D', text: '10 mg daily only during active labor' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Standard preconception folic acid supplementation is 400 mcg (0.4 mg) daily starting 1 to 3 months prior to conception through the 12th week of gestation. For high-risk women with a prior NTD-affected pregnancy, the dose is 4.0 - 5.0 mg daily.',
+    referenceNotes: 'FOGSI & WHO Perinatal Care Guidelines'
+  },
+  // --- FUNDAMENTALS OF NURSING, PHARMACOLOGY & INFECTION CONTROL (Questions 61-80) ---
+  {
+    id: 'norcet100_q61',
+    questionNumber: 61,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Fundamentals of Nursing',
+    topic: 'IV Cannula Color Coding & Gauges',
+    type: 'single_choice',
+    text: 'What is the standard gauge and color coding of the IV cannula primarily recommended for rapid blood transfusions and major trauma fluid resuscitation in adults?',
+    options: [
+      { id: 'A', text: '18 Gauge (Green) or 16 Gauge (Grey)' },
+      { id: 'B', text: '22 Gauge (Blue)' },
+      { id: 'C', text: '24 Gauge (Yellow)' },
+      { id: 'D', text: '26 Gauge (Purple)' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'IV cannula gauge standards: 14G (Orange - massive trauma), 16G (Grey - rapid blood/fluids), 18G (Green - standard blood transfusion & surgery), 20G (Pink - general adult IV medications), 22G (Blue - elderly/fragile veins), 24G (Yellow - pediatrics/neonates), 26G (Purple - extreme preterm neonates).',
+    referenceNotes: 'Standard Nursing Clinical Skills Manual'
+  },
+  {
+    id: 'norcet100_q62',
+    questionNumber: 62,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Fundamentals of Nursing',
+    topic: 'Biomedical Waste Management (BMW Rules India)',
+    type: 'single_choice',
+    text: 'According to the revised Biomedical Waste Management Rules (Govt of India), into which color-coded waste bin should the nurse discard blood-soaked cotton gauze, anatomical waste, and expired medications?',
+    options: [
+      { id: 'A', text: 'Yellow Bag (for non-chlorinated incineration / plasma pyrolysis)' },
+      { id: 'B', text: 'Red Bag (for autoclaving / recycling)' },
+      { id: 'C', text: 'Blue Box / Cardboard container (for glassware)' },
+      { id: 'D', text: 'White Translucent Puncture-Proof Container (for sharps)' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'BMW Color Categories: Yellow (anatomical waste, soiled cotton, placenta, expired drugs, body fluids), Red (contaminated recyclable plastics - IV sets, catheters, syringes without needles), White (metallic sharps - needles, scalpels), Blue (glass ampoules, metallic implants).',
+    referenceNotes: 'Biomedical Waste Management Rules 2016 (amended 2018/2019) MoEFCC India'
+  },
+  {
+    id: 'norcet100_q63',
+    questionNumber: 63,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Fundamentals of Nursing',
+    topic: 'Pressure Injury Prevention & Staging',
+    type: 'single_choice',
+    text: 'What is the recommended turning frequency for an immobilized bedridden patient to prevent ischemia and stage I pressure ulcer development?',
+    options: [
+      { id: 'A', text: 'Every 2 hours while in bed (and every 1 hour in a wheelchair)' },
+      { id: 'B', text: 'Every 6 to 8 hours' },
+      { id: 'C', text: 'Once per 12-hour shift' },
+      { id: 'D', text: 'Only when the patient requests repositioning' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Repositioning every 2 hours in bed (and every 1 hour in a chair) relieves capillary closing pressure (>32 mmHg) over bony prominences (sacrum, greater trochanter, heels), preventing tissue ischemia and decubitus ulcer formation.',
+    referenceNotes: 'NPUAP/EPUAP Pressure Ulcer Prevention & Treatment Clinical Guidelines'
+  },
+  {
+    id: 'norcet100_q64',
+    questionNumber: 64,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pharmacology in Nursing',
+    topic: 'IV Infusion Drop Rate Calculation',
+    type: 'single_choice',
+    text: 'A physician prescribes 1000 mL of 0.9% Normal Saline to be infused over 8 hours. The macro-drip administration set has a drop factor of 15 drops/mL. What should be the infusion rate in drops per minute (gtts/min)?',
+    options: [
+      { id: 'A', text: '31 drops/min' },
+      { id: 'B', text: '42 drops/min' },
+      { id: 'C', text: '21 drops/min' },
+      { id: 'D', text: '50 drops/min' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Formula: (Total Volume in mL × Drop Factor) / (Time in Minutes). Calculation: (1000 × 15) / (8 × 60) = 15000 / 480 = 31.25 ≈ 31 drops/min.',
+    referenceNotes: 'Clinical Drug Calculations for Nursing Practice'
+  },
+  {
+    id: 'norcet100_q65',
+    questionNumber: 65,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Pharmacology in Nursing',
+    topic: 'Digoxin Toxicity & Serum Potassium',
+    type: 'single_choice',
+    text: 'Before administering daily oral Digoxin (0.25 mg) to a patient with Congestive Heart Failure, what vital sign must the nurse assess, and which electrolyte abnormality significantly increases the risk of Digoxin toxicity?',
+    options: [
+      { id: 'A', text: 'Assess Apical Pulse for 1 full minute (hold if HR < 60 bpm in adults); Hypokalemia (< 3.5 mEq/L) potentiates toxicity' },
+      { id: 'B', text: 'Assess Blood Pressure (hold if Systolic < 90); Hypernatremia potentiates toxicity' },
+      { id: 'C', text: 'Assess Respiratory Rate (hold if RR < 10); Hypercalcemia potentiates toxicity' },
+      { id: 'D', text: 'Assess Axillary temperature; Hypomagnesemia potentiates toxicity' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Digoxin is a cardiac glycoside with positive inotropic and negative chronotropic effects. The apical pulse must be checked for 60 seconds (withheld if HR < 60 bpm in adults, < 70 in children, < 90 in infants). Hypokalemia enhances myocardial binding of Digoxin, triggering severe arrhythmias (ventricular ectopy, xanthopsia yellow-green halos). Therapeutic range: 0.5 - 2.0 ng/mL.',
+    referenceNotes: 'Clinical Pharmacology in Nursing'
+  },
+  {
+    id: 'norcet100_q66',
+    questionNumber: 66,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Fundamentals of Nursing',
+    topic: 'Intramuscular Injection Sites & Z-Track Technique',
+    type: 'single_choice',
+    text: 'What is the safest, evidence-based intramuscular (IM) injection site for administering deep, irritating medications (like Iron Dextran) in adults to avoid sciatic nerve and superior gluteal vessel injury?',
+    options: [
+      { id: 'A', text: 'Ventrogluteal site (Gluteus medius and minimus)' },
+      { id: 'B', text: 'Dorsogluteal site' },
+      { id: 'C', text: 'Deltoid muscle' },
+      { id: 'D', text: 'Rectus femoris muscle' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The Ventrogluteal site (located on gluteus medius between greater trochanter and anterior superior iliac spine) is the safest IM site across all ages above 7 months because it is free of major nerves and blood vessels with thick muscle mass. Z-track technique prevents subcutaneous leakage and skin staining.',
+    referenceNotes: 'Potter & Perry Fundamentals of Nursing'
+  },
+  {
+    id: 'norcet100_q67',
+    questionNumber: 67,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Fundamentals of Nursing',
+    topic: 'Endotracheal Suctioning Parameters',
+    type: 'single_choice',
+    text: 'What is the maximum safe vacuum suction pressure and maximum duration per suction pass when performing open endotracheal suctioning in an adult patient to prevent hypoxemia and mucosal trauma?',
+    options: [
+      { id: 'A', text: 'Vacuum pressure: 100 to 120 mmHg; Duration: ≤ 10 to 15 seconds' },
+      { id: 'B', text: 'Vacuum pressure: 180 to 200 mmHg; Duration: 30 seconds' },
+      { id: 'C', text: 'Vacuum pressure: 50 to 60 mmHg; Duration: 25 seconds' },
+      { id: 'D', text: 'Vacuum pressure: 220 to 250 mmHg; Duration: 5 seconds' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Standard suction pressures: Adults 100–120 mmHg (max 150), Children 80–100 mmHg, Neonates 60–80 mmHg. Always pre-oxygenate with 100% O2 for 30–60 seconds, apply suction only while withdrawing the catheter using a rotating motion, and limit each pass to ≤ 10–15 seconds.',
+    referenceNotes: 'AARC Clinical Practice Guideline: Endotracheal Suctioning'
+  },
+  {
+    id: 'norcet100_q68',
+    questionNumber: 68,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Infection Control',
+    topic: 'WHO 5 Moments for Hand Hygiene',
+    type: 'single_choice',
+    text: 'According to the World Health Organization (WHO), what are the "5 Moments for Hand Hygiene" in clinical healthcare settings?',
+    options: [
+      { id: 'A', text: '1. Before touching a patient, 2. Before clean/aseptic procedure, 3. After body fluid exposure risk, 4. After touching a patient, 5. After touching patient surroundings' },
+      { id: 'B', text: '1. Before shift, 2. Before lunch, 3. After restroom, 4. After patient discharge, 5. End of shift' },
+      { id: 'C', text: '1. Before wearing gloves only, 2. After taking off mask only, 3. Before giving injections, 4. After drawing blood, 5. Before leaving the ward' },
+      { id: 'D', text: '1. Before rounds, 2. After rounds, 3. Before surgery, 4. After surgery, 5. During emergency' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'WHO My 5 Moments for Hand Hygiene: 1) Before touching a patient, 2) Before clean/aseptic procedure, 3) After body fluid exposure risk, 4) After touching a patient, 5) After touching patient surroundings.',
+    referenceNotes: 'WHO Guidelines on Hand Hygiene in Health Care'
+  },
+  {
+    id: 'norcet100_q69',
+    questionNumber: 69,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Community Health Nursing',
+    topic: 'Epidemiological Triad & Levels of Prevention',
+    type: 'single_choice',
+    text: 'Administering Measles-Rubella (MR) immunization to infants and conducting health education on balanced nutrition are examples of which level of disease prevention?',
+    options: [
+      { id: 'A', text: 'Primary Prevention (Health Promotion & Specific Protection)' },
+      { id: 'B', text: 'Secondary Prevention (Early Diagnosis & Prompt Treatment)' },
+      { id: 'C', text: 'Tertiary Prevention (Disability Limitation & Rehabilitation)' },
+      { id: 'D', text: 'Primordial Prevention only' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Primary prevention halts disease before it occurs through Health Promotion (nutrition, hygiene) and Specific Protection (immunization, chemoprophylaxis). Secondary prevention involves screening, early diagnosis (Pap smear, sputum AFB), and prompt treatment.',
+    referenceNotes: 'Park’s Textbook of Preventive and Social Medicine'
+  },
+  {
+    id: 'norcet100_q70',
+    questionNumber: 70,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Community Health Nursing',
+    topic: 'Rural Healthcare Infrastructure in India (IPHS Norms)',
+    type: 'single_choice',
+    text: 'According to Indian Public Health Standards (IPHS), what is the population norm covered by a Primary Health Centre (PHC) in plain areas versus hilly/tribal areas?',
+    options: [
+      { id: 'A', text: '30,000 in Plain areas / 20,000 in Hilly, Tribal, and Difficult areas' },
+      { id: 'B', text: '5,000 in Plain areas / 3,000 in Hilly areas' },
+      { id: 'C', text: '1,20,000 in Plain areas / 80,000 in Hilly areas' },
+      { id: 'D', text: '50,000 in Plain areas / 40,000 in Hilly areas' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'IPHS Population Norms: Sub-Centre (5,000 plain / 3,000 tribal), Primary Health Centre PHC (30,000 plain / 20,000 tribal), Community Health Centre CHC (1,20,000 plain / 80,000 tribal).',
+    referenceNotes: 'Indian Public Health Standards (IPHS) Guidelines 2022'
+  },
+  {
+    id: 'norcet100_q71',
+    questionNumber: 71,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Community Health Nursing',
+    topic: 'Maternal Mortality Ratio (MMR) Definition',
+    type: 'single_choice',
+    text: 'How is Maternal Mortality Ratio (MMR) statistically calculated and expressed in epidemiological vital health statistics?',
+    options: [
+      { id: 'A', text: 'Number of maternal deaths per 100,000 (1 Lakh) Live Births' },
+      { id: 'B', text: 'Number of maternal deaths per 1,000 Live Births' },
+      { id: 'C', text: 'Number of maternal deaths per 10,000 Total Pregnancies' },
+      { id: 'D', text: 'Number of maternal deaths per 1,000 Women of Reproductive Age' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'MMR (Maternal Mortality Ratio) is expressed as maternal deaths per 100,000 live births during a given year. In contrast, Infant Mortality Rate (IMR) and Crude Birth Rate (CBR) are expressed per 1,000 live births.',
+    referenceNotes: 'Park’s Textbook of Preventive and Social Medicine'
+  },
+  {
+    id: 'norcet100_q72',
+    questionNumber: 72,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Psychiatric Nursing',
+    topic: 'Schizophrenia (Bleuler’s 4 A’s)',
+    type: 'single_choice',
+    text: 'Which four fundamental primary psychological features constitute Eugen Bleuler’s classic "4 A’s of Schizophrenia"?',
+    options: [
+      { id: 'A', text: 'Affective blunting, Associative looseness, Autism, and Ambivalence' },
+      { id: 'B', text: 'Anxiety, Agitation, Apathy, and Anhedonia' },
+      { id: 'C', text: 'Amnesia, Aphasia, Apraxia, and Agnosia' },
+      { id: 'D', text: 'Auditory hallucinations, Anorexia, Akathisia, and Alexithymia' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Bleuler’s 4 A’s of Schizophrenia: 1) Affect (inappropriate/blunted affect), 2) Associations (loosening of thought associations), 3) Autism (preoccupation with internal fantasies/detachment from reality), 4) Ambivalence (contradictory simultaneous feelings). The 4 A’s of Alzheimer’s are Amnesia, Aphasia, Apraxia, Agnosia.',
+    referenceNotes: 'Kaplan & Sadock’s Synopsis of Psychiatry'
+  },
+  {
+    id: 'norcet100_q73',
+    questionNumber: 73,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Psychiatric Nursing',
+    topic: 'Antipsychotics & Extrapyramidal Symptoms (EPS)',
+    type: 'single_choice',
+    text: 'A patient receiving Haloperidol develops severe acute muscle spasms of the tongue, face, and neck with involuntary upward rolling of the eyes (Oculogyric Crisis). What is this condition, and what is the immediate drug of choice?',
+    options: [
+      { id: 'A', text: 'Acute Dystonia; Administer IV / IM Promethazine or Diphenhydramine / Benztropine' },
+      { id: 'B', text: 'Tardive Dyskinesia; Administer IV Haloperidol' },
+      { id: 'C', text: 'Akathisia; Administer Propranolol' },
+      { id: 'D', text: 'Neuroleptic Malignant Syndrome; Administer Dantrolene' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'Acute Dystonia occurs within hours to days of initiating high-potency typical antipsychotics (Haloperidol, Fluphenazine) due to dopamine D2 blockade. It produces torticollis, trismus, and oculogyric crisis. Immediate treatment is anticholinergic/antihistaminic therapy (Diphenhydramine 50 mg IV/IM or Promethazine 25-50 mg IM/IV).',
+    referenceNotes: 'Psychopharmacology in Clinical Nursing'
+  },
+  {
+    id: 'norcet100_q74',
+    questionNumber: 74,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Psychiatric Nursing',
+    topic: 'Neuroleptic Malignant Syndrome (NMS)',
+    type: 'single_choice',
+    text: 'A patient on high-dose typical antipsychotics develops "lead-pipe" muscle rigidity, extreme hyperpyrexia (temperature 40.2°C), autonomic instability (fluctuating BP, diaphoresis), and marked elevation in Serum Creatine Kinase (CPK). What is the life-threatening diagnosis and treatment?',
+    options: [
+      { id: 'A', text: 'Neuroleptic Malignant Syndrome (NMS); Immediately discontinue antipsychotic, provide aggressive cooling, and administer Dantrolene Sodium / Bromocriptine' },
+      { id: 'B', text: 'Serotonin Syndrome; Administer Cyproheptadine' },
+      { id: 'C', text: 'Malignant Hyperthermia; Administer Succinylcholine' },
+      { id: 'D', text: 'Catatonic Stupor; Administer Lorazepam' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'medium',
+    explanation: 'NMS is a medical emergency caused by acute central dopamine receptor blockade. Hallmarks: "Lead-pipe" rigidity, hyperthermia, autonomic storm, and rhabdomyolysis with elevated CPK. Management: Stat cessation of all neuroleptics, ICU supportive cooling/hydration, and direct skeletal muscle relaxant Dantrolene Sodium or dopamine agonist Bromocriptine.',
+    referenceNotes: 'Emergency Psychiatric Nursing Protocols'
+  },
+  {
+    id: 'norcet100_q75',
+    questionNumber: 75,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Nursing Research & Management',
+    topic: 'Nursing Theories (Florence Nightingale)',
+    type: 'single_choice',
+    text: 'Which fundamental conceptual focus characterizes Florence Nightingale’s Environmental Theory of Nursing?',
+    options: [
+      { id: 'A', text: 'Manipulating the patient’s physical environment (fresh air, pure water, cleanliness, light, warmth, and quiet) to assist nature in healing' },
+      { id: 'B', text: 'Self-care deficit model based on universal self-care requisites' },
+      { id: 'C', text: 'Interpersonal therapeutic relationship across four phases' },
+      { id: 'D', text: 'Goal attainment theory through nurse-client transaction' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Florence Nightingale’s Environmental Theory posits that nursing’s role is to put the patient in the best condition for nature to act upon them through control of 5 essential environmental components: pure air, pure water, efficient drainage, cleanliness, and light.',
+    referenceNotes: 'Theoretical Foundations of Nursing'
+  },
+  {
+    id: 'norcet100_q76',
+    questionNumber: 76,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Nursing Research & Management',
+    topic: 'Ethics in Nursing (Autonomy, Beneficence, Justice)',
+    type: 'single_choice',
+    text: 'A competent adult patient with terminal cancer decides to refuse further chemotherapy and requests palliative hospice care. The nurse supports the patient’s right to make this healthcare decision. Which ethical principle is being upheld?',
+    options: [
+      { id: 'A', text: 'Autonomy' },
+      { id: 'B', text: 'Beneficence' },
+      { id: 'C', text: 'Non-maleficence' },
+      { id: 'D', text: 'Fidelity' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Autonomy is the moral principle that recognizes the right of self-determination and personal independence of individuals to make informed decisions about their own medical treatment without coercion.',
+    referenceNotes: 'Code of Ethics for Nurses (International Council of Nurses / INC)'
+  },
+  {
+    id: 'norcet100_q77',
+    questionNumber: 77,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Nursing Research & Management',
+    topic: 'Informed Consent Legal Responsibilities',
+    type: 'single_choice',
+    text: 'What is the nurse’s primary legal responsibility when witnessing a patient’s signature on a surgical informed consent form?',
+    options: [
+      { id: 'A', text: 'Verifying that the patient signed voluntarily, is mentally competent, and the signature is authentic' },
+      { id: 'B', text: 'Explaining the detailed surgical procedure, risks, and alternatives' },
+      { id: 'C', text: 'Selecting the appropriate anesthesia method' },
+      { id: 'D', text: 'Guaranteeing that no surgical complications will occur' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The surgeon/physician has the primary legal duty to explain the procedure, benefits, risks, and alternatives. The nurse acts strictly as a witness to confirm that the patient is competent, acting voluntarily, and signed the document authentically.',
+    referenceNotes: 'Legal and Ethical Issues in Nursing Practice'
+  },
+  {
+    id: 'norcet100_q78',
+    questionNumber: 78,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Nursing Research & Management',
+    topic: 'Evidence-Based Practice (PICO Format)',
+    type: 'single_choice',
+    text: 'In Evidence-Based Nursing Practice (EBP), what does the acronym "PICO" represent when formulating a clinical research question?',
+    options: [
+      { id: 'A', text: 'Patient / Population, Intervention, Comparison / Control, Outcome' },
+      { id: 'B', text: 'Problem, Implementation, Clinical protocol, Observation' },
+      { id: 'C', text: 'Provider, Institution, Cost, Organization' },
+      { id: 'D', text: 'Pathology, Infection rate, Complications, Operation' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'PICO framework: P = Patient or Population of interest, I = Intervention or Exposure, C = Comparison intervention, O = Outcome of interest.',
+    referenceNotes: 'Polit & Beck Essentials of Nursing Research'
+  },
+  {
+    id: 'norcet100_q79',
+    questionNumber: 79,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Anatomy & Physiology',
+    topic: 'Cardiovascular Conduction System',
+    type: 'single_choice',
+    text: 'Which anatomical structure is known as the primary natural physiological pacemaker of the human heart, generating electrical impulses at a baseline intrinsic rate of 60 to 100 bpm?',
+    options: [
+      { id: 'A', text: 'Sinoatrial (SA) Node (located in the right atrium near the superior vena cava)' },
+      { id: 'B', text: 'Atrioventricular (AV) Node' },
+      { id: 'C', text: 'Bundle of His' },
+      { id: 'D', text: 'Purkinje Fibers' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The SA node is the primary pacemaker (intrinsic rate 60–100 bpm). The AV node is secondary (40–60 bpm), and the Purkinje system/ventricles are tertiary pacemakers (20–40 bpm).',
+    referenceNotes: 'Ross and Wilson Anatomy and Physiology in Health and Illness'
+  },
+  {
+    id: 'norcet100_q80',
+    questionNumber: 80,
+    sectionId: 'sec_norcet100_core',
+    sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
+    subject: 'Anatomy & Physiology',
+    topic: 'Renal Physiology & Renin-Angiotensin System',
+    type: 'single_choice',
+    text: 'In response to renal hypoperfusion or hyponatremia, which specialized cells in the kidney secrete the enzyme Renin to initiate the RAAS cascade?',
+    options: [
+      { id: 'A', text: 'Juxtaglomerular (JG) cells of the afferent arteriole' },
+      { id: 'B', text: 'Podocytes of Bowman’s capsule' },
+      { id: 'C', text: 'Principal cells of the collecting duct' },
+      { id: 'D', text: 'Mesangial cells' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Juxtaglomerular (JG) cells in the afferent renal arterioles secrete Renin in response to decreased renal blood flow or reduced sodium delivery sensed by the macula densa.',
+    referenceNotes: 'Guyton and Hall Textbook of Medical Physiology'
+  },
+  // --- GENERAL AWARENESS, APTITUDE & REASONING (Questions 81-100) ---
+  {
+    id: 'norcet100_q81',
+    questionNumber: 81,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'National Health Mission & Portals',
+    type: 'single_choice',
+    text: 'Under the Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (AB-PMJAY), what is the annual cashless hospitalization financial cover provided per eligible beneficiary family for secondary and tertiary care?',
+    options: [
+      { id: 'A', text: '₹5 Lakhs per family per year' },
+      { id: 'B', text: '₹2 Lakhs per family per year' },
+      { id: 'C', text: '₹10 Lakhs per family per year' },
+      { id: 'D', text: '₹1 Lakh per family per year' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'AB-PMJAY provides a defined benefit cover of ₹5 Lakhs per family per year for secondary and tertiary care across empaneled public and private hospitals nationwide.',
+    referenceNotes: 'National Health Authority (NHA) PMJAY Guidelines'
+  },
+  {
+    id: 'norcet100_q82',
+    questionNumber: 82,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'International Commemorations',
+    type: 'single_choice',
+    text: 'Which date is celebrated globally as International Nurses Day to honor the birth anniversary of Florence Nightingale, the founder of modern nursing?',
+    options: [
+      { id: 'A', text: '12th May' },
+      { id: 'B', text: '7th April (World Health Day)' },
+      { id: 'C', text: '1st December (World AIDS Day)' },
+      { id: 'D', text: '24th March (World TB Day)' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'International Nurses Day is celebrated worldwide on May 12th every year, commemorating the birth anniversary of Florence Nightingale (born May 12, 1820).',
+    referenceNotes: 'International Council of Nurses (ICN)'
+  },
+  {
+    id: 'norcet100_q83',
+    questionNumber: 83,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'Indian Constitution & Healthcare',
+    type: 'single_choice',
+    text: 'Which Article under the Directive Principles of State Policy (Part IV) of the Constitution of India mandates the State to regard the raising of the level of nutrition and the standard of living of its people and the improvement of public health as among its primary duties?',
+    options: [
+      { id: 'A', text: 'Article 47' },
+      { id: 'B', text: 'Article 21' },
+      { id: 'C', text: 'Article 39A' },
+      { id: 'D', text: 'Article 51A' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Article 47 of the Indian Constitution directs the State to improve public health, nutrition, and standard of living, and prohibit the consumption of intoxicating drinks and drugs injurious to health.',
+    referenceNotes: 'Constitution of India - Ministry of Law & Justice'
+  },
+  {
+    id: 'norcet100_q84',
+    questionNumber: 84,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'National Health Programmes (TB Elimination)',
+    type: 'single_choice',
+    text: 'Under the National Tuberculosis Elimination Programme (NTEP), what is the direct benefit transfer (DBT) monthly financial nutritional incentive provided to every registered TB patient under the "Ni-kshay Poshan Yojana"?',
+    options: [
+      { id: 'A', text: '₹500 per month during the entire duration of anti-TB treatment' },
+      { id: 'B', text: '₹1,500 per month' },
+      { id: 'C', text: '₹250 per month' },
+      { id: 'D', text: '₹2,000 one-time grant only' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Ni-kshay Poshan Yojana provides a monthly financial nutritional incentive of ₹500 via Direct Benefit Transfer (DBT) into the bank account of every notified TB patient for the duration of anti-tubercular treatment.',
+    referenceNotes: 'Central TB Division, Ministry of Health & Family Welfare'
+  },
+  {
+    id: 'norcet100_q85',
+    questionNumber: 85,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'Global Health Milestones (Alma-Ata Declaration)',
+    type: 'single_choice',
+    text: 'The historic 1978 WHO International Conference at Alma-Ata is universally renowned for identifying which cornerstone strategy as the key to achieving "Health for All"?',
+    options: [
+      { id: 'A', text: 'Primary Health Care (PHC)' },
+      { id: 'B', text: 'Tertiary super-specialty hospitals' },
+      { id: 'C', text: 'Compulsory health insurance policies' },
+      { id: 'D', text: 'Exclusive private public partnerships' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The Declaration of Alma-Ata (1978) affirmed health as a fundamental human right and declared Primary Health Care (PHC) as the central mechanism to attain Health for All.',
+    referenceNotes: 'WHO Alma-Ata Declaration'
+  },
+  {
+    id: 'norcet100_q86',
+    questionNumber: 86,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Blood Relations',
+    type: 'single_choice',
+    text: 'Pointing to a doctor in the hospital corridor, Sunita said, "His father is the only son of my grandfather." How is Sunita related to the doctor?',
+    options: [
+      { id: 'A', text: 'Sister' },
+      { id: 'B', text: 'Mother' },
+      { id: 'C', text: 'Aunt' },
+      { id: 'D', text: 'Daughter' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The only son of Sunita’s grandfather is Sunita’s father. So, the doctor’s father is Sunita’s father, which means Sunita is the sister of the doctor.',
+    referenceNotes: 'Standard Logical Reasoning'
+  },
+  {
+    id: 'norcet100_q87',
+    questionNumber: 87,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Coding-Decoding',
+    type: 'single_choice',
+    text: 'If in a certain code language, "NURSE" is coded as "QXUVH", how will "CLINIC" be coded in the same pattern?',
+    options: [
+      { id: 'A', text: 'FOLQLF' },
+      { id: 'B', text: 'ENKPKB' },
+      { id: 'C', text: 'FPMRLG' },
+      { id: 'D', text: 'EMKPHB' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Pattern: Each letter is shifted forward by +3 positions in the alphabetical series: N(+3)=Q, U(+3)=X, R(+3)=U, S(+3)=V, E(+3)=H. Applying +3 to CLINIC: C(+3)=F, L(+3)=O, I(+3)=L, N(+3)=Q, I(+3)=L, C(+3)=F -> FOLQLF.',
+    referenceNotes: 'Aptitude & Verbal Reasoning'
+  },
+  {
+    id: 'norcet100_q88',
+    questionNumber: 88,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Number Series Completion',
+    type: 'single_choice',
+    text: 'Find the missing number in the following mathematical series: 4, 9, 19, 39, 79, ?',
+    options: [
+      { id: 'A', text: '159' },
+      { id: 'B', text: '149' },
+      { id: 'C', text: '169' },
+      { id: 'D', text: '158' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Pattern: Each term = (Previous term × 2) + 1. Calculation: 4×2+1=9; 9×2+1=19; 19×2+1=39; 39×2+1=79; 79×2+1 = 158 + 1 = 159.',
+    referenceNotes: 'Numerical Reasoning'
+  },
+  {
+    id: 'norcet100_q89',
+    questionNumber: 89,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Direction Sense Test',
+    type: 'single_choice',
+    text: 'A community health nurse starts from the primary health centre and walks 4 km East, then turns Left and walks 3 km North to reach a patient’s home. What is the shortest straight-line distance from the starting point to the patient’s home?',
+    options: [
+      { id: 'A', text: '5 km' },
+      { id: 'B', text: '7 km' },
+      { id: 'C', text: '6 km' },
+      { id: 'D', text: '4.5 km' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Using the Pythagorean theorem: Distance = √(4² + 3²) = √(16 + 9) = √25 = 5 km.',
+    referenceNotes: 'Spatial & Directional Reasoning'
+  },
+  {
+    id: 'norcet100_q90',
+    questionNumber: 90,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Syllogism',
+    type: 'single_choice',
+    text: 'Statements: 1. All doctors are healers. 2. All nurses are healers. Conclusion I: All doctors are nurses. Conclusion II: Some healers are doctors. Which conclusion logically follows?',
+    options: [
+      { id: 'A', text: 'Only Conclusion II follows' },
+      { id: 'B', text: 'Only Conclusion I follows' },
+      { id: 'C', text: 'Both Conclusions I and II follow' },
+      { id: 'D', text: 'Neither Conclusion I nor II follows' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Since all doctors are healers, the subset of doctors is inside healers, which implies that some healers must be doctors (Conclusion II is valid). There is no necessary overlap between doctors and nurses (Conclusion I is invalid).',
+    referenceNotes: 'Deductive Logic'
+  },
+  {
+    id: 'norcet100_q91',
+    questionNumber: 91,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Quantitative Aptitude',
+    topic: 'Ratios & Hospital Staffing',
+    type: 'single_choice',
+    text: 'In an ICU with 60 staff members, the ratio of nursing officers to attending doctors is 7 : 3. How many nursing officers are on duty in the ICU?',
+    options: [
+      { id: 'A', text: '42 nursing officers' },
+      { id: 'B', text: '35 nursing officers' },
+      { id: 'C', text: '45 nursing officers' },
+      { id: 'D', text: '18 nursing officers' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Total parts = 7 + 3 = 10. Value per part = 60 / 10 = 6. Number of nursing officers = 7 × 6 = 42.',
+    referenceNotes: 'Quantitative Aptitude'
+  },
+  {
+    id: 'norcet100_q92',
+    questionNumber: 92,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Quantitative Aptitude',
+    topic: 'Percentages & Medicine Discount',
+    type: 'single_choice',
+    text: 'A hospital pharmacy offers a 20% institutional discount on a life-saving medication whose maximum retail price (MRP) is ₹2,500. What is the final discounted price paid by the patient?',
+    options: [
+      { id: 'A', text: '₹2,000' },
+      { id: 'B', text: '₹2,200' },
+      { id: 'C', text: '₹1,800' },
+      { id: 'D', text: '₹2,350' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Discount = 20% of 2500 = (20/100) × 2500 = ₹500. Final price = ₹2,500 - ₹500 = ₹2,000.',
+    referenceNotes: 'Arithmetic Aptitude'
+  },
+  {
+    id: 'norcet100_q93',
+    questionNumber: 93,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Quantitative Aptitude',
+    topic: 'Time and Work',
+    type: 'single_choice',
+    text: 'Nurse Priya can complete patient charting for a 30-bed ward in 3 hours, and Nurse Rohit can do the same charting in 6 hours. If they collaborate and work together, how long will it take to finish the charting?',
+    options: [
+      { id: 'A', text: '2 hours (120 minutes)' },
+      { id: 'B', text: '4.5 hours' },
+      { id: 'C', text: '1.5 hours' },
+      { id: 'D', text: '2.5 hours' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Priya’s 1-hr work = 1/3; Rohit’s 1-hr work = 1/6. Combined 1-hr work = 1/3 + 1/6 = 3/6 = 1/2. Therefore, working together it takes 2 hours.',
+    referenceNotes: 'Time and Work Formulae'
+  },
+  {
+    id: 'norcet100_q94',
+    questionNumber: 94,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Quantitative Aptitude',
+    topic: 'Speed, Distance and Time',
+    type: 'single_choice',
+    text: 'An emergency advanced life-support ambulance travels a distance of 45 km to reach a trauma center in 45 minutes. What is the average speed of the ambulance in km/h?',
+    options: [
+      { id: 'A', text: '60 km/h' },
+      { id: 'B', text: '45 km/h' },
+      { id: 'C', text: '50 km/h' },
+      { id: 'D', text: '75 km/h' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Time = 45 minutes = 45/60 hours = 0.75 hours. Speed = Distance / Time = 45 km / 0.75 hours = 60 km/h.',
+    referenceNotes: 'Basic Motion & Speed Maths'
+  },
+  {
+    id: 'norcet100_q95',
+    questionNumber: 95,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'Immunization Campaigns (Mission Indradhanush)',
+    type: 'single_choice',
+    text: 'What is the primary flagship objective of the Ministry of Health and Family Welfare’s "Intensified Mission Indradhanush (IMI)" program in India?',
+    options: [
+      { id: 'A', text: 'To achieve over 90% full immunization coverage among children under 2 years of age and pregnant women in unvaccinated and hard-to-reach pockets' },
+      { id: 'B', text: 'To provide free spectacles in primary schools' },
+      { id: 'C', text: 'To construct medical colleges in every district' },
+      { id: 'D', text: 'To promote AYUSH herbal garden cultivation' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Mission Indradhanush was launched to ensure full immunization coverage for all children under 2 years of age and pregnant women against vaccine-preventable diseases.',
+    referenceNotes: 'MoHFW National Health Mission Portals'
+  },
+  {
+    id: 'norcet100_q96',
+    questionNumber: 96,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'Hospital Hygiene Accreditations (Kayakalp)',
+    type: 'single_choice',
+    text: 'Under the Swachh Bharat Abhiyan, which national initiative was launched by the Ministry of Health to incentivize and recognize public healthcare facilities that demonstrate high levels of cleanliness, hygiene, and infection control?',
+    options: [
+      { id: 'A', text: 'Kayakalp Award Scheme' },
+      { id: 'B', text: 'LaQshya Program' },
+      { id: 'C', text: 'SUMAN Initiative' },
+      { id: 'D', text: 'PMSSY Scheme' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'The Kayakalp initiative was instituted on 15th May 2015 to promote cleanliness, hygiene, and waste management in public health facilities across India.',
+    referenceNotes: 'National Health Systems Resource Centre (NHSRC)'
+  },
+  {
+    id: 'norcet100_q97',
+    questionNumber: 97,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'Labour Room Quality Improvement (LaQshya)',
+    type: 'single_choice',
+    text: 'What is the primary target objective of the "LaQshya" quality improvement initiative launched by the Government of India?',
+    options: [
+      { id: 'A', text: 'Improving quality of care in Labour Rooms and Maternity Operation Theatres to reduce preventable maternal and newborn mortality' },
+      { id: 'B', text: 'Providing free eye cataract surgeries' },
+      { id: 'C', text: 'Eliminating Malaria by 2030' },
+      { id: 'D', text: 'Standardizing nursing college curricula' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'LaQshya focuses on rapid improvement of maternity care during intrapartum and immediate postpartum periods in Labour Rooms and Maternity OT complexes.',
+    referenceNotes: 'Maternal Health Division, MoHFW'
+  },
+  {
+    id: 'norcet100_q98',
+    questionNumber: 98,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Logical Reasoning',
+    topic: 'Odd One Out Classification',
+    type: 'single_choice',
+    text: 'Choose the word which is least like the other words in the group: Stethoscope, Sphygmomanometer, Thermometer, Penicillin.',
+    options: [
+      { id: 'A', text: 'Penicillin' },
+      { id: 'B', text: 'Stethoscope' },
+      { id: 'C', text: 'Sphygmomanometer' },
+      { id: 'D', text: 'Thermometer' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Stethoscope, Sphygmomanometer, and Thermometer are diagnostic medical instruments/equipment, whereas Penicillin is a therapeutic antibiotic drug.',
+    referenceNotes: 'Logical Classification'
+  },
+  {
+    id: 'norcet100_q99',
+    questionNumber: 99,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'Quantitative Aptitude',
+    topic: 'Averages & Vital Statistics',
+    type: 'single_choice',
+    text: 'A nurse records the systolic blood pressure of 5 patients in a ward as: 120, 130, 125, 140, and 135 mmHg. What is the mean systolic blood pressure of these 5 patients?',
+    options: [
+      { id: 'A', text: '130 mmHg' },
+      { id: 'B', text: '128 mmHg' },
+      { id: 'C', text: '132 mmHg' },
+      { id: 'D', text: '135 mmHg' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'Mean = Sum of values / Total count = (120 + 130 + 125 + 140 + 135) / 5 = 650 / 5 = 130 mmHg.',
+    referenceNotes: 'Descriptive Statistics'
+  },
+  {
+    id: 'norcet100_q100',
+    questionNumber: 100,
+    sectionId: 'sec_norcet100_apt',
+    sectionName: 'Section B: General Awareness & Logical Aptitude',
+    subject: 'General Awareness',
+    topic: 'National Health Policy Goal',
+    type: 'single_choice',
+    text: 'According to the National Health Policy 2017 (NHP-2017), what target life expectancy at birth in India is envisioned to be achieved by 2025?',
+    options: [
+      { id: 'A', text: '70 Years' },
+      { id: 'B', text: '65 Years' },
+      { id: 'C', text: '75 Years' },
+      { id: 'D', text: '80 Years' }
+    ],
+    correctAnswer: 'A',
+    positiveMarks: 1.0,
+    negativeMarks: 0.33,
+    difficulty: 'easy',
+    explanation: 'National Health Policy 2017 targets increasing life expectancy at birth from 67.5 to 70 years by 2025, while reducing Total Fertility Rate (TFR) to 2.1.',
+    referenceNotes: 'National Health Policy 2017, Ministry of Health & Family Welfare'
   }
 ];
 
-// Complete the remaining 45 clinical core questions and 20 General Aptitude/GK questions
-// using authentic distinct items for full 100 questions.
+// Returns all 100 distinct authentic NORCET questions directly (Zero duplicates, Zero loops)
 export function generateFull100NorcetQuestions(): ExamQuestion[] {
-  const result: ExamQuestion[] = [...AIIMS_NORCET_100_DISTINCT_QUESTIONS];
-
-  const clinicalTopics = [
-    {
-      subject: 'Medical Surgical Nursing',
-      topic: 'Stroke & FAST Assessment',
-      text: 'A 68-year-old patient arrives with sudden right-sided hemiplegia and expressive aphasia that started 90 minutes ago. What is the standard diagnostic window for IV Tissue Plasminogen Activator (tPA / Alteplase)?',
-      options: [
-        { id: 'A', text: 'Within 3 to 4.5 hours from the exact onset of ischemic stroke symptoms' },
-        { id: 'B', text: 'Within 12 to 24 hours of symptom onset' },
-        { id: 'C', text: 'Within 48 hours with continuous Heparin' },
-        { id: 'D', text: 'Only after 24 hours of antiplatelet therapy' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'AHA/ASA Stroke Guidelines: IV tPA (Alteplase 0.9 mg/kg) is approved within 3 to 4.5 hours of symptom onset in acute ischemic stroke without hemorrhage on CT scan.'
-    },
-    {
-      subject: 'Medical Surgical Nursing',
-      topic: 'Hypocalcemia Signs (Chvostek & Trousseau)',
-      text: 'Following a total thyroidectomy, the patient reports tingling in the fingers and circumoral numbness. Inflation of a blood pressure cuff causes carpal spasm within 2 minutes. What is this sign called?',
-      options: [
-        { id: 'A', text: 'Trousseau’s Sign of latent tetany (Hypocalcemia)' },
-        { id: 'B', text: 'Chvostek’s Sign (Facial twitching)' },
-        { id: 'C', text: 'Homans’ Sign (Deep vein thrombosis)' },
-        { id: 'D', text: 'Kernig’s Sign (Meningeal irritation)' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Trousseau’s sign is carpopedal spasm induced by occluding the brachial artery with a blood pressure cuff inflated above systolic pressure for 3 minutes, indicating hypocalcemia due to accidental parathyroid gland removal/injury.'
-    },
-    {
-      subject: 'Fundamentals of Nursing',
-      topic: 'Nasogastric (NG) Tube Insertion & Verification',
-      text: 'What is the gold standard, most reliable diagnostic method to confirm correct placement of a newly inserted nasogastric feeding tube before administering feeds?',
-      options: [
-        { id: 'A', text: 'Abdominal X-Ray (Radiography) visualizing the tube tip in the stomach' },
-        { id: 'B', text: 'Auscultation of air insufflated with a syringe over the epigastrium' },
-        { id: 'C', text: 'Aspirating gastric fluid and testing with pH paper (pH < 5.5)' },
-        { id: 'D', text: 'Submerging the proximal tube end in water to look for bubbling' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'X-ray confirmation is the definitive gold standard before first use. Testing gastric aspirate pH (<5.5) is the primary bedside check. Auscultating air ("whoosh" test) is unreliable and discouraged.'
-    },
-    {
-      subject: 'Obstetrics & Gynaecological Nursing',
-      topic: 'Non-Stress Test (NST) Interpretation',
-      text: 'In an antepartum Non-Stress Test (NST), what criteria define a normal "Reactive NST" in a 36-week fetus?',
-      options: [
-        { id: 'A', text: 'At least 2 accelerations of ≥ 15 bpm above baseline lasting ≥ 15 seconds within a 20-minute monitoring window' },
-        { id: 'B', text: 'Absence of fetal heart rate decelerations during uterine contractions' },
-        { id: 'C', text: 'Baseline fetal heart rate strictly between 80-100 bpm' },
-        { id: 'D', text: 'Persistent late decelerations following fetal movement' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'A reactive NST requires ≥2 fetal heart rate accelerations of ≥15 bpm lasting ≥15 seconds associated with fetal movements within a 20-minute timeframe.'
-    },
-    {
-      subject: 'Pediatric Nursing',
-      topic: 'Dehydration Classification (IMNCI)',
-      text: 'A 14-month-old infant with acute watery diarrhea is lethargic, has deeply sunken eyes, is unable to drink, and skin pinch goes back very slowly (> 2 seconds). How is dehydration classified under IMNCI?',
-      options: [
-        { id: 'A', text: 'Severe Dehydration (Plan C: Immediate IV Ringer Lactate 100 mL/kg)' },
-        { id: 'B', text: 'Some Dehydration (Plan B: Oral ORS 75 mL/kg over 4 hours)' },
-        { id: 'C', text: 'No Dehydration (Plan A: Home fluids & Zinc)' },
-        { id: 'D', text: 'Persistent Diarrhea with malnutrition' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Under IMNCI, any 2 signs among lethargy/unconsciousness, sunken eyes, inability to drink, and skin pinch >2 seconds classify as Severe Dehydration requiring Plan C IV fluid therapy.'
-    },
-    {
-      subject: 'Pharmacology',
-      topic: 'Aminoglycoside Toxicity',
-      text: 'Which two major organ toxicities must the nurse monitor closely when a patient is receiving therapeutic IV Gentamicin or Amikacin?',
-      options: [
-        { id: 'A', text: 'Nephrotoxicity (elevated serum creatinine) and Ototoxicity (auditory/vestibular damage)' },
-        { id: 'B', text: 'Hepatotoxicity and Cardiotoxicity' },
-        { id: 'C', text: 'Neurotoxicity and Aplastic Anemia' },
-        { id: 'D', text: 'Pulmonary Fibrosis and Pancreatitis' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Aminoglycosides (Gentamicin, Amikacin, Tobramycin) accumulate in the renal proximal tubules and inner ear perilymph, causing dose-dependent nephrotoxicity and irreversible ototoxicity.'
-    },
-    {
-      subject: 'Fundamentals of Nursing',
-      topic: 'Blood Transfusion Filter & Needle Gauge',
-      text: 'Which standard needle gauge and infusion set should the nurse use when administering Packed Red Blood Cells (PRBC) to an adult to prevent hemolysis?',
-      options: [
-        { id: 'A', text: '18-gauge to 20-gauge IV cannula with a standard 170-200 micron micro-aggregate blood filter set' },
-        { id: 'B', text: '24-gauge cannula with micro-drip set' },
-        { id: 'C', text: '22-gauge cannula with 0.2 micron inline bacterial filter' },
-        { id: 'D', text: '26-gauge cannula with regular IV tubing' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'An 18G or 20G IV cannula allows smooth flow of viscous red cells without mechanical shear stress or hemolysis. Blood administration sets contain a standard 170-200 micron filter to trap clots and debris.'
-    },
-    {
-      subject: 'Medical Surgical Nursing',
-      topic: 'Chronic Obstructive Pulmonary Disease (COPD) Oxygen Therapy',
-      text: 'In a patient with severe COPD and chronic hypercapnia (CO2 retention), why is high-flow 100% oxygen therapy avoided?',
-      options: [
-        { id: 'A', text: 'It blunts the hypoxic respiratory drive, leading to acute hypoventilation and CO2 narcosis' },
-        { id: 'B', text: 'It induces bronchospasm and reduces surfactant' },
-        { id: 'C', text: 'It causes acute metabolic alkalosis and hypokalemia' },
-        { id: 'D', text: 'It causes pulmonary edema immediately' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Chronic hypercapnic COPD patients adapt to elevated PaCO2 and depend on peripheral chemoreceptor hypoxic drive (low PaO2) to stimulate respiration. High FiO2 eliminates this drive, worsening CO2 retention.'
-    },
-    {
-      subject: 'Infection Control',
-      topic: 'Personal Protective Equipment (PPE) Donning & Doffing',
-      text: 'What is the correct CDC-recommended sequence for removing (doffing) Personal Protective Equipment (PPE) to minimize self-contamination?',
-      options: [
-        { id: 'A', text: 'Gloves -> Goggles/Face Shield -> Gown -> Mask/Respirator -> Hand Hygiene' },
-        { id: 'B', text: 'Mask -> Gown -> Gloves -> Goggles' },
-        { id: 'C', text: 'Gown -> Gloves -> Mask -> Goggles' },
-        { id: 'D', text: 'Goggles -> Mask -> Gloves -> Gown' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Doffing PPE (most contaminated to cleanest): 1) Gloves, 2) Goggles/Face shield, 3) Gown, 4) Mask/Respirator (removed outside patient room for airborne precautions), followed by immediate hand hygiene.'
-    },
-    {
-      subject: 'Obstetrics & Gynaecological Nursing',
-      topic: 'Bishop Score for Labor Induction',
-      text: 'What minimum Bishop Score indicates a favorable (ripe) cervix predicting successful induction of vaginal labor in a multiparous woman?',
-      options: [
-        { id: 'A', text: 'Bishop score ≥ 8 (Favorable cervix)' },
-        { id: 'B', text: 'Bishop score < 4' },
-        { id: 'C', text: 'Bishop score between 1 and 3' },
-        { id: 'D', text: 'Bishop score = 0' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'The Bishop scoring system evaluates Cervical Dilatation, Effacement, Station, Consistency, and Position. A score ≥ 8 indicates a favorable cervix with high probability of successful vaginal delivery.'
-    }
-  ];
-
-  // Fill up to 80 core clinical questions
-  let qIndex = result.length + 1;
-  while (result.length < 80) {
-    const tmpl = clinicalTopics[(qIndex - 1) % clinicalTopics.length];
-    result.push({
-      id: `norcet100_q${qIndex}`,
-      questionNumber: qIndex,
-      sectionId: 'sec_norcet100_core',
-      sectionName: 'Section A: Nursing Core (Med-Surg, OBG, Peds, Pharma)',
-      subject: tmpl.subject,
-      topic: tmpl.topic,
-      type: 'single_choice',
-      text: `[Clinical Scenario ${qIndex}] ${tmpl.text}`,
-      options: tmpl.options.map(o => ({ ...o })),
-      correctAnswer: tmpl.correctAnswer as any,
-      positiveMarks: 1.0,
-      negativeMarks: 0.33,
-      difficulty: 'medium',
-      explanation: tmpl.explanation,
-      referenceNotes: 'AIIMS NORCET Clinical Nursing Protocols'
-    });
-    qIndex++;
-  }
-
-  // Add 20 General Awareness & Reasoning Aptitude Questions (Questions 81 to 100)
-  const generalQuestions = [
-    {
-      topic: 'Healthcare Portals & AYUSH',
-      text: 'Under Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (AB-PMJAY), what is the annual cashless secondary and tertiary hospitalization cover per eligible family?',
-      options: [
-        { id: 'A', text: '₹5 Lakhs per family per year' },
-        { id: 'B', text: '₹2 Lakhs per family per year' },
-        { id: 'C', text: '₹10 Lakhs per family per year' },
-        { id: 'D', text: '₹3 Lakhs per family per year' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'AB-PMJAY provides a defined benefit cover of ₹5 Lakhs per family per year across empaneled public and private healthcare facilities nationwide.'
-    },
-    {
-      topic: 'International Commemorations',
-      text: 'Which date is officially celebrated globally as International Nurses Day to honor the birth anniversary of Florence Nightingale, the founder of modern nursing?',
-      options: [
-        { id: 'A', text: '12th May' },
-        { id: 'B', text: '7th April (World Health Day)' },
-        { id: 'C', text: '1st December (World AIDS Day)' },
-        { id: 'D', text: '8th March (International Women’s Day)' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'International Nurses Day is observed on May 12 annually around the world.'
-    },
-    {
-      topic: 'Reasoning & Blood Relations',
-      text: 'Pointing to a photograph of a surgeon, Maya said, "His father is the only son of my grandfather." How is Maya related to the surgeon in the photograph?',
-      options: [
-        { id: 'A', text: 'Sister' },
-        { id: 'B', text: 'Mother' },
-        { id: 'C', text: 'Aunt' },
-        { id: 'D', text: 'Daughter' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Only son of Maya’s grandfather is Maya’s father. So the surgeon’s father is Maya’s father, meaning Maya is the surgeon’s sister.'
-    },
-    {
-      topic: 'Quantitative Aptitude (Ratios & Proportions)',
-      text: 'In an ICU with 48 registered nursing staff, the ratio of female nurses to male nurses is 5 : 3. How many female nurses are employed in the ICU?',
-      options: [
-        { id: 'A', text: '30 female nurses' },
-        { id: 'B', text: '28 female nurses' },
-        { id: 'C', text: '32 female nurses' },
-        { id: 'D', text: '24 female nurses' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Total parts = 5 + 3 = 8. Female nurses = (5/8) × 48 = 5 × 6 = 30.'
-    },
-    {
-      topic: 'Indian Constitution & Public Health',
-      text: 'Which Article under Part IV (Directive Principles of State Policy) of the Constitution of India directs the State to improve public health and nutrition as primary duties?',
-      options: [
-        { id: 'A', text: 'Article 47' },
-        { id: 'B', text: 'Article 21' },
-        { id: 'C', text: 'Article 32' },
-        { id: 'D', text: 'Article 14' }
-      ],
-      correctAnswer: 'A',
-      explanation: 'Article 47 directs the State to raise nutritional standards and improve public health.'
-    }
-  ];
-
-  while (result.length < 100) {
-    const gIndex = result.length - 80;
-    const gTmpl = generalQuestions[gIndex % generalQuestions.length];
-    const qNum = result.length + 1;
-    result.push({
-      id: `norcet100_q${qNum}`,
-      questionNumber: qNum,
-      sectionId: 'sec_norcet100_apt',
-      sectionName: 'Section B: General Awareness & Logical Aptitude',
-      subject: 'General Awareness & Reasoning',
-      topic: gTmpl.topic,
-      type: 'single_choice',
-      text: `[NORCET Aptitude Q${qNum}] ${gTmpl.text}`,
-      options: gTmpl.options.map(o => ({ ...o })),
-      correctAnswer: gTmpl.correctAnswer as any,
-      positiveMarks: 1.0,
-      negativeMarks: 0.33,
-      difficulty: 'easy',
-      explanation: gTmpl.explanation,
-      referenceNotes: 'AIIMS General Awareness & Aptitude Syllabus'
-    });
-  }
-
-  return result;
+  return AIIMS_NORCET_100_DISTINCT_QUESTIONS.map(q => ({
+    ...q,
+    options: q.options.map(o => ({ ...o }))
+  }));
 }
 
 // =========================================================================

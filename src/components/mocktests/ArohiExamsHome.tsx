@@ -72,7 +72,11 @@ export default function ArohiExamsHome({
     : (activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60));
   const passTotalTests = activePass?.totalTests || (activePass?.tier === 'silver' ? 10 : activePass?.tier === 'gold' ? 25 : 60);
   const isPassExpired = Boolean(activePass?.expiresAt && new Date(activePass.expiresAt).getTime() < Date.now());
-  const isPassValid = Boolean(activePass && passTestsRemaining > 0 && !isPassExpired);
+  const isSubscriber = Boolean(
+    userData?.isSubscribed || 
+    (userData?.subscriptionEndDate && userData.subscriptionEndDate > Date.now())
+  );
+  const isPassValid = Boolean((activePass && passTestsRemaining > 0 && !isPassExpired) || isSubscriber);
   
   // Resolve user display name strictly from logged-in credentials or fallback to 'Candidate'
   const rawDisplayName = 

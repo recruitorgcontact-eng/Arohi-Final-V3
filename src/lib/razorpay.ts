@@ -97,9 +97,10 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
   }
 
   // If order creation returned an error or missing key_id
-  const razorpayKey = orderData?.key_id || (typeof process !== 'undefined' && process.env.RAZORPAY_KEY_ID) || '';
+  const clientEnvKey = typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_RAZORPAY_KEY_ID : '';
+  const razorpayKey = orderData?.key_id || clientEnvKey || (typeof process !== 'undefined' && process.env.RAZORPAY_KEY_ID) || '';
   if (!orderData || !orderData.order_id || !razorpayKey || razorpayKey === 'rzp_test_arohi_demo') {
-    const errorMsg = 'Razorpay payment gateway credentials are not yet configured or invalid. Please configure RAZORPAY_KEY_ID in Settings.';
+    const errorMsg = 'Razorpay payment gateway credentials (RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET) are required to process live charges. Please configure them in your environment settings.';
     console.warn(errorMsg, orderData);
     if (options.onError) {
       options.onError(new Error(errorMsg));
@@ -113,7 +114,7 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
       key: razorpayKey,
       amount: orderData.amount,
       currency: orderData.currency,
-      name: 'AROHI EXAMS',
+      name: 'AROHI AI',
       description: options.planName,
       image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=80',
       order_id: orderData.order_id,
@@ -128,7 +129,8 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
         ...options.notes
       },
       theme: {
-        color: '#7c3aed'
+        color: '#7c3aed',
+        backdrop_color: '#090714'
       },
       handler: async function (paymentResponse: {
         razorpay_payment_id: string;

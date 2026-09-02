@@ -42,10 +42,19 @@ export default function ArohiExamPassModal({
     : (activeUserPass ? (activeUserPass.totalTests || 10) : 0);
   const hasActiveUserPass = Boolean(activeUserPass && currentRemaining > 0 && !isPassExpired);
 
+  const isSubscriber = Boolean(
+    userData?.isSubscribed || 
+    (userData?.subscriptionEndDate && userData.subscriptionEndDate > Date.now())
+  );
+
   const rawStudentName = userData?.profile?.name || userData?.displayName || userMemory?.displayName || user?.displayName || (user?.email ? user.email.split('@')[0] : '');
   const studentName = user ? (rawStudentName?.trim() || 'Student') : 'Student';
   const studentEmail = userData?.profile?.email || userData?.email || user?.email || '';
   const studentPhone = userData?.profile?.phone || '';
+
+  const handleClaimSubscriberPass = () => {
+    handleActivateSuccess('silver', 'Bundled with Arohi Subscription (Free ₹99 Value)', `SUB_EXAMPASS_${Date.now()}`);
+  };
 
   if (!isOpen) return null;
 
@@ -321,6 +330,41 @@ export default function ArohiExamPassModal({
             </div>
           ) : (
             <>
+              {/* Subscriber Included Banner */}
+              {isSubscriber && (
+                <div className={`mb-5 p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-amber-950/40 via-purple-950/40 to-slate-900 border-amber-500/40 text-amber-200' 
+                    : 'bg-gradient-to-r from-amber-50 via-purple-50 to-slate-50 border-amber-300 text-amber-950'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xl shrink-0">
+                      🎁
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-black text-sm">Arohi Subscriber Benefit: ₹99 Pass FREE</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 uppercase">
+                          Included
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 dark:text-slate-400 mt-0.5">
+                        Your active Arohi AI subscription includes 10 full-length CBT tests (₹99 value) automatically.
+                      </p>
+                    </div>
+                  </div>
+                  {!hasActiveUserPass && (
+                    <button
+                      type="button"
+                      onClick={handleClaimSubscriberPass}
+                      className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 hover:brightness-110 shadow-lg cursor-pointer shrink-0 transition-all active:scale-95"
+                    >
+                      ⚡ Activate Free Pass
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Existing Active Pass Status Banner */}
               {hasActiveUserPass && (
                 <div className={`mb-5 p-3.5 sm:p-4 rounded-2xl border flex items-center justify-between gap-3 ${
