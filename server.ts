@@ -6,6 +6,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Modality, GenerateVideosOperation } from '@google/genai';
 import dotenv from 'dotenv';
 import { createResumeDocx } from './server-resume.ts';
+import { expandAndRefineImagePrompt } from './server/imagePromptExpander.ts';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
@@ -7500,7 +7501,7 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
   }
 });
 
-// AI Image Generation & Editing Endpoints (Create & Edit Images with gemini-3.1-flash-image-preview)
+// AI Image Generation & Editing Endpoints (Create & Edit Images with smart prompt expansion & Gemini/Imagen/Pollinations)
 app.post('/api/generate-image', async (req, res) => {
   try {
     const { prompt, aspectRatio = '1:1', style = 'photorealistic', seed } = req.body;
@@ -7508,7 +7509,13 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ success: false, error: "Prompt is required to generate an image." });
     }
 
-    const cleanPrompt = prompt.trim();
+    const rawPrompt = prompt.trim();
+    // Intelligent Semantic Expansion & Disambiguation Engine
+    const expansion = expandAndRefineImagePrompt(rawPrompt, style);
+    const cleanPrompt = expansion.expandedPrompt;
+    const targetAspectRatio = expansion.recommendedAspectRatio || aspectRatio;
+    const targetStyle = expansion.recommendedStyle || style;
+
     let imageUrl = '';
     let provider = 'pollinations';
 
@@ -7522,7 +7529,7 @@ app.post('/api/generate-image', async (req, res) => {
 
       for (const mName of geminiImageModels) {
         try {
-          const stylePrefix = style ? `${style} style, ` : '';
+          const stylePrefix = targetStyle ? `${targetStyle} style, ` : '';
           const fullPrompt = `${stylePrefix}${cleanPrompt}, high quality, detailed, 8k resolution`;
 
           const response = await aiClient.models.generateContent({
@@ -7532,7 +7539,7 @@ app.post('/api/generate-image', async (req, res) => {
             },
             config: {
               imageConfig: {
-                aspectRatio: (aspectRatio === '16:9' ? '16:9' : aspectRatio === '4:3' ? '4:3' : aspectRatio === '3:4' ? '3:4' : aspectRatio === '9:16' ? '9:16' : '1:1') as any,
+                aspectRatio: (targetAspectRatio === '16:9' ? '16:9' : targetAspectRatio === '4:3' ? '4:3' : targetAspectRatio === '3:4' ? '3:4' : targetAspectRatio === '9:16' ? '9:16' : '1:1') as any,
               }
             }
           });
@@ -7557,7 +7564,7 @@ app.post('/api/generate-image', async (req, res) => {
         const imagenModels = ['imagen-3.0-generate-002', 'imagen-3.0-generate-001'];
         for (const mName of imagenModels) {
           try {
-            const stylePrefix = style ? `${style} style, ` : '';
+            const stylePrefix = targetStyle ? `${targetStyle} style, ` : '';
             const fullPrompt = `${stylePrefix}${cleanPrompt}, high quality, detailed, 8k resolution`;
             
             const response = await aiClient.models.generateImages({
@@ -7566,7 +7573,7 @@ app.post('/api/generate-image', async (req, res) => {
               config: {
                 numberOfImages: 1,
                 outputMimeType: 'image/jpeg',
-                aspectRatio: (aspectRatio === '16:9' ? '16:9' : aspectRatio === '4:3' ? '4:3' : aspectRatio === '3:4' ? '3:4' : aspectRatio === '9:16' ? '9:16' : '1:1') as any,
+                aspectRatio: (targetAspectRatio === '16:9' ? '16:9' : targetAspectRatio === '4:3' ? '4:3' : targetAspectRatio === '3:4' ? '3:4' : targetAspectRatio === '9:16' ? '9:16' : '1:1') as any,
               },
             });
 
@@ -7595,9 +7602,9 @@ app.post('/api/generate-image', async (req, res) => {
         '3:2': { w: 1080, h: 720 },
         '2:3': { w: 720, h: 1080 },
       };
-      const dims = dimMap[aspectRatio] || { w: 1024, h: 1024 };
+      const dims = dimMap[targetAspectRatio] || { w: 1024, h: 1024 };
       const randomSeed = seed || Math.floor(Math.random() * 999999);
-      const styledPrompt = `${cleanPrompt}, ${style} style, vibrant details, 8k render, professional quality`;
+      const styledPrompt = `${cleanPrompt}, ${targetStyle} style, vibrant details, 8k render, professional quality`;
       
       imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(styledPrompt)}?width=${dims.w}&height=${dims.h}&nologo=true&seed=${randomSeed}&enhance=true`;
       provider = 'pollinations';
@@ -7606,9 +7613,11 @@ app.post('/api/generate-image', async (req, res) => {
     return res.json({
       success: true,
       imageUrl,
-      prompt: cleanPrompt,
-      aspectRatio,
-      style,
+      prompt: rawPrompt,
+      expandedPrompt: cleanPrompt,
+      category: expansion.detectedCategory,
+      aspectRatio: targetAspectRatio,
+      style: targetStyle,
       provider,
       message: "Image generated successfully!"
     });
@@ -11783,6 +11792,210 @@ Please generate a structured, empathetic, and strategic AI Diagnostic Report in 
   } catch (err: any) {
     console.error('Error generating AI exam analysis:', err);
     res.status(500).json({ error: err.message || 'Failed to analyze exam result.' });
+  }
+});
+
+/* =========================================================================
+   AROHI ONE BUSINESS OS - INBOUND VOICE AGENTS & TELEPHONY GATEWAY
+   ========================================================================= */
+
+// In-memory / file fallback store for business call logs
+const BUSINESS_CALLS_FILE = path.join(process.cwd(), '.local_business_calls.json');
+
+function loadLocalBusinessCalls(): any[] {
+  try {
+    if (fs.existsSync(BUSINESS_CALLS_FILE)) {
+      const raw = fs.readFileSync(BUSINESS_CALLS_FILE, 'utf-8');
+      return JSON.parse(raw) || [];
+    }
+  } catch (e) {
+    console.warn('[Arohi One Voice] Error loading local call logs:', e);
+  }
+  return [];
+}
+
+function saveLocalBusinessCall(callRecord: any) {
+  try {
+    const existing = loadLocalBusinessCalls();
+    const updated = [callRecord, ...existing.filter((c: any) => c.id !== callRecord.id)].slice(0, 100);
+    fs.writeFileSync(BUSINESS_CALLS_FILE, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('[Arohi One Voice] Error saving local call log:', e);
+  }
+}
+
+// 1. Process Conversational Turn for Inbound Voice Agent (TTS/STT Reasoning)
+app.post('/api/arohi-one/voice-agents/simulate-turn', async (req, res) => {
+  try {
+    const {
+      agent,
+      callerMessage,
+      history = [],
+      callerName = 'Customer',
+      callerPhone = '+91 98XXX XXXXX',
+      businessName = 'Our Enterprise'
+    } = req.body;
+
+    const agentName = agent?.name || 'Arohi Inbound Receptionist';
+    const agentRole = agent?.role || 'Front Desk Assistant';
+    const agentLanguage = agent?.language || 'Hinglish (Hindi + English)';
+    const agentKB = agent?.knowledgeBase || 'We offer products, services, appointments, and live support.';
+    const agentGreeting = agent?.greetingMessage || 'Namaste! Welcome. How can I help you today?';
+    const autoActions = agent?.autoActions || {};
+
+    const systemPrompt = `You are "${agentName}", an autonomous AI voice receptionist for "${businessName}".
+Your designated role is: ${agentRole}.
+Primary Language / Tone: ${agentLanguage}.
+
+YOUR BUSINESS KNOWLEDGE BASE:
+${agentKB}
+
+CALLER DETAILS:
+Name: ${callerName}
+Phone: ${callerPhone}
+
+CRITICAL VOICE CONVERSATION GUIDELINES:
+1. Speak naturally as if on a real phone call. Keep replies brief (1 to 3 spoken sentences maximum, strictly under 45 words).
+2. Sound warm, polite, highly professional, and helpful.
+3. If the user asks in Hindi/Hinglish, reply in warm natural Hinglish/Hindi. If in English, reply in English.
+4. Answer questions accurately using the knowledge base.
+5. If the caller wants to book an appointment or consultation, ask for their preferred day/time and confirm.
+6. If the caller asks for pricing, explain the key points clearly.
+7. If the caller is upset or has a critical emergency, offer immediate escalation.
+8. RETURN A STRICT JSON OBJECT ONLY with this schema:
+{
+  "speechResponse": "The exact spoken words for the voice agent (under 45 words)",
+  "sentiment": "positive" | "neutral" | "negative" | "urgent",
+  "detectedIntent": "inquiry" | "booking" | "pricing" | "support" | "escalation" | "greeting",
+  "extractedLead": {
+    "name": "string or null",
+    "phone": "string or null",
+    "requirement": "string or null"
+  },
+  "extractedAppointment": {
+    "title": "string or null",
+    "date": "string or null",
+    "time": "string or null"
+  },
+  "shouldEscalateToHuman": boolean,
+  "actionItem": "string description of next step"
+}`;
+
+    const formattedHistory = (history || []).slice(-6).map((m: any) => {
+      return `${m.role === 'agent' ? agentName : 'Caller'}: ${m.text}`;
+    }).join('\n');
+
+    const promptText = `${systemPrompt}\n\nCONVERSATION HISTORY:\n${formattedHistory}\n\nCALLER JUST SAID:\n"${callerMessage}"\n\nProvide the JSON response:`;
+
+    let generatedJson: any = null;
+    const ai = getAiClient();
+
+    if (ai) {
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+      for (const modelName of modelsToTry) {
+        try {
+          const result = await ai.models.generateContent({
+            model: modelName,
+            contents: [{ role: 'user', parts: [{ text: promptText }] }],
+            config: {
+              temperature: 0.3,
+              responseMimeType: 'application/json'
+            }
+          });
+          const text = result.text || '';
+          if (text) {
+            generatedJson = JSON.parse(text);
+            break;
+          }
+        } catch (e: any) {
+          console.warn(`[Arohi One Voice] Model ${modelName} attempt failed:`, e?.message || e);
+        }
+      }
+    }
+
+    // Smart Fallback if AI was unavailable
+    if (!generatedJson || !generatedJson.speechResponse) {
+      const lower = (callerMessage || '').toLowerCase();
+      let reply = `Namaste ${callerName}! Thank you for reaching out to ${businessName}. I have noted your inquiry and our team will get back to you shortly.`;
+      let intent = 'inquiry';
+      let sentiment = 'positive';
+
+      if (lower.includes('appointment') || lower.includes('book') || lower.includes('doctor') || lower.includes('slot')) {
+        reply = `Certainly! I would be delighted to schedule that for you. What day and time works best for you?`;
+        intent = 'booking';
+      } else if (lower.includes('price') || lower.includes('cost') || lower.includes('fee') || lower.includes('kitna')) {
+        reply = `Our pricing starts at affordable tiers with complete GST compliance. Would you like me to send our official brochure to your WhatsApp number?`;
+        intent = 'pricing';
+      } else if (lower.includes('urgent') || lower.includes('emergency') || lower.includes('help') || lower.includes('problem')) {
+        reply = `I understand this is urgent. I am connecting you directly with our priority support lead right away.`;
+        intent = 'escalation';
+        sentiment = 'urgent';
+      }
+
+      generatedJson = {
+        speechResponse: reply,
+        sentiment,
+        detectedIntent: intent,
+        extractedLead: { name: callerName, phone: callerPhone, requirement: callerMessage },
+        extractedAppointment: null,
+        shouldEscalateToHuman: intent === 'escalation',
+        actionItem: `Follow up with caller regarding: ${callerMessage.slice(0, 60)}`
+      };
+    }
+
+    return res.json({
+      success: true,
+      agentId: agent?.id,
+      turn: generatedJson
+    });
+  } catch (err: any) {
+    console.error('[Arohi One Voice] simulate-turn error:', err);
+    res.status(500).json({ error: err.message || 'Failed to simulate voice turn.' });
+  }
+});
+
+// 2. Inbound Telephony Webhook for Carriers (Exotel, Tata Tele, Twilio, SIP)
+app.post('/api/arohi-one/voice-agents/webhook/inbound', async (req, res) => {
+  try {
+    const { CallSid, From, To, SpeechResult, Digits, agentId } = req.body || req.query;
+    console.log(`[Arohi One Voice Webhook] Incoming Call: ${CallSid || 'SIP'} From: ${From} To: ${To}`);
+
+    // Standard IVR / Voice XML response for telephony providers
+    res.set('Content-Type', 'text/xml');
+    const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Aditi" language="hi-IN">Namaste! Welcome to Arohi Autonomous Enterprise Voice. Connecting you to your AI business receptionist now.</Say>
+  <Gather input="speech dtmf" timeout="5" speechTimeout="auto" action="/api/arohi-one/voice-agents/webhook/gather">
+    <Say voice="Polly.Aditi">Please tell me how I can assist you today.</Say>
+  </Gather>
+</Response>`;
+    res.send(twiml);
+  } catch (err: any) {
+    res.status(500).send('<Response><Say>An error occurred. Please try again later.</Say></Response>');
+  }
+});
+
+// 3. Get Call Logs
+app.get('/api/arohi-one/voice-agents/call-logs', (req, res) => {
+  try {
+    const logs = loadLocalBusinessCalls();
+    res.json({ success: true, calls: logs });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 4. Save Call Log
+app.post('/api/arohi-one/voice-agents/call-logs', (req, res) => {
+  try {
+    const callRecord = req.body;
+    if (!callRecord || !callRecord.id) {
+      return res.status(400).json({ error: 'Call record with id is required.' });
+    }
+    saveLocalBusinessCall(callRecord);
+    res.json({ success: true, saved: callRecord });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
   }
 });
 

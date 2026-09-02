@@ -18,6 +18,7 @@ import {
   ProjectTask,
   MarketingCampaign,
   TelephonyCallRecord,
+  InboundVoiceAgent,
   SupportTicket,
   DocumentVaultItem,
   AutomationRule,
@@ -43,6 +44,7 @@ import {
   INITIAL_PROJECTS,
   INITIAL_PROJECT_TASKS,
   INITIAL_CAMPAIGNS,
+  INITIAL_INBOUND_VOICE_AGENTS,
   INITIAL_TELEPHONY_CALLS,
   INITIAL_SUPPORT_TICKETS,
   INITIAL_DOCUMENTS,
@@ -123,9 +125,16 @@ interface BusinessOSContextType {
   campaigns: MarketingCampaign[];
   addCampaign: (camp: Omit<MarketingCampaign, 'id'>) => void;
 
-  // Telephony
+  // Telephony & Inbound Voice Agents
   calls: TelephonyCallRecord[];
-  simulateInboundCall: (callerName: string, phone: string) => void;
+  inboundAgents: InboundVoiceAgent[];
+  activeInboundAgentId: string;
+  setActiveInboundAgentId: (id: string) => void;
+  addInboundAgent: (agent: Omit<InboundVoiceAgent, 'id' | 'createdAt' | 'totalCallsAttended' | 'avgRating'>) => void;
+  updateInboundAgent: (id: string, updates: Partial<InboundVoiceAgent>) => void;
+  deleteInboundAgent: (id: string) => void;
+  addCallRecord: (call: Omit<TelephonyCallRecord, 'id'>) => void;
+  simulateInboundCall: (callerName: string, phone: string, agentId?: string) => void;
 
   // Support
   tickets: SupportTicket[];
@@ -269,6 +278,8 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [projects, setProjects] = useState<Project[]>(() => safeLoad('projects', INITIAL_PROJECTS));
   const [tasks, setTasks] = useState<ProjectTask[]>(() => safeLoad('tasks', INITIAL_PROJECT_TASKS));
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>(() => safeLoad('campaigns', INITIAL_CAMPAIGNS));
+  const [inboundAgents, setInboundAgents] = useState<InboundVoiceAgent[]>(() => safeLoad('inbound_agents', INITIAL_INBOUND_VOICE_AGENTS));
+  const [activeInboundAgentId, setActiveInboundAgentId] = useState<string>(() => inboundAgents[0]?.id || 'agent_reception_01');
   const [calls, setCalls] = useState<TelephonyCallRecord[]>(() => safeLoad('calls', INITIAL_TELEPHONY_CALLS));
   const [tickets, setTickets] = useState<SupportTicket[]>(() => safeLoad('tickets', INITIAL_SUPPORT_TICKETS));
   const [documents, setDocuments] = useState<DocumentVaultItem[]>(() => safeLoad('documents', INITIAL_DOCUMENTS));
@@ -293,6 +304,7 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       localStorage.setItem(`${STORAGE_KEY}_projects`, JSON.stringify(projects));
       localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(tasks));
       localStorage.setItem(`${STORAGE_KEY}_campaigns`, JSON.stringify(campaigns));
+      localStorage.setItem(`${STORAGE_KEY}_inbound_agents`, JSON.stringify(inboundAgents));
       localStorage.setItem(`${STORAGE_KEY}_calls`, JSON.stringify(calls));
       localStorage.setItem(`${STORAGE_KEY}_tickets`, JSON.stringify(tickets));
       localStorage.setItem(`${STORAGE_KEY}_documents`, JSON.stringify(documents));
@@ -659,27 +671,94 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     showToast(`Campaign ${newCamp.name} launched`);
   };
 
-  // Telephony simulation
-  const simulateInboundCall = (callerName: string, phone: string) => {
+  // Inbound Voice Agents & Telephony
+  const addInboundAgent = (agentData: Omit<InboundVoiceAgent, 'id' | 'createdAt' | 'totalCallsAttended' | 'avgRating'>) => {
+    const newAgent: InboundVoiceAgent = {
+      ...agentData,
+      id: `agent_${Date.now()}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      totalCallsAttended: 0,
+      avgRating: 5.0
+    };
+    setInboundAgents(prev => [newAgent, ...prev]);
+    setActiveInboundAgentId(newAgent.id);
+    showToast(`Voice Agent "${newAgent.name}" activated for ${newAgent.department}`);
+  };
+
+  const updateInboundAgent = (id: string, updates: Partial<InboundVoiceAgent>) => {
+    setInboundAgents(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    showToast('Voice Agent configuration updated');
+  };
+
+  const deleteInboundAgent = (id: string) => {
+    setInboundAgents(prev => prev.filter(a => a.id !== id));
+    if (activeInboundAgentId === id) {
+      const remaining = inboundAgents.filter(a => a.id !== id);
+      if (remaining.length > 0) setActiveInboundAgentId(remaining[0].id);
+    }
+    showToast('Voice Agent removed');
+  };
+
+  const addCallRecord = (callData: Omit<TelephonyCallRecord, 'id'>) => {
+    const newCall: TelephonyCallRecord = {
+      ...callData,
+      id: `call_${Date.now()}`
+    };
+    setCalls(prev => [newCall, ...prev]);
+    showToast(`Inbound Call from ${newCall.callerName} recorded & processed`);
+  };
+
+  const simulateInboundCall = (callerName: string, phone: string, agentId?: string) => {
+    const agent = inboundAgents.find(a => a.id === (agentId || activeInboundAgentId)) || inboundAgents[0];
+    const agentName = agent ? agent.name : 'Arohi AI Telephony Agent';
+
     const newCall: TelephonyCallRecord = {
       id: `call_${Date.now()}`,
       callType: 'inbound',
       callerName,
       callerPhone: phone,
-      companyName: 'Incoming Enterprise Caller',
-      durationSeconds: 195,
+      companyName: callerName.includes('Dr.') ? 'Kalinga Hospital OPD' : 'Enterprise Customer',
+      durationSeconds: 165,
       timestamp: 'Just Now',
-      agentName: 'Arohi AI Telephony Agent',
+      agentName: `${agentName} (${agent?.role || 'Receptionist'})`,
       sentiment: 'positive',
-      callSummary: 'Live Telephony demonstration: AI handled multilingual caller query, explained Business OS capabilities, and captured lead requirements.',
-      actionItems: ['Generate custom quotation', 'Send WhatsApp brochure'],
-      audioDuration: '03:15',
-      transcriptionSnippet: `Caller: "Hello, I am interested in Arohi Business OS." Arohi AI: "Welcome! I can assist you with CRM, GST billing, telephony, and HR payroll integration..."`,
+      callSummary: `Inbound customer call attended autonomously by ${agentName}. Captured caller requirements, verified service availability, and confirmed action items.`,
+      actionItems: [
+        'Sync caller record to CRM Leads',
+        'Send WhatsApp confirmation alert to business owner',
+        'Schedule follow-up on calendar'
+      ],
+      audioDuration: '02:45',
+      transcriptionSnippet: `Caller: "Namaste! I am calling to inquire about services and book an appointment."\n${agentName}: "${agent?.greetingMessage || 'Namaste! Welcome. I would be happy to assist you.'} Let me confirm the available slots for you."\nCaller: "Thank you, that is very helpful!"`,
       status: 'completed'
     };
 
     setCalls(prev => [newCall, ...prev]);
-    showToast(`Arohi Call Telephony: New inbound call logged from ${callerName}`);
+
+    // Also auto-add a lead if agent has createCrmLead enabled
+    if (agent?.autoActions?.createCrmLead) {
+      const newLead: Lead = {
+        id: `lead_call_${Date.now()}`,
+        name: callerName,
+        company: newCall.companyName || 'Inbound Caller',
+        email: `${callerName.toLowerCase().replace(/[^a-z0-9]/g, '')}@inbound-caller.com`,
+        phone,
+        source: 'Arohi Call',
+        status: 'new',
+        estimatedValue: 75000,
+        aiScore: 92,
+        aiInsight: `High-intent inbound caller attended by ${agentName}. Ready for immediate follow-up.`,
+        assignedTo: 'Ananya Sharma',
+        city: 'Bengaluru / New Delhi',
+        createdAt: 'Today',
+        lastContactedAt: 'Just Now',
+        tags: ['Inbound AI Call', agent?.department || 'Reception', 'Warm Lead'],
+        notes: `Call duration: 02:45. Summary: ${newCall.callSummary}`
+      };
+      setLeads(prev => [newLead, ...prev]);
+    }
+
+    showToast(`Arohi Call: Inbound call attended by ${agentName}. Lead synced to CRM!`);
     setActiveModule('telephony');
   };
 
@@ -819,6 +898,13 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         campaigns,
         addCampaign,
         calls,
+        inboundAgents,
+        activeInboundAgentId,
+        setActiveInboundAgentId,
+        addInboundAgent,
+        updateInboundAgent,
+        deleteInboundAgent,
+        addCallRecord,
         simulateInboundCall,
         tickets,
         addTicket,

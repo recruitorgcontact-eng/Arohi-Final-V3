@@ -15,6 +15,7 @@ import {
   ProjectTask,
   MarketingCampaign,
   TelephonyCallRecord,
+  InboundVoiceAgent,
   SupportTicket,
   DocumentVaultItem,
   AutomationRule,
@@ -1037,6 +1038,138 @@ export const INITIAL_CAMPAIGNS: MarketingCampaign[] = [
     status: 'completed',
     startDate: '2025-01-15',
     endDate: '2025-02-05'
+  }
+];
+
+export const INITIAL_INBOUND_VOICE_AGENTS: InboundVoiceAgent[] = [
+  {
+    id: 'agent_reception_01',
+    name: 'Pooja Sharma',
+    role: 'Autonomous Front Desk Receptionist',
+    department: 'Reception & Front Desk',
+    language: 'Hinglish (Hindi + English)',
+    voiceProfile: 'Arohi-Warm-Female',
+    pitch: 1.0,
+    speechRate: 1.0,
+    greetingMessage: 'Namaste! Welcome to our enterprise. How may I assist you or direct your call today?',
+    businessName: 'Apex Innovations & Enterprises',
+    knowledgeBase: `Business Overview: Apex Innovations provides AI Enterprise Solutions, GST Billing software, and HRMS.
+Operating Hours: Monday to Saturday, 9:30 AM to 6:30 PM IST.
+Location: Sector 62, Noida, NCR & Indiranagar, Bengaluru.
+Pricing Plans: Starter at ₹399/mo, Business OS at ₹1,999/mo, Enterprise Custom.
+Common Queries:
+- For Demo/Sales: Book 15-min discovery call or transfer to Sales.
+- For Support: Collect ticket number or phone and assign high priority.
+- For Billing/GST: Invoices are auto-sent with QR code payment.`,
+    autoActions: {
+      createCrmLead: true,
+      sendWhatsAppNotification: true,
+      bookCalendarAppointment: true,
+      forwardToHumanOnUrgent: true,
+    },
+    forwardingPhoneNumber: '+91 98765 43210',
+    assignedPhoneNumber: '+91 80 4712 9901',
+    operatingHours: '24/7 Always Active',
+    isActive: true,
+    totalCallsAttended: 142,
+    avgRating: 4.9,
+    createdAt: '2025-01-15'
+  },
+  {
+    id: 'agent_appointments_02',
+    name: 'Dr. Consultation Frontdesk (Kavita)',
+    role: 'Clinical & OPD Appointment Booker',
+    department: 'Appointments & Booking',
+    language: 'Hindi, English & Odia',
+    voiceProfile: 'Arohi-Empathetic-Female',
+    pitch: 1.05,
+    speechRate: 0.95,
+    greetingMessage: 'Namaste! Thank you for calling the Wellness & Diagnostics Care Desk. I can book your doctor consultation or lab test slot.',
+    businessName: 'Kalinga Care & Multi-Specialty Clinic',
+    knowledgeBase: `Clinic Hours: 8:00 AM to 8:00 PM Daily.
+Doctors Available:
+- Dr. S. N. Rath (Cardiologist, Mon-Fri 4 PM - 7 PM, Fee: ₹800)
+- Dr. Meera Sen (General Physician & Diabetologist, Daily 10 AM - 2 PM, Fee: ₹500)
+- Dr. Anupam Ray (Orthopedic & Joint Care, Tue/Thu/Sat 5 PM - 8 PM, Fee: ₹700)
+Booking Procedure: Ask caller's name, preferred doctor, day, and time. Confirm slot and trigger SMS/WhatsApp confirmation.
+Emergency: For emergency, dial 108 or transfer to emergency line immediately.`,
+    autoActions: {
+      createCrmLead: true,
+      sendWhatsAppNotification: true,
+      bookCalendarAppointment: true,
+      forwardToHumanOnUrgent: true,
+    },
+    forwardingPhoneNumber: '+91 94371 99880',
+    assignedPhoneNumber: '+91 80 4712 9902',
+    operatingHours: 'Business Hours (9 AM - 7 PM)',
+    isActive: true,
+    totalCallsAttended: 288,
+    avgRating: 4.95,
+    createdAt: '2025-01-10'
+  },
+  {
+    id: 'agent_sales_03',
+    name: 'Rajesh Nair',
+    role: 'Enterprise Sales & Deal Qualifier',
+    department: 'Sales & Qualification',
+    language: 'English & Hindi (Professional)',
+    voiceProfile: 'Arohi-Executive-Male',
+    pitch: 0.95,
+    speechRate: 1.05,
+    greetingMessage: 'Hello and welcome to Sales! I am Rajesh. Are you looking to upgrade your business software or explore our Enterprise tier?',
+    businessName: 'Apex Innovations & Enterprises',
+    knowledgeBase: `Enterprise Capabilities:
+- Full ERP with 15 integrated modules (GST Invoicing, CRM, HR Payroll, Document Vault, Telephony).
+- Multi-branch inventory tracking, custom GST e-Invoicing & e-Way bill sync.
+- Pricing discount of 20% on annual multi-seat agreements.
+- Implementation timeframe: 48 hours with dedicated support manager.
+Sales Qualification Criteria:
+- Number of users / employees.
+- Current software used (Tally, Excel, Zoho, SAP).
+- Timeline to deploy and budget range.`,
+    autoActions: {
+      createCrmLead: true,
+      sendWhatsAppNotification: true,
+      bookCalendarAppointment: true,
+      forwardToHumanOnUrgent: true,
+    },
+    forwardingPhoneNumber: '+91 98450 77661',
+    assignedPhoneNumber: '+91 80 4712 9903',
+    operatingHours: '24/7 Always Active',
+    isActive: true,
+    totalCallsAttended: 96,
+    avgRating: 4.85,
+    createdAt: '2025-01-20'
+  },
+  {
+    id: 'agent_support_04',
+    name: 'Aditya Care',
+    role: '24/7 Emergency & VIP Support Desk',
+    department: 'Customer Support',
+    language: '150+ Multilingual Auto-Detect',
+    voiceProfile: 'Arohi-Energetic-Male',
+    pitch: 1.0,
+    speechRate: 1.0,
+    greetingMessage: 'Hello! You have reached our 24/7 Priority Support Desk. Please share your issue or ticket number, and I will resolve it immediately.',
+    businessName: 'Apex Innovations & Enterprises',
+    knowledgeBase: `Support SLAs:
+- Critical downtime: Escalated in 5 minutes with human on-call engineer.
+- Billing / License inquiries: Instant license key lookup and verification.
+- Password/Login resets: Self-service via registered email or instant OTP.
+Escalation Protocol: If caller expresses high frustration or severity level 1 outage, trigger instant call transfer to +91 98765 00000.`,
+    autoActions: {
+      createCrmLead: false,
+      sendWhatsAppNotification: true,
+      bookCalendarAppointment: false,
+      forwardToHumanOnUrgent: true,
+    },
+    forwardingPhoneNumber: '+91 98765 00000',
+    assignedPhoneNumber: '+91 80 4712 9904',
+    operatingHours: 'After Hours & Weekends',
+    isActive: true,
+    totalCallsAttended: 215,
+    avgRating: 4.88,
+    createdAt: '2025-01-05'
   }
 ];
 

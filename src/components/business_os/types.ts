@@ -405,3 +405,68 @@ export interface RolePermission {
   canApproveOrders: boolean;
   canAccessApi: boolean;
 }
+
+export type VoiceProfileId =
+  | 'Arohi-Warm-Female'
+  | 'Arohi-Executive-Male'
+  | 'Arohi-Empathetic-Female'
+  | 'Arohi-Energetic-Male';
+
+export interface InboundVoiceAgent {
+  id: string;
+  name: string;
+  role: string;
+  department: 'Reception & Front Desk' | 'Sales & Qualification' | 'Appointments & Booking' | 'Customer Support' | 'VIP Concierge';
+  language: string;
+  voiceProfile: VoiceProfileId;
+  pitch: number; // 0.8 - 1.2
+  speechRate: number; // 0.8 - 1.3
+  greetingMessage: string;
+  businessName: string;
+  systemPrompt?: string;
+  knowledgeBase: string;
+  autoActions: {
+    createCrmLead: boolean;
+    sendWhatsAppNotification: boolean;
+    bookCalendarAppointment: boolean;
+    forwardToHumanOnUrgent: boolean;
+  };
+  forwardingPhoneNumber?: string;
+  assignedPhoneNumber?: string;
+  operatingHours: '24/7 Always Active' | 'Business Hours (9 AM - 7 PM)' | 'After Hours & Weekends';
+  isActive: boolean;
+  totalCallsAttended: number;
+  avgRating: number;
+  createdAt: string;
+}
+
+export interface InboundCallTurnMessage {
+  id: string;
+  role: 'agent' | 'caller' | 'system';
+  text: string;
+  timestamp: string;
+  sentiment?: 'positive' | 'neutral' | 'negative' | 'urgent';
+  detectedIntent?: string;
+}
+
+export interface InboundCallSimulationSession {
+  sessionId: string;
+  agentId: string;
+  callerName: string;
+  callerPhone: string;
+  companyName?: string;
+  messages: InboundCallTurnMessage[];
+  status: 'idle' | 'calling' | 'connected' | 'ended';
+  startedAt?: string;
+  durationSeconds: number;
+  extractedLead?: Partial<Lead>;
+  extractedAppointment?: {
+    title: string;
+    date: string;
+    time: string;
+    callerName: string;
+    phone: string;
+    notes?: string;
+  };
+  actionItemsTriggered: string[];
+}
