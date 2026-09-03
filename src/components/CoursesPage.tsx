@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
-import { openRazorpayCheckout } from '../lib/razorpay';
 import { 
   Sparkles, 
   BookOpen, 
@@ -35,12 +34,7 @@ import {
   Lock,
   Search,
   History,
-  Trash2,
-  Loader2,
-  AlertCircle,
-  Zap,
-  Mail,
-  Phone
+  Trash2
 } from 'lucide-react';
 import { initialCourses, Course } from '../data/coursesData';
 import ArohiAvatar from './ArohiAvatar';
@@ -456,11 +450,7 @@ export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?
   const [courses, setCourses] = useState<Course[]>(initialCourses);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [candidateName, setCandidateName] = useState(() => user?.displayName || (userData as any)?.name || localStorage.getItem('recruit_user_name') || '');
-  const [candidateEmail, setCandidateEmail] = useState(() => user?.email || (userData as any)?.email || localStorage.getItem('recruit_user_email') || '');
-  const [candidatePhone, setCandidatePhone] = useState(() => (userData as any)?.phone || (userData as any)?.phoneNumber || localStorage.getItem('recruit_user_phone') || '');
-  const [isPaymentProcessing, setIsPaymentProcessing] = useState<boolean>(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [candidateName, setCandidateName] = useState(() => user?.displayName || localStorage.getItem('recruit_user_name') || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>(() => {
     const saved = localStorage.getItem('recruit_course_search_history');
@@ -574,111 +564,66 @@ export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?
     }
   };
 
-  const launchCourseWorkspace = (course: Course) => {
-    setActiveLearningCourse(course);
-    setActiveModuleIndex(0);
-    setSelectedQuizOption(null);
-    setQuizSubmitted(false);
-    setClassroomTab('lecture');
-    setIsAudioLecturePlaying(false);
-    setAudioProgress(0);
-    setTechTaskPassed(false);
-
-    // Populate starter code if it is a tech course
-    const firstTopic = course.syllabus[0];
-    const content = getModuleContent(course.id, firstTopic, 0);
-    if (course.category === 'tech' && content.techChallenge) {
-      setEditorCode(content.techChallenge.starterCode);
-      setConsoleLogs(['[System] Compiler workspace loaded. Write code below and click Execute.']);
-    } else {
-      setEditorCode('');
-      setConsoleLogs([]);
-    }
-    setBizLedgerResult(null);
-  };
-
-  const handlePayAndEnrollWithRazorpay = async (course: Course) => {
-    // 1. Extract clean numeric amount
-    const rawPriceStr = course.price.replace(/[^0-9]/g, '');
-    const numericPrice = Number(rawPriceStr) || 399;
-
-    // Save contact info locally for persistence
-    if (candidateName) localStorage.setItem('recruit_user_name', candidateName);
-    if (candidateEmail) localStorage.setItem('recruit_user_email', candidateEmail);
-    if (candidatePhone) localStorage.setItem('recruit_user_phone', candidatePhone);
-
-    setIsPaymentProcessing(true);
-    setPaymentError(null);
-
-    try {
-      await openRazorpayCheckout({
-        price: numericPrice,
-        currency: 'INR',
-        planName: `Arohi Academy: ${course.title}`,
-        userName: candidateName || user?.displayName || 'Aspirant',
-        userEmail: candidateEmail || user?.email || '',
-        userPhone: candidatePhone || (userData as any)?.phone || '',
-        notes: {
-          courseId: course.id,
-          courseTitle: course.title,
-          category: course.category,
-          provider: course.provider,
-          duration: course.duration,
-          modulesCount: String(course.modules)
-        },
-        onSuccess: (paymentResult: any) => {
-          setIsPaymentProcessing(false);
-          setPaymentError(null);
-
-          // 1. Enroll user in this course
-          handleEnroll(course.id);
-
-          // 2. Launch auto-activation sequence & celebration
-          setIsCheckoutOpen(false);
+  const handleAuthorizePaymentAndAutoLaunch = (course: Course) => {
+    // 1. Enroll the course
+    handleEnroll(course.id);
+    
+    // 2. Open full-screen auto-launch loader
+    setIsAutoLaunching(true);
+    setLaunchProgress(0);
+    setLaunchStepText('Establishing Secure UPI Bank Connection...');
+    setLaunchedCourseObj(course);
+    
+    // 3. Incrementally animate progress and step description
+    let currentProg = 0;
+    const interval = setInterval(() => {
+      currentProg += 5;
+      if (currentProg >= 100) {
+        clearInterval(interval);
+        setLaunchProgress(100);
+        setLaunchStepText('Ecosystem Synced! Launching Player Workspace...');
+        
+        setTimeout(() => {
+          setIsAutoLaunching(false);
           setSelectedCourse(null);
-          setIsAutoLaunching(true);
-          setLaunchProgress(0);
-          setLaunchStepText('Razorpay Transaction Verified! Synchronizing Academic LMS...');
-          setLaunchedCourseObj(course);
+          setIsCheckoutOpen(false);
+          setWasAutoLaunched(true);
+          
+          // Seamlessly switch directly to the active learning player!
+          setActiveLearningCourse(course);
+          setActiveModuleIndex(0);
+          setSelectedQuizOption(null);
+          setQuizSubmitted(false);
+          setClassroomTab('lecture');
+          setIsAudioLecturePlaying(false);
+          setAudioProgress(0);
+          setTechTaskPassed(false);
 
-          let currentProg = 0;
-          const interval = setInterval(() => {
-            currentProg += 10;
-            if (currentProg >= 100) {
-              clearInterval(interval);
-              setLaunchProgress(100);
-              setLaunchStepText('LMS Enrolled & ISO Registry Updated! Launching Workspace...');
-              
-              setTimeout(() => {
-                setIsAutoLaunching(false);
-                setWasAutoLaunched(true);
-                launchCourseWorkspace(course);
-              }, 500);
-            } else {
-              setLaunchProgress(currentProg);
-              if (currentProg === 20) {
-                setLaunchStepText('HMAC-SHA256 Cryptographic Signature Authenticated...');
-              } else if (currentProg === 50) {
-                setLaunchStepText('Updating Student Master Enrollment Records...');
-              } else if (currentProg === 80) {
-                setLaunchStepText('Provisioning Arohi AI 24x7 Direct Classroom Mentorship...');
-              }
-            }
-          }, 80);
-        },
-        onError: (err: any) => {
-          setIsPaymentProcessing(false);
-          const errMsg = err?.description || err?.message || 'Payment processing was cancelled or could not be completed. Please try again.';
-          setPaymentError(errMsg);
-        },
-        onDismiss: () => {
-          setIsPaymentProcessing(false);
+          // Populate starter code if it is a tech course
+          const firstTopic = course.syllabus[0];
+          const content = getModuleContent(course.id, firstTopic, 0);
+          if (course.category === 'tech' && content.techChallenge) {
+            setEditorCode(content.techChallenge.starterCode);
+            setConsoleLogs(['[System] Compiler workspace loaded. Write code below and click Execute.']);
+          } else {
+            setEditorCode('');
+            setConsoleLogs([]);
+          }
+          setBizLedgerResult(null);
+        }, 500);
+      } else {
+        setLaunchProgress(currentProg);
+        if (currentProg < 25) {
+          setLaunchStepText('Validating transaction token with National Payments Gateway...');
+        } else if (currentProg < 50) {
+          setLaunchStepText('Payment Authorized! Syncing Academic Registry...');
+        } else if (currentProg < 75) {
+          setLaunchStepText('Generating ISO Verification Keys...');
+        } else {
+          setLaunchStepText('Calibrating Arohi AI Live Mentorship module...');
         }
-      });
-    } catch (err: any) {
-      setIsPaymentProcessing(false);
-      setPaymentError(err?.message || 'Unable to open Razorpay payment gateway.');
-    }
+      }
+    }, 100);
   };
 
   const handleUnenroll = (courseId: string) => {
@@ -2528,158 +2473,79 @@ Keep in mind:
                 </div>
               </>
             ) : (
-              /* OFFICIAL RAZORPAY STANDARD PAYMENT CHECKOUT */
-              <div className="space-y-5">
-                <div className="text-center space-y-1.5">
-                  <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-1.5 shadow-sm">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Official Razorpay Payment Gateway</span>
+              /* SECURE PAYMENT SIMULATOR */
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="bg-[#fbbf24]/10 text-[#fcd34d] border border-[#fbbf24]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Secure Odisha Education Gateway
                   </div>
-                  <h3 className="text-xl font-black text-white tracking-tight">Skill Academy Enrollment Checkout</h3>
-                  <p className="text-xs text-slate-300 font-semibold leading-relaxed max-w-md mx-auto">
-                    Complete your enrollment securely via UPI, Cards, or Net Banking. Your learning syllabus, sandbox compiler, and ISO credential pipeline unlock instantly.
+                  <h3 className="text-xl font-black text-white">Course Purchase Checkout</h3>
+                  <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-md mx-auto">
+                    Activate your certification track. All learning modules, interactive mock exams, and Arohi AI mentor guidelines are unlocked immediately.
                   </p>
                 </div>
 
-                {/* Course Summary Card */}
-                <div className="bg-[#18133a] border border-[#2b1f5c] rounded-2xl p-4 space-y-3 shadow-inner">
-                  <div className="flex justify-between items-start gap-3">
-                    <div className="min-w-0">
-                      <span className="text-[10px] text-[#a78bfa] font-black uppercase tracking-wider block">Selected Course</span>
-                      <p className="text-sm font-black text-white mt-0.5 truncate">{selectedCourse.title}</p>
-                      <p className="text-[11px] text-slate-400 font-semibold">{selectedCourse.provider} • {selectedCourse.duration}</p>
+                <div className="bg-[#18133a] border border-[#2b1f5c] rounded-2xl p-4 space-y-3.5">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] text-[#a78bfa] font-black uppercase tracking-wider block">Course Title</span>
+                      <p className="text-sm font-black text-white mt-0.5">{selectedCourse.title}</p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-black block">
-                        {selectedCourse.price}
-                      </span>
-                      <span className="text-[9px] text-slate-400 block mt-1 font-semibold">Incl. All Taxes</span>
-                    </div>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded font-bold shrink-0">
+                      {selectedCourse.price}
+                    </span>
                   </div>
 
-                  <div className="border-t border-[#231a4f] pt-2.5 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-300">
-                    <div className="bg-[#120e2a]/60 p-2 rounded-xl border border-[#231a4f]">
-                      <span className="block text-[8px] uppercase text-slate-400 font-bold">Modules</span>
-                      <span className="text-slate-200 text-xs font-black">{selectedCourse.modules} Units</span>
+                  <div className="border-t border-[#231a4f] pt-2.5 grid grid-cols-2 gap-4 text-xs font-bold text-slate-300">
+                    <div>
+                      <span className="block text-[9px] uppercase text-slate-500">Instructor Support</span>
+                      <span className="text-slate-200">Continuous via Arohi AI</span>
                     </div>
-                    <div className="bg-[#120e2a]/60 p-2 rounded-xl border border-[#231a4f]">
-                      <span className="block text-[8px] uppercase text-slate-400 font-bold">Certification</span>
-                      <span className="text-emerald-300 text-xs font-black">ISO Verified</span>
-                    </div>
-                    <div className="bg-[#120e2a]/60 p-2 rounded-xl border border-[#231a4f]">
-                      <span className="block text-[8px] uppercase text-slate-400 font-bold">Mentorship</span>
-                      <span className="text-purple-300 text-xs font-black">24x7 AI Live</span>
+                    <div>
+                      <span className="block text-[9px] uppercase text-slate-500">Credential Status</span>
+                      <span className="text-slate-200">ISO Verified Certificate</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Candidate Billing & Certification Info Form */}
-                <div className="bg-[#141033] border border-[#2f2268] rounded-2xl p-4 space-y-3.5 text-left">
-                  <div className="flex items-center justify-between pb-1 border-b border-[#231a4f]">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-slate-300 flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-[#a78bfa]" /> Candidate Details for Invoice & Certificate
-                    </span>
-                    <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                      Live Verification
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                        Full Name (On Certificate)
-                      </label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Rahul Sharma"
-                        value={candidateName}
-                        onChange={(e) => setCandidateName(e.target.value)}
-                        className="w-full bg-[#0d0924] border border-[#3b2b73] rounded-xl px-3.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed] transition-colors"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                        <Mail className="w-3 h-3 text-slate-400" /> Email (For GST Invoice & LMS Login)
-                      </label>
-                      <input 
-                        type="email" 
-                        placeholder="e.g. rahul@example.com"
-                        value={candidateEmail}
-                        onChange={(e) => setCandidateEmail(e.target.value)}
-                        className="w-full bg-[#0d0924] border border-[#3b2b73] rounded-xl px-3.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed] transition-colors"
-                      />
+                <div className="space-y-4">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Mock Payment Interface</label>
+                    <div className="bg-[#19143d] border border-[#3b2b73] rounded-xl p-3.5 flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span className="flex items-center gap-2">🇮🇳 UPI / Direct Net Banking Mockway</span>
+                      <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Active</span>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-slate-400" /> Phone / WhatsApp (For UPI Push & Instant SMS)
-                    </label>
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Candidate Name on Certificate</label>
                     <input 
-                      type="tel" 
-                      placeholder="e.g. +91 98765 43210"
-                      value={candidatePhone}
-                      onChange={(e) => setCandidatePhone(e.target.value)}
-                      className="w-full bg-[#0d0924] border border-[#3b2b73] rounded-xl px-3.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed] transition-colors"
+                      type="text" 
+                      value={candidateName}
+                      onChange={(e) => setCandidateName(e?.target?.value ?? "")}
+                      className="w-full bg-[#19143d] border border-[#3b2b73] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-[#7c3aed]"
                     />
                   </div>
+
+                  <p className="text-[10px] text-slate-400 font-medium text-center leading-normal">
+                    This is a sandbox educational simulation. Clicking "Authorize Payment" charges no real money but immediately updates your workspace dashboard and assigns your enrolled course track.
+                  </p>
                 </div>
 
-                {/* Accepted Payment Channels */}
-                <div className="bg-[#120e2a] border border-[#231a4f] rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#a78bfa] flex items-center gap-1"><Zap className="w-3 h-3 text-amber-400" /> Instant Payment Modes:</span>
-                    <span className="text-slate-200">GPay, PhonePe, Paytm, BHIM, Cards, Net Banking</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-emerald-400">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>256-Bit SSL Encrypted</span>
-                  </div>
-                </div>
-
-                {/* Error Banner if any */}
-                {paymentError && (
-                  <div className="bg-rose-950/60 border border-rose-500/50 rounded-xl p-3 text-left flex items-start gap-2.5 text-xs text-rose-200 animate-in fade-in">
-                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="font-bold text-rose-300">Payment Gateway Notice</p>
-                      <p className="text-[11px] text-rose-200 leading-relaxed">{paymentError}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="grid grid-cols-2 gap-3 pt-2">
                   <button
-                    type="button"
-                    disabled={isPaymentProcessing}
-                    onClick={() => {
-                      setIsCheckoutOpen(false);
-                      setPaymentError(null);
-                    }}
-                    className="w-full bg-[#1a153b] hover:bg-[#251e54] text-white border border-[#2b215e] font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl cursor-pointer transition-all disabled:opacity-50"
+                    onClick={() => setIsCheckoutOpen(false)}
+                    className="w-full bg-[#1a153b] hover:bg-[#251e54] text-white border border-[#2b215e] font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl cursor-pointer transition-all"
                   >
-                    Cancel
+                    Go Back
                   </button>
                   <button
-                    type="button"
-                    disabled={isPaymentProcessing}
                     onClick={() => {
-                      handlePayAndEnrollWithRazorpay(selectedCourse);
+                      handleAuthorizePaymentAndAutoLaunch(selectedCourse);
                     }}
-                    className="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] text-white font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] text-white font-black text-[11px] uppercase tracking-wider py-3.5 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    {isPaymentProcessing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-white" />
-                        <span>Opening Razorpay...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pay {selectedCourse.price} via Razorpay</span>
-                      </>
-                    )}
+                    Authorize Payment
                   </button>
                 </div>
               </div>

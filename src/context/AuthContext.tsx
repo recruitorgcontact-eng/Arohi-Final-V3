@@ -14,7 +14,7 @@ import {
   signInWithPhoneNumber,
   RecaptchaVerifier
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { authenticateBiometricDevice } from '../lib/webauthn';
 import { getChatDisplayDate, getCallDisplayDate } from '../utils/dateUtils';
@@ -588,21 +588,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             data.arohiChats = mergeArohiChatLists(data.arohiChats || [], chatsArr);
           }
         }
-        // Auto-claim and migrate pre-login guest chats so no conversation is ever lost upon login
-        const guestChats = localStorage.getItem('guest_arohi_chats');
-        if (guestChats) {
-          const guestArr = JSON.parse(guestChats);
-          if (Array.isArray(guestArr) && guestArr.length > 0) {
-            data.arohiChats = mergeArohiChatLists(data.arohiChats || [], guestArr);
-          }
-        }
-        const guestCalls = localStorage.getItem('guest_arohi_calls');
-        if (guestCalls) {
-          const guestCallsArr = JSON.parse(guestCalls);
-          if (Array.isArray(guestCallsArr) && guestCallsArr.length > 0) {
-            data.arohiCalls = [...(data.arohiCalls || []), ...guestCallsArr];
-          }
-        }
       } catch (e) {}
       localStorage.setItem(`recruit_user_data_${uid}`, JSON.stringify(data));
       if (data.arohiChats && data.arohiChats.length > 0) {
@@ -761,36 +746,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {}
       }
 
-      // Auto-provision Free ₹99 Exam Starter Pass for active subscribers if no pass exists or previous pass exhausted
-      const isUserSubscribed = Boolean(data.isSubscribed || (data.subscriptionEndDate && Number(data.subscriptionEndDate) > Date.now()));
-      if (isUserSubscribed) {
-        const existingPass = data.examPass;
-        const passRemaining = typeof existingPass?.testsRemaining === 'number' ? existingPass.testsRemaining : 0;
-        const isPassValid = Boolean(existingPass && passRemaining > 0 && (!existingPass.expiresAt || new Date(existingPass.expiresAt).getTime() > Date.now()));
-        
-        if (!isPassValid) {
-          const passTotalTests = 10;
-          const passValidityDays = 30;
-          const passExpiry = new Date();
-          passExpiry.setDate(passExpiry.getDate() + passValidityDays);
-          const subscriberPass = {
-            tier: 'silver' as const,
-            name: 'Arohi Exams™ Starter Pass (Included with Subscription)',
-            totalTests: passTotalTests,
-            testsRemaining: passTotalTests,
-            testsUsed: 0,
-            validityDays: passValidityDays,
-            activatedAt: new Date().toISOString(),
-            expiresAt: passExpiry.toISOString(),
-            paymentMethod: 'Bundled with Arohi Subscription (Free ₹99 Value)',
-            transactionId: `SUB_EXAMPASS_${Date.now()}`
-          };
-          data.examPass = subscriberPass;
-          try {
-            localStorage.setItem('arohi_exam_pass', JSON.stringify(subscriberPass));
-            window.dispatchEvent(new CustomEvent('arohi_exam_pass_activated', { detail: subscriberPass }));
-          } catch (e) {}
-        }
+      // Synchronize Exam Pass into client cache
+      if (data.examPass) {
+        try {
+          localStorage.setItem('arohi_exam_pass', JSON.stringify(data.examPass));
+        } catch (e) {}
       }
       return data;
     };
@@ -1003,80 +963,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, []);
-
-  // Multi-Device Real-Time Firestore Snapshot Listener & Cross-Tab Sync
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    let unsubscribeSnapshot = () => {};
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const remoteData = snapshot.data() as UserData;
-          setUserData((prev) => {
-            if (!prev) return remoteData;
-            // Merge chats non-destructively so active local session messages are preserved
-            const mergedChats = mergeArohiChatLists(remoteData.arohiChats || [], prev.arohiChats || []);
-            const merged: UserData = {
-              ...remoteData,
-              arohiChats: mergedChats
-            };
-            localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(merged));
-            if (mergedChats.length > 0) {
-              try {
-                localStorage.setItem(`arohi_saved_chats_${user.uid}`, JSON.stringify(mergedChats));
-              } catch (e) {}
-            }
-            return merged;
-          });
-        }
-      }, (error) => {
-        // Silently tolerate if offline or security rules pending
-        console.warn("Real-time Firestore user snapshot listener notice:", error?.message || error);
-      });
-    } catch (err) {
-      console.warn("Unable to attach Firestore onSnapshot listener:", err);
-    }
-
-    // Cross-Tab Broadcast Channel synchronization
-    let broadcastChannel: BroadcastChannel | null = null;
-    try {
-      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-        broadcastChannel = new BroadcastChannel('arohi_sync_channel');
-        broadcastChannel.onmessage = (event) => {
-          if (event.data?.type === 'AROHI_DATA_UPDATED' && event.data?.uid === user.uid) {
-            const cached = localStorage.getItem(`recruit_user_data_${user.uid}`);
-            if (cached) {
-              try {
-                const parsed = JSON.parse(cached);
-                setUserData(parsed);
-              } catch (e) {}
-            }
-          }
-        };
-      }
-    } catch (e) {}
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `recruit_user_data_${user.uid}` && e.newValue) {
-        try {
-          setUserData(JSON.parse(e.newValue));
-        } catch (err) {}
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      if (typeof unsubscribeSnapshot === 'function') {
-        unsubscribeSnapshot();
-      }
-      if (broadcastChannel) {
-        try { broadcastChannel.close(); } catch (e) {}
-      }
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [user?.uid]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -1607,16 +1493,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const broadcastUserDataChange = (userId: string) => {
-    try {
-      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-        const ch = new BroadcastChannel('arohi_sync_channel');
-        ch.postMessage({ type: 'AROHI_DATA_UPDATED', uid: userId });
-        ch.close();
-      }
-    } catch (e) {}
-  };
-
   const updateArohiChats = async (arohiChats: any[]) => {
     if (!user) return;
     const updatedUserData = userData ? { ...userData, arohiChats } : null;
@@ -1625,7 +1501,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updatedUserData) {
       setUserData(updatedUserData);
       localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
-      broadcastUserDataChange(user.uid);
     }
 
     // Layer 1: Server-side API
@@ -1640,7 +1515,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data.success && data.userData) {
           setUserData(data.userData);
           localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(data.userData));
-          broadcastUserDataChange(user.uid);
           return;
         }
       }
@@ -1668,7 +1542,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updatedUserData) {
       setUserData(updatedUserData);
       localStorage.setItem(`recruit_user_data_${user.uid}`, JSON.stringify(updatedUserData));
-      broadcastUserDataChange(user.uid);
     }
 
     // Layer 1: Server-side API
@@ -2002,37 +1875,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subPayload.appliedCoupon = cleanCoupon;
       subPayload.lastCouponUsed = cleanCoupon;
       localStorage.setItem('arohi_applied_coupon', cleanCoupon);
-    }
-
-    // Auto-bundle Free ₹99 Exam Test Pass (Silver, 10 tests, 30 days) with any active subscription
-    if (subData.isSubscribed) {
-      const existingPass = userData?.examPass;
-      const passRemaining = typeof existingPass?.testsRemaining === 'number' ? existingPass.testsRemaining : 0;
-      const isPassValid = Boolean(existingPass && passRemaining > 0 && (!existingPass.expiresAt || new Date(existingPass.expiresAt).getTime() > Date.now()));
-
-      if (!isPassValid) {
-        const passTotalTests = 10;
-        const passValidityDays = 30;
-        const passExpiry = new Date();
-        passExpiry.setDate(passExpiry.getDate() + passValidityDays);
-        const subscriberPass = {
-          tier: 'silver' as const,
-          name: 'Arohi Exams™ Starter Pass (Included with Subscription)',
-          totalTests: passTotalTests,
-          testsRemaining: passTotalTests,
-          testsUsed: 0,
-          validityDays: passValidityDays,
-          activatedAt: new Date().toISOString(),
-          expiresAt: passExpiry.toISOString(),
-          paymentMethod: 'Bundled with Arohi Subscription (Free ₹99 Value)',
-          transactionId: `SUB_EXAMPASS_${Date.now()}`
-        };
-        subPayload.examPass = subscriberPass;
-        try {
-          localStorage.setItem('arohi_exam_pass', JSON.stringify(subscriberPass));
-          window.dispatchEvent(new CustomEvent('arohi_exam_pass_activated', { detail: subscriberPass }));
-        } catch (e) {}
-      }
     }
 
     const updatedUserData = userData ? { ...userData, ...subPayload } : null;

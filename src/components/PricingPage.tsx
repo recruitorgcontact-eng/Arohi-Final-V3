@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Sparkles, Check, CheckCircle2, ShieldCheck, Phone, Cpu, Crown, 
   ArrowRight, Lock, Zap, HelpCircle, Star, Award, Building, BookOpen, UserCheck,
-  Tag, AlertCircle, RefreshCw, Globe, GraduationCap
+  Tag, AlertCircle, RefreshCw, Globe
 } from 'lucide-react';
 import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PricingTier, detectUserCurrency, getPricingTiers } from '../data/pricingData';
 import { isValidCouponCode, persistSubscriptionActivation } from '../utils/subscriptionEngine';
@@ -341,17 +341,6 @@ export default function PricingPage({
                     <span className="text-emerald-100">✨ Unlimited AI Chat</span>
                   </div>
 
-                  {/* FREE EXAM TEST PASS INCLUDED */}
-                  <div className="bg-amber-950/70 border border-amber-500/50 p-1.5 rounded-xl flex items-center justify-between gap-1.5 text-[9.5px] font-black text-amber-200">
-                    <div className="flex items-center gap-1.5">
-                      <GraduationCap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>₹99 Exam Pass</span>
-                    </div>
-                    <span className="text-[8.5px] bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded font-black uppercase">
-                      Free
-                    </span>
-                  </div>
-
                   {/* AI Tokens */}
                   <div className="bg-purple-900/60 border border-purple-500/40 p-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-extrabold text-cyan-200">
                     <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
@@ -422,19 +411,6 @@ export default function PricingPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-900/30 font-medium text-slate-200">
-              {/* Arohi Exams Starter Pass Bundle */}
-              <tr className="bg-amber-950/30">
-                <td className="py-3 px-4 font-black text-amber-300 flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-amber-400" />
-                  <span>Arohi Exams™ Starter Pass</span>
-                </td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">🎁 Included (₹99 Free)</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">🎁 Included (₹99 Free)</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">🎁 Included (₹99 Free)</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">🎁 Included (₹99 Free)</td>
-                <td className="py-3 px-3 text-center text-amber-300 font-bold">🎁 Included (₹99 Free)</td>
-              </tr>
-
               {/* Unlimited AI Chat */}
               <tr className="bg-emerald-950/30">
                 <td className="py-3 px-4 font-black text-emerald-300 flex items-center gap-1.5">

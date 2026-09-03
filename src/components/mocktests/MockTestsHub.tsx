@@ -87,14 +87,8 @@ export default function MockTestsHub({
     ? activePass.testsRemaining 
     : (activePass ? passTotalTests : 0);
   
-  // Check if subscriber is active (Arohi Subscription includes Free ₹99 Exam Starter Pass)
-  const isSubscriber = Boolean(
-    userData?.isSubscribed || 
-    (userData?.subscriptionEndDate && userData.subscriptionEndDate > Date.now())
-  );
-
-  const hasActivePass = Boolean((activePass && passTestsRemaining > 0) || isSubscriber);
-  const isPassExhausted = Boolean(activePass && passTestsRemaining <= 0 && !isSubscriber);
+  const hasActivePass = Boolean(activePass && passTestsRemaining > 0);
+  const isPassExhausted = Boolean(activePass && passTestsRemaining <= 0);
 
   const [localSubmissionCount, setLocalSubmissionCount] = useState<number>(() => {
     try {

@@ -1209,7 +1209,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMessageMenuId, setActiveMessageMenuId] = useState<string | null>(null);
   const [activeNotebooks, setActiveNotebooks] = useState<string[]>(['Career Growth Plan', 'MSME Udyam Roadmap']);
   const [showNewNotebookModal, setShowNewNotebookModal] = useState(false);
@@ -3408,12 +3408,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
       <aside 
         className={`${
-          isSidebarOpen 
-            ? 'translate-x-0 w-80 md:w-72' 
-            : '-translate-x-full md:-translate-x-full md:w-0 md:p-0 md:border-r-0 pointer-events-none'
-        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
           isDarkMode ? 'bg-[#121215] border-zinc-800 text-zinc-100' : 'bg-[#f4f4f5] border-zinc-200 text-zinc-900'
-        } border-r p-4 shrink-0 transition-all duration-300 ease-in-out font-sans select-none shadow-2xl overflow-hidden`}
+        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl overflow-hidden`}
       >
         {/* Sidebar Header: Brand + Search + Close */}
         <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
@@ -3435,8 +3433,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </button>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className={`p-2 ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200'} rounded-full transition-colors cursor-pointer`}
-              title="Close Sidebar"
+              className={`md:hidden p-2 ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200'} rounded-full transition-colors cursor-pointer`}
             >
               <X className="w-5 h-5" />
             </button>

@@ -489,30 +489,24 @@ export default function HeaderNotifications({
                       <div>
                         <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                          {subState.isLifetimeVip ? '👑 Founder Lifetime VIP' : 'Active & Protected'}
+                          Active &amp; Protected
                         </span>
                         <h4 className="font-extrabold text-sm text-white mt-1 leading-tight">
-                          {subState.isLifetimeVip ? 'Enterprise Lifetime VIP (Permanent Access)' : (subState.planName || subscriptionPlanName)}
+                          {subscriptionPlanName}
                         </h4>
                       </div>
                     </div>
-                    <span className="text-right text-[11px] font-mono text-emerald-300 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full whitespace-nowrap">
-                      {subState.isLifetimeVip ? 'Lifetime Access' : `${daysRemaining} Days Left`}
+                    <span className="text-right text-[11px] font-mono text-emerald-300 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                      {daysRemaining} Days Left
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    {subState.isLifetimeVip ? (
-                      <>Your Founder VIP membership is permanently active with unrestricted access to all multimodal AI models, 150+ regional voice engines, exam simulations, and enterprise tools.</>
-                    ) : (
-                      <>Your membership is active through <strong className="text-white">{expiryDateFormatted}</strong>. You have unrestricted access to all multimodal AI models, 150+ regional voice engines, and career tools.</>
-                    )}
+                    Your membership is active through <strong className="text-white">{expiryDateFormatted}</strong>. You have unrestricted access to all multimodal AI models, 150+ regional voice engines, and career tools.
                   </p>
 
                   <div className="pt-1 flex items-center justify-between border-t border-emerald-500/20 text-[11px]">
-                    <span className="text-slate-400">
-                      {subState.isLifetimeVip ? 'Status: Permanent Founder Exemption (No Renewal Needed)' : `Next Renewal: ${expiryDateFormatted}`}
-                    </span>
+                    <span className="text-slate-400">Next Renewal: {expiryDateFormatted}</span>
                     {onNavigateTab && (
                       <button
                         type="button"
@@ -658,7 +652,7 @@ export default function HeaderNotifications({
                   <span>{showSimulateBar ? 'Hide Simulation Tools' : 'Simulate 7-Day / 3-Day Alert'}</span>
                 </button>
                 <span className="text-[9.5px] text-slate-500 font-mono">
-                  Current: {subState.isLifetimeVip ? 'Permanent Lifetime VIP' : `${daysRemaining}d ${hoursRemaining}h left`}
+                  Current: {daysRemaining}d {hoursRemaining}h left
                 </span>
               </div>
 

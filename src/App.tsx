@@ -43,7 +43,6 @@ import ArohiGuideView from './components/ArohiGuideView';
 import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
-import ConnectorsHub from './components/ConnectorsHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
 import PartnerPortal from './components/PartnerPortal';
@@ -135,7 +134,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'connectors', 'plugins', 'integrations', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -823,9 +822,7 @@ export default function App() {
   };
 
   const activePlanDetail = Object.values(subscriptionDetails)[0];
-  const activeSubscriptionPlanName = subscriptionStatus.isLifetimeVip 
-    ? 'Enterprise Lifetime VIP (Permanent Access)'
-    : (activePlanDetail?.tierName || subscriptionStatus.planName || (currency === 'USD' ? 'Starter Plan ($5/mo)' : 'Starter Plan (₹399/mo)'));
+  const activeSubscriptionPlanName = activePlanDetail?.tierName || (currency === 'USD' ? 'Starter Plan ($5/mo)' : 'Starter Plan (₹399/mo)');
 
   const [tokenUsage, setTokenUsage] = useState<Record<string, number>>(() => {
     const saved = getStorageItem('arohi_token_usage');
@@ -2196,6 +2193,7 @@ export default function App() {
           />
         );
       case 'guide':
+      case 'arohi':
         return (
           <ArohiGuideView
             onOpenChat={(initialPrompt) => {
@@ -2204,8 +2202,6 @@ export default function App() {
               }
               setIsChatOpen(true);
               setIsChatMinimized(false);
-              setHasEntered(true);
-              setActiveTab('arohi');
             }}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
@@ -2221,23 +2217,6 @@ export default function App() {
             language={language}
             isDarkMode={isDarkMode}
           />
-        );
-      case 'arohi':
-        return (
-          <div className="w-full h-full min-h-screen flex flex-col bg-[#09090b]">
-            <ArohiChat 
-              initialPrompt={chatInitialPrompt}
-              language={language}
-              isDarkMode={isDarkMode}
-              onNavigateTab={(tab) => {
-                setActiveTab(tab);
-              }}
-              onMinimize={() => {}}
-              onClose={() => {
-                setActiveTab('home');
-              }}
-            />
-          </div>
         );
       case 'franchise':
         return <FranchisePage />;
@@ -3297,37 +3276,6 @@ export default function App() {
     );
   }
 
-  // Standalone Full-Screen ChatGPT-Style Arohi AI Chat Workspace
-  if (activeTab === 'arohi') {
-    return (
-      <div id="arohi-full-chat-portal-root" className="h-screen h-[100dvh] w-full font-sans antialiased overflow-hidden bg-[#09090b] text-white">
-        <SEOHead 
-          activeTab="arohi" 
-          selectedState="" 
-          selectedAudienceSlug="" 
-          selectedProblemSlug=""
-          currentLanguage={language} 
-        />
-        <ArohiChat 
-          initialPrompt={chatInitialPrompt}
-          language={language}
-          isDarkMode={isDarkMode}
-          onNavigateTab={(tab) => {
-            setActiveTab(tab);
-            setHasEntered(true);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onMinimize={() => {
-            setActiveTab('home');
-          }}
-          onClose={() => {
-            setActiveTab('home');
-          }}
-        />
-      </div>
-    );
-  }
-
   // Standalone Direct Admin Route Portal Render
   if (activeTab === 'admin') {
     return (
@@ -4131,10 +4079,10 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Full ChatGPT-Style Chat Overlay Container */}
+      {/* Floating Chat Overlay Container */}
       {isChatOpen && !isChatMinimized && (
-        <div className={`fixed inset-0 w-full h-screen h-[100dvh] max-h-[100dvh] z-[100] overflow-hidden flex flex-col animate-in fade-in duration-200 ${
-          isDarkMode ? 'bg-[#09090b]' : 'bg-[#fafafa]'
+        <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.3)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
+          isDarkMode ? 'bg-[#090714] border-[#a78bfa]/30' : 'bg-white border-purple-200'
         }`}>
           <ArohiChat 
             initialPrompt={chatInitialPrompt}

@@ -6,7 +6,6 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Modality, GenerateVideosOperation } from '@google/genai';
 import dotenv from 'dotenv';
 import { createResumeDocx } from './server-resume.ts';
-import { expandAndRefineImagePrompt } from './server/imagePromptExpander.ts';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
@@ -7501,7 +7500,7 @@ app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) =>
   }
 });
 
-// AI Image Generation & Editing Endpoints (Create & Edit Images with smart prompt expansion & Gemini/Imagen/Pollinations)
+// AI Image Generation & Editing Endpoints (Create & Edit Images with gemini-3.1-flash-image-preview)
 app.post('/api/generate-image', async (req, res) => {
   try {
     const { prompt, aspectRatio = '1:1', style = 'photorealistic', seed } = req.body;
@@ -7509,13 +7508,7 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ success: false, error: "Prompt is required to generate an image." });
     }
 
-    const rawPrompt = prompt.trim();
-    // Intelligent Semantic Expansion & Disambiguation Engine
-    const expansion = expandAndRefineImagePrompt(rawPrompt, style);
-    const cleanPrompt = expansion.expandedPrompt;
-    const targetAspectRatio = expansion.recommendedAspectRatio || aspectRatio;
-    const targetStyle = expansion.recommendedStyle || style;
-
+    const cleanPrompt = prompt.trim();
     let imageUrl = '';
     let provider = 'pollinations';
 
@@ -7529,7 +7522,7 @@ app.post('/api/generate-image', async (req, res) => {
 
       for (const mName of geminiImageModels) {
         try {
-          const stylePrefix = targetStyle ? `${targetStyle} style, ` : '';
+          const stylePrefix = style ? `${style} style, ` : '';
           const fullPrompt = `${stylePrefix}${cleanPrompt}, high quality, detailed, 8k resolution`;
 
           const response = await aiClient.models.generateContent({
@@ -7539,7 +7532,7 @@ app.post('/api/generate-image', async (req, res) => {
             },
             config: {
               imageConfig: {
-                aspectRatio: (targetAspectRatio === '16:9' ? '16:9' : targetAspectRatio === '4:3' ? '4:3' : targetAspectRatio === '3:4' ? '3:4' : targetAspectRatio === '9:16' ? '9:16' : '1:1') as any,
+                aspectRatio: (aspectRatio === '16:9' ? '16:9' : aspectRatio === '4:3' ? '4:3' : aspectRatio === '3:4' ? '3:4' : aspectRatio === '9:16' ? '9:16' : '1:1') as any,
               }
             }
           });
@@ -7564,7 +7557,7 @@ app.post('/api/generate-image', async (req, res) => {
         const imagenModels = ['imagen-3.0-generate-002', 'imagen-3.0-generate-001'];
         for (const mName of imagenModels) {
           try {
-            const stylePrefix = targetStyle ? `${targetStyle} style, ` : '';
+            const stylePrefix = style ? `${style} style, ` : '';
             const fullPrompt = `${stylePrefix}${cleanPrompt}, high quality, detailed, 8k resolution`;
             
             const response = await aiClient.models.generateImages({
@@ -7573,7 +7566,7 @@ app.post('/api/generate-image', async (req, res) => {
               config: {
                 numberOfImages: 1,
                 outputMimeType: 'image/jpeg',
-                aspectRatio: (targetAspectRatio === '16:9' ? '16:9' : targetAspectRatio === '4:3' ? '4:3' : targetAspectRatio === '3:4' ? '3:4' : targetAspectRatio === '9:16' ? '9:16' : '1:1') as any,
+                aspectRatio: (aspectRatio === '16:9' ? '16:9' : aspectRatio === '4:3' ? '4:3' : aspectRatio === '3:4' ? '3:4' : aspectRatio === '9:16' ? '9:16' : '1:1') as any,
               },
             });
 
@@ -7602,9 +7595,9 @@ app.post('/api/generate-image', async (req, res) => {
         '3:2': { w: 1080, h: 720 },
         '2:3': { w: 720, h: 1080 },
       };
-      const dims = dimMap[targetAspectRatio] || { w: 1024, h: 1024 };
+      const dims = dimMap[aspectRatio] || { w: 1024, h: 1024 };
       const randomSeed = seed || Math.floor(Math.random() * 999999);
-      const styledPrompt = `${cleanPrompt}, ${targetStyle} style, vibrant details, 8k render, professional quality`;
+      const styledPrompt = `${cleanPrompt}, ${style} style, vibrant details, 8k render, professional quality`;
       
       imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(styledPrompt)}?width=${dims.w}&height=${dims.h}&nologo=true&seed=${randomSeed}&enhance=true`;
       provider = 'pollinations';
@@ -7613,11 +7606,9 @@ app.post('/api/generate-image', async (req, res) => {
     return res.json({
       success: true,
       imageUrl,
-      prompt: rawPrompt,
-      expandedPrompt: cleanPrompt,
-      category: expansion.detectedCategory,
-      aspectRatio: targetAspectRatio,
-      style: targetStyle,
+      prompt: cleanPrompt,
+      aspectRatio,
+      style,
       provider,
       message: "Image generated successfully!"
     });
