@@ -51,8 +51,8 @@ export default function BackgroundScrollEffects({ isDarkMode = true }: Backgroun
         ref={orb1Ref}
         className={`absolute -top-[15%] -left-[10%] w-[50vw] max-w-[600px] h-[50vw] max-h-[600px] rounded-full blur-[120px] transform-gpu will-change-transform transition-opacity duration-700 ${
           isDarkMode
-            ? 'opacity-15 bg-gradient-to-br from-purple-800 via-indigo-900 to-cyan-900'
-            : 'opacity-5 bg-gradient-to-br from-purple-400 via-indigo-300 to-sky-300'
+            ? 'opacity-20 bg-gradient-to-br from-blue-700 via-indigo-950 to-cyan-900'
+            : 'opacity-25 bg-gradient-to-br from-blue-200 via-sky-100 to-indigo-100'
         }`}
       />
 
@@ -60,8 +60,8 @@ export default function BackgroundScrollEffects({ isDarkMode = true }: Backgroun
         ref={orb2Ref}
         className={`absolute top-[40%] -right-[15%] w-[55vw] max-w-[650px] h-[55vw] max-h-[650px] rounded-full blur-[140px] transform-gpu will-change-transform transition-opacity duration-700 ${
           isDarkMode
-            ? 'opacity-15 bg-gradient-to-bl from-teal-800 via-purple-950 to-emerald-900'
-            : 'opacity-5 bg-gradient-to-bl from-teal-300 via-purple-200 to-emerald-200'
+            ? 'opacity-20 bg-gradient-to-bl from-cyan-900 via-blue-950 to-indigo-950'
+            : 'opacity-20 bg-gradient-to-bl from-sky-200 via-blue-100 to-cyan-100'
         }`}
       />
 
@@ -69,8 +69,8 @@ export default function BackgroundScrollEffects({ isDarkMode = true }: Backgroun
         ref={orb3Ref}
         className={`absolute -bottom-[15%] left-[5%] w-[45vw] max-w-[500px] h-[45vw] max-h-[500px] rounded-full blur-[120px] transform-gpu will-change-transform transition-opacity duration-700 ${
           isDarkMode
-            ? 'opacity-15 bg-gradient-to-tr from-fuchsia-900 via-purple-950 to-amber-900'
-            : 'opacity-5 bg-gradient-to-tr from-fuchsia-300 via-purple-200 to-amber-200'
+            ? 'opacity-15 bg-gradient-to-tr from-blue-900 via-indigo-950 to-sky-950'
+            : 'opacity-20 bg-gradient-to-tr from-blue-100 via-slate-100 to-sky-100'
         }`}
       />
 
@@ -78,7 +78,7 @@ export default function BackgroundScrollEffects({ isDarkMode = true }: Backgroun
       <div
         ref={gridRef}
         className={`absolute inset-0 bg-grid-cyber transform-gpu will-change-transform transition-opacity duration-500 ${
-          isDarkMode ? 'opacity-[0.03]' : 'opacity-[0.015]'
+          isDarkMode ? 'opacity-[0.03]' : 'opacity-[0.018]'
         }`}
         style={{
           backgroundSize: '60px 60px'
@@ -89,8 +89,8 @@ export default function BackgroundScrollEffects({ isDarkMode = true }: Backgroun
       <div className="absolute inset-x-0 bottom-0 h-[25vh] opacity-20 overflow-hidden transform-gpu pointer-events-none">
         <div className={`absolute inset-0 bg-gradient-to-t ${
           isDarkMode 
-            ? 'from-[#070814] via-[#070814]/80 to-transparent' 
-            : 'from-[#f8f9fe] via-[#f8f9fe]/80 to-transparent'
+            ? 'from-[#080c18] via-[#080c18]/80 to-transparent' 
+            : 'from-[#f8fafc] via-[#f8fafc]/80 to-transparent'
         }`} />
       </div>
 

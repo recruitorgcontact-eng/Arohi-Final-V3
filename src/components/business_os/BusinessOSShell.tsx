@@ -28,7 +28,8 @@ import {
   Lock,
   Globe,
   Sun,
-  Moon
+  Moon,
+  Bot
 } from 'lucide-react';
 import { BusinessOSProvider, useBusinessOS } from './BusinessOSContext';
 import { BusinessOSModule } from './types';
@@ -47,6 +48,7 @@ import HrPayrollView from './HrPayrollView';
 import ProjectsTasksView from './ProjectsTasksView';
 import MarketingCampaignsView from './MarketingCampaignsView';
 import ArohiCallView from './ArohiCallView';
+import BusinessBrainSyncView from './BusinessBrainSyncView';
 import SupportDeskView from './SupportDeskView';
 import DocumentsVaultView from './DocumentsVaultView';
 import AnalyticsBiView from './AnalyticsBiView';
@@ -100,6 +102,7 @@ const NAV_GROUPS: { groupName: string; items: NavItem[] }[] = [
   {
     groupName: 'Intelligence & Comms',
     items: [
+      { id: 'brain_sync', label: 'Arohi Brain & Voice Sync', icon: Bot, badge: 'Auto-Sync' },
       { id: 'telephony', label: 'Arohi Call Telephony', icon: PhoneCall, badge: 'AI Voice' },
       { id: 'marketing', label: 'WhatsApp & Marketing', icon: Send },
       { id: 'analytics', label: 'BI Analytics & Forecast', icon: BarChart3 },
@@ -132,6 +135,8 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
       switch (activeModule) {
         case 'overview':
           return <DashboardOverview />;
+        case 'brain_sync':
+          return <BusinessBrainSyncView />;
         case 'crm':
         case 'crm_leads':
           return <CrmLeadsView />;

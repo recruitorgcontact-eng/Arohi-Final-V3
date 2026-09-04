@@ -42,6 +42,7 @@ interface UserDashboardProps {
   onSetSubscriptionEndDate?: (newTimestamp: number) => void;
   hasActiveSubscription?: boolean;
   subscriptionPlanName?: string;
+  isDarkMode?: boolean;
 }
 
 export default function UserDashboard({ 
@@ -71,7 +72,8 @@ export default function UserDashboard({
   onRenewSubscription,
   onSetSubscriptionEndDate,
   hasActiveSubscription = false,
-  subscriptionPlanName = 'Starter Plan (₹399/mo)'
+  subscriptionPlanName = 'Starter Plan (₹399/mo)',
+  isDarkMode = true
 }: UserDashboardProps) {
   
   const { user, userData, updateUserProfile, updateBookmarks, updateDiagnostics, updateActivities } = useAuth();
@@ -794,18 +796,28 @@ export default function UserDashboard({
       
       {/* Guest warning banner if not logged in */}
       {!user && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10 border border-amber-500/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-left relative overflow-hidden">
+        <div className={`border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-left relative overflow-hidden ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10 border-amber-500/30' 
+            : 'bg-amber-50/90 border-amber-300 shadow-sm'
+        }`}>
           <div className="absolute right-0 top-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="bg-gradient-to-tr from-amber-500 to-yellow-500 p-3.5 rounded-2xl text-slate-950 shadow-md">
               <AlertCircle className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h4 className="text-sm font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+              <h4 className={`text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                isDarkMode ? 'text-amber-300' : 'text-amber-900'
+              }`}>
                 <span>Guest Local Workspace Active</span>
-                <span className="bg-amber-500/25 text-amber-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">UNSAVED PROGRESS</span>
+                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                  isDarkMode ? 'bg-amber-500/25 text-amber-300' : 'bg-amber-200 text-amber-900'
+                }`}>UNSAVED PROGRESS</span>
               </h4>
-              <p className="text-xs text-slate-300 mt-1.5 font-semibold leading-relaxed max-w-xl">
+              <p className={`text-xs mt-1.5 font-semibold leading-relaxed max-w-xl ${
+                isDarkMode ? 'text-slate-300' : 'text-slate-700'
+              }`}>
                 You are utilizing localized state caches. Connect with secure cloud sign-in to backup your career matching bookmarks, enrolled courses progress, checklist achievements, and job application histories persistently across devices!
               </p>
             </div>
@@ -1249,7 +1261,11 @@ export default function UserDashboard({
       )}
 
       {/* DASHBOARD SECTION NAVIGATION BAR */}
-      <div className="bg-[#120e2e] border-2 border-[#31226e] p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-2xl">
+      <div className={`p-2.5 rounded-[1.75rem] flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shadow-2xl border-2 ${
+        isDarkMode 
+          ? 'bg-[#120e2e] border-[#31226e]' 
+          : 'bg-white border-slate-200'
+      }`}>
         {[
           { id: 'all', label: '📊 Dashboard Overview', icon: Sparkles },
           { id: 'subscriptions', label: '👑 Subscription Plans & Tiers', icon: Crown, badge: '₹399+' },
@@ -1275,16 +1291,20 @@ export default function UserDashboard({
               className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-[1.02] border border-purple-400/40'
-                  : 'bg-[#1b143c] text-slate-300 hover:text-white hover:bg-[#251d54] border border-slate-800/60'
+                  : isDarkMode
+                  ? 'bg-[#1b143c] text-slate-300 hover:text-white hover:bg-[#251d54] border border-slate-800/60'
+                  : 'bg-slate-50 text-slate-700 hover:text-slate-950 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300 animate-pulse' : 'text-purple-400'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300 animate-pulse' : isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
               <span>{tab.label}</span>
               {tab.badge && (
                 <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full border ml-1 ${
                   isActive 
                     ? 'bg-amber-400 text-slate-950 border-amber-300' 
-                    : 'bg-purple-950/80 text-purple-300 border-purple-500/30'
+                    : isDarkMode
+                    ? 'bg-purple-950/80 text-purple-300 border-purple-500/30'
+                    : 'bg-purple-100 text-purple-800 border-purple-200'
                 }`}>
                   {tab.badge}
                 </span>

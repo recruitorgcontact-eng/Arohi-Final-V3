@@ -238,7 +238,7 @@ export default function Mission87Portal({
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-12 sm:space-y-20 text-slate-100 font-sans pb-32">
+    <div className={`w-full max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-12 sm:space-y-20 font-sans pb-32 ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
       
       {/* Dynamic Animated Storytelling Chronicle Ticker */}
       <Mission87AwakeningTicker isDarkMode={isDarkMode} />
@@ -363,15 +363,15 @@ export default function Mission87Portal({
       <section id="mission87-earning-ladder" className="space-y-8 text-left scroll-mt-20">
         
         {/* Section Header */}
-        <div className="space-y-2 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-400">
+        <div className={`space-y-2 border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-500">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             <span>THE CORE MOVEMENT AGENDA</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             The ₹5,000 to ₹1,00,000+ Monthly Earning Journey
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-3xl font-medium">
+          <p className={`text-xs sm:text-sm max-w-3xl font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Financial freedom is not an overnight miracle. Mission 87 breaks down real economic value creation into 4 verifiable stages with clear milestones and execution blueprints.
           </p>
         </div>
@@ -587,15 +587,15 @@ export default function Mission87Portal({
       {/* ========================================================================= */}
       <section className="space-y-8 text-left">
         
-        <div className="space-y-2 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <div className={`space-y-2 border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>SOVEREIGN FOUNDATION</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             The 5 Pillars of the Movement
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-3xl font-medium">
+          <p className={`text-xs sm:text-sm max-w-3xl font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Mission 87 is built on five non-negotiable principles designed to ensure true inclusivity, national self-reliance, and direct youth empowerment.
           </p>
         </div>
@@ -666,15 +666,15 @@ export default function Mission87Portal({
       {/* ========================================================================= */}
       <section className="space-y-8 text-left">
         
-        <div className="space-y-2 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-cyan-400">
-            <Layers className="w-4 h-4 text-cyan-400" />
+        <div className={`space-y-2 border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-cyan-500">
+            <Layers className="w-4 h-4 text-cyan-500" />
             <span>PRACTICAL EXECUTION TRACKS</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             The 6 Pathways of Financial Activation
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-3xl font-medium">
+          <p className={`text-xs sm:text-sm max-w-3xl font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Choose your dedicated domain. Each track comes with tested first-₹5,000 blueprints, target buyers, and real-world project roadmaps.
           </p>
         </div>
@@ -688,7 +688,9 @@ export default function Mission87Portal({
               className={`px-4 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shrink-0 flex items-center gap-2 cursor-pointer border ${
                 selectedTrack.id === t.id
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-300 text-white shadow-lg scale-105'
-                  : 'bg-[#100b29] border-purple-500/30 text-slate-300 hover:border-purple-400 hover:text-white'
+                  : isDarkMode 
+                    ? 'bg-[#100b29] border-purple-500/30 text-slate-300 hover:border-purple-400 hover:text-white'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-900 shadow-sm'
               }`}
             >
               <span>{getTrackIcon(t.iconName)}</span>
@@ -784,15 +786,15 @@ export default function Mission87Portal({
       {/* ========================================================================= */}
       <section className="space-y-8 text-left">
         
-        <div className="space-y-2 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-pink-400">
-            <Target className="w-4 h-4 text-pink-400" />
+        <div className={`space-y-2 border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-pink-500">
+            <Target className="w-4 h-4 text-pink-500" />
             <span>NATIONAL HORIZON</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             5-Year National Impact Milestones (2026 – 2031)
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-3xl font-medium">
+          <p className={`text-xs sm:text-sm max-w-3xl font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Mission 87 is not an abstract slogan. It is a measurable national transformation roadmap tracked across every Indian district.
           </p>
         </div>

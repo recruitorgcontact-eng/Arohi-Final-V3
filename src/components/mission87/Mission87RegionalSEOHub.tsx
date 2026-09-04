@@ -104,21 +104,25 @@ export default function Mission87RegionalSEOHub({
     <section id="mission87-regional-hub" className="w-full space-y-8 text-left scroll-mt-20">
       
       {/* Header Section */}
-      <div className="space-y-2 border-b border-white/10 pb-4">
+      <div className={`space-y-2 border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-cyan-400">
-            <Globe className="w-4 h-4 text-cyan-400" />
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-cyan-500">
+            <Globe className="w-4 h-4 text-cyan-500" />
             <span>ALL-INDIA 28 STATES & 8 UTs PAN-BHARAT DEPLOYMENT</span>
           </div>
-          <span className="text-[10px] font-bold text-slate-400 bg-white/[0.05] border border-white/10 px-2.5 py-1 rounded-full">
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+            isDarkMode 
+              ? 'text-slate-400 bg-white/[0.05] border-white/10' 
+              : 'text-slate-600 bg-slate-100 border-slate-200'
+          }`}>
             12+ Languages • 700+ Districts Indexed
           </span>
         </div>
         
-        <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+        <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           Pan-India Regional Activation Radar
         </h2>
-        <p className="text-xs sm:text-sm text-slate-300 max-w-3xl font-medium leading-relaxed">
+        <p className={`text-xs sm:text-sm max-w-3xl font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
           Access state-specific micro-enterprise blueprints, regional government subsidy alignments (PMEGP, Stand-Up India, Mudra, State Startup Policies), and district-level economic opportunities in your native mother tongue.
         </p>
       </div>
@@ -126,12 +130,12 @@ export default function Mission87RegionalSEOHub({
       {/* Multilingual Selector Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-xs font-black uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Select Your Preferred Regional Language:
           </span>
-          <span className="text-[10px] text-slate-400">
-            Active: <strong className="text-white">{activeLang.nameEnglish} ({activeLang.nativeName})</strong>
+          <span className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            Active: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{activeLang.nameEnglish} ({activeLang.nativeName})</strong>
           </span>
         </div>
 
@@ -145,11 +149,17 @@ export default function Mission87RegionalSEOHub({
                 className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-lg scale-105'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10'
+                    : isDarkMode 
+                      ? 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                 }`}
               >
                 <span>{lang.nativeName}</span>
-                <span className={`text-[10px] opacity-80 ${isSelected ? 'text-slate-950 font-extrabold' : 'text-slate-400'}`}>
+                <span className={`text-[10px] opacity-80 ${
+                  isSelected 
+                    ? 'text-slate-950 font-extrabold' 
+                    : isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                }`}>
                   ({lang.nameEnglish})
                 </span>
               </button>
@@ -210,7 +220,11 @@ export default function Mission87RegionalSEOHub({
               placeholder="Search by state, district (e.g. Varanasi, Sambalpur, Coimbatore), or industry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#09061c] border border-purple-500/30 text-white rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold focus:outline-none focus:border-cyan-400"
+              className={`w-full rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold focus:outline-none transition-colors border ${
+                isDarkMode 
+                  ? 'bg-[#09061c] border-purple-500/30 text-white focus:border-cyan-400' 
+                  : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-500 shadow-sm'
+              }`}
             />
           </div>
 
@@ -222,7 +236,9 @@ export default function Mission87RegionalSEOHub({
                 className={`px-3 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
                   selectedRegionFilter === region
                     ? 'bg-cyan-500 text-slate-950 shadow-md'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-400'
+                    : isDarkMode 
+                      ? 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-400' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                 }`}
               >
                 {region}
@@ -232,7 +248,11 @@ export default function Mission87RegionalSEOHub({
         </div>
 
         {/* State Interactive Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5 max-h-[300px] overflow-y-auto p-2 rounded-2xl bg-[#060415] border border-white/[0.06] scrollbar-thin scrollbar-thumb-white/10">
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5 max-h-[300px] overflow-y-auto p-2 rounded-2xl border scrollbar-thin ${
+          isDarkMode 
+            ? 'bg-[#060415] border-white/[0.06] scrollbar-thumb-white/10' 
+            : 'bg-slate-50 border-slate-200 shadow-inner'
+        }`}>
           {filteredStates.map((st) => {
             const isSelected = st.state === selectedStateName;
             return (
@@ -242,23 +262,31 @@ export default function Mission87RegionalSEOHub({
                 className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex flex-col justify-between space-y-1 ${
                   isSelected
                     ? 'bg-gradient-to-br from-cyan-900/60 to-purple-900/60 border-2 border-cyan-400 shadow-md'
-                    : 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06]'
+                    : isDarkMode 
+                      ? 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06]' 
+                      : 'bg-white hover:bg-slate-100 border border-slate-200 shadow-sm'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-                    isSelected ? 'bg-cyan-400 text-slate-950' : 'bg-white/10 text-slate-400'
+                    isSelected 
+                      ? 'bg-cyan-400 text-slate-950' 
+                      : isDarkMode ? 'bg-white/10 text-slate-400' : 'bg-slate-100 text-slate-600 font-bold'
                   }`}>
                     {st.region}
                   </span>
                   {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-300" />}
                 </div>
 
-                <p className={`text-xs font-black truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                <p className={`text-xs font-black truncate ${
+                  isSelected 
+                    ? 'text-white' 
+                    : isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                }`}>
                   {st.state}
                 </p>
 
-                <p className="text-[9.5px] text-slate-400 truncate">
+                <p className={`text-[9.5px] truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                   Cap: {st.stateCapital}
                 </p>
               </button>

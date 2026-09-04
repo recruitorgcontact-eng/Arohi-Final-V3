@@ -61,6 +61,7 @@ export default function CommandPaletteModal() {
 
   // Static modules
   const modulesList: { name: string; module: BusinessOSModule; desc: string }[] = [
+    { name: 'Arohi Business Brain & Voice Sync', module: 'brain_sync', desc: 'Autonomous voice intake call, brain chat & document sync' },
     { name: 'Executive Overview Dashboard', module: 'overview', desc: 'KPIs, cash flow, revenue targets' },
     { name: 'CRM & Lead Intelligence', module: 'crm_leads', desc: 'Manage inbound leads and AI scores' },
     { name: '360° Customer Directory', module: 'customers', desc: 'Client profiles and accounts' },

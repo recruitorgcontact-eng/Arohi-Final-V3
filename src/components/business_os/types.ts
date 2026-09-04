@@ -1,5 +1,6 @@
 export type BusinessOSModule =
   | 'overview'
+  | 'brain_sync'
   | 'crm'
   | 'crm_leads'
   | 'customers'

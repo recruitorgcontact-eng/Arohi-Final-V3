@@ -140,21 +140,21 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.92 }}
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center justify-center p-3.5 bg-white dark:bg-[#0f0b24]/90 hover:bg-purple-50 dark:hover:bg-[#181238] border border-slate-200 dark:border-[#302166] hover:border-purple-300 dark:hover:border-[#6342cb] text-slate-800 dark:text-white rounded-full shadow-xl transition-all duration-300 cursor-pointer backdrop-blur-xl group relative ${
-            isOpen ? 'ring-2 ring-indigo-500/80 border-indigo-400' : ''
+          className={`flex items-center justify-center p-3.5 bg-white dark:bg-[#0c1326]/95 hover:bg-blue-50/80 dark:hover:bg-[#121c38] border border-slate-200/90 dark:border-blue-500/25 hover:border-blue-400 dark:hover:border-blue-400 text-slate-800 dark:text-white rounded-full shadow-xl transition-all duration-300 cursor-pointer backdrop-blur-xl group relative ${
+            isOpen ? 'ring-2 ring-blue-500/70 border-blue-400' : ''
           }`}
           title={isOpen ? "Close Navigation" : "Open Navigation"}
           id="floating-navigation-hub-trigger"
         >
           {/* Animated 3-Bar / Panel Left Icon */}
-          <div className="relative w-5 h-5 flex items-center justify-center text-indigo-400 group-hover:text-white transition-colors">
+          <div className="relative w-5 h-5 flex items-center justify-center text-blue-500 group-hover:text-blue-400 dark:group-hover:text-white transition-colors">
             {isOpen ? (
-              <PanelLeftClose className="w-5 h-5 text-purple-300" />
+              <PanelLeftClose className="w-5 h-5 text-blue-400" />
             ) : (
               <div className="flex flex-col gap-1 items-center justify-center w-4.5">
-                <span className="w-4.5 h-0.5 bg-indigo-400 group-hover:bg-cyan-300 rounded-full transition-all duration-300 group-hover:w-5"></span>
-                <span className="w-3.5 h-0.5 bg-indigo-300 group-hover:bg-white rounded-full transition-all duration-300 group-hover:w-5"></span>
-                <span className="w-4.5 h-0.5 bg-indigo-400 group-hover:bg-cyan-300 rounded-full transition-all duration-300 group-hover:w-5"></span>
+                <span className="w-4.5 h-0.5 bg-blue-500 group-hover:bg-cyan-400 rounded-full transition-all duration-300 group-hover:w-5"></span>
+                <span className="w-3.5 h-0.5 bg-blue-400 group-hover:bg-white rounded-full transition-all duration-300 group-hover:w-5"></span>
+                <span className="w-4.5 h-0.5 bg-blue-500 group-hover:bg-cyan-400 rounded-full transition-all duration-300 group-hover:w-5"></span>
               </div>
             )}
           </div>
@@ -162,8 +162,8 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
           {/* Pulse notification dot when closed */}
           {!isOpen && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 border border-[#0f0b24]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 border border-[#0c1326]"></span>
             </span>
           )}
         </motion.button>
@@ -180,7 +180,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-[#04020a]/75 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#04060f]/80 backdrop-blur-sm"
             />
 
             {/* Slide-out Sidebar Drawer */}
@@ -189,20 +189,20 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="absolute top-0 left-0 bottom-0 w-[88vw] sm:w-[380px] max-w-[400px] h-full bg-white dark:bg-[#0c081e]/95 text-slate-900 dark:text-white border-r border-slate-200 dark:border-[#2d2163] shadow-2xl flex flex-col z-50 backdrop-blur-2xl"
+              className="absolute top-0 left-0 bottom-0 w-[88vw] sm:w-[380px] max-w-[400px] h-full bg-white dark:bg-[#090e1d]/98 text-slate-900 dark:text-white border-r border-slate-200/80 dark:border-blue-500/20 shadow-2xl flex flex-col z-50 backdrop-blur-2xl"
             >
               {/* Drawer Top Branding Header */}
-              <div className="p-5 border-b border-slate-200 dark:border-[#201847] flex items-center justify-between shrink-0 bg-slate-50 dark:bg-[#0e0924]/80">
+              <div className="p-5 border-b border-slate-200/80 dark:border-blue-900/40 flex items-center justify-between shrink-0 bg-slate-50/80 dark:bg-[#0c1326]/80">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/30 border border-indigo-400/30">
+                  <div className="p-2 bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-lg shadow-blue-600/30 border border-blue-400/30">
                     <Sparkles className="w-5 h-5 text-white animate-pulse" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-black text-sm text-slate-900 dark:text-white tracking-tight uppercase">
-                        AROHI <span className="text-indigo-600 dark:text-indigo-400">AI</span>
+                        AROHI <span className="text-blue-600 dark:text-blue-400">AI</span>
                       </h3>
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300">
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
                         Ecosystem
                       </span>
                     </div>
@@ -211,7 +211,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-xl bg-slate-200 dark:bg-[#1a143b] hover:bg-slate-300 dark:hover:bg-[#281f5c] border border-slate-300 dark:border-[#342775] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer active:scale-95"
+                  className="p-2 rounded-xl bg-slate-200/80 dark:bg-[#131d36] hover:bg-slate-300 dark:hover:bg-[#1a284a] border border-slate-300/80 dark:border-blue-500/20 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer active:scale-95"
                   title="Close Navigation (Esc)"
                 >
                   <X className="w-4 h-4" />
@@ -228,7 +228,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e?.target?.value ?? "")}
                     placeholder="Quick search sections..."
-                    className="w-full bg-slate-100 dark:bg-[#140e33] border border-slate-200 dark:border-[#2b1f5e] focus:border-purple-500 text-slate-900 dark:text-white text-xs rounded-xl pl-9 pr-8 py-2.5 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
+                    className="w-full bg-slate-100 dark:bg-[#0e162c] border border-slate-200 dark:border-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white text-xs rounded-xl pl-9 pr-8 py-2.5 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
                   />
                   {filterQuery && (
                     <button
@@ -248,7 +248,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelectTab('home')}
-                    className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-[11px] uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 border border-indigo-400/30 transition-all cursor-pointer"
+                    className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-extrabold text-[11px] uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 border border-blue-400/30 transition-all cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Return to Ecosystem Home</span>
@@ -283,13 +283,13 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                               onClick={() => handleSelectTab(item.id)}
                               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left cursor-pointer relative overflow-hidden group ${
                                 isSelected
-                                  ? 'bg-[#1e1747] border-[#7c3aed] text-white shadow-md shadow-indigo-950/50'
-                                  : 'bg-[#120d2d]/60 hover:bg-[#1a1342] border-[#22174a]/80 text-slate-300 hover:text-white'
+                                  ? 'bg-blue-50/90 dark:bg-[#132040] border-blue-300 dark:border-blue-500/60 text-blue-950 dark:text-white shadow-md shadow-blue-950/20'
+                                  : 'bg-slate-50/60 dark:bg-[#0c1428]/60 hover:bg-blue-50/40 dark:hover:bg-[#121c38] border-slate-200/60 dark:border-blue-900/30 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
                               }`}
                             >
                               {/* Left Active Glow Bar */}
                               {isSelected && (
-                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#00e676] rounded-r-full shadow-[0_0_10px_#00e676]" />
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full shadow-[0_0_10px_#3b82f6]" />
                               )}
 
                               <div className="flex items-center gap-3">
@@ -297,7 +297,7 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
                                   <Icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
+                                  <span className={`text-xs font-bold ${isSelected ? 'text-blue-900 dark:text-white' : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white'}`}>
                                     {item.label}
                                   </span>
                                 </div>
@@ -305,11 +305,11 @@ export default function NavigationHub({ activeTab, setActiveTab, prevTab, setSel
 
                               <div className="flex items-center gap-2">
                                 {item.badge && (
-                                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300">
+                                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-500/40 text-blue-700 dark:text-blue-300">
                                     {item.badge}
                                   </span>
                                 )}
-                                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'text-[#00e676] translate-x-0.5' : 'text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5'}`} />
+                                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'text-blue-500 translate-x-0.5' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5'}`} />
                               </div>
                             </motion.button>
                           );

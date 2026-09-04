@@ -435,7 +435,15 @@ function renderMarkdown(content: string) {
   return <div className="space-y-1 text-slate-100">{elements}</div>;
 }
 
-export default function CoursesPage({ onOpenAuth, onNavigateTab }: { onOpenAuth?: () => void, onNavigateTab?: (tab: string) => void }) {
+export default function CoursesPage({ 
+  onOpenAuth, 
+  onNavigateTab,
+  isDarkMode = true 
+}: { 
+  onOpenAuth?: () => void; 
+  onNavigateTab?: (tab: string) => void;
+  isDarkMode?: boolean;
+}) {
   const { user, userData, updateCareerProgress } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -1776,13 +1784,19 @@ Keep in mind:
 
       {/* SECURITY REGISTRATION NOTICE BANNER */}
       {!user && (
-        <div className="bg-gradient-to-r from-purple-950/20 via-[#1d144d]/30 to-purple-950/20 border border-purple-500/25 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left">
+        <div className={`border rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-purple-950/20 via-[#1d144d]/30 to-purple-950/20 border-purple-500/25'
+            : 'bg-gradient-to-r from-purple-100 via-indigo-50 to-purple-100 border-purple-300 shadow-sm'
+        }`}>
           <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase text-purple-400 font-mono tracking-widest block">🔒 SECURE ACADEMY PORTAL</span>
-            <h4 className="text-xs font-black text-white">
+            <span className={`text-[9px] font-black uppercase font-mono tracking-widest block ${
+              isDarkMode ? 'text-purple-400' : 'text-purple-800'
+            }`}>🔒 SECURE ACADEMY PORTAL</span>
+            <h4 className={`text-xs font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Claim Your Government-Accredited ISO Certification
             </h4>
-            <p className="text-[11px] text-slate-300 font-medium max-w-2xl">
+            <p className={`text-[11px] font-medium max-w-2xl ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               You are currently practicing in Guest mode. Register your National Career profile with Google Sign-In to backup your module checkmarks, quiz attempts, and unlock verified completion certificates with validation barcodes!
             </p>
           </div>
@@ -1796,13 +1810,19 @@ Keep in mind:
       )}
 
       {user && (
-        <div className="bg-gradient-to-r from-emerald-950/15 via-[#1a2e3b]/30 to-purple-950/15 border border-emerald-500/25 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left">
+        <div className={`border rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-emerald-950/15 via-[#1a2e3b]/30 to-purple-950/15 border-emerald-500/25'
+            : 'bg-gradient-to-r from-emerald-100 via-teal-50 to-emerald-100 border-emerald-300 shadow-sm'
+        }`}>
           <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase text-emerald-400 font-mono tracking-widest block">✓ INTEGRATED CLASSROOM ACTIVE</span>
-            <h4 className="text-xs font-black text-white">
+            <span className={`text-[9px] font-black uppercase font-mono tracking-widest block ${
+              isDarkMode ? 'text-emerald-400' : 'text-emerald-800'
+            }`}>✓ INTEGRATED CLASSROOM ACTIVE</span>
+            <h4 className={`text-xs font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Track Your Courses & Earned Certificates
             </h4>
-            <p className="text-[11px] text-slate-300 font-medium max-w-2xl">
+            <p className={`text-[11px] font-medium max-w-2xl ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               All your study progress, lesson scores, module completions, and verified digital certificates are securely synced. Open your main User Dashboard to review your course progression, download high-resolution certificates, and access your subscriptions.
             </p>
           </div>
@@ -2147,8 +2167,8 @@ Keep in mind:
         <div className="lg:col-span-9 space-y-4 text-left">
           
           <div className="flex justify-between items-center px-2">
-            <span className="text-xs font-bold text-slate-400">
-              Showing <span className="text-white font-extrabold">{isCoursesExpanded ? filteredCourses.length : Math.min(3, filteredCourses.length)}</span> of <span className="text-white font-extrabold">{filteredCourses.length}</span> high-demand upskilling courses
+            <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Showing <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} font-extrabold`}>{isCoursesExpanded ? filteredCourses.length : Math.min(3, filteredCourses.length)}</span> of <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} font-extrabold`}>{filteredCourses.length}</span> high-demand upskilling courses
             </span>
           </div>
 

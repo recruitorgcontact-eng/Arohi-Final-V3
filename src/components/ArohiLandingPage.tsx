@@ -85,9 +85,9 @@ export default function ArohiLandingPage({
     <div id="home-landing-root" className="space-y-16 pb-12 text-slate-100 font-sans">
       
       {/* 2. SPECTACULAR HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#090714] via-[#05030a] to-[#020205] border border-slate-800/50 rounded-[3rem] p-8 md:p-14 shadow-2xl">
-        <div className="absolute right-0 bottom-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none transform-gpu"></div>
-        <div className="absolute left-1/4 top-1/4 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl pointer-events-none transform-gpu"></div>
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#080c18] via-[#050712] to-[#020308] border border-blue-950/70 rounded-[2.5rem] sm:rounded-[3rem] p-8 md:p-14 shadow-2xl">
+        <div className="absolute right-0 bottom-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none transform-gpu"></div>
+        <div className="absolute left-1/4 top-1/4 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none transform-gpu"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
           
@@ -96,8 +96,8 @@ export default function ArohiLandingPage({
             
             {/* Top Badge and Tour Button Row */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-2 bg-[#091515] border border-teal-500/30 text-teal-300 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#00e676] shadow-[0_0_8px_#00e676]"></span>
+              <div className="inline-flex items-center gap-2 bg-blue-950/60 border border-blue-500/40 text-blue-300 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-sm backdrop-blur-sm">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
                 <span>#1 AI ASSISTANT FOR LEARNING, RESEARCH & GROWTH ★</span>
               </div>
               {isTourEnabled && (
@@ -113,7 +113,7 @@ export default function ArohiLandingPage({
 
             {/* Giant Immersive Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black tracking-tight leading-[1.1] text-white">
-              Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-500 font-black">Arohi AI</span>
+              Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 font-black">Arohi AI</span>
             </h1>
 
             <h2 className="text-lg sm:text-2xl font-black text-slate-200 leading-tight max-w-xl">
@@ -124,8 +124,8 @@ export default function ArohiLandingPage({
             {/* Distinct Colored Slogans */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:text-base font-black tracking-wider uppercase">
               <span className="text-cyan-400">Learn.</span>
-              <span className="text-pink-400">Think.</span>
-              <span className="text-violet-400">Research.</span>
+              <span className="text-blue-400">Think.</span>
+              <span className="text-indigo-400">Research.</span>
               <span className="text-emerald-400">Build.</span>
               <span className="text-amber-400">Grow.</span>
             </div>
@@ -139,7 +139,7 @@ export default function ArohiLandingPage({
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <button
                 onClick={() => handleQuickChatPrompt("Arohi, give me a custom career roadmap!")}
-                className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs uppercase tracking-wider py-4 px-8 rounded-2xl shadow-[0_8px_30px_rgba(124,58,237,0.35)] border border-indigo-500/30 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs uppercase tracking-wider py-4 px-8 rounded-2xl shadow-[0_8px_30px_rgba(37,99,235,0.35)] border border-blue-400/30 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
               >
                 <span>Start Free</span>
                 <ArrowRight className="w-4 h-4 text-white" />
@@ -158,7 +158,7 @@ export default function ArohiLandingPage({
               
               <a
                 href="#pricing-section"
-                className="inline-flex flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-[#1f0f42] via-[#2c135c] to-[#1a0a38] hover:bg-slate-900 border-2 border-amber-400/80 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-6 rounded-2xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_8px_25px_rgba(245,158,11,0.25)] relative"
+                className="inline-flex flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-[#0a142c] via-[#0f224a] to-[#0d1836] hover:bg-slate-900 border-2 border-amber-400/80 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-6 rounded-2xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_8px_25px_rgba(245,158,11,0.25)] relative"
               >
                 <div className="flex items-center gap-2">
                   <span>Get Arohi Premium – ₹399/month</span>
@@ -171,9 +171,9 @@ export default function ArohiLandingPage({
             </div>
 
             {/* Trust badges below buttons */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 border-t border-slate-900 text-[11px] text-slate-400 font-bold">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 border-t border-blue-950/70 text-[11px] text-slate-400 font-bold">
               <div className="flex items-center gap-1.5">
-                <span className="text-indigo-400 text-xs">👥</span>
+                <span className="text-blue-400 text-xs">👥</span>
                 <span>Trusted by 10,000+ Users</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -181,7 +181,7 @@ export default function ArohiLandingPage({
                 <span>Secure & Reliable</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-purple-400 text-xs">🕒</span>
+                <span className="text-indigo-400 text-xs">🕒</span>
                 <span>Available 24x7</span>
               </div>
             </div>
@@ -192,21 +192,21 @@ export default function ArohiLandingPage({
           <div className="lg:col-span-5 relative flex items-center justify-center min-h-[360px] lg:min-h-[440px] select-none">
             
             {/* Ambient Base pedestal illustration */}
-            <div className="absolute bottom-4 w-48 h-4 bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute bottom-4 w-48 h-4 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
             
             {/* Glowing vertical platform pedestal loops */}
-            <div className="absolute w-56 h-56 rounded-full border border-indigo-500/10 scale-y-[0.3] translate-y-24 animate-spin" style={{ animationDuration: '10s' }}></div>
-            <div className="absolute w-44 h-44 rounded-full border border-purple-500/15 scale-y-[0.35] translate-y-24 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}></div>
-            <div className="absolute w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-500/10 to-pink-500/10 scale-y-[0.3] translate-y-24 shadow-[0_0_30px_rgba(99,102,241,0.2)] border border-indigo-500/30"></div>
+            <div className="absolute w-56 h-56 rounded-full border border-blue-500/20 scale-y-[0.3] translate-y-24 animate-spin" style={{ animationDuration: '10s' }}></div>
+            <div className="absolute w-44 h-44 rounded-full border border-cyan-500/25 scale-y-[0.35] translate-y-24 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}></div>
+            <div className="absolute w-32 h-32 rounded-full bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 scale-y-[0.3] translate-y-24 shadow-[0_0_30px_rgba(37,99,235,0.3)] border border-blue-400/40"></div>
 
             {/* Pedestal Center core sphere */}
-            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-indigo-600/30 to-purple-600/30 border border-indigo-400/40 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.3)] animate-bounce" style={{ animationDuration: '4s' }}>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-slate-950 border border-indigo-500/25 flex items-center justify-center relative">
+            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-blue-600/30 to-indigo-600/30 border border-blue-400/40 flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.35)] animate-bounce" style={{ animationDuration: '4s' }}>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-[#080c18] border border-blue-400/40 flex items-center justify-center relative">
                 <ArohiAvatar className="w-full h-full scale-[1.1]" />
-                <div className="absolute inset-0 bg-indigo-500/5 mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-blue-500/10 mix-blend-color-dodge"></div>
               </div>
               {/* Spinning particle dots */}
-              <div className="absolute -inset-2 rounded-full border-2 border-dashed border-cyan-400/30 animate-spin" style={{ animationDuration: '12s' }}></div>
+              <div className="absolute -inset-2 rounded-full border-2 border-dashed border-cyan-400/40 animate-spin" style={{ animationDuration: '12s' }}></div>
             </div>
 
             {/* Orbiting Badge 1: Learn Anything (Top Middle) */}
@@ -215,9 +215,9 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("I want to learn standard physics concepts.")}
                 onMouseEnter={() => setActiveOrbText("Deep tutorial roadmaps for academics and skills.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#0a0714] border border-purple-500/30 text-[#e9d5ff] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-blue-500/40 text-blue-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-blue-400 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]"
               >
-                <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+                <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
                 <span>Learn Anything</span>
               </button>
             </div>
@@ -228,7 +228,7 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("Arohi, help me brainstorm a research paper concept.")}
                 onMouseEnter={() => setActiveOrbText("Academic literature analysis and hypothesis drafting.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#050914] border border-cyan-500/30 text-[#e0f2fe] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-cyan-500/40 text-cyan-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
               >
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Research & Innovate</span>
@@ -241,9 +241,9 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("Let's practice conversational Spanish!")}
                 onMouseEnter={() => setActiveOrbText("Translating and speaking over 150+ global languages.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#050c14] border border-blue-500/30 text-[#e0f2fe] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-indigo-500/40 text-indigo-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-indigo-400 hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]"
               >
-                <Globe className="w-3.5 h-3.5 text-blue-400" />
+                <Globe className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Speak 150+ Languages</span>
               </button>
             </div>
@@ -254,9 +254,9 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("How do I prepare for a tech interview?")}
                 onMouseEnter={() => setActiveOrbText("ATS optimization, professional resumes, and career pathways.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#0d0714] border border-pink-500/30 text-[#fce7f3] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-pink-400 hover:shadow-[0_0_15px_rgba(236,72,153,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-blue-500/40 text-blue-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-blue-400 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]"
               >
-                <Briefcase className="w-3.5 h-3.5 text-pink-400" />
+                <Briefcase className="w-3.5 h-3.5 text-blue-400" />
                 <span>Grow Your Career</span>
               </button>
             </div>
@@ -267,9 +267,9 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("Arohi, what are some unique business strategies?")}
                 onMouseEnter={() => setActiveOrbText("Problem-solving, text synthesis, and technical calculations.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#090714] border border-violet-500/30 text-[#fae8ff] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-violet-400 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-cyan-500/40 text-cyan-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-violet-400" />
+                <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Get Smart Answers</span>
               </button>
             </div>
@@ -280,7 +280,7 @@ export default function ArohiLandingPage({
                 onClick={() => handleQuickChatPrompt("How do I start a small business or get MSME funding?")}
                 onMouseEnter={() => setActiveOrbText("Mudra schemes, state startups, and strategy guides.")}
                 onMouseLeave={() => setActiveOrbText(null)}
-                className="flex items-center gap-2 bg-[#060a12] border border-emerald-500/30 text-[#d1fae5] px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                className="flex items-center gap-2 bg-[#080c18] border border-emerald-500/40 text-emerald-200 px-4 py-1.5 rounded-full text-xs font-black shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]"
               >
                 <Zap className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Build Your Business</span>
@@ -288,8 +288,8 @@ export default function ArohiLandingPage({
             </div>
 
             {/* Informative Floating tooltip detailing orb functionalities */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[280px] bg-slate-950/80 border border-slate-800 p-2 rounded-xl text-center z-10 min-h-[44px]">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[280px] bg-[#080c18]/90 border border-blue-950 p-2 rounded-xl text-center z-10 min-h-[44px] backdrop-blur-md">
+              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider">
                 {activeOrbText ? "FEATURE FOCUS" : "✦ CLICK ANY ORB TO TALK TO AROHI ✦"}
               </p>
               <p className="text-[11px] text-slate-200 font-semibold leading-relaxed mt-0.5">
@@ -305,49 +305,49 @@ export default function ArohiLandingPage({
       {/* 3. "BUILT FOR EVERYONE" HORIZONTAL TRAY */}
       <section className="space-y-6 text-center">
         <div className="space-y-1">
-          <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             WIDE APPLICATION RANGE
           </span>
           <h3 className="text-2xl md:text-3xl font-black text-white">
-            Built for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Everyone</span>
+            Built for <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Everyone</span>
           </h3>
         </div>
 
         {/* 14 Beautiful Interactive Categories Grid matching screenshot text */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
           {[
-            { label: "Students", icon: GraduationCap, color: "text-blue-400", border: "border-blue-500/15 hover:border-blue-500/30" },
-            { label: "Teachers", icon: Users, color: "text-indigo-400", border: "border-indigo-500/15 hover:border-indigo-500/30" },
-            { label: "Parents", icon: Heart, color: "text-pink-400", border: "border-pink-500/15 hover:border-pink-500/30" },
-            { label: "Scientists", icon: Sparkles, color: "text-yellow-400", border: "border-yellow-500/15 hover:border-yellow-500/30" },
-            { label: "Researchers", icon: Clock, color: "text-cyan-400", border: "border-cyan-500/15 hover:border-cyan-500/30" },
-            { label: "Doctors", icon: Heart, color: "text-rose-400", border: "border-rose-500/15 hover:border-rose-500/30" },
-            { label: "Advocates", icon: Scale, color: "text-amber-400", border: "border-amber-500/15 hover:border-amber-500/30" },
-            { label: "Thespians", icon: Theater, color: "text-purple-400", border: "border-purple-500/15 hover:border-purple-500/30" },
-            { label: "Artists", icon: Palette, color: "text-pink-400", border: "border-pink-500/15 hover:border-pink-500/30" },
-            { label: "Engineers", icon: Zap, color: "text-emerald-400", border: "border-emerald-500/15 hover:border-emerald-500/30" },
-            { label: "Entrepreneurs", icon: Compass, color: "text-amber-400", border: "border-amber-500/15 hover:border-amber-500/30" },
-            { label: "Job Seekers", icon: Briefcase, color: "text-teal-400", border: "border-teal-500/15 hover:border-teal-500/30" },
-            { label: "Professionals", icon: Award, color: "text-violet-400", border: "border-violet-500/15 hover:border-violet-500/30" },
-            { label: "Humans", icon: Users, color: "text-pink-400", border: "border-pink-500/15 hover:border-pink-500/30" },
-            { label: "Businesses", icon: Landmark, color: "text-sky-400", border: "border-sky-500/15 hover:border-sky-500/30" },
-            { label: "Govt. Aspirants", icon: Landmark, color: "text-orange-400", border: "border-orange-500/15 hover:border-orange-500/30" },
-            { label: "Universities", icon: GraduationCap, color: "text-fuchsia-400", border: "border-fuchsia-500/15 hover:border-fuchsia-500/30" },
-            { label: "Organizations", icon: Users, color: "text-purple-400", border: "border-purple-500/15 hover:border-purple-500/30" },
-            { label: "Aliens", icon: Bot, color: "text-lime-400", border: "border-lime-500/15 hover:border-lime-500/30" },
-            { label: "The citizens of Mars", icon: Globe, color: "text-red-400", border: "border-red-500/15 hover:border-red-500/30" },
-            { label: "The citizens of Jupiter", icon: Sparkles, color: "text-amber-500", border: "border-amber-500/15 hover:border-amber-500/30" },
-            { label: "All Govt. Officials", icon: ShieldCheck, color: "text-orange-500", border: "border-orange-500/15 hover:border-orange-500/30" },
-            { label: "All Private officials", icon: Briefcase, color: "text-teal-400", border: "border-teal-500/15 hover:border-teal-500/30" }
+            { label: "Students", icon: GraduationCap, color: "text-blue-400", border: "border-blue-500/20 hover:border-blue-500/40" },
+            { label: "Teachers", icon: Users, color: "text-indigo-400", border: "border-indigo-500/20 hover:border-indigo-500/40" },
+            { label: "Parents", icon: Heart, color: "text-pink-400", border: "border-pink-500/20 hover:border-pink-500/40" },
+            { label: "Scientists", icon: Sparkles, color: "text-yellow-400", border: "border-yellow-500/20 hover:border-yellow-500/40" },
+            { label: "Researchers", icon: Clock, color: "text-cyan-400", border: "border-cyan-500/20 hover:border-cyan-500/40" },
+            { label: "Doctors", icon: Heart, color: "text-rose-400", border: "border-rose-500/20 hover:border-rose-500/40" },
+            { label: "Advocates", icon: Scale, color: "text-amber-400", border: "border-amber-500/20 hover:border-amber-500/40" },
+            { label: "Thespians", icon: Theater, color: "text-purple-400", border: "border-purple-500/20 hover:border-purple-500/40" },
+            { label: "Artists", icon: Palette, color: "text-pink-400", border: "border-pink-500/20 hover:border-pink-500/40" },
+            { label: "Engineers", icon: Zap, color: "text-emerald-400", border: "border-emerald-500/20 hover:border-emerald-500/40" },
+            { label: "Entrepreneurs", icon: Compass, color: "text-amber-400", border: "border-amber-500/20 hover:border-amber-500/40" },
+            { label: "Job Seekers", icon: Briefcase, color: "text-teal-400", border: "border-teal-500/20 hover:border-teal-500/40" },
+            { label: "Professionals", icon: Award, color: "text-violet-400", border: "border-violet-500/20 hover:border-violet-500/40" },
+            { label: "Humans", icon: Users, color: "text-pink-400", border: "border-pink-500/20 hover:border-pink-500/40" },
+            { label: "Businesses", icon: Landmark, color: "text-sky-400", border: "border-sky-500/20 hover:border-sky-500/40" },
+            { label: "Govt. Aspirants", icon: Landmark, color: "text-orange-400", border: "border-orange-500/20 hover:border-orange-500/40" },
+            { label: "Universities", icon: GraduationCap, color: "text-fuchsia-400", border: "border-fuchsia-500/20 hover:border-fuchsia-500/40" },
+            { label: "Organizations", icon: Users, color: "text-purple-400", border: "border-purple-500/20 hover:border-purple-500/40" },
+            { label: "Aliens", icon: Bot, color: "text-lime-400", border: "border-lime-500/20 hover:border-lime-500/40" },
+            { label: "The citizens of Mars", icon: Globe, color: "text-red-400", border: "border-red-500/20 hover:border-red-500/40" },
+            { label: "The citizens of Jupiter", icon: Sparkles, color: "text-amber-500", border: "border-amber-500/20 hover:border-amber-500/40" },
+            { label: "All Govt. Officials", icon: ShieldCheck, color: "text-orange-500", border: "border-orange-500/20 hover:border-orange-500/40" },
+            { label: "All Private officials", icon: Briefcase, color: "text-teal-400", border: "border-teal-500/20 hover:border-teal-500/40" }
           ].map((item, idx) => {
             const IconComponent = item.icon;
             return (
               <button
                 key={idx}
                 onClick={() => handleQuickChatPrompt(`As a ${item.label}, how can Arohi assist me?`)}
-                className={`bg-slate-950/40 border ${item.border} rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all hover:bg-slate-900/60 active:scale-95 cursor-pointer shadow-sm`}
+                className={`bg-[#080c18]/60 border ${item.border} rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all hover:bg-blue-950/40 active:scale-95 cursor-pointer shadow-sm`}
               >
-                <div className={`p-2 rounded-xl bg-slate-900 border border-slate-800 ${item.color}`}>
+                <div className={`p-2 rounded-xl bg-[#0b1022] border border-blue-900/40 ${item.color}`}>
                   <IconComponent className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-extrabold text-slate-300 group-hover:text-white">{item.label}</span>
@@ -358,16 +358,16 @@ export default function ArohiLandingPage({
       </section>
 
       {/* 4. INTERACTIVE CHAT MOCKUP WINDOW */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-950/30 border border-slate-900 rounded-[2.5rem] p-6 sm:p-10 text-left relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-80 h-80 bg-violet-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#080c18]/60 border border-blue-950/70 rounded-[2.5rem] p-6 sm:p-10 text-left relative overflow-hidden backdrop-blur-md">
+        <div className="absolute right-0 top-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Info Column */}
         <div className="lg:col-span-5 space-y-5">
-          <span className="text-[10px] bg-violet-500/10 text-violet-300 border border-violet-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             INTERACTIVE PREVIEW
           </span>
           <h3 className="text-2xl sm:text-3xl font-black text-white">
-            Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400 font-black">Arohi</span>
+            Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 font-black">Arohi</span>
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
             Arohi is an AI-powered personal assistant designed to simplify learning, research, career growth, business planning, and everyday problem-solving. Instead of switching between dozens of websites and applications, ask Arohi one question and receive intelligent, personalized guidance.
@@ -377,7 +377,7 @@ export default function ArohiLandingPage({
               setIsChatOpen(true);
               setIsChatMinimized(false);
             }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer border border-violet-500/25"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer border border-blue-400/30"
           >
             <MessageSquare className="w-4 h-4 text-white" />
             <span>Chat with Arohi Now 💬</span>
@@ -385,23 +385,23 @@ export default function ArohiLandingPage({
         </div>
 
         {/* Real Dynamic Mockup Chat Console Column */}
-        <div className="lg:col-span-7 bg-[#0b0816]/95 border border-[#21183c] rounded-3xl p-5 shadow-2xl relative">
+        <div className="lg:col-span-7 bg-[#060a14]/95 border border-blue-900/40 rounded-3xl p-5 shadow-2xl relative">
           
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#21183c] pb-3 mb-4">
+          <div className="flex items-center justify-between border-b border-blue-900/30 pb-3 mb-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full w-9 h-9 border border-indigo-500/30 flex items-center justify-center bg-slate-950 relative overflow-hidden">
+              <div className="rounded-full w-9 h-9 border border-blue-500/40 flex items-center justify-center bg-slate-950 relative overflow-hidden">
                 <ArohiAvatar className="w-full h-full scale-105" />
               </div>
               <div className="text-left">
                 <h4 className="text-xs font-extrabold text-white">Arohi AI</h4>
                 <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-pulse"></span>
-                  <span className="text-[9px] text-[#00e676] font-bold uppercase tracking-wider">Online</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Online</span>
                 </div>
               </div>
             </div>
-            <div className="text-[9px] text-slate-400 font-black tracking-widest uppercase">
+            <div className="text-[9px] text-blue-400/80 font-black tracking-widest uppercase">
               AROHI AI PLATFORM ENGINE
             </div>
           </div>
@@ -409,10 +409,10 @@ export default function ArohiLandingPage({
           {/* Messages */}
           <div className="space-y-4 min-h-[140px] flex flex-col justify-end text-left">
             <div className="flex items-start gap-3 max-w-[85%]">
-              <div className="rounded-full w-7 h-7 border border-indigo-500/30 flex items-center justify-center bg-slate-950 shrink-0">
-                <Bot className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="rounded-full w-7 h-7 border border-blue-500/30 flex items-center justify-center bg-blue-950/60 shrink-0">
+                <Bot className="w-3.5 h-3.5 text-blue-400" />
               </div>
-              <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-xs font-semibold text-slate-200 leading-relaxed shadow-sm">
+              <div className="bg-[#0b1224] border border-blue-900/40 p-3 rounded-2xl text-xs font-semibold text-slate-200 leading-relaxed shadow-sm">
                 Hello! I'm Arohi <span className="text-sm">👋</span> How can I help you today?
               </div>
             </div>
@@ -421,10 +421,10 @@ export default function ArohiLandingPage({
           {/* Promptsuggestion chips */}
           <div className="grid grid-cols-2 gap-2 mt-5 text-left">
             {[
-              { text: "Explain Quantum Physics", bg: "from-blue-900/10 to-indigo-900/10 border-blue-500/20 text-blue-200" },
-              { text: "Write a Resume", bg: "from-purple-900/10 to-indigo-900/10 border-purple-500/20 text-purple-200" },
-              { text: "Business Plan Ideas", bg: "from-emerald-900/10 to-teal-900/10 border-emerald-500/20 text-emerald-200" },
-              { text: "Learn Spanish", bg: "from-amber-900/10 to-orange-900/10 border-amber-500/20 text-amber-200" }
+              { text: "Explain Quantum Physics", bg: "from-blue-900/20 to-indigo-900/20 border-blue-500/30 text-blue-200" },
+              { text: "Write a Resume", bg: "from-indigo-900/20 to-blue-900/20 border-indigo-500/30 text-indigo-200" },
+              { text: "Business Plan Ideas", bg: "from-emerald-900/20 to-teal-900/20 border-emerald-500/30 text-emerald-200" },
+              { text: "Learn Spanish", bg: "from-cyan-900/20 to-blue-900/20 border-cyan-500/30 text-cyan-200" }
             ].map((chip, idx) => (
               <button
                 key={idx}
@@ -437,7 +437,7 @@ export default function ArohiLandingPage({
           </div>
 
           {/* Form mockup */}
-          <div className="mt-4 flex items-center gap-2 bg-slate-950 border border-[#21183c] p-2 rounded-2xl">
+          <div className="mt-4 flex items-center gap-2 bg-[#080d1e] border border-blue-900/40 p-2 rounded-2xl">
             <input 
               type="text" 
               placeholder="Tell me what you want to achieve..." 
@@ -446,7 +446,7 @@ export default function ArohiLandingPage({
             />
             <button 
               onClick={() => handleQuickChatPrompt("Arohi, guide me.")}
-              className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-md cursor-pointer transition-all active:scale-95"
+              className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md cursor-pointer transition-all active:scale-95"
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -458,7 +458,7 @@ export default function ArohiLandingPage({
       {/* 5. CORE DETAILED FEATURE CARDS (THE BENTO FEATURE LISTS FROM SCREENSHOT) */}
       <section id="features-grid" className="space-y-8 scroll-mt-20">
         <div className="text-center space-y-1.5">
-          <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             SPECTACULAR FOCUS TIERS
           </span>
           <h3 className="text-2xl md:text-3xl font-black text-white">
@@ -473,11 +473,11 @@ export default function ArohiLandingPage({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
           
           {/* Card 1: Learn the Real World (Blue theme) */}
-          <div className="bg-gradient-to-br from-[#0c0f20] via-[#04050d] to-[#020306] border-2 border-blue-500/20 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-blue-500/40 transition-all duration-300">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="bg-gradient-to-br from-[#080d1e] via-[#050814] to-[#020308] border border-blue-500/30 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-blue-500/50 transition-all duration-300">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="bg-blue-600/15 border border-blue-500/30 text-blue-400 p-2.5 rounded-2xl shadow-sm">
+                <div className="bg-blue-600/20 border border-blue-500/40 text-blue-400 p-2.5 rounded-2xl shadow-sm">
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <span className="text-[9px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
@@ -492,7 +492,7 @@ export default function ArohiLandingPage({
               </div>
 
               {/* Bullet points exact */}
-              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-slate-900/80">
+              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-blue-950/70">
                 {[
                   "Mathematics", "Physics", "Chemistry", "Biology", 
                   "Computer Science", "Artificial Intelligence", "Robotics", "Astronomy", 
@@ -506,20 +506,20 @@ export default function ArohiLandingPage({
                 ))}
               </ul>
             </div>
-            <div className="pt-4 border-t border-slate-900/80 mt-6 text-[10px] text-slate-400 font-bold text-center">
+            <div className="pt-4 border-t border-blue-950/70 mt-6 text-[10px] text-slate-400 font-bold text-center">
               From basics to advanced levels with clear explanations.
             </div>
           </div>
 
           {/* Card 2: Learn 150+ Languages (Cyan/Teal theme) */}
-          <div className="bg-gradient-to-br from-[#0c1c1a] via-[#040c0b] to-[#020404] border-2 border-teal-500/20 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-teal-500/40 transition-all duration-300">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="bg-gradient-to-br from-[#06101c] via-[#040812] to-[#020308] border border-cyan-500/30 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-cyan-500/50 transition-all duration-300">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="bg-teal-600/15 border border-teal-500/30 text-teal-400 p-2.5 rounded-2xl shadow-sm">
+                <div className="bg-cyan-600/20 border border-cyan-500/40 text-cyan-400 p-2.5 rounded-2xl shadow-sm">
                   <Globe className="w-5 h-5" />
                 </div>
-                <span className="text-[9px] bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
+                <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
                   Languages
                 </span>
               </div>
@@ -531,33 +531,33 @@ export default function ArohiLandingPage({
               </div>
 
               {/* Bullet points exact */}
-              <ul className="space-y-2 pt-2 border-t border-slate-900/80">
+              <ul className="space-y-2 pt-2 border-t border-blue-950/70">
                 {[
                   "Speak naturally", "Improve pronunciation", "Build vocabulary", 
                   "Practice conversations", "Learn grammar", "Read and write fluently", 
                   "Translate naturally"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-[11px] font-semibold text-slate-300">
-                    <span className="text-teal-400 text-xs shrink-0">●</span>
+                    <span className="text-cyan-400 text-xs shrink-0">●</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="pt-4 border-t border-slate-900/80 mt-6 text-[10px] text-slate-400 font-bold text-center">
+            <div className="pt-4 border-t border-blue-950/70 mt-6 text-[10px] text-slate-400 font-bold text-center">
               Perfect for students, travelers, professionals, and language enthusiasts.
             </div>
           </div>
 
-          {/* Card 3: Research & Innovation (Purple theme) */}
-          <div className="bg-gradient-to-br from-[#140b20] via-[#07040d] to-[#030206] border-2 border-purple-500/20 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-purple-500/40 transition-all duration-300">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          {/* Card 3: Research & Innovation (Indigo theme) */}
+          <div className="bg-gradient-to-br from-[#0a0d24] via-[#050714] to-[#020308] border border-indigo-500/30 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all duration-300">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="bg-purple-600/15 border border-purple-500/30 text-purple-400 p-2.5 rounded-2xl shadow-sm">
+                <div className="bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 p-2.5 rounded-2xl shadow-sm">
                   <Sparkles className="w-5 h-5" />
                 </div>
-                <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
+                <span className="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
                   Research
                 </span>
               </div>
@@ -569,7 +569,7 @@ export default function ArohiLandingPage({
               </div>
 
               {/* Bullet points exact */}
-              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-slate-900/80">
+              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-blue-950/70">
                 {[
                   "Literature review assistance", "Research paper summaries", 
                   "Scientific concept explanations", "Data interpretation", 
@@ -579,23 +579,23 @@ export default function ArohiLandingPage({
                   "Trend analysis", "Strategic insights"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                    <span className="text-purple-400 text-xs shrink-0">●</span>
+                    <span className="text-indigo-400 text-xs shrink-0">●</span>
                     <span className="truncate">{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="pt-4 border-t border-slate-900/80 mt-6 text-[10px] text-slate-400 font-bold text-center">
+            <div className="pt-4 border-t border-blue-950/70 mt-6 text-[10px] text-slate-400 font-bold text-center">
               Accelerate your research and turn ideas into impact.
             </div>
           </div>
 
-          {/* Card 4: Career Growth (Bright Blue theme) */}
-          <div className="bg-gradient-to-br from-[#0c1228] via-[#04060d] to-[#020306] border-2 border-sky-500/20 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-sky-500/40 transition-all duration-300 md:col-span-1 lg:col-span-1 lg:translate-x-[50%]">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          {/* Card 4: Career Growth (Sky Blue theme) */}
+          <div className="bg-gradient-to-br from-[#080f24] via-[#050914] to-[#020308] border border-sky-500/30 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-sky-500/50 transition-all duration-300 md:col-span-1 lg:col-span-1 lg:translate-x-[50%]">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="bg-sky-600/15 border border-sky-500/30 text-sky-400 p-2.5 rounded-2xl shadow-sm">
+                <div className="bg-sky-600/20 border border-sky-500/40 text-sky-400 p-2.5 rounded-2xl shadow-sm">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <span className="text-[9px] bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
@@ -610,7 +610,7 @@ export default function ArohiLandingPage({
               </div>
 
               {/* Bullet points exact */}
-              <ul className="space-y-2 pt-2 border-t border-slate-900/80">
+              <ul className="space-y-2 pt-2 border-t border-blue-950/70">
                 {[
                   "Resume Builder", "ATS Resume Optimization", "Interview Preparation", 
                   "Career Planning", "Skill Development", "LinkedIn Profile Guidance", 
@@ -623,20 +623,20 @@ export default function ArohiLandingPage({
                 ))}
               </ul>
             </div>
-            <div className="pt-4 border-t border-slate-900/80 mt-6 text-[10px] text-slate-400 font-bold text-center">
+            <div className="pt-4 border-t border-blue-950/70 mt-6 text-[10px] text-slate-400 font-bold text-center">
               Get job-ready and grow your career faster.
             </div>
           </div>
 
-          {/* Card 5: Business & Entrepreneurship (Sunset Orange/Rose theme) */}
-          <div className="bg-gradient-to-br from-[#180916] via-[#080307] to-[#040104] border-2 border-rose-500/20 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-rose-500/40 transition-all duration-300 md:col-span-1 lg:col-span-1 lg:translate-x-[50%]">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          {/* Card 5: Business & Entrepreneurship (Emerald/Teal theme) */}
+          <div className="bg-gradient-to-br from-[#061418] via-[#040c10] to-[#020308] border border-emerald-500/30 rounded-[2.5rem] p-7 flex flex-col justify-between relative overflow-hidden shadow-xl hover:border-emerald-500/50 transition-all duration-300 md:col-span-1 lg:col-span-1 lg:translate-x-[50%]">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="bg-rose-600/15 border border-rose-500/30 text-rose-400 p-2.5 rounded-2xl shadow-sm">
+                <div className="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 p-2.5 rounded-2xl shadow-sm">
                   <Zap className="w-5 h-5" />
                 </div>
-                <span className="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full font-extrabold uppercase">
                   Business
                 </span>
               </div>
@@ -648,7 +648,7 @@ export default function ArohiLandingPage({
               </div>
 
               {/* Bullet points exact */}
-              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-slate-900/80">
+              <ul className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-blue-950/70">
                 {[
                   "Business Planning", "Startup Strategy", "Market Research", 
                   "Sales Guidance", "Marketing Strategy", "Financial Planning", 
@@ -656,13 +656,13 @@ export default function ArohiLandingPage({
                   "Decision Support"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                    <span className="text-rose-400 text-xs shrink-0">●</span>
+                    <span className="text-emerald-400 text-xs shrink-0">●</span>
                     <span className="truncate">{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="pt-4 border-t border-slate-900/80 mt-6 text-[10px] text-slate-400 font-bold text-center">
+            <div className="pt-4 border-t border-blue-950/70 mt-6 text-[10px] text-slate-400 font-bold text-center">
               Build, manage and grow your business with confidence.
             </div>
           </div>
@@ -673,11 +673,11 @@ export default function ArohiLandingPage({
       {/* 6. "WHY CHOOSE AROHI?" ROW / BENTO GRID OF 12 ITEMS */}
       <section className="space-y-6 text-center">
         <div className="space-y-1">
-          <span className="text-[10px] bg-teal-500/10 text-teal-300 border border-teal-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             STABILITY & TRUST
           </span>
           <h3 className="text-2xl md:text-3xl font-black text-white">
-            Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-indigo-400">Arohi?</span>
+            Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Arohi?</span>
           </h3>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">One AI for Every Need</p>
         </div>
@@ -687,24 +687,24 @@ export default function ArohiLandingPage({
           {[
             { title: "Personalized AI Conversations", desc: "Adaptive memory structure", icon: MessageSquare, color: "text-blue-400" },
             { title: "Multilingual Support", desc: "Over 150+ global translation tools", icon: Globe, color: "text-cyan-400" },
-            { title: "Voice Interaction", desc: "Live high-fidelity speech input", icon: Mic, color: "text-purple-400" },
-            { title: "Context-Aware Assistance", desc: "Retains deep chat history", icon: Sparkles, color: "text-pink-400" },
+            { title: "Voice Interaction", desc: "Live high-fidelity speech input", icon: Mic, color: "text-indigo-400" },
+            { title: "Context-Aware Assistance", desc: "Retains deep chat history", icon: Sparkles, color: "text-blue-400" },
             { title: "Intelligent Search", desc: "Real-time query synthesis", icon: Clock, color: "text-sky-400" },
             { title: "Career Guidance", desc: "ATS checker and interview logs", icon: Compass, color: "text-amber-400" },
             { title: "Research Support", desc: "Literature & data analysis", icon: Sparkles, color: "text-indigo-400" },
-            { title: "Business Consultation", desc: "Mudra details & subsidy reports", icon: Landmark, color: "text-rose-400" },
-            { title: "Learning Companion", desc: "Step-by-step academic roadmaps", icon: GraduationCap, color: "text-teal-400" },
-            { title: "Professional Productivity", desc: "Rapid summary drafts & notes", icon: Zap, color: "text-emerald-400" },
-            { title: "Secure & Reliable", desc: "100% data privacy verified", icon: Shield, color: "text-orange-400" },
-            { title: "Available 24x7", desc: "Uninterrupted automated support", icon: Clock, color: "text-violet-400" }
+            { title: "Business Consultation", desc: "Mudra details & subsidy reports", icon: Landmark, color: "text-emerald-400" },
+            { title: "Learning Companion", desc: "Step-by-step academic roadmaps", icon: GraduationCap, color: "text-cyan-400" },
+            { title: "Professional Productivity", desc: "Rapid summary drafts & notes", icon: Zap, color: "text-blue-400" },
+            { title: "Secure & Reliable", desc: "100% data privacy verified", icon: Shield, color: "text-teal-400" },
+            { title: "Available 24x7", desc: "Uninterrupted automated support", icon: Clock, color: "text-blue-400" }
           ].map((item, idx) => {
             const Icon = item.icon;
             return (
               <div 
                 key={idx}
-                className="bg-[#07060f]/60 border border-slate-900 p-4 rounded-2xl flex flex-col justify-between min-h-[120px] shadow-sm hover:border-slate-800 transition-colors"
+                className="bg-[#070b16]/70 border border-blue-950/70 p-4 rounded-2xl flex flex-col justify-between min-h-[120px] shadow-sm hover:border-blue-800/50 transition-colors"
               >
-                <div className={`p-2 bg-slate-950 border border-slate-900 rounded-xl w-fit ${item.color}`}>
+                <div className={`p-2 bg-[#0b1224] border border-blue-900/40 rounded-xl w-fit ${item.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5 mt-3">
@@ -722,11 +722,11 @@ export default function ArohiLandingPage({
       {/* 7. PREMIUM PRICING PLANS */}
       <section className="space-y-8 scroll-mt-20">
         <div className="text-center space-y-1">
-          <span className="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             TRANSPARENT PRICING
           </span>
           <h3 className="text-2xl md:text-3xl font-black text-white">
-            Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Premium Plan</span>
+            Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400">Premium Plan</span>
           </h3>
           <p className="text-xs text-slate-400 font-bold max-w-lg mx-auto">
             Flexible options built to match your learning pace, professional guidance, state filing needs, and career goals.
@@ -734,7 +734,7 @@ export default function ArohiLandingPage({
         </div>
 
         {/* 🎁 100% CASHBACK & REFERRAL SYSTEM BANNER */}
-        <div className="bg-gradient-to-r from-[#1e0f47] via-[#2c135d] to-[#1e0f47] border-2 border-amber-400/80 p-4 sm:p-5 rounded-2xl shadow-2xl text-left space-y-2 max-w-3xl mx-auto">
+        <div className="bg-gradient-to-r from-[#0a1532] via-[#0e214d] to-[#0a1532] border-2 border-amber-400/80 p-4 sm:p-5 rounded-2xl shadow-2xl text-left space-y-2 max-w-3xl mx-auto">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xl">🪙</span>
@@ -764,19 +764,19 @@ export default function ArohiLandingPage({
                 key={idx}
                 className={`p-6 rounded-[2rem] border-2 text-left transition-all duration-300 relative flex flex-col justify-between ${
                   isPopular
-                    ? 'bg-gradient-to-b from-[#1b103c] to-[#0b061c] border-purple-500 shadow-[0_0_30px_rgba(124,58,237,0.25)] scale-[1.03]'
-                    : 'bg-[#090616]/75 border-slate-900 hover:border-slate-800'
+                    ? 'bg-gradient-to-b from-[#0e1838] to-[#060a18] border-blue-500 shadow-[0_0_30px_rgba(37,99,235,0.25)] scale-[1.03]'
+                    : 'bg-[#070b18]/80 border-blue-950/70 hover:border-blue-800/50'
                 }`}
               >
                 {isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md border border-purple-400/20">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md border border-blue-400/30">
                     Most Popular
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-wider block">
+                    <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-wider block">
                       {tier.name}
                     </span>
                     <div className="flex items-baseline gap-1">
@@ -788,17 +788,17 @@ export default function ArohiLandingPage({
                     </div>
                   </div>
 
-                  <ul className="space-y-2 border-t border-slate-900/80 pt-4 text-[10.5px] text-slate-300 font-semibold leading-relaxed">
+                  <ul className="space-y-2 border-t border-blue-950/70 pt-4 text-[10.5px] text-slate-300 font-semibold leading-relaxed">
                     {features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-start gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                        <CheckCircle className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-900/80">
+                <div className="mt-6 pt-4 border-t border-blue-950/70">
                   <button
                     onClick={() => {
                       if (!user) {
@@ -818,8 +818,8 @@ export default function ArohiLandingPage({
                     }}
                     className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                       isPopular
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg'
-                        : 'bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/20'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg'
+                        : 'bg-blue-950/40 hover:bg-blue-900/40 text-blue-300 border border-blue-500/25'
                     }`}
                   >
                     <Sparkles className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
@@ -837,11 +837,11 @@ export default function ArohiLandingPage({
       {/* 8. INTERACTIVE FAQ ACCORDIONS */}
       <section className="space-y-6 max-w-3xl mx-auto scroll-mt-20">
         <div className="text-center space-y-1">
-          <span className="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
             KNOWLEDGE BASE
           </span>
           <h3 className="text-2xl md:text-3xl font-black text-white">
-            Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Questions</span>
+            Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Questions</span>
           </h3>
         </div>
 
@@ -852,21 +852,21 @@ export default function ArohiLandingPage({
             return (
               <div 
                 key={index} 
-                className="bg-[#06040a]/80 border border-slate-900 rounded-2xl overflow-hidden transition-all duration-300"
+                className="bg-[#070b18]/80 border border-blue-950/70 rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur-sm"
               >
                 <button
                   onClick={() => setActiveFaq(isOpen ? null : index)}
-                  className="w-full py-4.5 px-6 flex items-center justify-between text-left font-extrabold text-xs sm:text-sm text-slate-200 hover:text-white transition-colors cursor-pointer bg-slate-950/30"
+                  className="w-full py-4.5 px-6 flex items-center justify-between text-left font-extrabold text-xs sm:text-sm text-slate-200 hover:text-white transition-colors cursor-pointer bg-[#070b18]/40"
                 >
                   <span>{faq.question}</span>
                   {isOpen ? (
-                    <ChevronDown className="w-4 h-4 text-indigo-400 shrink-0 transform rotate-180 transition-transform" />
+                    <ChevronDown className="w-4 h-4 text-blue-400 shrink-0 transform rotate-180 transition-transform" />
                   ) : (
                     <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform" />
                   )}
                 </button>
                 {isOpen && (
-                  <div className="p-6 border-t border-slate-900 text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed bg-[#0b0813]/20 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="p-6 border-t border-blue-950/70 text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed bg-[#050814]/60 animate-in fade-in slide-in-from-top-1 duration-200">
                     {faq.answer}
                   </div>
                 )}
@@ -877,13 +877,13 @@ export default function ArohiLandingPage({
       </section>
 
       {/* 9. ABOUT AROHI AI BLOCK & STATS */}
-      <section id="about-section" className="bg-[#050309] border border-slate-900 rounded-[2.5rem] p-6 sm:p-10 scroll-mt-20">
+      <section id="about-section" className="bg-gradient-to-b from-[#080d1e] to-[#04060e] border border-blue-950/80 rounded-[2.5rem] p-6 sm:p-10 scroll-mt-20 backdrop-blur-md">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-left">
           
           {/* About description */}
           <div className="lg:col-span-6 space-y-4">
             <h3 className="text-2xl font-black text-white">
-              About <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-500">Arohi AI</span>
+              About <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Arohi AI</span>
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
               Arohi AI is India's premier intelligent opportunity & growth ecosystem. Dedicated to making professional-grade AI assistance accessible to everyone through one intelligent assistant that empowers learning, research, careers, business, and innovation.
@@ -893,14 +893,14 @@ export default function ArohiLandingPage({
           {/* Metric cards right */}
           <div className="lg:col-span-6 grid grid-cols-2 gap-4">
             {[
-              { val: "10,000+", label: "Happy Users", color: "text-blue-400 shadow-blue-500/5" },
-              { val: "150+", label: "Languages Supported", color: "text-teal-400 shadow-teal-500/5" },
-              { val: "24/7", label: "Always Available", color: "text-purple-400 shadow-purple-500/5" },
-              { val: "∞", label: "Infinite Possibilities", color: "text-pink-400 shadow-pink-500/5" }
+              { val: "10,000+", label: "Happy Users", color: "text-blue-400" },
+              { val: "150+", label: "Languages Supported", color: "text-cyan-400" },
+              { val: "24/7", label: "Always Available", color: "text-indigo-400" },
+              { val: "∞", label: "Infinite Possibilities", color: "text-blue-400" }
             ].map((metric, idx) => (
               <div 
                 key={idx}
-                className={`bg-slate-950 border border-slate-900 p-4.5 rounded-2xl flex flex-col justify-center items-center text-center shadow-lg ${metric.color}`}
+                className={`bg-[#060a16] border border-blue-900/30 p-4.5 rounded-2xl flex flex-col justify-center items-center text-center shadow-lg ${metric.color}`}
               >
                 <span className="text-xl sm:text-2xl font-black tracking-tight">{metric.val}</span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">{metric.label}</span>

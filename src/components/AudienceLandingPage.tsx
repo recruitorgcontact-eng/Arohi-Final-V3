@@ -292,7 +292,9 @@ export default function AudienceLandingPage({
                     {tool.icon === 'Scale' && <Scale className="w-5 h-5" />}
                     {!['BookOpen', 'Award', 'Mic', 'FileText', 'Video', 'Briefcase', 'Building2', 'Shield', 'Code', 'Globe', 'Rocket', 'TrendingUp', 'Scale'].includes(tool.icon) && <Sparkles className="w-5 h-5" />}
                   </div>
-                  <h3 className="text-base font-black tracking-tight text-white group-hover:text-purple-300 transition-colors">
+                  <h3 className={`text-base font-black tracking-tight transition-colors ${
+                    isDarkMode ? 'text-white group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  }`}>
                     {tool.title}
                   </h3>
                   <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -300,7 +302,9 @@ export default function AudienceLandingPage({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs font-black text-purple-400 group-hover:translate-x-1 transition-transform">
+                <div className={`flex items-center gap-1.5 text-xs font-black group-hover:translate-x-1 transition-transform ${
+                  isDarkMode ? 'text-purple-400' : 'text-purple-700'
+                }`}>
                   <span>Launch Tool</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -419,7 +423,9 @@ export default function AudienceLandingPage({
                   {renderAudienceIcon(other.iconName, "w-4 h-4")}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-black truncate group-hover:text-purple-300 transition-colors">
+                  <h4 className={`text-xs font-black truncate transition-colors ${
+                    isDarkMode ? 'text-slate-100 group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  }`}>
                     {other.title}
                   </h4>
                   <p className="text-[10px] text-slate-400 truncate">

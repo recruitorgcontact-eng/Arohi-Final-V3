@@ -816,15 +816,15 @@ export default function WelcomeLanding({
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 font-sans select-none pb-28 ${
       isDarkMode 
-        ? 'bg-[#070814] text-white' 
-        : 'bg-[#f8f9fe] text-slate-900'
+        ? 'bg-transparent text-white' 
+        : 'bg-transparent text-slate-900'
     }`}>
       
       {/* 1. Header Navigation */}
       <header className={`sticky top-0 z-40 w-full backdrop-blur-md transition-colors ${
         isDarkMode 
-          ? 'bg-[#070814]/90 border-b border-slate-800/60' 
-          : 'bg-[#f8f9fe]/90 border-b border-slate-200/80'
+          ? 'bg-[#080c18]/85 border-b border-blue-950/60' 
+          : 'bg-white/85 border-b border-slate-200/80'
       }`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           
@@ -833,7 +833,7 @@ export default function WelcomeLanding({
             onClick={() => setIsMobileMenuOpen(true)}
             className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
               isDarkMode 
-                ? 'bg-[#131728] border-slate-800 text-slate-200 hover:bg-[#1a2038]' 
+                ? 'bg-[#0c1224] border-blue-950 text-slate-200 hover:bg-[#121b36] hover:border-blue-500/40' 
                 : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
             }`}
             aria-label="Menu"
@@ -847,7 +847,7 @@ export default function WelcomeLanding({
               <span className={isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-300' : 'text-slate-900'}>
                 AROHI
               </span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-fuchsia-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400">
                 AI
               </span>
               <span className="text-[7px] sm:text-[8.5px] font-black text-cyan-400 self-start font-mono leading-none tracking-normal">
@@ -855,8 +855,8 @@ export default function WelcomeLanding({
               </span>
             </h1>
             <p className="block text-[9px] sm:text-[10.5px] font-semibold tracking-[0.2em] uppercase leading-none mt-0.5 font-sans">
-              <span className={isDarkMode ? 'text-zinc-400' : 'text-slate-500'}>One AI. </span>
-              <span className={isDarkMode ? 'text-zinc-300 font-bold' : 'text-slate-700 font-bold'}>
+              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>One AI. </span>
+              <span className={isDarkMode ? 'text-blue-300 font-bold' : 'text-blue-700 font-bold'}>
                 Infinite Opportunities.
               </span>
             </p>
@@ -881,10 +881,10 @@ export default function WelcomeLanding({
                   }
                 }
               }}
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black text-[10px] sm:text-xs leading-none shadow-xs shadow-purple-600/30 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer border border-purple-300/40 shrink-0 tracking-tight"
+              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[10px] sm:text-xs leading-none shadow-xs shadow-blue-600/30 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer border border-blue-400/40 shrink-0 tracking-tight"
               title={user ? 'Account / Profile' : 'Sign Up / Sign In'}
             >
-              <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-100 shrink-0" />
+              <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-100 shrink-0" />
               <span className="whitespace-nowrap font-bold">
                 {user ? (currentUserName.length > 10 ? `${currentUserName.slice(0, 10)}..` : currentUserName) : 'Sign Up / Sign In'}
               </span>
@@ -895,8 +895,8 @@ export default function WelcomeLanding({
               onClick={toggleTheme}
               className={`p-1.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer ${
                 isDarkMode 
-                  ? 'bg-[#131728] border-slate-800 text-amber-400 hover:bg-[#1a2038]' 
-                  : 'bg-white border-slate-200 text-purple-600 hover:bg-slate-50 shadow-sm'
+                  ? 'bg-[#0c1224] border-blue-950 text-amber-400 hover:bg-[#121b36] hover:border-blue-500/40' 
+                  : 'bg-white border-slate-200 text-blue-600 hover:bg-slate-50 shadow-sm'
               }`}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
@@ -940,8 +940,8 @@ export default function WelcomeLanding({
         {!hasActiveSubscription && isTrialActive && (
           <div className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
             isDarkMode 
-              ? 'bg-gradient-to-r from-[#1d123d] via-[#140e30] to-[#241148] border-purple-500/40 text-white shadow-[0_8px_25px_rgba(124,58,237,0.25)]' 
-              : 'bg-gradient-to-r from-purple-900 via-indigo-900 to-fuchsia-900 border-purple-400/50 text-white shadow-purple-200'
+              ? 'bg-gradient-to-r from-[#0a1228] via-[#0f1e42] to-[#172e66] border-blue-500/30 text-white shadow-[0_8px_30px_rgba(37,99,235,0.2)]' 
+              : 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 border-blue-400/50 text-white shadow-blue-200'
           }`}>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-center sm:text-left">
               <div className="flex items-center gap-2">
@@ -951,7 +951,7 @@ export default function WelcomeLanding({
               <span className="text-slate-400 hidden sm:inline">|</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-slate-300 text-[11px] sm:text-xs">Time Remaining:</span>
-                <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded-lg border border-purple-400/40 text-amber-200 font-bold text-[11px] sm:text-xs shadow-inner">
+                <span className="font-mono bg-blue-950/90 px-2.5 py-0.5 rounded-lg border border-blue-400/40 text-blue-200 font-bold text-[11px] sm:text-xs shadow-inner">
                   {Math.floor(remainingHours / 24) > 0 ? `${Math.floor(remainingHours / 24)}d ` : ''}{remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
                 </span>
               </div>
@@ -959,7 +959,7 @@ export default function WelcomeLanding({
             <button
               type="button"
               onClick={onUpgradeClick}
-              className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
+              className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-400 hover:to-cyan-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
             >
               Upgrade for Minimum ₹399/mo
             </button>
@@ -969,8 +969,8 @@ export default function WelcomeLanding({
         {/* Hero Card ("Hello! I'm Arohi 👋") */}
         <div className={`relative rounded-2xl sm:rounded-3xl p-4 sm:p-5 transition-all border ${
           isDarkMode
-            ? 'bg-gradient-to-b from-[#111322] via-[#0d0f1b] to-[#121425] border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
-            : 'bg-gradient-to-b from-white via-purple-50/20 to-fuchsia-50/40 border-purple-100/80 shadow-[0_8px_30px_rgba(124,58,237,0.06)]'
+            ? 'bg-[#0c1224]/85 border-blue-950/70 shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md'
+            : 'bg-white/90 border-slate-200/90 shadow-[0_12px_35px_rgba(37,99,235,0.06)] backdrop-blur-md'
         }`}>
           
           {/* Top Info Header inside Card */}
@@ -984,7 +984,7 @@ export default function WelcomeLanding({
             <div className="flex-1 min-w-0">
               <h2 className="text-base sm:text-lg font-bold tracking-tight flex items-center gap-1">
                 <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>Hello! I'm</span>
-                <span className="text-purple-500 dark:text-purple-400 font-extrabold">Arohi</span>
+                <span className="text-blue-600 dark:text-blue-400 font-extrabold">Arohi</span>
                 <span>👋</span>
               </h2>
               <p className={`text-[11px] sm:text-xs font-normal mt-0.5 leading-snug ${
@@ -999,21 +999,21 @@ export default function WelcomeLanding({
           <form onSubmit={handlePromptSubmit} className="relative mb-3">
             <div className={`flex items-end gap-2 rounded-2xl p-1.5 sm:p-2 border transition-all ${
               isListening
-                ? 'bg-purple-950/30 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)] ring-2 ring-rose-500/50'
+                ? 'bg-blue-950/30 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)] ring-2 ring-rose-500/50'
                 : isDarkMode 
-                  ? 'bg-[#0a0b18] border-slate-800 focus-within:border-purple-500/60 shadow-inner' 
-                  : 'bg-white border-slate-200/90 focus-within:border-purple-400 shadow-xs'
+                  ? 'bg-[#080c18] border-blue-950/80 focus-within:border-blue-500/60 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-inner' 
+                  : 'bg-white border-slate-200/90 focus-within:border-blue-500/60 focus-within:ring-2 focus-within:ring-blue-500/15 shadow-xs'
             }`}>
               
               {/* Left Sparkles Icon / Recording Pulse */}
-              <div className="pl-2.5 pb-2 text-purple-500 shrink-0 flex items-center justify-center">
+              <div className="pl-2.5 pb-2 text-blue-500 shrink-0 flex items-center justify-center">
                 {isListening ? (
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
                   </span>
                 ) : (
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-purple-500" />
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-blue-500 dark:text-cyan-400" />
                 )}
               </div>
 
@@ -1046,7 +1046,7 @@ export default function WelcomeLanding({
               {landingInputText.trim().length > 0 && (
                 <button
                   type="submit"
-                  className="p-2 sm:p-2.5 mb-0.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
+                  className="p-2 sm:p-2.5 mb-0.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
                   title="Send to Arohi AI"
                 >
                   <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1060,7 +1060,7 @@ export default function WelcomeLanding({
                 className={`p-2 sm:p-2.5 mb-0.5 rounded-xl text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center ${
                   isListening
                     ? 'bg-rose-600 ring-4 ring-rose-500/40 animate-pulse shadow-rose-500/50'
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_4px_12px_rgba(124,58,237,0.35)]'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_4px_16px_rgba(37,99,235,0.35)]'
                 }`}
                 title={isListening ? "Stop listening" : "Speak to Arohi AI (Voice Input)"}
               >
@@ -1070,13 +1070,13 @@ export default function WelcomeLanding({
 
             {/* Active Voice Listening Live Waveform & Control Bar */}
             {isListening && (
-              <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-rose-950/80 border border-rose-500/50 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2.5 animate-fadeIn">
+              <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-blue-950/90 via-indigo-950/90 to-rose-950/80 border border-rose-500/50 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2.5 animate-fadeIn">
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   {/* Pulsing Audio Waveform Bars */}
                   <div className="flex items-end gap-1 h-6 px-1.5 py-1 bg-black/40 rounded-lg border border-rose-500/30">
                     <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(20, Math.min(100, micAudioLevel * 1.4))}%`, animationDuration: '400ms' }}></span>
-                    <span className="w-1 bg-fuchsia-400 rounded-full animate-bounce" style={{ height: `${Math.max(30, Math.min(100, micAudioLevel * 1.8))}%`, animationDuration: '300ms', animationDelay: '100ms' }}></span>
-                    <span className="w-1 bg-purple-400 rounded-full animate-bounce" style={{ height: `${Math.max(40, Math.min(100, micAudioLevel * 2.0))}%`, animationDuration: '500ms', animationDelay: '150ms' }}></span>
+                    <span className="w-1 bg-cyan-400 rounded-full animate-bounce" style={{ height: `${Math.max(30, Math.min(100, micAudioLevel * 1.8))}%`, animationDuration: '300ms', animationDelay: '100ms' }}></span>
+                    <span className="w-1 bg-blue-400 rounded-full animate-bounce" style={{ height: `${Math.max(40, Math.min(100, micAudioLevel * 2.0))}%`, animationDuration: '500ms', animationDelay: '150ms' }}></span>
                     <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(25, Math.min(100, micAudioLevel * 1.5))}%`, animationDuration: '350ms', animationDelay: '75ms' }}></span>
                     <span className="w-1 bg-amber-400 rounded-full animate-bounce" style={{ height: `${Math.max(20, Math.min(100, micAudioLevel * 1.2))}%`, animationDuration: '450ms', animationDelay: '200ms' }}></span>
                   </div>
@@ -1092,7 +1092,7 @@ export default function WelcomeLanding({
                       {landingInputText ? `"${landingInputText}"` : "Speak clearly into your microphone..."}
                     </p>
                     {landingInputText && (
-                      <p className="text-[10px] text-purple-300/80 animate-pulse mt-0.5">
+                      <p className="text-[10px] text-blue-300/80 animate-pulse mt-0.5">
                         Speaking captured • Opening chat in a moment...
                       </p>
                     )}
@@ -1104,7 +1104,7 @@ export default function WelcomeLanding({
                     <button
                       type="button"
                       onClick={() => submitVoiceQuery(landingInputText)}
-                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-rose-500 hover:from-purple-400 hover:to-rose-400 text-white text-[11px] font-black uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1 hover:scale-105 active:scale-95 shrink-0"
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-[11px] font-black uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1 hover:scale-105 active:scale-95 shrink-0"
                     >
                       <Send className="w-3 h-3" /> Ask Arohi
                     </button>
@@ -1141,11 +1141,11 @@ export default function WelcomeLanding({
               onClick={() => handleQuickAction("Please summarize this article or long document for me.")}
               className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
                 isDarkMode 
-                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
-                  : 'bg-white border-slate-200 text-slate-900 hover:bg-purple-50/80 shadow-xs'
+                  ? 'bg-[#0c1224]/85 border-blue-950/70 text-slate-200 hover:bg-[#121b36] hover:border-blue-500/40' 
+                  : 'bg-white border-slate-200/90 text-slate-900 hover:bg-blue-50/70 hover:border-blue-200 shadow-xs'
               }`}
             >
-              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-indigo-600 text-white flex items-center justify-center shrink-0">
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
                 <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
               </div>
               <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
@@ -1160,8 +1160,8 @@ export default function WelcomeLanding({
               onClick={() => handleQuickAction("Help me solve this question step by step with explanations.")}
               className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
                 isDarkMode 
-                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
-                  : 'bg-white border-slate-200 text-slate-900 hover:bg-emerald-50/80 shadow-xs'
+                  ? 'bg-[#0c1224]/85 border-blue-950/70 text-slate-200 hover:bg-[#121b36] hover:border-blue-500/40' 
+                  : 'bg-white border-slate-200/90 text-slate-900 hover:bg-emerald-50/70 hover:border-emerald-200 shadow-xs'
               }`}
             >
               <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -1179,11 +1179,11 @@ export default function WelcomeLanding({
               onClick={() => handleQuickAction("Help me write an essay, letter, email, or creative content.")}
               className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
                 isDarkMode 
-                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
-                  : 'bg-white border-slate-200 text-slate-900 hover:bg-blue-50/80 shadow-xs'
+                  ? 'bg-[#0c1224]/85 border-blue-950/70 text-slate-200 hover:bg-[#121b36] hover:border-blue-500/40' 
+                  : 'bg-white border-slate-200/90 text-slate-900 hover:bg-blue-50/70 hover:border-blue-200 shadow-xs'
               }`}
             >
-              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-indigo-600 text-white flex items-center justify-center shrink-0">
                 <PenTool className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
               </div>
               <div className={`text-left font-bold text-[8px] xs:text-[9px] sm:text-[10px] leading-[1.15] tracking-tight min-w-0 flex-1 ${
@@ -1198,8 +1198,8 @@ export default function WelcomeLanding({
               onClick={() => handleQuickAction("Create a customized study, work, or exam preparation schedule.")}
               className={`flex items-center gap-1 sm:gap-1.5 px-1 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer min-w-0 ${
                 isDarkMode 
-                  ? 'bg-[#121528]/90 border-slate-800 text-slate-200 hover:bg-[#1a1f3a]' 
-                  : 'bg-white border-slate-200 text-slate-900 hover:bg-amber-50/80 shadow-xs'
+                  ? 'bg-[#0c1224]/85 border-blue-950/70 text-slate-200 hover:bg-[#121b36] hover:border-blue-500/40' 
+                  : 'bg-white border-slate-200/90 text-slate-900 hover:bg-amber-50/70 hover:border-amber-200 shadow-xs'
               }`}
             >
               <div className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0">
@@ -1215,7 +1215,7 @@ export default function WelcomeLanding({
           </div>
 
           {/* Official 3D Neon "Arohi Exams™", "AROHI ONE Business OS", and "Mission 87" Compact Capsule Banners */}
-          <div className="mt-2.5 pt-2 border-t border-purple-500/20 space-y-2">
+          <div className="mt-2.5 pt-2 border-t border-blue-500/20 space-y-2">
             <Mission87HeroBanner
               isDarkMode={isDarkMode}
               onClick={() => {
@@ -1258,7 +1258,7 @@ export default function WelcomeLanding({
 
             <button
               onClick={() => setShowAllCategories(!showAllCategories)}
-              className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{showAllCategories ? 'Show Featured' : 'See All'}</span>
               <ChevronRight className={`w-4 h-4 transition-transform ${showAllCategories ? 'rotate-90' : ''}`} />
@@ -1276,8 +1276,8 @@ export default function WelcomeLanding({
                 placeholder="Search across all 20 audience categories..."
                 className={`w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-2xl border outline-none transition-all ${
                   isDarkMode 
-                    ? 'bg-[#131728] border-slate-800 text-white placeholder-slate-500 focus:border-purple-500' 
-                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500 shadow-sm'
+                    ? 'bg-[#0c1224] border-blue-950 text-white placeholder-slate-500 focus:border-blue-500' 
+                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 shadow-sm'
                 }`}
               />
             </div>
@@ -1303,8 +1303,8 @@ export default function WelcomeLanding({
                   }}
                   className={`group relative rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 border transition-all duration-300 cursor-pointer flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98] ${
                     isDarkMode 
-                      ? `bg-[#0f1123]/90 ${cat.borderDark} hover:border-purple-500/50 shadow-sm` 
-                      : `bg-white ${cat.borderLight} hover:border-purple-300 shadow-sm hover:shadow-md`
+                      ? `bg-[#0c1224]/85 ${cat.borderDark} hover:border-blue-500/50 shadow-sm hover:shadow-[0_8px_25px_rgba(37,99,235,0.12)]` 
+                      : `bg-white ${cat.borderLight} hover:border-blue-300 shadow-sm hover:shadow-[0_8px_25px_rgba(37,99,235,0.08)]`
                   }`}
                 >
                   <div>
@@ -1348,8 +1348,8 @@ export default function WelcomeLanding({
         {/* 4. Trust & Stats Bar (4 Badges in 4 Columns) */}
         <div className={`rounded-2xl p-2.5 sm:p-3.5 border grid grid-cols-4 gap-1.5 sm:gap-3 text-center ${
           isDarkMode 
-            ? 'bg-[#0f1123]/80 border-slate-800/80 text-slate-300' 
-            : 'bg-white border-slate-200/80 text-slate-700 shadow-sm'
+            ? 'bg-[#0c1224]/85 border-blue-950/70 text-slate-300' 
+            : 'bg-white border-slate-200/90 text-slate-700 shadow-sm'
         }`}>
           <div className="flex flex-col items-center justify-center p-1">
             <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mb-1" />
@@ -1358,19 +1358,19 @@ export default function WelcomeLanding({
           </div>
 
           <div className="flex flex-col items-center justify-center p-1">
-            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 mb-1" />
+            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mb-1" />
             <span className="text-[10px] sm:text-xs font-black leading-tight">150+ Languages</span>
             <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Chat & content in your language</span>
           </div>
 
           <div className="flex flex-col items-center justify-center p-1">
-            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mb-1" />
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 mb-1" />
             <span className="text-[10px] sm:text-xs font-black leading-tight">1M+ Queries</span>
             <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Answered everyday</span>
           </div>
 
           <div className="flex flex-col items-center justify-center p-1">
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mb-1" />
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mb-1" />
             <span className="text-[10px] sm:text-xs font-black leading-tight">99.9% Uptime</span>
             <span className={`text-[8px] sm:text-[9.5px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Reliable & always available</span>
           </div>
@@ -1468,15 +1468,15 @@ export default function WelcomeLanding({
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={`fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] z-50 p-6 flex flex-col justify-between overflow-y-auto ${
-                isDarkMode ? 'bg-[#0d0f20] text-white' : 'bg-white text-slate-900'
+                isDarkMode ? 'bg-[#080c18] border-r border-blue-950/70 text-white' : 'bg-white border-r border-slate-200 text-slate-900 shadow-xl'
               }`}
             >
               <div className="space-y-6">
                 
                 {/* Header inside Drawer */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-blue-950/60">
                   <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-purple-500/30">
+                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-blue-500/40">
                       <ArohiAvatar className="w-full h-full" />
                     </div>
                     <div>
@@ -1487,21 +1487,21 @@ export default function WelcomeLanding({
 
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-blue-950/40 cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Mobile Drawer Auth Header */}
-                <div className="p-3 bg-gradient-to-r from-purple-900/40 via-fuchsia-900/30 to-indigo-900/40 rounded-2xl border border-purple-500/30 flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-r from-blue-950/70 via-indigo-950/60 to-blue-900/60 dark:bg-gradient-to-r dark:from-blue-950/70 dark:via-indigo-950/60 dark:to-blue-900/60 rounded-2xl border border-blue-500/30 flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <div className="w-8 h-8 rounded-full bg-purple-600/50 flex items-center justify-center text-white shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-400 shrink-0 border border-blue-400/30">
                       <User className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-white truncate">{user ? currentUserName : 'Welcome Guest'}</p>
-                      <p className="text-[10px] text-purple-300 truncate">{user ? (user.email || 'Signed in') : 'Sign in to save your sessions'}</p>
+                      <p className="text-[10px] text-blue-200 truncate">{user ? (user.email || 'Signed in') : 'Sign in to save your sessions'}</p>
                     </div>
                   </div>
                   <button
@@ -1511,7 +1511,7 @@ export default function WelcomeLanding({
                       if (onOpenAuth) onOpenAuth();
                       else if (setActiveTab) setActiveTab('profile');
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-extrabold shadow-md shrink-0 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-md shrink-0 cursor-pointer"
                   >
                     {user ? 'Account' : 'Sign Up / Sign In'}
                   </button>
@@ -1527,7 +1527,7 @@ export default function WelcomeLanding({
                       setActiveTab('mission87');
                       onEnter();
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-emerald-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500/15 via-blue-500/10 to-emerald-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 flex items-center justify-between cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-base">🇮🇳</span>
@@ -1544,10 +1544,10 @@ export default function WelcomeLanding({
                       setActiveTab('arohi');
                       onEnter();
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-between cursor-pointer"
                   >
                     <span>Voice Call & Chat</span>
-                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <Sparkles className="w-4 h-4 text-blue-500" />
                   </button>
 
                   <button
@@ -1579,7 +1579,7 @@ export default function WelcomeLanding({
                       <Briefcase className="w-4 h-4 text-cyan-400" />
                       <span>AROHI ONE™ (Business OS)</span>
                     </div>
-                    <span className="text-[9px] font-black uppercase bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[9px] font-black uppercase bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 px-1.5 py-0.5 rounded-md">
                       New
                     </span>
                   </button>
@@ -1590,7 +1590,7 @@ export default function WelcomeLanding({
                       setActiveTab('syllabus');
                       onEnter();
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-between cursor-pointer"
                   >
                     <span>Odia & CBSE Syllabus Hub</span>
                     <BookOpen className="w-4 h-4 text-blue-500" />
@@ -1602,7 +1602,7 @@ export default function WelcomeLanding({
                       setActiveTab('jobs');
                       onEnter();
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-between cursor-pointer"
                   >
                     <span>Govt & Private Jobs Portal</span>
                     <Landmark className="w-4 h-4 text-amber-500" />
@@ -1614,7 +1614,7 @@ export default function WelcomeLanding({
                       setActiveTab('business');
                       onEnter();
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 flex items-center justify-between cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-between cursor-pointer"
                   >
                     <span>Business & Startup Hub</span>
                     <Briefcase className="w-4 h-4 text-emerald-500" />
@@ -1627,7 +1627,7 @@ export default function WelcomeLanding({
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Language ({language.toUpperCase()})
                     </p>
-                    <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
                       150+ Languages
                     </span>
                   </div>
@@ -1641,8 +1641,8 @@ export default function WelcomeLanding({
                       placeholder="Search language..."
                       className={`w-full text-xs px-3 py-1.5 rounded-xl border outline-none transition-all ${
                         isDarkMode
-                          ? 'bg-[#0a0c1a] border-slate-850 text-slate-100 placeholder:text-slate-500 focus:border-purple-500'
-                          : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-purple-400'
+                          ? 'bg-[#0c1224] border-blue-950 text-slate-100 placeholder:text-slate-500 focus:border-blue-500'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-400'
                       }`}
                     />
                     {drawerLangSearch && (
@@ -1676,10 +1676,10 @@ export default function WelcomeLanding({
                           }}
                           className={`px-3 py-2 rounded-xl text-left transition-all cursor-pointer flex flex-col justify-center min-w-0 border ${
                             isSelected
-                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-900/30'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 shadow-md shadow-blue-900/30'
                               : isDarkMode
-                              ? 'bg-[#111428] hover:bg-[#191e3a] border-slate-800/80 text-slate-200 hover:border-slate-700'
-                              : 'bg-slate-100 hover:bg-purple-50 border-slate-200 text-slate-700 hover:text-purple-700'
+                              ? 'bg-[#0c1224] hover:bg-[#121b36] border-blue-950/70 text-slate-200 hover:border-blue-500/40'
+                              : 'bg-slate-100 hover:bg-blue-50 border-slate-200 text-slate-700 hover:text-blue-700'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -1689,7 +1689,7 @@ export default function WelcomeLanding({
                             )}
                           </div>
                           {l.native !== l.english && (
-                            <span className={`text-[9px] truncate ${isSelected ? 'text-purple-200' : 'text-slate-400'}`}>
+                            <span className={`text-[9px] truncate ${isSelected ? 'text-blue-200' : 'text-slate-400'}`}>
                               {l.english}
                             </span>
                           )}
@@ -1702,14 +1702,14 @@ export default function WelcomeLanding({
               </div>
 
               {/* Share & Theme Controls inside Drawer */}
-              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="pt-6 border-t border-slate-200 dark:border-blue-950/60 space-y-3">
                 {onShare && (
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       onShare();
                     }}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
                   >
                     <Share2 className="w-4 h-4" />
                     <span>Share Arohi AI App</span>

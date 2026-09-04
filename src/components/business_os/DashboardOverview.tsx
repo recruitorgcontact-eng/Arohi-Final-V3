@@ -88,6 +88,17 @@ export default function DashboardOverview() {
   // Comprehensive list of all 17 Business OS tools formatted into compact tiles
   const allBusinessTools: BusinessToolItem[] = [
     {
+      id: 'brain_sync',
+      title: 'Arohi Brain & Voice Sync',
+      category: 'AI & Telephony',
+      subtitle: 'Voice intake calls, brain chat & autonomous account sync',
+      icon: Bot,
+      colorLight: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
+      colorDark: 'dark:bg-fuchsia-950/60 dark:text-fuchsia-400 dark:border-fuchsia-800/50',
+      badge: 'AUTO-SYNC',
+      metric: 'Voice & Docs'
+    },
+    {
       id: 'telephony',
       title: 'Arohi AI Calling',
       category: 'AI & Telephony',

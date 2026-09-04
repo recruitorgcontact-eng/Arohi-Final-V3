@@ -29,9 +29,10 @@ interface ToolsHubProps {
   onNavigateTab: (tab: string) => void;
   onOpenAuth?: () => void;
   onQuickChat?: (prompt: string) => void;
+  isDarkMode?: boolean;
 }
 
-export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) {
+export default function ToolsHub({ onNavigateTab, onQuickChat, isDarkMode = true }: ToolsHubProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -278,17 +279,29 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom duration-300 pb-16 text-left">
       
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#120b2e] via-[#1a1240] to-[#0d0922] border border-[#3b2b80]/50 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+      <div className={`border rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl ${
+        isDarkMode
+          ? 'bg-gradient-to-r from-[#120b2e] via-[#1a1240] to-[#0d0922] border-[#3b2b80]/50 text-white'
+          : 'bg-gradient-to-r from-purple-100 via-indigo-50 to-purple-50 border-purple-200 shadow-md text-slate-900'
+      }`}>
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10 space-y-3 max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 text-purple-300 border border-purple-500/30 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${
+            isDarkMode
+              ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
+              : 'bg-purple-100 text-purple-800 border-purple-300'
+          }`}>
+            <Sparkles className="w-3.5 h-3.5 text-yellow-500 animate-pulse" />
             AI Capabilities & Tools Suite
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-            All AI Capabilities <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400">In One Place</span>
+          <h1 className={`text-3xl md:text-4xl font-black tracking-tight leading-tight ${
+            isDarkMode ? 'text-white' : 'text-slate-900'
+          }`}>
+            All AI Capabilities <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600">In One Place</span>
           </h1>
-          <p className="text-sm text-slate-300 font-medium leading-relaxed">
+          <p className={`text-sm font-medium leading-relaxed ${
+            isDarkMode ? 'text-slate-300' : 'text-slate-700'
+          }`}>
             From <strong>AI Music Generation</strong>, <strong>Image Studio</strong>, and <strong>Video Scripting</strong> to ATS Resume Auditing, Mock Interview Coaching, Business Loan Calculators, and Code/Math Solvers — launch any tool below instantly.
           </p>
 
@@ -317,7 +330,9 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer border ${
                   selectedCategory === cat.id
                     ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                    : 'bg-[#120e2b] border-[#2d2163] text-slate-300 hover:border-purple-500/40 hover:bg-[#1a143d]'
+                    : isDarkMode
+                    ? 'bg-[#120e2b] border-[#2d2163] text-slate-300 hover:border-purple-500/40 hover:bg-[#1a143d]'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:bg-purple-50/50 shadow-xs'
                 }`}
               >
                 {cat.label}
@@ -327,13 +342,17 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
 
           {/* Search Box */}
           <div className="relative w-full sm:w-64 shrink-0">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <Search className={`absolute left-3 top-2.5 w-4 h-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e?.target?.value ?? "")}
               placeholder="Search AI tools..."
-              className="w-full bg-[#120e2b] border border-[#2d2163] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-white placeholder-slate-400 outline-none focus:border-purple-500 transition-colors"
+              className={`w-full border rounded-xl pl-9 pr-3 py-2 text-xs font-medium outline-none transition-colors ${
+                isDarkMode 
+                  ? 'bg-[#120e2b] border-[#2d2163] text-white placeholder-slate-400 focus:border-purple-500' 
+                  : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-purple-600 shadow-xs'
+              }`}
             />
           </div>
         </div>
@@ -347,34 +366,54 @@ export default function ToolsHub({ onNavigateTab, onQuickChat }: ToolsHubProps) 
             <div
               key={tool.id}
               onClick={() => handleLaunchTool(tool)}
-              className="group bg-[#120e2b]/90 hover:bg-[#1a143d] border border-[#2d2163] hover:border-[#7c3aed]/50 rounded-2xl p-5 transition-all duration-200 shadow-xl hover:shadow-[0_10px_30px_rgba(124,58,237,0.25)] flex flex-col justify-between cursor-pointer relative overflow-hidden"
+              className={`group border rounded-2xl p-5 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden ${
+                isDarkMode
+                  ? 'bg-[#120e2b]/90 hover:bg-[#1a143d] border-[#2d2163] hover:border-[#7c3aed]/50 shadow-xl hover:shadow-[0_10px_30px_rgba(124,58,237,0.25)]'
+                  : 'bg-white hover:bg-purple-50/30 border-slate-200 hover:border-purple-400 shadow-sm hover:shadow-md'
+              }`}
             >
               <div className="space-y-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <div className={`p-3 rounded-2xl bg-gradient-to-br ${tool.color} text-white shadow-md group-hover:scale-110 transition-transform duration-200`}>
                     <IconComponent className="w-6 h-6" />
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                    isDarkMode 
+                      ? 'bg-purple-500/10 border-purple-500/20 text-purple-300'
+                      : 'bg-purple-100 border-purple-200 text-purple-800'
+                  }`}>
                     {tool.badge}
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 font-mono block">
+                  <span className={`text-[10px] font-black uppercase tracking-wider font-mono block ${
+                    isDarkMode ? 'text-purple-400' : 'text-purple-700'
+                  }`}>
                     {tool.category}
                   </span>
-                  <h3 className="text-base font-black text-white group-hover:text-purple-200 transition-colors">
+                  <h3 className={`text-base font-black transition-colors ${
+                    isDarkMode 
+                      ? 'text-white group-hover:text-purple-200' 
+                      : 'text-slate-900 group-hover:text-purple-700'
+                  }`}>
                     {tool.title}
                   </h3>
-                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                  <p className={`text-xs font-medium leading-relaxed ${
+                    isDarkMode ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
                     {tool.description}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-[#251a54] flex items-center justify-between relative z-10 text-xs font-black text-purple-400 group-hover:text-purple-300">
+              <div className={`pt-4 mt-4 border-t flex items-center justify-between relative z-10 text-xs font-black ${
+                isDarkMode 
+                  ? 'border-[#251a54] text-purple-400 group-hover:text-purple-300'
+                  : 'border-slate-100 text-purple-700 group-hover:text-purple-900'
+              }`}>
                 <span className="flex items-center gap-1">
-                  Launch Capability <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                  Launch Capability <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                 </span>
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </div>

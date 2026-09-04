@@ -2064,6 +2064,7 @@ export default function App() {
               setHasEntered(true);
               setActiveTab('arohi');
             }}
+            isDarkMode={isDarkMode}
           />
         );
       case 'pricing':
@@ -2134,6 +2135,7 @@ export default function App() {
             onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
             hasActiveSubscription={hasActiveSubscription}
             subscriptionPlanName={activeSubscriptionPlanName}
+            isDarkMode={isDarkMode}
           />
         );
       case 'employer':
@@ -3304,7 +3306,7 @@ export default function App() {
   }
 
   return (
-    <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white pb-24 xl:pb-12 transition-colors duration-300 ${isDarkMode ? 'bg-[#070814] text-slate-100 dark' : 'bg-[#f8f9fe] text-slate-900 light'}`}>
+    <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white pb-24 xl:pb-12 transition-colors duration-300 ${isDarkMode ? 'bg-[#080c18] text-slate-100 dark' : 'bg-[#f8fafc] text-slate-900 light'}`}>
       
       {/* Interactive Parallax Background Scroll Effects */}
       <BackgroundScrollEffects isDarkMode={isDarkMode} />
@@ -3812,8 +3814,8 @@ export default function App() {
         {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && (
           <div className={`mb-6 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
             isDarkMode 
-              ? 'bg-gradient-to-r from-[#1d123d] via-[#140e30] to-[#241148] border-purple-500/40 text-white shadow-[0_8px_25px_rgba(124,58,237,0.25)]' 
-              : 'bg-gradient-to-r from-purple-900 via-indigo-900 to-fuchsia-900 border-purple-400/50 text-white shadow-purple-200'
+              ? 'bg-gradient-to-r from-[#0a1228] via-[#0f1e42] to-[#172e66] border-blue-500/30 text-white shadow-[0_8px_30px_rgba(37,99,235,0.2)]' 
+              : 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 border-blue-400/50 text-white shadow-blue-200'
           }`}>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-center sm:text-left">
               <div className="flex items-center gap-2">
@@ -3823,7 +3825,7 @@ export default function App() {
               <span className="text-slate-400 hidden sm:inline">|</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-slate-300 text-[11px] sm:text-xs">Time Remaining:</span>
-                <span className="font-mono bg-purple-950/90 px-2.5 py-0.5 rounded-lg border border-purple-400/40 text-amber-200 font-bold text-[11px] sm:text-xs shadow-inner">
+                <span className="font-mono bg-blue-950/90 px-2.5 py-0.5 rounded-lg border border-blue-400/40 text-blue-200 font-bold text-[11px] sm:text-xs shadow-inner">
                   {Math.floor(remainingHours / 24) > 0 ? `${Math.floor(remainingHours / 24)}d ` : ''}{remainingHours % 24}h {remainingMinutes}m {remainingSeconds}s
                 </span>
               </div>
@@ -3833,7 +3835,7 @@ export default function App() {
               onClick={() => {
                 handleInitiateUpgrade(0, true);
               }}
-              className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
+              className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-400 hover:to-cyan-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0 whitespace-nowrap"
             >
               Upgrade for Minimum ₹399/mo
             </button>
@@ -3861,7 +3863,7 @@ export default function App() {
                     <span>Home</span>
                   </button>
                   <span className="text-slate-300 dark:text-zinc-700">/</span>
-                  <span className="font-semibold text-slate-800 dark:text-zinc-200 uppercase tracking-widest text-[9.5px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.08]">
+                  <span className="font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-widest text-[9.5px] px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-500/30">
                     {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'mocktests' ? 'Exams' : activeTab}
                   </span>
                 </div>
@@ -3890,28 +3892,28 @@ export default function App() {
       {/* Footer verified seal and info */}
       <footer id="contact-section" className="max-w-7xl mx-auto px-4 mt-12 mb-8 space-y-6 scroll-mt-20">
         {/* Expanded Footer Grid */}
-        <div className="bg-[#120d2a]/80 rounded-2xl border border-[#211b3d] p-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
+        <div className="bg-white/80 dark:bg-[#0c1224]/90 rounded-2xl border border-slate-200/90 dark:border-blue-950/60 p-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-left shadow-sm backdrop-blur-md">
           {/* Col 1: Platform identity */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-xl">✨</span>
-              <span className="font-black text-white text-base tracking-tight">Arohi AI</span>
+              <span className="font-black text-slate-900 dark:text-white text-base tracking-tight">Arohi AI</span>
             </div>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. 🇮🇳 India’s sovereign LLM cum LMM AI ecosystem built for the ambition of young Bharat. Powered by real-time voice in 150+ languages, visual intelligence, and 24/7 guidance for Class 1–12 students, career aspirants, innovators, startups, and businesses. Your dreams, your language, your future—because anyone can be whoever they want to be.
             </p>
             <button
               onClick={() => handleOpenShare()}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 hover:from-purple-600/45 hover:to-indigo-600/45 border border-purple-500/30 hover:border-purple-400/60 text-purple-300 hover:text-white rounded-xl transition-all text-xs font-black uppercase tracking-wider cursor-pointer shadow-md w-full justify-center"
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 hover:border-blue-400/60 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-white rounded-xl transition-all text-xs font-black uppercase tracking-wider cursor-pointer shadow-sm w-full justify-center"
             >
-              <Share2 className="w-3.5 h-3.5 text-[#00f3ff]" />
+              <Share2 className="w-3.5 h-3.5 text-blue-500 dark:text-cyan-400" />
               <span>Share Platform</span>
             </button>
           </div>
 
           {/* Col 2: Legal Documents & Opportunities */}
           <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Links &amp; Documents</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Links &amp; Documents</h4>
             <ul className="space-y-2 text-xs font-semibold">
               <li>
                 <button 
@@ -3919,43 +3921,43 @@ export default function App() {
                     setActiveTab('partner');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-amber-400 hover:text-amber-300 flex items-center gap-1.5"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-1.5"
                 >
                   <span>Partner &amp; Influencer Hub</span>
-                  <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">15% Comm.</span>
+                  <span className="bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">15% Comm.</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('solutions')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-purple-400 hover:text-purple-300 flex items-center gap-1.5"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5"
                 >
                   <span>100+ Solutions Directory</span>
-                  <span className="bg-purple-600/25 border border-purple-500/30 text-purple-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">23 Audiences</span>
+                  <span className="bg-blue-600/15 dark:bg-blue-600/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">23 Audiences</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('blogs')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-amber-400 hover:text-amber-300 flex items-center gap-1.5"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-1.5"
                 >
                   <span>Blogs &amp; SEO Knowledge Hub</span>
-                  <span className="bg-amber-600/25 border border-amber-500/30 text-amber-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">100+</span>
+                  <span className="bg-amber-600/20 border border-amber-500/30 text-amber-500 dark:text-amber-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">100+</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('franchise')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-black text-purple-400 hover:text-purple-300 flex items-center gap-1.5"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5"
                 >
                   <span>AECN Franchise Hub</span>
-                  <span className="bg-purple-600/25 border border-purple-500/30 text-purple-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full animate-pulse">New</span>
+                  <span className="bg-blue-600/15 dark:bg-blue-600/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full animate-pulse">New</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => setActiveTab('privacy')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Privacy Policy
                 </button>
@@ -3963,7 +3965,7 @@ export default function App() {
               <li>
                 <button 
                   onClick={() => setActiveTab('terms')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Terms & Conditions
                 </button>
@@ -3971,7 +3973,7 @@ export default function App() {
               <li>
                 <button 
                   onClick={() => setActiveTab('refunds')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Refund & Cancellation Policy
                 </button>
@@ -3981,12 +3983,12 @@ export default function App() {
 
           {/* Col 3: Compliance & Security */}
           <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Compliance & Security</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Compliance & Security</h4>
             <ul className="space-y-2 text-xs font-semibold">
               <li>
                 <button 
                   onClick={() => setActiveTab('payments')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Pricing & RBI Guidelines
                 </button>
@@ -3994,14 +3996,14 @@ export default function App() {
               <li>
                 <button 
                   onClick={() => setActiveTab('payments')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left flex items-center gap-1"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left flex items-center gap-1"
                 >
                   <span>PCI-DSS Encryption</span>
                   <span className="bg-[#00e676]/10 text-[#00e676] text-[9px] px-1.5 py-0.5 rounded-full border border-[#00e676]/20 uppercase font-black tracking-wider">Active</span>
                 </button>
               </li>
               <li>
-                <div className="text-slate-500 font-medium text-[11px]">
+                <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">
                   Official Razorpay Standard Web Gateway
                 </div>
               </li>
@@ -4010,12 +4012,12 @@ export default function App() {
 
           {/* Col 4: Support & Grievance */}
           <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">Help Desk</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Help Desk</h4>
             <ul className="space-y-2 text-xs font-semibold">
               <li>
                 <button 
                   onClick={() => setActiveTab('faqs')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left font-bold text-violet-400 hover:text-violet-300"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Frequently Asked FAQs
                 </button>
@@ -4023,7 +4025,7 @@ export default function App() {
               <li>
                 <button 
                   onClick={() => setActiveTab('contact')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Contact Us
                 </button>
@@ -4031,14 +4033,14 @@ export default function App() {
               <li>
                 <button 
                   onClick={() => setActiveTab('contact')} 
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Grievance Redressal
                 </button>
               </li>
               <li>
-                <span className="text-slate-500 font-medium text-[11px] block leading-relaxed">
-                  Support Email: <a href="mailto:support@arohiai.com" className="hover:underline text-violet-400">support@arohiai.com</a>
+                <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px] block leading-relaxed">
+                  Support Email: <a href="mailto:support@arohiai.com" className="hover:underline text-blue-600 dark:text-blue-400">support@arohiai.com</a>
                 </span>
               </li>
               <li className="pt-2 flex flex-wrap items-center gap-2">
@@ -4054,10 +4056,10 @@ export default function App() {
 
                 <button
                   onClick={() => setIsRegionModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 hover:from-violet-600/30 hover:to-indigo-600/30 text-purple-200 border border-purple-500/35 px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-sm"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/15 to-indigo-600/15 hover:from-blue-600/25 hover:to-indigo-600/25 text-blue-700 dark:text-blue-200 border border-blue-500/30 px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-sm"
                   title="Select Country, State or Regional Language"
                 >
-                  <Globe className="w-4 h-4 shrink-0 text-purple-400" />
+                  <Globe className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" />
                   <span>Country, State & Language</span>
                 </button>
               </li>
@@ -4066,14 +4068,14 @@ export default function App() {
         </div>
 
         {/* Bottom copyright/security banner */}
-        <div className="bg-[#120d2a]/90 rounded-2xl border border-[#211b3d] p-6 flex flex-col lg:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-400">
-          <span className="flex items-center gap-2 font-bold text-slate-300">
+        <div className="bg-white/80 dark:bg-[#0c1224]/90 rounded-2xl border border-slate-200/90 dark:border-blue-950/60 p-6 flex flex-col lg:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-sm backdrop-blur-md">
+          <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
             <ShieldCheck className="w-5 h-5 text-[#00e676] shrink-0" /> Verified Career & Opportunity Platform
           </span>
           <div className="text-center lg:text-right space-y-1">
-            <p className="text-slate-300 font-bold">Copyright © 2026 Arohi AI (Arohiai.com). All Rights Reserved.</p>
-            <p className="text-[10px] text-slate-500">
-              Development and Maintenance by <span className="text-slate-400 font-bold">BRAGA TECHNOLOGIES PRIVATE LIMITED</span> in association with <span className="text-slate-400 font-bold">ODITREE SERVICES</span>
+            <p className="text-slate-700 dark:text-slate-300 font-bold">Copyright © 2026 Arohi AI (Arohiai.com). All Rights Reserved.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+              Development and Maintenance by <span className="text-slate-600 dark:text-slate-400 font-bold">BRAGA TECHNOLOGIES PRIVATE LIMITED</span> in association with <span className="text-slate-600 dark:text-slate-400 font-bold">ODITREE SERVICES</span>
             </p>
           </div>
         </div>
@@ -4081,8 +4083,8 @@ export default function App() {
 
       {/* Floating Chat Overlay Container */}
       {isChatOpen && !isChatMinimized && (
-        <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_12px_40px_rgba(124,58,237,0.3)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
-          isDarkMode ? 'bg-[#090714] border-[#a78bfa]/30' : 'bg-white border-purple-200'
+        <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_16px_50px_rgba(37,99,235,0.2)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
+          isDarkMode ? 'bg-[#080c18] border-blue-500/30' : 'bg-white border-slate-200/90'
         }`}>
           <ArohiChat 
             initialPrompt={chatInitialPrompt}

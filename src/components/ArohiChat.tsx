@@ -3403,44 +3403,44 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
   }
 
   return (
-    <div className={`flex ${isDarkMode ? 'bg-[#000000] text-slate-100' : 'bg-[#f8f9fe] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
+    <div className={`flex ${isDarkMode ? 'bg-[#070b16] text-slate-100' : 'bg-[#f8fafc] text-slate-900'} overflow-hidden h-full w-full font-sans relative ${isVoiceCallOpen ? 'hidden' : ''}`}>
       
-      {/* GEMINI & CHATGPT-STYLE NAVIGATION DRAWER / SIDEBAR */}
+      {/* AROHI LUMINA NAVIGATION DRAWER / SIDEBAR */}
       <aside 
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
-          isDarkMode ? 'bg-[#121215] border-zinc-800 text-zinc-100' : 'bg-[#f4f4f5] border-zinc-200 text-zinc-900'
-        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl overflow-hidden`}
+          isDarkMode ? 'bg-[#090d1a]/95 border-slate-800/80 text-slate-100' : 'bg-white/95 border-slate-200/80 text-slate-900'
+        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl md:shadow-none backdrop-blur-xl overflow-hidden`}
       >
         {/* Sidebar Header: Brand + Search + Close */}
-        <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+        <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-slate-800/80' : 'border-slate-200/80'}`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-white shadow-md">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-600/25">
+              <Bot className="w-4 h-4 text-white" />
             </div>
-            <h2 className={`text-lg font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'} flex items-center gap-1.5`}>
-              Arohi <span className={`text-[10px] ${isDarkMode ? 'bg-zinc-800 text-purple-300 border-zinc-700' : 'bg-purple-100 text-purple-700 border-purple-300'} px-2 py-0.5 rounded font-black uppercase border`}>AI</span>
+            <h2 className={`text-lg font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center gap-1.5`}>
+              Arohi <span className={`text-[10px] ${isDarkMode ? 'bg-blue-950/60 text-blue-300 border-blue-800/60' : 'bg-blue-50 text-blue-700 border-blue-200'} px-2 py-0.5 rounded-full font-black uppercase border tracking-wider`}>AI</span>
             </h2>
           </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={() => setShowSearchInput(!showSearchInput)}
-              className={`p-2 ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200'} rounded-full transition-colors cursor-pointer`}
+              className={`p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-xl transition-colors cursor-pointer`}
               title="Search Recents"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4.5 h-4.5" />
             </button>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className={`md:hidden p-2 ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200'} rounded-full transition-colors cursor-pointer`}
+              className={`md:hidden p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-xl transition-colors cursor-pointer`}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Top Quick Navigation List (Matches ChatGPT Sidebar) */}
+        {/* Top Quick Navigation List */}
         <div className="space-y-1 mb-3 py-1">
           <button
             onClick={() => {
@@ -3449,45 +3449,45 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             }}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
               isDarkMode 
-                ? 'text-white bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-purple-500/20 border-amber-500/40 hover:border-amber-400 hover:from-amber-500/30 hover:to-purple-500/30' 
-                : 'text-amber-950 bg-gradient-to-r from-amber-100/90 via-orange-100/80 to-purple-100/80 border-amber-300 hover:border-amber-400 hover:from-amber-200/90 hover:to-purple-200/90'
+                ? 'text-white bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/60 border-blue-500/30 hover:border-blue-400/60 hover:from-blue-950/60 hover:to-indigo-950/50' 
+                : 'text-slate-900 bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50/90 border-blue-200/90 hover:border-blue-300 hover:from-blue-100/90 hover:to-indigo-100/80'
             } border transition-all cursor-pointer text-left shadow-xs group mb-2`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <Zap className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
+              <Zap className="w-5 h-5 text-blue-500 shrink-0 animate-pulse" />
               <div className="min-w-0">
-                <div className={`font-extrabold leading-tight ${isDarkMode ? 'text-amber-200' : 'text-amber-950'}`}>
+                <div className={`font-bold leading-tight text-xs ${isDarkMode ? 'text-blue-200' : 'text-slate-900'}`}>
                   Apps & Everyday Tasks
                 </div>
-                <div className={`text-[10.5px] font-semibold leading-tight mt-0.5 ${isDarkMode ? 'text-amber-300/90' : 'text-amber-900'}`}>
+                <div className={`text-[10px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-700'}`}>
                   Under Beta Testing Mode
                 </div>
               </div>
             </div>
-            <span className="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ml-2">
+            <span className="text-[9px] bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ml-2">
               BETA
             </span>
           </button>
 
-          {/* Arohi Projects (ChatGPT-style Workspace) */}
+          {/* Arohi Projects Workspace */}
           <div className="w-full">
             <div className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
               activeProjectId
-                ? (isDarkMode ? 'bg-purple-900/40 text-purple-200 border border-purple-500/50 shadow-xs' : 'bg-purple-100 text-purple-950 border border-purple-300 font-bold')
-                : (isDarkMode ? 'text-slate-200 hover:text-white hover:bg-white/10' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70')
+                ? (isDarkMode ? 'bg-blue-950/50 text-blue-200 border border-blue-500/50 shadow-xs' : 'bg-blue-50 text-blue-950 border border-blue-300 font-bold')
+                : (isDarkMode ? 'text-slate-200 hover:text-white hover:bg-slate-800/60' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100')
             } transition-colors`}>
               <button
                 onClick={() => {
                   setIsProjectsModalOpen(true);
                   if (window.innerWidth < 768) setIsSidebarOpen(false);
                 }}
-                className="flex items-center gap-3.5 min-w-0 flex-1 cursor-pointer text-left"
+                className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer text-left"
               >
-                <Folder className={`w-5 h-5 ${activeProjectId ? 'text-purple-400' : (isDarkMode ? 'text-slate-300' : 'text-slate-600')} shrink-0`} />
+                <Folder className={`w-4.5 h-4.5 ${activeProjectId ? 'text-blue-400' : (isDarkMode ? 'text-slate-400' : 'text-slate-500')} shrink-0`} />
                 <div className="min-w-0 flex-1">
-                  <span className="block truncate leading-tight">Projects</span>
+                  <span className="block truncate text-xs leading-tight font-semibold">Projects</span>
                   {activeProjectId && (
-                    <span className="text-[10px] text-purple-400 block truncate font-normal">
+                    <span className="text-[10px] text-blue-400 block truncate font-normal">
                       {projects.find(p => p.id === activeProjectId)?.name || 'Filtered'}
                     </span>
                   )}
@@ -3498,7 +3498,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 {projects.length > 0 && (
                   <button
                     onClick={() => setIsSidebarProjectsListExpanded(!isSidebarProjectsListExpanded)}
-                    className="p-1 rounded-md text-purple-400 hover:text-purple-200 hover:bg-purple-500/20 cursor-pointer"
+                    className="p-1 rounded-md text-blue-400 hover:text-blue-200 hover:bg-blue-500/20 cursor-pointer"
                     title={isSidebarProjectsListExpanded ? "Collapse Projects" : "Expand Projects"}
                   >
                     {isSidebarProjectsListExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -3506,7 +3506,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 )}
                 <button
                   onClick={() => setIsProjectsModalOpen(true)}
-                  className="text-[10px] bg-purple-500/20 text-purple-300 font-extrabold px-1.5 py-0.5 rounded-md shrink-0 border border-purple-500/30 hover:bg-purple-500/30 cursor-pointer"
+                  className="text-[10px] bg-blue-500/15 text-blue-400 font-bold px-1.5 py-0.5 rounded-md shrink-0 border border-blue-500/30 hover:bg-blue-500/25 cursor-pointer"
                   title="Open Projects Manager"
                 >
                   {projects.length}
@@ -3514,9 +3514,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               </div>
             </div>
 
-            {/* Expandable Sidebar Projects List with Direct Inline Renaming */}
+            {/* Expandable Sidebar Projects List */}
             {projects.length > 0 && isSidebarProjectsListExpanded && (
-              <div className="mt-1.5 mb-2 pl-3 pr-1 space-y-1 border-l-2 border-purple-500/30 ml-4">
+              <div className="mt-1.5 mb-2 pl-3 pr-1 space-y-1 border-l-2 border-blue-500/30 ml-4">
                 {projects.map((proj) => {
                   const isEditingThis = editingSidebarProjectId === proj.id;
                   const isProjActive = activeProjectId === proj.id;
@@ -3527,7 +3527,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       <div 
                         key={proj.id}
                         className={`flex items-center gap-1.5 p-1.5 rounded-lg border text-xs ${
-                          isDarkMode ? 'bg-purple-950/90 border-purple-400 text-white' : 'bg-white border-purple-400 text-purple-950 shadow-sm'
+                          isDarkMode ? 'bg-slate-900 border-blue-400 text-white' : 'bg-white border-blue-400 text-slate-900 shadow-sm'
                         }`}
                       >
                         <input
@@ -3542,7 +3542,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                           autoFocus
                           placeholder="Project name..."
                           className={`w-full px-2 py-0.5 text-xs font-semibold rounded bg-transparent border-0 focus:outline-none focus:ring-0 ${
-                            isDarkMode ? 'text-white' : 'text-purple-950'
+                            isDarkMode ? 'text-white' : 'text-slate-900'
                           }`}
                         />
                         <button
@@ -3568,14 +3568,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       key={proj.id}
                       className={`group flex items-center justify-between p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                         isProjActive
-                          ? (isDarkMode ? 'bg-purple-900/50 text-purple-200 font-bold border border-purple-500/40' : 'bg-purple-100 text-purple-950 font-bold')
-                          : (isDarkMode ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-700 hover:bg-slate-200/60 hover:text-slate-900')
+                          ? (isDarkMode ? 'bg-blue-950/60 text-blue-200 font-bold border border-blue-500/40' : 'bg-blue-50 text-blue-950 font-bold border border-blue-200')
+                          : (isDarkMode ? 'text-slate-300 hover:bg-slate-800/60 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900')
                       }`}
                       onClick={() => setActiveProjectId(isProjActive ? null : proj.id)}
                       title={`Click to filter by ${proj.name}. Click pen icon to rename.`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Folder className={`w-3.5 h-3.5 ${isProjActive ? 'text-purple-400' : 'text-slate-400'} shrink-0`} />
+                        <Folder className={`w-3.5 h-3.5 ${isProjActive ? 'text-blue-400' : 'text-slate-400'} shrink-0`} />
                         <span 
                           className="truncate max-w-[110px]"
                           onClick={(e) => {
@@ -3594,7 +3594,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         </span>
                         <button
                           onClick={(e) => startInlineEditProject(proj.id, proj.name, e)}
-                          className="p-1 rounded opacity-0 group-hover:opacity-100 text-slate-400 hover:text-purple-400 hover:bg-purple-500/20 cursor-pointer transition-opacity"
+                          className="p-1 rounded opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 cursor-pointer transition-opacity"
                           title="Rename Project"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -3611,12 +3611,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         {/* Active Project Banner Filter Indicator */}
         {activeProjectId && (
           <div className={`mb-3 mx-0.5 p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-            isDarkMode ? 'bg-purple-950/50 border-purple-500/40 text-purple-200 shadow-sm' : 'bg-purple-50 border-purple-300 text-purple-900'
+            isDarkMode ? 'bg-blue-950/50 border-blue-500/40 text-blue-200 shadow-sm' : 'bg-blue-50 border-blue-300 text-blue-950'
           }`}>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Folder className="w-4 h-4 text-purple-400 shrink-0" />
+              <Folder className="w-4 h-4 text-blue-400 shrink-0" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9px] uppercase tracking-wider font-extrabold text-purple-400">Active Project</div>
+                <div className="text-[9px] uppercase tracking-wider font-extrabold text-blue-400">Active Project</div>
                 {editingSidebarProjectId === activeProjectId ? (
                   <div className="flex items-center gap-1 mt-0.5">
                     <input
@@ -3630,8 +3630,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       onBlur={() => saveInlineEditProject(activeProjectId)}
                       autoFocus
                       className={`w-full px-2 py-0.5 text-xs font-bold rounded border ${
-                        isDarkMode ? 'bg-purple-900/80 border-purple-400 text-white' : 'bg-white border-purple-400 text-purple-950'
-                      } focus:outline-none focus:ring-1 focus:ring-purple-400`}
+                        isDarkMode ? 'bg-slate-900 border-blue-400 text-white' : 'bg-white border-blue-400 text-blue-950'
+                      } focus:outline-none focus:ring-1 focus:ring-blue-400`}
                     />
                     <button
                       onClick={() => saveInlineEditProject(activeProjectId)}
@@ -3660,7 +3660,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     <span className="font-bold truncate text-xs hover:underline decoration-dotted">
                       {projects.find(p => p.id === activeProjectId)?.name}
                     </span>
-                    <Edit3 className="w-3 h-3 text-purple-400 opacity-60 group-hover/title:opacity-100 shrink-0 transition-opacity" />
+                    <Edit3 className="w-3 h-3 text-blue-400 opacity-60 group-hover/title:opacity-100 shrink-0 transition-opacity" />
                   </div>
                 )}
               </div>
@@ -3668,14 +3668,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <div className="flex items-center gap-1.5 shrink-0 ml-2">
               <button
                 onClick={() => handleStartChatInProject(activeProjectId)}
-                className="text-[10px] px-2 py-0.5 rounded-md bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer"
+                className="text-[10px] px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer transition-colors"
                 title="New Chat in this Project"
               >
                 + Chat
               </button>
               <button
                 onClick={() => setActiveProjectId(null)}
-                className="text-[10px] text-slate-400 hover:text-white underline font-semibold cursor-pointer"
+                className="text-[10px] text-slate-400 hover:text-slate-200 underline font-semibold cursor-pointer"
                 title="Show all chats"
               >
                 Show All
@@ -3692,7 +3692,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               placeholder="Search conversation titles..."
               value={sidebarSearchQuery}
               onChange={(e) => setSidebarSearchQuery(e?.target?.value ?? "")}
-              className={`w-full ${isDarkMode ? 'bg-zinc-900 border-zinc-750 text-white placeholder-zinc-400' : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'} border rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500`}
+              className={`w-full ${isDarkMode ? 'bg-slate-900/80 border-slate-800 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} border rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500`}
               autoFocus
             />
           </div>
@@ -3704,23 +3704,19 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             startNewChat();
             if (window.innerWidth < 768) setIsSidebarOpen(false);
           }}
-          className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 mb-2 rounded-xl text-sm font-bold ${
-            isDarkMode 
-              ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-md' 
-              : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm'
-          } transition-all cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 mb-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white shadow-md shadow-blue-600/25 transition-all cursor-pointer active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
           <span>{activeProjectId ? 'New Chat in Project' : 'New Chat'}</span>
         </button>
 
         {/* Recents Section Heading */}
-        <div className={`flex items-center justify-between text-xs font-bold ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'} uppercase tracking-wider mb-2 px-3 pt-1`}>
+        <div className={`flex items-center justify-between text-[11px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-wider mb-2 px-3 pt-1`}>
           <span>{activeProjectId ? 'Project Recents' : 'Recents'}</span>
           {activeTab === 'calls' && (
             <button
               onClick={() => setActiveTab('chats')}
-              className="text-[10px] text-purple-400 hover:underline normal-case font-medium cursor-pointer"
+              className="text-[10px] text-blue-400 hover:underline normal-case font-medium cursor-pointer"
             >
               Show Chats
             </button>
@@ -3748,16 +3744,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       setMessages(item.messages);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer flex items-center justify-between group ${
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center justify-between group ${
                       isActive
-                        ? (isDarkMode ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white font-semibold border border-purple-500/40 shadow-sm' : 'bg-purple-100 text-purple-950 font-bold border border-purple-300 shadow-xs')
-                        : (isDarkMode ? 'text-slate-300 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900')
+                        ? (isDarkMode ? 'bg-blue-600/15 text-blue-300 font-semibold border border-blue-500/30 shadow-xs' : 'bg-blue-50 text-blue-900 font-bold border border-blue-200 shadow-xs')
+                        : (isDarkMode ? 'text-slate-300 hover:bg-slate-800/50 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900')
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                      <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? (isDarkMode ? 'text-purple-400' : 'text-purple-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`} />
+                      <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? (isDarkMode ? 'text-blue-400' : 'text-blue-600') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`} />
                       <div className="min-w-0">
-                        <div className="truncate text-sm leading-tight">{displayTitle}</div>
+                        <div className="truncate text-xs leading-tight">{displayTitle}</div>
                         <div className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-normal flex items-center gap-1.5 mt-0.5`}>
                           <span>{getChatDisplayDate(item)}</span>
                           {msgCount > 0 && (
@@ -3768,7 +3764,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                           )}
                           {projObj && (
                             <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
-                              isDarkMode ? 'bg-purple-950/70 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-800'
+                              isDarkMode ? 'bg-blue-950/70 text-blue-300 border border-blue-500/30' : 'bg-blue-50 text-blue-800'
                             } truncate max-w-[80px]`}>
                               📁 {projObj.name}
                             </span>
@@ -3787,7 +3783,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                             currentProjectId: item.projectId
                           });
                         }}
-                        className="p-1 rounded-md text-slate-400 hover:text-purple-400 hover:bg-purple-500/20 cursor-pointer"
+                        className="p-1 rounded-md text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 cursor-pointer"
                         title="Move to Project"
                       >
                         <Folder className="w-3.5 h-3.5" />
@@ -3816,7 +3812,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   setSelectedCallDetail(item);
                   if (window.innerWidth < 768) setIsSidebarOpen(false);
                 }}
-                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium ${isDarkMode ? 'text-slate-300 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900'} transition-colors cursor-pointer flex items-center justify-between group`}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium ${isDarkMode ? 'text-slate-300 hover:bg-slate-800/50 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} transition-colors cursor-pointer flex items-center justify-between group`}
               >
                 <div className="truncate flex items-center gap-2">
                   <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -3832,13 +3828,13 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
 
         {/* Bottom Bar: Chat Pill + User Profile Circle */}
-        <div className={`pt-3 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'} mt-2 px-1 flex items-center justify-between gap-2`}>
+        <div className={`pt-3 border-t ${isDarkMode ? 'border-slate-800/80' : 'border-slate-200/80'} mt-2 px-1 flex items-center justify-between gap-2`}>
           <button
             onClick={() => {
               startNewChat();
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-full font-bold text-xs tracking-wide shadow-lg transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full font-bold text-xs tracking-wide shadow-md shadow-blue-600/25 transition-all cursor-pointer active:scale-95"
           >
             <Edit3 className="w-4 h-4" />
             <span>Chat</span>
@@ -3849,7 +3845,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               onNavigateTab?.('dashboard');
               if (window.innerWidth < 768) setIsSidebarOpen(false);
             }}
-            className="w-9 h-9 rounded-full bg-[#2563eb] text-white font-extrabold flex items-center justify-center text-xs border border-white/20 shadow-md cursor-pointer hover:scale-105 transition-all shrink-0"
+            className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center text-xs border border-white/20 shadow-md shadow-blue-600/20 cursor-pointer hover:scale-105 transition-all shrink-0"
             title="User Profile"
           >
             {(user as any)?.photoURL ? (
@@ -3870,43 +3866,43 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       )}
 
       {/* CENTER: MAIN CHAT WINDOW */}
-      <div className={`flex-1 flex flex-col min-w-0 ${isDarkMode ? 'bg-[#09090b]' : 'bg-[#fafafa]'} relative h-full`}>
+      <div className={`flex-1 flex flex-col min-w-0 ${isDarkMode ? 'bg-[#070b16]' : 'bg-[#f8fafc]'} relative h-full`}>
         
-        {/* Minimal Top Header Bar */}
-        <div className={`${isDarkMode ? 'bg-[#09090b]/95 border-zinc-800/80 backdrop-blur-md' : 'bg-white/95 border-zinc-200/80 shadow-xs backdrop-blur-md'} border-b px-4 py-3 flex justify-between items-center z-20 shrink-0`}>
+        {/* Arohi Lumina Top Header Bar */}
+        <div className={`${isDarkMode ? 'bg-[#090d1a]/85 border-slate-800/80 backdrop-blur-xl' : 'bg-white/85 border-slate-200/80 shadow-xs backdrop-blur-xl'} border-b px-4 py-3 flex justify-between items-center z-20 shrink-0`}>
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className={`p-1.5 ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800/70' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'} rounded-lg transition-colors cursor-pointer`}
+              className={`p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-xl transition-colors cursor-pointer`}
               title="Toggle Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0 flex items-center gap-2">
-              <h1 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-900'} text-base sm:text-lg tracking-tight truncate`}>
+              <h1 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} text-base sm:text-lg tracking-tight truncate`}>
                 {activeChatTitle || 'Arohi AI'}
               </h1>
               {currentChatObj?.projectId && (
                 <button
                   onClick={() => setIsProjectsModalOpen(true)}
-                  className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
+                  className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${
                     isDarkMode 
-                      ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' 
-                      : 'bg-zinc-100 text-zinc-800 border-zinc-200 hover:bg-zinc-200'
+                      ? 'bg-blue-950/50 text-blue-300 border-blue-800/50 hover:bg-blue-900/50' 
+                      : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
                   }`}
                   title="View Project Workspace"
                 >
-                  <Folder className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <Folder className="w-3 h-3 text-blue-400 shrink-0" />
                   <span className="truncate max-w-[130px]">
                     {projects.find(p => p.id === currentChatObj.projectId)?.name || 'Project'}
                   </span>
                 </button>
               )}
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Core AI Online"></span>
-              <span className={`hidden sm:inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs shadow-emerald-400/50 shrink-0" title="Core AI Online"></span>
+              <span className={`hidden sm:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
                 isDarkMode 
-                  ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60' 
-                  : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                  ? 'bg-blue-950/40 text-blue-300/80 border-blue-800/40' 
+                  : 'bg-blue-50/80 text-blue-700/80 border-blue-200/80'
               }`}>
                 Beta
               </span>
@@ -3916,16 +3912,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => setIsVoiceCallOpen(true)}
-              className={`p-2 rounded-full ${isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-emerald-400 border-zinc-700/70' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5`}
+              className={`px-3 py-1.5 rounded-full ${isDarkMode ? 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs`}
               title="Start Live Voice Call"
             >
-              <Phone className="w-4 h-4" />
-              <span className={`text-[11px] font-semibold ${isDarkMode ? 'text-zinc-200' : 'text-zinc-800'} hidden xs:inline pr-1`}>Voice</span>
+              <Phone className="w-3.5 h-3.5" />
+              <span className={`text-[11px] font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800'} hidden xs:inline`}>Voice</span>
             </button>
 
             <button
               onClick={() => handleSendMessage("Activate live video camera stream analysis")}
-              className={`p-2 rounded-full ${isDarkMode ? 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/70' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200'} border transition-all cursor-pointer`}
+              className={`p-2 rounded-xl ${isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700/70' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'} border transition-all cursor-pointer`}
               title="Camera Stream"
             >
               <Camera className="w-4 h-4" />
@@ -3936,14 +3932,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <div className="relative">
               <button
                 onClick={() => setActiveMessageMenuId(activeMessageMenuId === 'header' ? null : 'header')}
-                className={`p-2 rounded-full ${isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800/70' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'} transition-colors cursor-pointer`}
+                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
                 title="Options"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
 
               {activeMessageMenuId === 'header' && (
-                <div className={`absolute right-0 top-11 w-56 ${isDarkMode ? 'bg-[#18181b] border-zinc-700/80 text-zinc-200 shadow-2xl' : 'bg-white border-zinc-200 text-zinc-700 shadow-xl'} border rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                <div className={`absolute right-0 top-11 w-56 ${isDarkMode ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-200 shadow-2xl backdrop-blur-xl' : 'bg-white/95 border-slate-200 text-slate-700 shadow-xl backdrop-blur-xl'} border rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
                   <button
                     onClick={() => {
                       if (currentChatObj) {
@@ -3955,20 +3951,20 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       }
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center gap-2 cursor-pointer`}
                   >
-                    <Folder className="w-3.5 h-3.5 text-zinc-400" /> Move Chat to Project
+                    <Folder className="w-3.5 h-3.5 text-blue-400" /> Move Chat to Project
                   </button>
                   <button
                     onClick={() => {
                       setIsProjectsModalOpen(true);
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'} rounded-xl flex items-center gap-2 cursor-pointer`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center gap-2 cursor-pointer`}
                   >
-                    <FolderPlus className="w-3.5 h-3.5 text-zinc-400" /> Manage Projects
+                    <FolderPlus className="w-3.5 h-3.5 text-blue-400" /> Manage Projects
                   </button>
-                  <div className={`my-1 border-t ${isDarkMode ? 'border-zinc-750' : 'border-zinc-100'}`} />
+                  <div className={`my-1 border-t ${isDarkMode ? 'border-slate-800/80' : 'border-slate-100'}`} />
                   <button
                     onClick={() => {
                       if (navigator.share) {
@@ -3984,9 +3980,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       }
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'} rounded-xl flex items-center gap-2`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center gap-2`}
                   >
-                    <Share2 className="w-3.5 h-3.5 text-zinc-400" /> Share Conversation
+                    <Share2 className="w-3.5 h-3.5 text-slate-400" /> Share Conversation
                   </button>
                   <button
                     onClick={() => {
@@ -3994,17 +3990,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       exportToPDF(activeChatTitle || 'Arohi_Conversation', 'Arohi AI Conversation Transcript', allText);
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'} rounded-xl flex items-center gap-2`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center gap-2`}
                   >
-                    <Download className="w-3.5 h-3.5 text-zinc-400" /> Download PDF
+                    <Download className="w-3.5 h-3.5 text-slate-400" /> Download PDF
                   </button>
-                  <div className={`my-1 border-t ${isDarkMode ? 'border-zinc-750' : 'border-zinc-100'}`} />
+                  <div className={`my-1 border-t ${isDarkMode ? 'border-slate-800/80' : 'border-slate-100'}`} />
                   <button
                     onClick={() => {
                       setIsMemoryModalOpen(true);
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-amber-300 hover:bg-zinc-800' : 'text-amber-800 hover:bg-amber-50'} rounded-xl flex items-center gap-2`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-amber-300 hover:bg-slate-800/70' : 'text-amber-800 hover:bg-amber-50'} rounded-xl flex items-center gap-2`}
                   >
                     <Brain className="w-3.5 h-3.5 text-amber-400" /> Personalization Memory
                   </button>
@@ -4013,16 +4009,16 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       handleSummarizeChat();
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Generate AI Summary
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Generate AI Summary
                   </button>
                   <button
                     onClick={() => {
                       setMessages([messages[0]]);
                       setActiveMessageMenuId(null);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-blue-400" /> Clear Messages
                   </button>
@@ -4032,9 +4028,9 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         onMinimize();
                         setActiveMessageMenuId(null);
                       }}
-                      className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800 hover:text-white' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'} rounded-xl flex items-center gap-2`}
+                      className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70 hover:text-white' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'} rounded-xl flex items-center gap-2`}
                     >
-                      <Minus className="w-3.5 h-3.5 text-zinc-400" /> Minimize
+                      <Minus className="w-3.5 h-3.5 text-slate-400" /> Minimize
                     </button>
                   )}
                   {onClose && (
@@ -4055,7 +4051,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>
 
         {/* Messages Canvas Container */}
-        <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 space-y-7 chat-scrollbar ${isDarkMode ? 'bg-[#09090b]' : 'bg-[#fafafa]'}`}>
+        <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 space-y-7 chat-scrollbar ${isDarkMode ? 'bg-[#070b16]' : 'bg-[#f8fafc]'}`}>
           {messages.map((msg) => {
             const summaryParsed = msg.role === 'assistant'
               ? parseMessageCallSummary(msg.content)
@@ -4093,28 +4089,28 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                     <div className="flex items-center gap-2">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${
                         isDarkMode 
-                          ? 'bg-zinc-800/80 text-zinc-200 border border-zinc-700/60' 
-                          : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
+                          ? 'bg-blue-950/60 text-blue-200 border border-blue-800/60' 
+                          : 'bg-blue-50 text-blue-800 border border-blue-200'
                       }`}>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <Bot className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                         <span>Arohi Xaldra 7.0</span>
                       </div>
                     </div>
                   ) : (
-                    <div className={`flex items-center gap-1.5 text-xs font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                    <div className={`flex items-center gap-1.5 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                       <span>You</span>
                     </div>
                   )}
-                  <span className={`text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'} font-normal`}>{msg.timestamp}</span>
+                  <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{msg.timestamp}</span>
                 </div>
 
                 {/* Message Content Container */}
                 <div className={`w-full text-left ${
                   msg.role === 'user'
                     ? (isDarkMode 
-                        ? 'bg-[#27272a] text-[#f4f4f5] px-4 py-3 sm:px-5 sm:py-3.5 rounded-3xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed shadow-sm'
-                        : 'bg-[#f4f4f5] text-[#18181b] px-4 py-3 sm:px-5 sm:py-3.5 rounded-3xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed border border-zinc-200 shadow-sm')
-                    : (isDarkMode ? 'text-zinc-200 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]' : 'text-zinc-800 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]')
+                        ? 'bg-[#0f172a] text-slate-100 border border-blue-900/40 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed shadow-sm'
+                        : 'bg-white text-slate-900 border border-slate-200/80 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed shadow-sm')
+                    : (isDarkMode ? 'text-slate-200 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]' : 'text-slate-800 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]')
                 }`}>
                   {/* Parse standard markdown formatting */}
                   <div className={`prose ${
@@ -4443,14 +4439,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           {/* Arohi Xaldra 7.0 Model Indicator */}
           <div className="flex items-center justify-between px-3 pb-1.5 text-[11px]">
             <div className="flex items-center gap-1.5 font-semibold select-none">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className={isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}>Model:</span>
-              <span className={isDarkMode ? 'text-zinc-200 font-semibold' : 'text-zinc-800 font-semibold'}>
+              <Bot className="w-3.5 h-3.5 text-blue-500" />
+              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Model:</span>
+              <span className={isDarkMode ? 'text-slate-200 font-semibold' : 'text-slate-900 font-semibold'}>
                 Arohi Xaldra 7.0
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse shadow-xs shadow-emerald-400/50"></span>
               <span className={isDarkMode ? 'text-emerald-400/90 font-medium' : 'text-emerald-700 font-medium'}>Zero-Downtime Active</span>
             </div>
           </div>
@@ -4460,22 +4456,22 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             id="chat-input-bar-container"
             className={`${
               recording
-                ? 'bg-zinc-900 border-rose-500/70 shadow-xl ring-2 ring-rose-500/40'
+                ? 'bg-slate-900 border-rose-500/70 shadow-xl ring-2 ring-rose-500/40'
                 : isDarkMode 
-                  ? 'bg-[#18181b] border-zinc-800/90 shadow-lg shadow-black/40' 
-                  : 'bg-white border-zinc-200/90 shadow-md shadow-zinc-300/30'
-            } border rounded-[22px] sm:rounded-[26px] px-2 py-1 sm:px-2.5 sm:py-1.5 flex items-end gap-1 sm:gap-1.5 transition-all`}
+                  ? 'bg-[#090d1a]/90 border-slate-800/90 shadow-xl shadow-black/40 backdrop-blur-xl' 
+                  : 'bg-white/95 border-slate-200/90 shadow-lg shadow-blue-600/5 backdrop-blur-xl'
+            } border rounded-2xl sm:rounded-3xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-end gap-1.5 sm:gap-2 transition-all`}
           >
             
-            {/* ChatGPT-Style Expandable Attachment Menu (+) */}
+            {/* Expandable Attachment Menu (+) */}
             <div className="relative shrink-0 flex items-center mb-0.5" ref={attachMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsAttachMenuOpen(prev => !prev)}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
                   isAttachMenuOpen
-                    ? (isDarkMode ? 'bg-zinc-700 text-white rotate-45 shadow-sm ring-2 ring-purple-500/40' : 'bg-zinc-300 text-zinc-950 rotate-45 shadow-sm')
-                    : (isDarkMode ? 'bg-zinc-800/70 hover:bg-zinc-700 text-zinc-300 hover:text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900')
+                    ? (isDarkMode ? 'bg-blue-600 text-white rotate-45 shadow-sm' : 'bg-blue-600 text-white rotate-45 shadow-sm')
+                    : (isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900')
                 }`}
                 title="Add files, photos, or capture with camera"
                 aria-label="Attachment options"
@@ -4526,8 +4522,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 <div 
                   className={`absolute bottom-full left-0 mb-3 w-48 sm:w-52 rounded-2xl shadow-2xl border p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl ${
                     isDarkMode 
-                      ? 'bg-[#1e1e24]/95 border-zinc-700/80 text-zinc-100 shadow-black/60' 
-                      : 'bg-white/95 border-zinc-200 text-zinc-900 shadow-zinc-400/30'
+                      ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-100 shadow-black/60' 
+                      : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/40'
                   }`}
                 >
                   <div className="flex flex-col gap-0.5">
@@ -4539,11 +4535,11 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         cameraInputRef.current?.click();
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
                       }`}
                     >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
                       }`}>
                         <Camera className="w-3.5 h-3.5" />
                       </div>
@@ -4558,11 +4554,11 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         photosInputRef.current?.click();
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
                       }`}
                     >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
                       }`}>
                         <ImageIcon className="w-3.5 h-3.5" />
                       </div>
@@ -4577,11 +4573,11 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                         filesInputRef.current?.click();
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-zinc-800/80 text-zinc-200 hover:text-white' : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-950'
+                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
                       }`}
                     >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 group-hover:bg-zinc-200'
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
                       }`}>
                         <Paperclip className="w-3.5 h-3.5" />
                       </div>
@@ -4607,7 +4603,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 className={`w-full bg-transparent px-2 sm:px-2.5 py-1 text-[14px] sm:text-[14.5px] leading-[20px] max-h-32 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
                   recording 
                     ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
-                    : isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
+                    : isDarkMode ? 'text-slate-100 placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
                 } focus:outline-none font-normal`}
               />
             </div>
@@ -4615,10 +4611,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             {/* Microphone Speech to Text Button */}
             <button
               onClick={toggleRecording}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all shrink-0 cursor-pointer flex items-center justify-center mb-0.5 ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl transition-all shrink-0 cursor-pointer flex items-center justify-center mb-0.5 ${
                 recording 
                   ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-500/40' 
-                  : (isDarkMode ? 'bg-zinc-800/70 hover:bg-zinc-700 text-zinc-300 hover:text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900')
+                  : (isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900')
               }`}
               title={recording ? "Stop listening" : "Speech to text (Voice Input)"}
             >
@@ -4629,14 +4625,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             <button
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !uploadedFileName) || isLoading}
-              className={`w-8 h-8 sm:w-9 sm:h-9 ${isDarkMode ? 'bg-zinc-100 hover:bg-white text-zinc-950 disabled:bg-zinc-800/80 disabled:text-zinc-600' : 'bg-zinc-900 hover:bg-zinc-800 text-white disabled:bg-zinc-200 disabled:text-zinc-400'} rounded-full shadow-sm cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5`}
+              className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white disabled:bg-none disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 rounded-xl shadow-md shadow-blue-600/25 cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5 active:scale-95"
               title="Send message"
             >
               <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
-          <div className={`mt-2 text-center text-[11px] ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'} font-normal flex items-center justify-center`}>
+          <div className={`mt-2 text-center text-[11px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-normal flex items-center justify-center`}>
             <span>AI can make mistakes. Verify important facts.</span>
           </div>
         </div>
