@@ -884,7 +884,7 @@ export const COMPREHENSIVE_EXPANDED_MOCK_TESTS: MockTest[] = [
   // ==========================================
   {
     id: 'test_opsc_oas_prelims_mock',
-    slug: 'opsc-oas-odisha-civil-services-mock',
+    slug: 'opsc-oas-prelims-paper-1-mock',
     title: 'OPSC OAS (Odisha Civil Services) • Prelims GS Paper-1 Mock',
     titleOdia: 'ଓପିଏସସି OAS (ଓଡ଼ିଶା ପ୍ରଶାସନିକ ସେବା) • ପ୍ରିଲିମ୍ସ GS ପେପର-୧ ମକ୍',
     shortDescription: 'Odisha Public Service Commission standard: Odisha Heritage, Panchayati Raj, Mahanadi Basin, and Indian Constitution.',
@@ -1000,7 +1000,7 @@ export const COMPREHENSIVE_EXPANDED_MOCK_TESTS: MockTest[] = [
   // ==========================================
   {
     id: 'test_teaching_ctet_otet_mock',
-    slug: 'ctet-otet-teaching-eligibility-mock',
+    slug: 'ctet-otet-paper-1-pedagogy-mock',
     title: 'CTET & State TET • Child Development & Pedagogy (CDP) Mock',
     titleOdia: 'CTET ଓ OTET ଶିକ୍ଷକ ଯୋଗ୍ୟତା • ଶିଶୁ ବିକାଶ ଓ ଶିକ୍ଷାଦାନ ପଦ୍ଧତି',
     shortDescription: 'Piaget, Vygotsky, Kohlberg stages of moral development, Inclusive Education, and Classroom Pedagogy.',

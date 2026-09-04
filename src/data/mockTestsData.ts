@@ -1804,6 +1804,9 @@ export const INITIAL_MOCK_TESTS: MockTest[] = DEDUPED_MOCK_TESTS.map(test => {
   const resolvedCategory = classifyTestCategory(test);
   return {
     ...test,
+    totalSets: test.totalSets || 20,
+    currentSetNumber: test.currentSetNumber || 1,
+    setNumber: test.currentSetNumber || 1,
     resolvedCategory,
     kgLineage: test.kgLineage || resolveKGLineage(test)
   };

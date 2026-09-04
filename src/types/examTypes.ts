@@ -358,11 +358,18 @@ export interface MockTest {
   supportedLanguages?: string[]; // ['en', 'hi', 'mr', 'ta', 'te', 'bn', 'or', 'gu', 'kn', 'pa', 'ml']
   durationMinutes: number;
   totalQuestions: number;
+  totalSets?: number; // Total available 100-question sets in this series (e.g. 5, 10, 15)
+  currentSetNumber?: number; // Active set number (1 to totalSets)
+  setNumber?: number; // Alias for active set number
+  setVariantSlug?: string; // Unique slug for this specific set paper
+  seriesId?: string; // Series group ID for multi-set packs
   totalMarks: number;
   sections: ExamSection[];
   questions: ExamQuestion[];
   isLive: boolean;
   isFree: boolean;
+  isNewlyAdded?: boolean;
+  isLatestPattern?: boolean;
   featuredBadge?: string; // "High Yield", "Real Exam Replicate", "Most Popular", "Official PYQ"
   attemptsCount: number;
   averageScore?: number;

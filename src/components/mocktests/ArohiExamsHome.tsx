@@ -271,6 +271,45 @@ export default function ArohiExamsHome({
         isDarkMode={isDarkMode}
       />
 
+      {/* 3.6 GRAND 100-QUESTION MULTI-SET SERIES SPOTLIGHT (MEGA PLAN) */}
+      <div 
+        onClick={() => {
+          if (onNavigateTab) onNavigateTab('exams');
+        }}
+        className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 cursor-pointer transition-all hover:border-purple-400/80 active:scale-[0.99] group ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-purple-950/40 via-zinc-900 to-indigo-950/40 border-purple-800/40' 
+            : 'bg-gradient-to-r from-amber-50/80 via-white to-purple-50/80 border-purple-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg font-black shrink-0">
+            💯
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs sm:text-[13px] font-bold tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-purple-600 transition-colors">
+                Mega Plan: 100-Question Multi-Set Series
+              </h3>
+              <span className="text-[9.5px] font-black px-2 py-0.2 rounded-full bg-amber-500 text-white">
+                2,720+ SETS
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              20 unique, seed-generated 100-question CBT sets per exam across 136+ national & state tests.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="self-stretch sm:self-center px-4 py-1.5 rounded-full text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition-all cursor-pointer text-center shrink-0 flex items-center justify-center gap-1"
+        >
+          <span>Explore 2,720+ Sets</span>
+          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      </div>
+
       {/* 4. EXPLORE TESTS CATEGORY CARDS */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-0.5">

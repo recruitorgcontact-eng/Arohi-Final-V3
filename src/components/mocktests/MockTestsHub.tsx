@@ -125,8 +125,11 @@ export default function MockTestsHub({
   const [pickerSelectedTest, setPickerSelectedTest] = useState<MockTest | null>(null);
 
   // Intercepting Selection Handler to open Subject Picker Modal for All Categories
-  const handleSelectTestWithSubjectPicker = useCallback((test: MockTest) => {
+  const [pickerSelectedSetNumber, setPickerSelectedSetNumber] = useState<number>(1);
+
+  const handleSelectTestWithSubjectPicker = useCallback((test: MockTest, setNumber?: number) => {
     setPickerSelectedTest(test);
+    setPickerSelectedSetNumber(setNumber || test.currentSetNumber || test.setNumber || 1);
     if (test.mainCategory?.toLowerCase().includes('state') || test.subCategory?.includes('OPSC') || test.subCategory?.includes('Police') || test.subCategory?.includes('BPSC') || test.subCategory?.includes('TET')) {
       setPickerInitialCategory('state');
     } else if (test.mainCategory?.toLowerCase().includes('school') || test.board) {
@@ -137,21 +140,27 @@ export default function MockTestsHub({
     setIsSubjectPickerOpen(true);
   }, []);
 
-  const handleOpenSubjectPicker = useCallback((cat?: 'all' | 'school' | 'competitive' | 'state', test?: MockTest) => {
+  const handleOpenSubjectPicker = useCallback((cat?: 'all' | 'school' | 'competitive' | 'state', test?: MockTest, setNumber?: number) => {
     if (cat) setPickerInitialCategory(cat);
-    if (test) setPickerSelectedTest(test);
-    else setPickerSelectedTest(null);
+    if (test) {
+      setPickerSelectedTest(test);
+      setPickerSelectedSetNumber(setNumber || test.currentSetNumber || test.setNumber || 1);
+    } else {
+      setPickerSelectedTest(null);
+      setPickerSelectedSetNumber(1);
+    }
     setIsSubjectPickerOpen(true);
   }, []);
 
   // Master Launch Handler with Complete Questions Expansion and Pass / Free-Quota Check
-  const handleLaunchTest = useCallback((test: MockTest) => {
+  const handleLaunchTest = useCallback((test: MockTest, setNumber?: number) => {
     if (!hasActivePass && freeAttemptsCount >= MAX_FREE_TESTS) {
       setPassModalTier(activePass?.tier || 'silver');
       setIsExamPassModalOpen(true);
       return;
     }
-    const completeTest = ensureTestComplete(test);
+    const targetSet = setNumber || test.currentSetNumber || test.setNumber || 1;
+    const completeTest = ensureTestComplete(test, targetSet);
     setSelectedTest(completeTest);
     setSubView('player');
   }, [hasActivePass, freeAttemptsCount, activePass]);
@@ -174,9 +183,17 @@ export default function MockTestsHub({
     } catch (e) {}
 
     if (initialTestSlug) {
-      const match = allTests.find(t => t.slug === initialTestSlug || t.id === initialTestSlug);
+      const setMatch = initialTestSlug.match(/-set-(\d+)$/i);
+      const parsedSet = setMatch ? parseInt(setMatch[1], 10) : 1;
+      const cleanSlug = initialTestSlug.replace(/-set-\d+$/i, '');
+      const match = allTests.find(t => 
+        t.slug === initialTestSlug || 
+        t.id === initialTestSlug ||
+        t.slug === cleanSlug ||
+        t.id === cleanSlug
+      );
       if (match) {
-        handleLaunchTest(match);
+        handleLaunchTest(match, parsedSet);
       }
     }
   }, [initialTestSlug, allTests, handleLaunchTest]);
@@ -640,8 +657,9 @@ export default function MockTestsHub({
                 remainingFreeTests={remainingFreeTests}
                 hasActivePass={hasActivePass}
                 maxFreeTests={MAX_FREE_TESTS}
-                onSelectTest={(t) => handleSelectTestWithSubjectPicker(t)}
-                onOpenSubjectPicker={(cat, t) => handleOpenSubjectPicker(cat, t)}
+                onSelectTest={(t, setNumber) => handleSelectTestWithSubjectPicker(t, setNumber)}
+                onDirectLaunchTest={(t, setNumber) => handleLaunchTest(t, setNumber)}
+                onOpenSubjectPicker={(cat, t, setNumber) => handleOpenSubjectPicker(cat, t, setNumber)}
                 onOpenExamPass={() => setIsExamPassModalOpen(true)}
                 onOpenArena={() => setSubView('arena')}
                 initialCategoryTab={selectedCategoryTab}
@@ -762,27 +780,32 @@ export default function MockTestsHub({
       )}
 
       {/* Pro Pass Modal */}
-      <ArohiExamPassModal
-        isOpen={isExamPassModalOpen}
-        onClose={() => setIsExamPassModalOpen(false)}
-        isDarkMode={isDarkMode}
-        selectedTier={passModalTier}
-      />
+      {isExamPassModalOpen && (
+        <ArohiExamPassModal
+          isOpen={isExamPassModalOpen}
+          onClose={() => setIsExamPassModalOpen(false)}
+          isDarkMode={isDarkMode}
+          selectedTier={passModalTier}
+        />
+      )}
 
       {/* Exam Subject & Paper Picker Modal */}
-      <ExamSubjectPickerModal
-        isOpen={isSubjectPickerOpen}
-        onClose={() => setIsSubjectPickerOpen(false)}
-        isDarkMode={isDarkMode}
-        initialCategory={pickerInitialCategory}
-        initialTest={pickerSelectedTest}
-        tests={allTests}
-        userState={userState}
-        onConfirmLaunch={(preparedTest) => {
-          setIsSubjectPickerOpen(false);
-          handleLaunchTest(preparedTest);
-        }}
-      />
+      {isSubjectPickerOpen && (
+        <ExamSubjectPickerModal
+          isOpen={isSubjectPickerOpen}
+          onClose={() => setIsSubjectPickerOpen(false)}
+          isDarkMode={isDarkMode}
+          initialCategory={pickerInitialCategory}
+          initialTest={pickerSelectedTest}
+          initialSetNumber={pickerSelectedSetNumber}
+          tests={allTests}
+          userState={userState}
+          onConfirmLaunch={(preparedTest, setNumber) => {
+            setIsSubjectPickerOpen(false);
+            handleLaunchTest(preparedTest, setNumber);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -22,9 +22,10 @@ export interface ExamSubjectOption {
 interface ExamSubjectPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmLaunch: (preparedTest: MockTest) => void;
+  onConfirmLaunch: (preparedTest: MockTest, setNumber?: number) => void;
   initialCategory?: 'all' | 'school' | 'competitive' | 'state';
   initialTest?: MockTest | null;
+  initialSetNumber?: number;
   tests: MockTest[];
   isDarkMode?: boolean;
   userState?: string;
@@ -620,12 +621,11 @@ export default function ExamSubjectPickerModal({
   onConfirmLaunch,
   initialCategory = 'all',
   initialTest = null,
+  initialSetNumber = 1,
   tests,
   isDarkMode = false,
   userState = 'Odisha'
 }: ExamSubjectPickerModalProps) {
-  if (!isOpen) return null;
-
   // Selected High-Level Category: 'state' | 'competitive' | 'school'
   const [selectedCategory, setSelectedCategory] = useState<'state' | 'competitive' | 'school'>(() => {
     if (initialCategory === 'state') return 'state';
@@ -635,6 +635,15 @@ export default function ExamSubjectPickerModal({
     if (initialTest?.mainCategory?.toLowerCase().includes('school') || initialTest?.board) return 'school';
     return 'state'; // default to state as requested
   });
+
+  // Selected Question Set Number (Mega Plan Series: Set 1 to 10)
+  const [selectedSetNumber, setSelectedSetNumber] = useState<number>(initialSetNumber || 1);
+
+  useEffect(() => {
+    if (initialSetNumber) {
+      setSelectedSetNumber(initialSetNumber);
+    }
+  }, [initialSetNumber, isOpen]);
 
   // State selection for State Category
   const [selectedStateId, setSelectedStateId] = useState<string>(() => {
@@ -827,10 +836,12 @@ export default function ExamSubjectPickerModal({
       questions: [] // ensureTestComplete will populate subject-pure authentic questions!
     };
 
-    const readyTest = ensureTestComplete(customizedTest);
-    onConfirmLaunch(readyTest);
+    const readyTest = ensureTestComplete(customizedTest, selectedSetNumber);
+    onConfirmLaunch(readyTest, selectedSetNumber);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
@@ -1287,7 +1298,45 @@ export default function ExamSubjectPickerModal({
             </div>
           </div>
 
-          {/* 7. EXPLICIT CONFIRMATION SUMMARY CARD (Approval Preview) */}
+          {/* 7. QUESTION SET SELECTION (Mega Multi-Set Series) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span>7. Question Set (Mega Multi-Set Series)</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[10px] font-black">
+                  20 Unique Sets
+                </span>
+              </label>
+              <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
+                Selected: Set {String(selectedSetNumber).padStart(2, '0')} of 20
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((sNum) => {
+                const isSelected = selectedSetNumber === sNum;
+                return (
+                  <button
+                    key={sNum}
+                    type="button"
+                    onClick={() => setSelectedSetNumber(sNum)}
+                    className={`py-1.5 sm:py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
+                      isSelected
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs scale-105 ring-2 ring-purple-400/40'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 hover:bg-purple-50/50'
+                    }`}
+                  >
+                    Set {String(sNum).padStart(2, '0')}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Deterministic question selection with shuffled options and parametric variations — each set presents a fresh test experience across all 20 unique sets.
+            </p>
+          </div>
+
+          {/* 8. EXPLICIT CONFIRMATION SUMMARY CARD (Approval Preview) */}
           <div className={`p-5 rounded-3xl border space-y-3.5 ${
             isDarkMode 
               ? 'bg-purple-950/30 border-purple-800/50' 
@@ -1309,9 +1358,9 @@ export default function ExamSubjectPickerModal({
               </div>
 
               <div className="space-y-0.5">
-                <span className="text-slate-400 font-semibold uppercase text-[10px]">Selected Subject:</span>
+                <span className="text-slate-400 font-semibold uppercase text-[10px]">Selected Subject & Set:</span>
                 <div className="font-black text-purple-600 dark:text-purple-400 truncate">
-                  {activeSubject.name}
+                  {activeSubject.name} • Set {String(selectedSetNumber).padStart(2, '0')}
                 </div>
               </div>
 
