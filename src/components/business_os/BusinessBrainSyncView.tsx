@@ -70,7 +70,7 @@ export default function BusinessBrainSyncView() {
     addExpense,
     addCustomer,
     markInvoicePaid,
-    addProjectTask,
+    addTask,
     addDocument,
     showToast,
     theme
@@ -303,15 +303,17 @@ export default function BusinessBrainSyncView() {
       const desc = rawText.length > 70 ? rawText.slice(0, 70) + '...' : rawText;
 
       addExpense({
+        title: `Auto-logged: ${desc}`,
         category,
         amount,
         date: new Date().toISOString().split('T')[0],
-        vendor: lower.includes('uber') ? 'Uber Technologies' : lower.includes('ola') ? 'Ola Cabs' : lower.includes('iocl') ? 'IOCL Fuel Station' : 'Merchant Vendor',
+        paidBy: 'Founder / Operations',
+        vendorName: lower.includes('uber') ? 'Uber Technologies' : lower.includes('ola') ? 'Ola Cabs' : lower.includes('iocl') ? 'IOCL Fuel Station' : 'Merchant Vendor',
         paymentMethod: lower.includes('card') ? 'Corporate Card' : lower.includes('cash') ? 'Petty Cash' : 'UPI',
         status: 'approved',
-        description: `Auto-synced via Arohi Voice Agent: "${desc}"`,
-        gstDeductible: true,
-        receiptUrl: undefined
+        receiptAttached: false,
+        taxDeductible: true,
+        gstClaimable: true
       });
 
       const syncRecord: SyncRecord = {
@@ -343,7 +345,7 @@ export default function BusinessBrainSyncView() {
       const amount = matchAmount ? parseInt(matchAmount[1].replace(/,/g, ''), 10) : 50000;
 
       // Find first unpaid invoice or mark top one
-      const pendingInv = invoices.find(i => i.status === 'sent' || i.status === 'overdue');
+      const pendingInv = invoices.find(i => i.status === 'pending' || i.status === 'overdue');
       if (pendingInv) {
         markInvoicePaid(pendingInv.id, 'UPI');
       }
@@ -376,9 +378,10 @@ export default function BusinessBrainSyncView() {
       const taskTitle = rawText.replace(/(create task|add task|task|todo|remind me to)/i, '').trim() || 'Review Client Requirement';
       const cleanTitle = taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1);
 
-      addProjectTask({
+      addTask({
         projectId: 'proj_1',
         title: cleanTitle,
+        description: `Auto-assigned via Arohi Voice Agent from instruction: "${rawText}"`,
         assignedTo: lower.includes('priya') ? 'Priya Verma' : lower.includes('rahul') ? 'Rahul Roy' : 'You (Founder)',
         dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         priority: lower.includes('urgent') ? 'urgent' : 'high',
@@ -494,7 +497,7 @@ export default function BusinessBrainSyncView() {
     {
       id: 'cb_1',
       sender: 'arohi',
-      text: `Namaste! I am your enterprise-restricted **Arohi Business Brain** for **${companyProfile.name}**.\n\nUnlike general web chat, my intelligence is strictly connected to your actual business ledger:\n• **Current Collected Revenue:** ₹${metrics.totalRevenue.toLocaleString()}\n• **Pending Invoices:** ₹${metrics.pendingInvoiceAmount.toLocaleString()} (${invoices.filter(i => i.status === 'sent').length} invoices)\n• **Active Deals Pipeline:** ₹${(metrics.openDealsValue / 100000).toFixed(1)} Lakhs\n• **Total Expenses:** ₹${metrics.totalExpenses.toLocaleString()}\n• **GSTIN:** \`${companyProfile.gstin}\`\n\nAsk me any operational question or tell me what to sync!`,
+      text: `Namaste! I am your enterprise-restricted **Arohi Business Brain** for **${companyProfile.name}**.\n\nUnlike general web chat, my intelligence is strictly connected to your actual business ledger:\n• **Current Collected Revenue:** ₹${metrics.totalRevenue.toLocaleString()}\n• **Pending Invoices:** ₹${metrics.pendingInvoiceAmount.toLocaleString()} (${invoices.filter(i => i.status === 'pending').length} invoices)\n• **Active Deals Pipeline:** ₹${(metrics.openDealsValue / 100000).toFixed(1)} Lakhs\n• **Total Expenses:** ₹${metrics.totalExpenses.toLocaleString()}\n• **GSTIN:** \`${companyProfile.gstin}\`\n\nAsk me any operational question or tell me what to sync!`,
       timestamp: 'Just Now'
     }
   ]);
@@ -541,10 +544,11 @@ export default function BusinessBrainSyncView() {
       const totalTax = invoices.reduce((sum, inv) => sum + (inv.status === 'paid' ? inv.totalTax : 0), 0);
       answer = `### GST & Tax Position\n- **Registered GSTIN:** \`${companyProfile.gstin}\` (${companyProfile.state})\n- **Output GST Liability (Collected):** ₹${totalTax.toLocaleString()}\n- **Input Tax Credit (ITC Eligible on Expenses):** ₹${(metrics.totalExpenses * 0.18).toLocaleString()} (approx. 18% slab)\n- **Net GST Payable:** ₹${Math.max(0, totalTax - (metrics.totalExpenses * 0.18)).toLocaleString()}\n- Dynamic UPI QR codes are automatically appended to your PDF invoices.`;
     } else if (lower.includes('pipeline') || lower.includes('deal') || lower.includes('leads')) {
-      answer = `### Sales Pipeline Intelligence\n- **Total Pipeline Value:** ₹${(metrics.openDealsValue / 100000).toFixed(2)} Lakhs across ${deals.length} active deals.\n- **Uncontacted Hot Leads:** ${leads.filter(l => l.status === 'new').length} leads.\n- **Top Opportunity:** Tata Advanced Systems (₹12.5L, 75% Win Probability, Assigned to Ananya Sharma).\n- **Win Rate:** ${metrics.dealWinRate}% over the current fiscal quarter.`;
+      const winRate = deals.length > 0 ? Math.round((deals.filter(d => d.stage === 'closed_won').length / deals.length) * 100) : 68;
+      answer = `### Sales Pipeline Intelligence\n- **Total Pipeline Value:** ₹${(metrics.openDealsValue / 100000).toFixed(2)} Lakhs across ${deals.length} active deals.\n- **Uncontacted Hot Leads:** ${leads.filter(l => l.status === 'new').length} leads.\n- **Top Opportunity:** Tata Advanced Systems (₹12.5L, 75% Win Probability, Assigned to Ananya Sharma).\n- **Win Rate:** ${winRate}% over the current fiscal quarter.`;
     } else if (lower.includes('overdue') || lower.includes('pending') || lower.includes('invoice')) {
-      const pendingList = invoices.filter(i => i.status === 'sent' || i.status === 'overdue');
-      answer = `### Outstanding Invoices\n- **Total Pending Amount:** ₹${metrics.pendingInvoiceAmount.toLocaleString()}\n- **Total Overdue Amount:** ₹${metrics.overdueInvoiceAmount.toLocaleString()}\n- **Pending Invoices:**\n${pendingList.map(inv => `  • **${inv.invoiceNumber}** — ${inv.customerName}: ₹${inv.totalAmount.toLocaleString()} (Due: ${inv.dueDate})`).join('\n')}\n\nYou can click below to trigger automated WhatsApp payment reminder links to these clients.`;
+      const pendingList = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
+      answer = `### Outstanding Invoices\n- **Total Pending Amount:** ₹${metrics.pendingInvoiceAmount.toLocaleString()}\n- **Total Overdue Amount:** ₹${metrics.overdueInvoiceAmount.toLocaleString()}\n- **Pending Invoices:**\n${pendingList.map(inv => `  • **${inv.invoiceNumber}** — ${inv.customerName}: ₹${inv.grandTotal.toLocaleString()} (Due: ${inv.dueDate})`).join('\n')}\n\nYou can click below to trigger automated WhatsApp payment reminder links to these clients.`;
     } else {
       answer = `I have reviewed your operations at **${companyProfile.name}**. Everything is synchronized with Firestore. You have **${leads.length} active leads**, **${invoices.length} invoices**, and **${tasks.filter(t => t.status === 'todo').length} open tasks**. What specific insight or action would you like to execute?`;
     }
@@ -664,14 +668,19 @@ export default function BusinessBrainSyncView() {
       showToast(`Visiting card synced to CRM Leads!`);
     } else if (extractedDocData.entityType === 'expense') {
       addExpense({
-        category: extractedDocData.category,
+        title: `Scanned Receipt: ${extractedDocData.vendor}`,
+        category: extractedDocData.category as any,
         amount: extractedDocData.amount,
         date: extractedDocData.date,
-        vendor: extractedDocData.vendor,
-        paymentMethod: extractedDocData.paymentMethod,
+        paidBy: 'Accounts Payable',
+        vendorName: extractedDocData.vendor,
+        paymentMethod: (extractedDocData.paymentMethod as any) || 'UPI',
         status: 'approved',
-        description: `Scanned receipt from ${uploadedDocName} (GSTIN: ${extractedDocData.gstin || 'N/A'})`,
-        gstDeductible: true
+        receiptAttached: true,
+        receiptName: uploadedDocName || 'Scanned_Invoice.pdf',
+        taxDeductible: true,
+        gstClaimable: true,
+        gstin: extractedDocData.gstin
       });
 
       const syncRecord: SyncRecord = {

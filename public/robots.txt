@@ -1,6 +1,7 @@
 # Robots.txt for Arohi AI (https://arohiai.com)
-# Optimized for Global Search Engines, Regional Crawlers, and AI / LLM Chatbot Search Agents
-# Explicitly allowing indexing, citation, and descriptive synthesis by all search bots and conversational AI agents.
+# Optimized for Global Search Engines, Regional Crawlers, and AI / LLM Chatbot Search Agents.
+# Explicitly allowing indexing, citation, and descriptive synthesis of all public site content,
+# while disallowing automated crawler indexing of internal execution and telemetry APIs (/api/).
 
 User-agent: *
 Allow: /
@@ -18,90 +19,119 @@ Allow: /schemes
 Allow: /courses
 Allow: /pricing
 Allow: /blogs
+Allow: /tools
+Allow: /franchise
+Allow: /business
+Allow: /syllabus
+Disallow: /api/
 
 # ==============================================================================
-# AI Search Crawlers & LLM Chatbots (Fully Allowed to Read, Cite & Summarize)
+# AI Search Crawlers & LLM Chatbots (Fully Allowed to Read, Cite & Summarize Pages, Disallowing /api/)
 # ==============================================================================
 
 # OpenAI (ChatGPT, SearchGPT, GPT-4, GPTBot)
 User-agent: GPTBot
 Allow: /
+Disallow: /api/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /api/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /api/
 
 # Anthropic (Claude, ClaudeBot, Claude-Web)
 User-agent: ClaudeBot
 Allow: /
+Disallow: /api/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /api/
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /api/
 
 # Perplexity AI Search
 User-agent: PerplexityBot
 Allow: /
+Disallow: /api/
 
 # Google (Gemini, Googlebot, Google-Extended, Googlebot-News)
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
 
 User-agent: Googlebot-News
 Allow: /
+Disallow: /api/
 
 # Microsoft (Copilot, Bing, Bingbot)
 User-agent: Bingbot
 Allow: /
+Disallow: /api/
 
 User-agent: BingChat
 Allow: /
+Disallow: /api/
 
 User-agent: msnbot
 Allow: /
+Disallow: /api/
 
 # Apple (Apple Intelligence, Applebot)
 User-agent: Applebot
 Allow: /
+Disallow: /api/
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /api/
 
-# Meta AI / LLaMA Search
+# Meta AI / LLaMA Search (Permitted to crawl all public pages; Disallowed from /api/)
 User-agent: meta-externalagent
 Allow: /
+Disallow: /api/
 
 User-agent: FacebookBot
 Allow: /
+Disallow: /api/
 
 # Other Major AI Search & Retrieval Agents
 User-agent: Cohere-ai
 Allow: /
+Disallow: /api/
 
 User-agent: Diffbot
 Allow: /
+Disallow: /api/
 
 User-agent: CCBot
 Allow: /
+Disallow: /api/
 
 User-agent: Bytespider
 Allow: /
+Disallow: /api/
 
 User-agent: DuckAssistBot
 Allow: /
+Disallow: /api/
 
 User-agent: Amazonbot
 Allow: /
+Disallow: /api/
 
 User-agent: YouBot
 Allow: /
+Disallow: /api/
 
 # ==============================================================================
 # Sitemaps

@@ -418,6 +418,41 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// AI Crawler & Bot API Protection Middleware
+// Allows AI bots (Meta-ExternalAgent, GPTBot, ClaudeBot, etc.) to freely crawl, index, and cite
+// all public pages (/, /solutions, /pricing, /courses, /blogs, etc.), while shielding internal
+// compute, TTS voice synthesis, and telemetry endpoints (/api/*) from automated crawler execution.
+const AI_CRAWLER_USER_AGENTS = /meta-externalagent|facebookbot|bytespider|gptbot|chatgpt-user|claudebot|claude-web|anthropic-ai|perplexitybot|ccbot|cohere-ai|diffbot|applebot-extended|amazonbot|youbot|scrapy|aiohttp|python-requests/i;
+
+app.use((req, res, next) => {
+  const url = req.originalUrl || req.url || '';
+  if (!url.startsWith('/api/')) {
+    return next();
+  }
+
+  // Exempt benign health/uptime endpoints
+  if (url === '/api/health' || url === '/api/ping' || url === '/api/status') {
+    return next();
+  }
+
+  const userAgent = req.get('user-agent') || '';
+  if (AI_CRAWLER_USER_AGENTS.test(userAgent)) {
+    // For telemetry/event tracking, acknowledge silently without polluting event logs
+    if (url.startsWith('/api/track-event')) {
+      return res.status(200).json({ success: true, ignored: true, reason: 'crawler_telemetry_filtered' });
+    }
+
+    // For heavy compute, audio TTS, and internal services, gracefully notify crawler
+    return res.status(403).json({
+      success: false,
+      restricted: true,
+      message: 'Arohi AI ecosystem information and documentation are indexed at https://arohiai.com. API execution is reserved for interactive browser sessions.'
+    });
+  }
+
+  next();
+});
+
 // Lazy initializer helper for GoogleGenAI to handle dynamic API key configuration cleanly
 let globalAiClient: GoogleGenAI | null = null;
 let globalAiClientAlpha: GoogleGenAI | null = null;
@@ -7403,6 +7438,13 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
 const arohiZypherAudioCache = new Map<string, { audioBase64: string; mimeType: string }>();
 let lastGeminiTts429Timestamp = 0;
 const TTS_429_COOLDOWN_MS = 60000; // 60s cooldown if quota reached
+
+app.get(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], (req, res) => {
+  return res.status(405).json({
+    success: false,
+    error: 'GET method not allowed. Voice synthesis is available via interactive POST requests in the web app.'
+  });
+});
 
 app.post(['/api/tts/arohi-zypher', '/api/arohi-zypher-tts'], async (req, res) => {
   try {
