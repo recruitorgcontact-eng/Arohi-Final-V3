@@ -16,27 +16,68 @@ html, body {
 
 /* Dark theme rules */
 html.dark, html.dark body, body.dark {
-  background-color: #080c18;
-  color: #f8fafc;
+  background-color: #0d0e12;
+  color: #f4f4f5;
   color-scheme: dark;
 }
 
-/* Bright / Light theme rules */
+/* Bright / Light theme rules - Warm Linen Ivory (Claude / OpenAI studio aesthetic) */
 html.light, html.light body, body.light, html:not(.dark), html:not(.dark) body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f9f9f6;
+  color: #18181b;
   color-scheme: light;
 }
 
-/* AROHI LUMINA DESIGN SYSTEM TOKENS */
+/* SOVEREIGN ATELIER DESIGN SYSTEM TOKENS */
 :root {
   --arohi-blue-primary: #2563eb;
   --arohi-blue-glow: rgba(37, 99, 235, 0.25);
-  --arohi-navy-deep: #080c18;
-  --arohi-navy-card: #0d1428;
-  --arohi-border-subtle: rgba(59, 130, 246, 0.18);
-  --arohi-glass-light: rgba(255, 255, 255, 0.88);
-  --arohi-glass-dark: rgba(13, 20, 40, 0.85);
+  --arohi-navy-deep: #0d0e12;
+  --arohi-navy-card: #15171e;
+  --arohi-border-subtle: rgba(255, 255, 255, 0.08);
+  --arohi-glass-light: rgba(255, 255, 255, 0.92);
+  --arohi-glass-dark: rgba(21, 23, 30, 0.88);
+  --atelier-brass: #d4af37;
+  --atelier-brass-light: #f5eed6;
+}
+
+.font-marcellus {
+  font-family: 'Marcellus', serif;
+}
+
+.font-newsreader {
+  font-family: 'Newsreader', Georgia, serif;
+}
+
+.font-display {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.font-apple,
+.font-gemini {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.atelier-card-light {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.atelier-card-dark {
+  background-color: #15171e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.atelier-dock-light {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.atelier-dock-dark {
+  background-color: rgba(21, 23, 30, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .arohi-glow-blue {

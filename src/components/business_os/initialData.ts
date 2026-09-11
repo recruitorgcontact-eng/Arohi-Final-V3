@@ -1044,14 +1044,14 @@ export const INITIAL_CAMPAIGNS: MarketingCampaign[] = [
 export const INITIAL_INBOUND_VOICE_AGENTS: InboundVoiceAgent[] = [
   {
     id: 'agent_reception_01',
-    name: 'Pooja Sharma',
-    role: 'Autonomous Front Desk Receptionist',
+    name: 'Arohi (Executive Front Desk Receptionist)',
+    role: 'Autonomous Executive Front Desk & Concierge',
     department: 'Reception & Front Desk',
-    language: 'Hinglish (Hindi + English)',
+    language: 'Hinglish (Hindi + English) & 150+ Multilingual',
     voiceProfile: 'Arohi-Warm-Female',
     pitch: 1.0,
     speechRate: 1.0,
-    greetingMessage: 'Namaste! Welcome to our enterprise. How may I assist you or direct your call today?',
+    greetingMessage: 'Hello and welcome to our enterprise! I am Arohi. How may I assist you or direct your call today?',
     businessName: 'Apex Innovations & Enterprises',
     knowledgeBase: `Business Overview: Apex Innovations provides AI Enterprise Solutions, GST Billing software, and HRMS.
 Operating Hours: Monday to Saturday, 9:30 AM to 6:30 PM IST.

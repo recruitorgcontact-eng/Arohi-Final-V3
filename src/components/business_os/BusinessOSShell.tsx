@@ -103,7 +103,7 @@ const NAV_GROUPS: { groupName: string; items: NavItem[] }[] = [
     groupName: 'Intelligence & Comms',
     items: [
       { id: 'brain_sync', label: 'Arohi Brain & Voice Sync', icon: Bot, badge: 'Auto-Sync' },
-      { id: 'telephony', label: 'Arohi Call Telephony', icon: PhoneCall, badge: 'AI Voice' },
+      { id: 'telephony', label: 'Business Voice Agent', icon: PhoneCall, badge: 'Live Calls' },
       { id: 'marketing', label: 'WhatsApp & Marketing', icon: Send },
       { id: 'analytics', label: 'BI Analytics & Forecast', icon: BarChart3 },
       { id: 'automation', label: 'Workflow Automations', icon: Zap },
@@ -196,10 +196,10 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
 
   return (
     <div className={`${theme === 'dark' ? 'dark' : ''} transition-colors duration-200`}>
-      <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#09090B] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900 transition-colors duration-200">
+      <div className="min-h-screen bg-[#f9f9f6] dark:bg-[#0d0e12] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900 transition-colors duration-200">
         
         {/* Apple-grade Top Navigation Header */}
-        <header className="h-14 sm:h-15 bg-white/80 dark:bg-[#121214]/80 border-b border-black/[0.06] dark:border-white/[0.08] sticky top-0 z-40 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 transition-colors">
+        <header className="h-14 sm:h-15 bg-[#f9f9f6]/90 dark:bg-[#0d0e12]/90 border-b border-black/[0.06] dark:border-white/[0.08] sticky top-0 z-40 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 transition-colors">
           
           {/* Left: Brand Identity & Workspace Switcher */}
           <div className="flex items-center gap-3">
@@ -211,8 +211,8 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
             </button>
 
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-xs">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-xl bg-zinc-900 dark:bg-white border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37] font-black text-xs shadow-xs">
+                <Sparkles className="w-4 h-4 text-[#d4af37]" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
@@ -273,9 +273,9 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
             {/* AI Business Copilot Button */}
             <button
               onClick={() => setIsCopilotOpen(true)}
-              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white text-[11px] font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+              className="px-3 py-1.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 border border-[#d4af37]/40 hover:border-[#d4af37] text-[11px] font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 text-[#d4af37] animate-pulse" />
               <span className="hidden sm:inline">Copilot</span>
             </button>
 
@@ -306,7 +306,7 @@ function InnerBusinessOS({ onBackToMainApp }: { onBackToMainApp?: () => void }) 
           
           {/* Apple-grade Left Navigation Sidebar */}
           <aside
-            className={`fixed lg:static inset-y-0 left-0 z-30 w-60 bg-[#FBFBFD]/90 dark:bg-[#121214]/90 border-r border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl flex flex-col justify-between overflow-y-auto transition-all duration-200 lg:translate-x-0 ${
+            className={`fixed lg:static inset-y-0 left-0 z-30 w-60 bg-[#fbfbf9]/95 dark:bg-[#13141a]/95 border-r border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl flex flex-col justify-between overflow-y-auto transition-all duration-200 lg:translate-x-0 ${
               isMobileSidebarOpen ? 'translate-x-0 top-14' : '-translate-x-full lg:translate-x-0'
             }`}
           >

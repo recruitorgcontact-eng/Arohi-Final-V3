@@ -7,7 +7,7 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Eye, ChevronDown, Wand2, Upload
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Wand2, Upload
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -62,6 +62,8 @@ interface ArohiChatProps {
   onNavigateTab?: (tab: string) => void;
   onMinimize?: () => void;
   onClose?: () => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   language?: Language;
   isDarkMode?: boolean;
 }
@@ -432,7 +434,7 @@ function renderMarkdown(
                     }
                   }}
                   className="text-amber-300 hover:text-amber-200 flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-md transition-colors cursor-pointer"
-                  title="Edit & Transform with AI (gemini-3.1-flash-image-preview)"
+                  title="Edit & Transform with AI (Arohi Neural Vision HD)"
                 >
                   <Wand2 className="w-3.5 h-3.5 text-amber-400" />
                   <span>Edit with AI</span>
@@ -755,7 +757,16 @@ export function getConversationTopicTitle(chat?: SavedChat | { messages?: Messag
   return 'New Conversation';
 }
 
-export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, onClose, language = 'en', isDarkMode = true }: ArohiChatProps) {
+export default function ArohiChat({ 
+  initialPrompt, 
+  onNavigateTab, 
+  onMinimize, 
+  onClose, 
+  isFullscreen = true,
+  onToggleFullscreen,
+  language = 'en', 
+  isDarkMode = true 
+}: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
@@ -1209,7 +1220,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
 
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
   const [activeMessageMenuId, setActiveMessageMenuId] = useState<string | null>(null);
   const [activeNotebooks, setActiveNotebooks] = useState<string[]>(['Career Growth Plan', 'MSME Udyam Roadmap']);
   const [showNewNotebookModal, setShowNewNotebookModal] = useState(false);
@@ -1774,8 +1785,8 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     let callAnalysis = summaryData.analysis;
     let computedSummaryText = summaryData.summaryText;
 
-    // If we have actual spoken turns, analyze the conversation on the server to obtain genuine discussion points
-    if (cleanTurns.length > 0 && userSpokenTurns.length > 0) {
+    // If we have spoken dialogue turns, analyze the conversation on the server to obtain genuine discussion points
+    if (cleanTurns.length > 0) {
       try {
         const res = await fetch('/api/analyze-call', {
           method: 'POST',
@@ -1799,7 +1810,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
     }
 
     let summaryCardContent = '';
-    if (callAnalysis?.summary && userSpokenTurns.length > 0) {
+    if (callAnalysis?.summary) {
       summaryCardContent = `📞 **Voice Consultation Completed** (${durationFormatted})\n\n` +
         `📌 **Key Discussion Points on Call**:\n${callAnalysis.summary}\n\n`;
 
@@ -2489,7 +2500,7 @@ export default function ArohiChat({ initialPrompt, onNavigateTab, onMinimize, on
       const loadingAssistantMessage: Message = {
         id: loadingMsgId,
         role: 'assistant',
-        content: `🎨 *Editing image with gemini-3.1-flash-image-preview...*`,
+        content: `🎨 *Editing image with Arohi Neural Vision HD...*`,
         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -3408,10 +3419,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       {/* AROHI LUMINA NAVIGATION DRAWER / SIDEBAR */}
       <aside 
         className={`${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col w-80 md:w-72 h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
+          isSidebarOpen 
+            ? 'translate-x-0 w-80 md:w-72' 
+            : '-translate-x-full md:w-0 md:p-0 md:border-r-0 md:overflow-hidden'
+        } fixed md:relative z-40 inset-y-0 left-0 flex flex-col h-screen h-[100dvh] max-h-[100dvh] md:h-full ${
           isDarkMode ? 'bg-[#090d1a]/95 border-slate-800/80 text-slate-100' : 'bg-white/95 border-slate-200/80 text-slate-900'
-        } border-r p-4 shrink-0 transition-transform duration-300 ease-in-out font-sans select-none shadow-2xl md:shadow-none backdrop-blur-xl overflow-hidden`}
+        } border-r p-4 shrink-0 transition-all duration-300 ease-in-out font-sans select-none shadow-2xl md:shadow-none backdrop-blur-xl overflow-hidden`}
       >
         {/* Sidebar Header: Brand + Search + Close */}
         <div className={`flex items-center justify-between pb-3 mb-2 px-1 border-b ${isDarkMode ? 'border-slate-800/80' : 'border-slate-200/80'}`}>
@@ -3899,13 +3912,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 </button>
               )}
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs shadow-emerald-400/50 shrink-0" title="Core AI Online"></span>
-              <span className={`hidden sm:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
-                isDarkMode 
-                  ? 'bg-blue-950/40 text-blue-300/80 border-blue-800/40' 
-                  : 'bg-blue-50/80 text-blue-700/80 border-blue-200/80'
-              }`}>
-                Beta
-              </span>
             </div>
           </div>
 
@@ -4047,6 +4053,36 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 </div>
               )}
             </div>
+
+            {onToggleFullscreen && (
+              <button
+                onClick={onToggleFullscreen}
+                className={`hidden sm:flex p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
+                title={isFullscreen ? "Exit Full Screen" : "Full Screen Size"}
+              >
+                {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+              </button>
+            )}
+
+            {onMinimize && (
+              <button
+                onClick={onMinimize}
+                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
+                title="Minimize Chat"
+              >
+                <Minus className="w-5 h-5" />
+              </button>
+            )}
+
+            {onClose && (
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50'} transition-colors cursor-pointer`}
+                title="Close Chat"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -4780,7 +4816,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   <h3 className="text-base font-extrabold text-white flex items-center gap-2">
                     Create & Edit Images
                     <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider border border-purple-500/30 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-purple-300" /> gemini-3.1-flash-image-preview
+                      <Sparkles className="w-3 h-3 text-purple-300" /> Arohi Neural Vision HD
                     </span>
                   </h3>
                   <p className="text-xs text-slate-300">Create new visuals or upload & edit existing artwork using natural language prompts.</p>
@@ -5033,7 +5069,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   <div className="bg-[#100a2b] border border-[#2c1d5c] p-3.5 rounded-2xl space-y-2.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit & Transform Image (gemini-3.1-flash-image-preview)
+                        <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit & Transform Image (Arohi Neural Vision HD)
                       </label>
                       <span className="text-[10px] text-purple-300 font-semibold bg-purple-900/40 px-2 py-0.5 rounded-full border border-purple-500/20">
                         Prompt-Based Editing

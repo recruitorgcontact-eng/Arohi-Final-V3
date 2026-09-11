@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Header from './components/Header';
 import MarqueeTicker from './components/MarqueeTicker';
@@ -12,6 +13,7 @@ import { ALL_150_PLUS_LANGUAGES } from './data/languagesData';
 
 // Core Tab Components
 import ArohiChat from './components/ArohiChat';
+import ArohiVoiceCall from './components/ArohiVoiceCall';
 import Arohi3DLearningWorkspace from './components/learning3d/Arohi3DLearningWorkspace';
 import ResumePage from './components/ResumePage';
 import CareerPage from './components/CareerPage';
@@ -27,7 +29,7 @@ import TierSelectorGrid from './components/TierSelectorGrid';
 import { LottieSuccessModal, LottieSuccessAnimation } from './components/LottieSuccess';
 import EmployerPortal from './components/EmployerPortal';
 import LegalPages from './components/LegalPages';
-import NavigationHub from './components/NavigationHub';
+import SovereignSidebar from './components/SovereignSidebar';
 import Smooth3DShowcase from './components/Smooth3DShowcase';
 import Interactive3DOrbit from './components/Interactive3DOrbit';
 import NotificationToast from './components/NotificationToast';
@@ -46,6 +48,12 @@ import MockTestsHub from './components/mocktests/MockTestsHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
 import PartnerPortal from './components/PartnerPortal';
+import ArohiAssistantProductPage from './components/products/ArohiAssistantProductPage';
+import ArohiCallingAgentsProductPage from './components/products/ArohiCallingAgentsProductPage';
+import ArohiExamsProductPage from './components/products/ArohiExamsProductPage';
+import ArohiInstitutionsProductPage from './components/products/ArohiInstitutionsProductPage';
+import ArohiOpportunitiesProductPage from './components/products/ArohiOpportunitiesProductPage';
+import ArohiOneProductPage from './components/products/ArohiOneProductPage';
 import { MASTER_AUDIENCES, MASTER_PROBLEM_SOLUTIONS, getAudienceBySlug as getMasterAudienceBySlug, getProblemBySlug } from './data/masterSeoEngine';
 import { TARGET_AUDIENCES_SEO, getAudienceBySlug } from './data/seoAudienceData';
 import SEOHead from './components/SEOHead';
@@ -61,7 +69,7 @@ import { openRazorpayCheckout } from './lib/razorpay';
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
 import { Posting, Application, CategoryType } from './types';
-import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2, Mail, Menu, Sun, Moon, Maximize2 } from 'lucide-react';
 
 // Storage migration helper to seamlessly transition legacy 'recruit_*' keys to 'arohi_*'
 function getStorageItem(key: string): string | null {
@@ -115,6 +123,7 @@ export default function App() {
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isGlobal3DLearningOpen, setIsGlobal3DLearningOpen] = useState(false);
   const [global3DTopic, setGlobal3DTopic] = useState('human_heart');
+  const [isDirectVoiceCallOpen, setIsDirectVoiceCallOpen] = useState(false);
   const IS_TOUR_ENABLED = false; // Set to true to activate walkthrough / site tour
 
   // Auto-trigger walkthrough for newly logged-in users or guest users upon entry
@@ -134,7 +143,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -240,17 +249,36 @@ export default function App() {
       rootEl.classList.remove('light');
       bodyEl.classList.add('dark');
       bodyEl.classList.remove('light');
-      bodyEl.style.backgroundColor = '#070814';
+      bodyEl.style.backgroundColor = '#0d0e12';
       bodyEl.style.color = '#f8fafc';
     } else {
       rootEl.classList.add('light');
       rootEl.classList.remove('dark');
       bodyEl.classList.add('light');
       bodyEl.classList.remove('dark');
-      bodyEl.style.backgroundColor = '#f8f9fe';
+      bodyEl.style.backgroundColor = '#f9f9f6';
       bodyEl.style.color = '#0f172a';
     }
   }, [isDarkMode]);
+
+  // Sovereign Atelier Workspace Sidebar Drawer State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsSidebarOpen((prev) => !prev);
+    const handleOpen = () => setIsSidebarOpen(true);
+    const handleClose = () => setIsSidebarOpen(false);
+
+    window.addEventListener('arohi_toggle_sidebar', handleToggle);
+    window.addEventListener('arohi_open_sidebar', handleOpen);
+    window.addEventListener('arohi_close_sidebar', handleClose);
+
+    return () => {
+      window.removeEventListener('arohi_toggle_sidebar', handleToggle);
+      window.removeEventListener('arohi_open_sidebar', handleOpen);
+      window.removeEventListener('arohi_close_sidebar', handleClose);
+    };
+  }, []);
 
   // Global Multi-Currency State (INR vs USD)
   const [currency, setCurrency] = useState<'INR' | 'USD'>(() => detectUserCurrency());
@@ -567,6 +595,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
+  const [isChatFullscreen, setIsChatFullscreen] = useState(true);
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string | undefined>(undefined);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [isSyncingJobs, setIsSyncingJobs] = useState(false);
@@ -2159,6 +2188,102 @@ export default function App() {
             }} 
           />
         );
+      case 'arohi-one-product':
+        return (
+          <ArohiOneProductPage
+            onLaunchBusinessOS={() => {
+              setActiveTab('business-os');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      case 'assistant':
+      case 'arohi-assistant':
+        return (
+          <ArohiAssistantProductPage
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onQuickChat={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
+            onOpenVoiceCall={() => {
+              setChatInitialPrompt('Hello Arohi! Let us speak in voice.');
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+            }}
+            isDarkMode={isDarkMode}
+            language={language}
+          />
+        );
+      case 'calling-agents':
+      case 'calling':
+        return (
+          <ArohiCallingAgentsProductPage
+            onLaunchLiveDashboard={() => {
+              setActiveTab('business-os');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      case 'exams':
+        return (
+          <ArohiExamsProductPage
+            onStartExams={() => {
+              setActiveTab('mocktests');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      case 'institutions':
+      case 'govt':
+        return (
+          <ArohiInstitutionsProductPage
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onQuickChat={(prompt) => {
+              setChatInitialPrompt(prompt);
+              setIsChatOpen(true);
+              setIsChatMinimized(false);
+              setHasEntered(true);
+              setActiveTab('arohi');
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      case 'opportunities':
+        return (
+          <ArohiOpportunitiesProductPage
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
       case 'privacy':
       case 'terms':
       case 'refunds':
@@ -2390,6 +2515,7 @@ export default function App() {
           if (topicId) setGlobal3DTopic(topicId);
           setIsGlobal3DLearningOpen(true);
         }}
+        onStartVoiceCall={() => setIsDirectVoiceCallOpen(true)}
       />
     );
   };
@@ -3306,7 +3432,7 @@ export default function App() {
   }
 
   return (
-    <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white pb-24 xl:pb-12 transition-colors duration-300 ${isDarkMode ? 'bg-[#080c18] text-slate-100 dark' : 'bg-[#f8fafc] text-slate-900 light'}`}>
+    <div key={language} className={`relative min-h-screen flex flex-col font-sans antialiased selection:bg-[#d4af37]/30 selection:text-zinc-900 dark:selection:text-zinc-100 pb-20 transition-colors duration-300 ${isDarkMode ? 'bg-[#0d0e12] text-zinc-100 dark' : 'bg-[#f9f9f6] text-zinc-900 light'}`}>
       
       {/* Interactive Parallax Background Scroll Effects */}
       <BackgroundScrollEffects isDarkMode={isDarkMode} />
@@ -3850,38 +3976,105 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {activeTab !== 'home' && (
-              <div className="flex items-center justify-between gap-3 mb-3.5 select-none animate-in fade-in duration-200">
-                <div className="flex items-center gap-1.5 text-[11px]">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-2 sm:p-2.5 rounded-2xl bg-white/80 dark:bg-[#12131a]/80 border border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.03)] select-none animate-in fade-in duration-200">
+                {/* Left: Workspace Drawer Button + Breadcrumb */}
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-1.5 sm:px-2 sm:py-1.5 rounded-xl border border-black/8 dark:border-white/10 bg-white dark:bg-white/5 text-zinc-800 dark:text-zinc-200 hover:text-[#d4af37] hover:border-[#d4af37]/40 transition-all cursor-pointer shadow-xs flex items-center gap-1 font-semibold text-xs active:scale-95"
+                    title="Open Sovereign Workspace & Navigation"
+                    aria-label="Open Navigation Menu"
+                  >
+                    <Menu className="w-4 h-4 text-[#d4af37]" />
+                  </button>
+
                   <button
                     onClick={() => {
                       setActiveTab('home');
                       setSelectedPosting(null);
                     }}
-                    className="flex items-center gap-1 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-medium"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer font-medium"
                   >
-                    <Home className="w-3 h-3 opacity-70" />
-                    <span>Home</span>
+                    <Home className="w-3.5 h-3.5 opacity-70" />
+                    <span className="hidden sm:inline">Home</span>
                   </button>
-                  <span className="text-slate-300 dark:text-zinc-700">/</span>
-                  <span className="font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-widest text-[9.5px] px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-500/30">
-                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'mocktests' ? 'Exams' : activeTab}
+                  <span className="text-zinc-300 dark:text-zinc-700">/</span>
+                  <span className="font-semibold text-[#d4af37] uppercase tracking-widest text-[10px] px-2.5 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30">
+                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'mocktests' ? 'Arohi Exams' : activeTab === 'business-os' ? 'Business OS' : activeTab === 'mission87' ? 'Mission 87' : activeTab === 'career' ? 'Career & Interview' : activeTab === 'resume' ? 'Resume Builder' : activeTab}
                   </span>
                 </div>
 
-                {prevTab !== activeTab && prevTab !== 'home' && (
+                {/* Right: Quick Controls (Currency, Coins, Theme, Auth, Back) */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Currency Toggle */}
                   <button
                     onClick={() => {
-                      const temp = activeTab;
-                      setActiveTab(prevTab);
-                      setPrevTab(temp);
-                      setSelectedPosting(null);
+                      const next = currency === 'INR' ? 'USD' : 'INR';
+                      setCurrency(next);
+                      try { localStorage.setItem('arohi_currency', next); } catch (e) {}
                     }}
-                    className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                    className="px-2 py-1 rounded-lg border border-black/8 dark:border-white/10 bg-white/70 dark:bg-white/5 text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:border-[#d4af37]/40 transition-all cursor-pointer shadow-xs flex items-center gap-1 active:scale-95"
+                    title={`Switch currency (Current: ${currency})`}
                   >
-                    <RotateCcw className="w-3 h-3 opacity-70" />
-                    <span>Back</span>
+                    <span className="text-[#d4af37]">{currency === 'INR' ? '₹' : '$'}</span>
+                    <span>{currency}</span>
                   </button>
-                )}
+
+                  {/* Sovereign Coins Wallet Badge */}
+                  <div
+                    onClick={() => {
+                      if (user) setActiveTab('profile');
+                      else setIsAuthModalOpen(true);
+                    }}
+                    className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/10 text-[11px] font-mono font-bold text-zinc-800 dark:text-zinc-200 cursor-pointer hover:bg-[#d4af37]/15 transition-all shadow-xs"
+                    title="Arohi Sovereign Coins Balance"
+                  >
+                    <span className="text-amber-500">🪙</span>
+                    <span>{arohiCoinBalance}</span>
+                  </div>
+
+                  {/* Theme Toggle Button */}
+                  <button
+                    onClick={toggleTheme}
+                    className="p-1.5 rounded-lg border border-black/8 dark:border-white/10 bg-white/70 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 hover:text-amber-400 transition-all cursor-pointer shadow-xs active:scale-95"
+                    title={isDarkMode ? 'Switch to Linen Light' : 'Switch to Obsidian Dark'}
+                  >
+                    {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-zinc-700" />}
+                  </button>
+
+                  {/* Profile / Auth Button */}
+                  <button
+                    onClick={() => {
+                      if (user) {
+                        setActiveTab('profile');
+                      } else {
+                        setIsAuthModalOpen(true);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-[11px] shadow-xs flex items-center gap-1.5 transition-all hover:opacity-90 active:scale-95 cursor-pointer shrink-0"
+                  >
+                    <User className="w-3 h-3 opacity-80" />
+                    <span className="hidden sm:inline">
+                      {user ? (currentUserName.length > 10 ? `${currentUserName.slice(0, 10)}..` : currentUserName) : 'Sign In'}
+                    </span>
+                  </button>
+
+                  {/* Back to previous tab */}
+                  {prevTab !== activeTab && prevTab !== 'home' && (
+                    <button
+                      onClick={() => {
+                        const temp = activeTab;
+                        setActiveTab(prevTab);
+                        setPrevTab(temp);
+                        setSelectedPosting(null);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3 opacity-70" />
+                      <span className="hidden sm:inline">Back</span>
+                    </button>
+                  )}
+                </div>
               </div>
             )}
             {renderActiveContent()}
@@ -4081,15 +4274,21 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Floating Chat Overlay Container */}
+      {/* Arohi AI Chat Container - Full Screen Size on Desktop and Laptop */}
       {isChatOpen && !isChatMinimized && (
-        <div className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] z-[100] sm:rounded-3xl shadow-[0_16px_50px_rgba(37,99,235,0.2)] border-t sm:border overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-300 ${
-          isDarkMode ? 'bg-[#080c18] border-blue-500/30' : 'bg-white border-slate-200/90'
+        <div className={`fixed z-[100] overflow-hidden flex flex-col transition-all duration-200 ${
+          isChatFullscreen
+            ? 'inset-0 w-full h-full h-[100dvh] max-w-none max-h-none rounded-none border-none'
+            : 'bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[480px] md:w-[820px] lg:w-[1120px] max-w-full sm:max-w-[calc(100vw-48px)] h-[100dvh] sm:h-[600px] md:h-[700px] lg:h-[760px] max-h-[100dvh] sm:max-h-[82vh] md:max-h-[85vh] lg:max-h-[88vh] sm:rounded-3xl shadow-[0_16px_50px_rgba(37,99,235,0.2)] border-t sm:border'
+        } ${
+          isDarkMode ? 'bg-[#070b16] border-blue-500/30' : 'bg-white border-slate-200/90'
         }`}>
           <ArohiChat 
             initialPrompt={chatInitialPrompt}
             language={language}
             isDarkMode={isDarkMode}
+            isFullscreen={isChatFullscreen}
+            onToggleFullscreen={() => setIsChatFullscreen((prev) => !prev)}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               setIsChatOpen(false);
@@ -4097,6 +4296,33 @@ export default function App() {
             onMinimize={() => setIsChatMinimized(true)}
             onClose={() => setIsChatOpen(false)}
           />
+        </div>
+      )}
+
+      {/* Minimized Floating Restore Pill for Desktop and Laptop */}
+      {isChatOpen && isChatMinimized && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-in slide-in-from-bottom-3 duration-200">
+          <button
+            onClick={() => setIsChatMinimized(false)}
+            className={`px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl border cursor-pointer hover:scale-105 transition-all ${
+              isDarkMode 
+                ? 'bg-[#0a0f1d] border-blue-500/40 text-white shadow-blue-900/30' 
+                : 'bg-white border-blue-200 text-slate-900 shadow-blue-500/20'
+            }`}
+            title="Resume Arohi Chat"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+              <Bot className="w-4 h-4 text-white" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                <span>Arohi AI Chat</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
+              <div className="text-[10px] text-blue-400 font-medium">Click to resume conversation</div>
+            </div>
+            <Maximize2 className="w-4 h-4 text-blue-400 ml-1" />
+          </button>
         </div>
       )}
 
@@ -4539,6 +4765,7 @@ export default function App() {
           isChatOpen={isChatOpen}
           isChatMinimized={isChatMinimized}
           setIsChatMinimized={setIsChatMinimized}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
           onQuickChat={(prompt) => {
             setChatInitialPrompt(prompt);
             setIsChatOpen(true);
@@ -4549,15 +4776,38 @@ export default function App() {
         />
       )}
 
-      {/* Floating Bottom-Left Navigation Hub */}
-      {(!isChatOpen || isChatMinimized) && (
-        <NavigationHub
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          prevTab={prevTab}
-          setSelectedPosting={setSelectedPosting}
-        />
-      )}
+      {/* Sovereign Atelier Workspace Navigation Drawer */}
+      <SovereignSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen((prev) => !prev)}
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setHasEntered(true);
+        }}
+        onNewChat={() => {
+          setActiveTab('home');
+          setChatInitialPrompt('');
+          setIsChatOpen(false);
+          setHasEntered(false);
+        }}
+        language={language}
+        onLanguageChange={(l) => changeLanguage(l)}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        user={user}
+        onOpenAuth={() => {
+          setAuthInitialMode('signin');
+          setIsAuthModalOpen(true);
+        }}
+        hasActiveSubscription={hasActiveSubscription}
+        isTrialActive={isTrialActive}
+        remainingHours={remainingHours}
+        remainingMinutes={remainingMinutes}
+        remainingSeconds={remainingSeconds}
+        onUpgradeClick={() => handleInitiateUpgrade(0, true)}
+        arohiCoinBalance={arohiCoinBalance}
+      />
 
       {/* Interactive Walkthrough Tour overlay */}
       <WalkthroughTour
@@ -4676,6 +4926,23 @@ export default function App() {
         upgradePrompt={authUpgradePrompt}
         forced={!user}
       />
+
+      {/* DIRECT AROHI VOICE CALL MODAL PORTAL */}
+      {isDirectVoiceCallOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] bg-[#070514] text-white overflow-hidden">
+          <ArohiVoiceCall 
+            onClose={() => setIsDirectVoiceCallOpen(false)} 
+            language={language} 
+            onNavigateTab={(tab) => {
+              setIsDirectVoiceCallOpen(false);
+              setActiveTab(tab);
+              setHasEntered(true);
+            }}
+            uid={user?.uid}
+          />
+        </div>,
+        document.body
+      )}
 
     </div>
   );

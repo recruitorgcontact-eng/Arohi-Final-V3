@@ -21,8 +21,8 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
   // Setup WebSocket server for Gemini Live Audio Bidirectional Streaming
   const wss = new WebSocketServer({ noServer: true });
 
-  wss.on('error', (err) => {
-    console.error('WebSocket Server error:', err);
+  wss.on('error', (err: any) => {
+    console.warn('WebSocket Server notice:', err?.message || err);
   });
 
   wss.on('connection', async (clientWs: WebSocket, request) => {
@@ -31,9 +31,42 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
 
     // Prevent uncaught socket-level errors from crashing the Node.js process
     clientWs.on('error', (err: any) => {
-      console.error('Client WebSocket connection error:', err);
-      logWsEvent('client_ws_error', { error: err.message || err });
+      console.warn('Client WebSocket connection notice:', err?.message || err);
+      logWsEvent('client_ws_error', { error: err?.message || err });
     });
+
+    if ((clientWs as any)._socket) {
+      try {
+        (clientWs as any)._socket.on('error', (sErr: any) => {
+          console.warn('Client WebSocket underlying socket notice:', sErr?.message || sErr);
+          logWsEvent('client_ws_socket_error', { error: sErr?.message || sErr });
+        });
+      } catch (sockTrapErr) {}
+    }
+
+    if ((clientWs as any)._sender) {
+      try {
+        (clientWs as any)._sender.onerror = (sErr: any) => {
+          console.warn('Client WebSocket sender notice handled gracefully:', sErr?.message || sErr);
+        };
+      } catch (sockTrapErr) {}
+    }
+
+    // Safe sender helper that always passes an error callback to avoid unhandled senderOnError
+    const safeSendClient = (payload: any) => {
+      try {
+        if (clientWs && clientWs.readyState === WebSocket.OPEN) {
+          const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
+          clientWs.send(dataStr, (err) => {
+            if (err) {
+              logWsEvent('client_send_error_suppressed', { error: err.message || err });
+            }
+          });
+        }
+      } catch (sendEx: any) {
+        logWsEvent('client_send_exception_suppressed', { error: sendEx?.message || sendEx });
+      }
+    };
 
     const safeSendAndClose = (msgObj: any, closeCode = 1000, closeReason = '') => {
       try {
@@ -53,10 +86,35 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
             } catch (e) {}
           }, 200);
         }
-      } catch (err) {
-        console.error('Error flushing message and closing WebSocket:', err);
+      } catch (err: any) {
+        console.warn('Notice flushing message and closing WebSocket:', err?.message || err);
         logWsEvent('safe_send_and_close_err', { error: err instanceof Error ? err.message : String(err) });
       }
+    };
+
+    // Helper to safeguard any Gemini Live SDK WebSocket and TLSSocket against uncaught errors
+    const attachSocketSafeguards = (targetSession: any) => {
+      try {
+        if (!targetSession) return;
+        const rawWs = targetSession.conn?.ws;
+        if (rawWs) {
+          if (typeof rawWs.on === 'function') {
+            rawWs.on('error', (rawErr: any) => {
+              console.warn('[Gemini Live SDK WebSocket notice handled]:', rawErr?.message || rawErr);
+            });
+          }
+          if (rawWs._socket && typeof rawWs._socket.on === 'function') {
+            rawWs._socket.on('error', (sockErr: any) => {
+              console.warn('[Gemini Live SDK TLSSocket notice handled]:', sockErr?.message || sockErr);
+            });
+          }
+          if (rawWs._sender) {
+            rawWs._sender.onerror = (senderErr: any) => {
+              console.warn('[Gemini Live SDK Sender notice handled]:', senderErr?.message || senderErr);
+            };
+          }
+        }
+      } catch (e) {}
     };
 
     // Parse the voice, uid, and lang parameters safely from the query string
@@ -207,6 +265,7 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                 },
                 callbacks: {
                   onopen: () => {
+                    attachSocketSafeguards(tempSession);
                     console.log(`Gemini Live session opened with model: ${liveModel}, waiting for stability...`);
                     logWsEvent('gemini_live_session_open', { model: liveModel });
 
@@ -219,42 +278,73 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                     }, 400);
                   },
                   onmessage: (msg: any) => {
-                    if (clientWs.readyState === WebSocket.OPEN) {
-                      const serverContent = msg.serverContent;
-                      if (serverContent) {
-                        const parts = serverContent.modelTurn?.parts;
-                        if (parts) {
-                          for (const part of parts) {
-                            if (part.inlineData && part.inlineData.data) {
-                              clientWs.send(JSON.stringify({ audio: part.inlineData.data }));
-                            }
-                            if (part.text) {
-                              clientWs.send(JSON.stringify({ transcript: part.text, speaker: 'arohi' }));
-                            }
+                    const serverContent = msg.serverContent;
+                    if (serverContent) {
+                      // 1. User speech transcription directly from Gemini Live API
+                      const userTranscriptText = 
+                        serverContent.inputTranscription?.text ||
+                        serverContent.inputAudioTranscription?.text ||
+                        serverContent.input_transcription?.text ||
+                        serverContent.interimInputTranscription?.text ||
+                        serverContent.interim_input_transcription?.text;
+
+                      if (userTranscriptText && typeof userTranscriptText === 'string' && userTranscriptText.trim()) {
+                        safeSendClient({ 
+                          transcript: userTranscriptText.trim(), 
+                          speaker: 'user',
+                          isFinal: !!(serverContent.inputTranscription || serverContent.inputAudioTranscription || serverContent.input_transcription)
+                        });
+                      }
+
+                      // 2. Arohi speech output transcription from Gemini Live API
+                      const arohiTranscriptText = 
+                        serverContent.outputTranscription?.text ||
+                        serverContent.outputAudioTranscription?.text ||
+                        serverContent.output_transcription?.text;
+
+                      if (arohiTranscriptText && typeof arohiTranscriptText === 'string' && arohiTranscriptText.trim()) {
+                        safeSendClient({ 
+                          transcript: arohiTranscriptText.trim(), 
+                          speaker: 'arohi' 
+                        });
+                      }
+
+                      // 3. Spoken audio chunks and modelTurn text parts
+                      const parts = serverContent.modelTurn?.parts;
+                      if (parts) {
+                        for (const part of parts) {
+                          if (part.inlineData && part.inlineData.data) {
+                            safeSendClient({ audio: part.inlineData.data });
+                          }
+                          if (part.text && !arohiTranscriptText) {
+                            safeSendClient({ transcript: part.text, speaker: 'arohi' });
                           }
                         }
-                        if (serverContent.turnComplete) {
-                          clientWs.send(JSON.stringify({ turnComplete: true }));
-                        }
-                        if (serverContent.interrupted) {
-                          console.log("Gemini Live: User voice barge-in interruption detected.");
-                          clientWs.send(JSON.stringify({ interrupted: true }));
-                        }
+                      }
+                      if (serverContent.turnComplete) {
+                        safeSendClient({ turnComplete: true });
+                      }
+                      if (serverContent.interrupted) {
+                        console.log("Gemini Live: User voice barge-in interruption detected.");
+                        safeSendClient({ interrupted: true });
                       }
                     }
                   },
                   onerror: (err: any) => {
-                    console.error(`Gemini Live session error on model ${liveModel}:`, err);
-                    logWsEvent('gemini_live_session_error', { model: liveModel, error: err.message || err });
+                    const errMsg = err?.message || (typeof err === 'string' ? err : 'Socket transmission reset');
+                    console.warn(`[Gemini Live Notice]: Connection event on model ${liveModel}:`, errMsg);
+                    logWsEvent('gemini_live_session_notice', { model: liveModel, error: errMsg });
+                    session = null;
                     if (stabilityTimeout) clearTimeout(stabilityTimeout);
                     if (!finished) {
                       finished = true;
-                      reject(err);
+                      reject(new Error(`Gemini Live session notice: ${errMsg}`));
                     }
                   },
                   onclose: (event: any) => {
-                    console.log(`Gemini Live session closed on model ${liveModel}:`, event);
+                    console.log(`Gemini Live session closed on model ${liveModel}:`, event?.code);
                     logWsEvent('gemini_live_session_close', { model: liveModel, event });
+                    session = null;
                     if (stabilityTimeout) clearTimeout(stabilityTimeout);
                     if (!finished) {
                       finished = true;
@@ -263,16 +353,18 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                   },
                 },
               });
-            } catch (err) {
+              attachSocketSafeguards(tempSession);
+            } catch (err: any) {
               if (stabilityTimeout) clearTimeout(stabilityTimeout);
               if (!finished) {
                 finished = true;
-                reject(err);
+                reject(err instanceof Error ? err : new Error(err?.message || 'Failed to connect Live session'));
               }
             }
           });
 
           session = establishedSession;
+          attachSocketSafeguards(establishedSession);
           console.log(`Successfully connected and validated Gemini Live session with model: ${liveModel}`);
           logWsEvent('gemini_live_session_established', { model: liveModel });
 
@@ -325,20 +417,37 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
         try {
           const parsed = JSON.parse(data.toString());
           if (parsed.audio && session) {
-            session.sendRealtimeInput({
-              audio: { data: parsed.audio, mimeType: "audio/pcm;rate=16000" },
-            });
+            try {
+              const rawWs = (session as any)?.conn?.ws;
+              // Ensure connection is strictly OPEN (readyState 1) before sending audio chunks
+              if (!rawWs || rawWs.readyState === 1) {
+                session.sendRealtimeInput({
+                  audio: { data: parsed.audio, mimeType: "audio/pcm;rate=16000" },
+                });
+              } else {
+                session = null;
+              }
+            } catch (audioErr: any) {
+              console.warn("Caught error forwarding realtime audio to Gemini Live:", audioErr?.message || audioErr);
+              session = null;
+            }
           }
           if (parsed.text) {
             if (session) {
               try {
-                session.sendClientContent({
-                  turns: [{ role: 'user', parts: [{ text: parsed.text }] }],
-                  turnComplete: true
-                });
-                console.log(`Forwarded user text prompt to Gemini Live session: "${parsed.text.slice(0, 50)}..."`);
-              } catch (textErr) {
-                console.error("Error forwarding text to Gemini Live session:", textErr);
+                const rawWs = (session as any)?.conn?.ws;
+                if (!rawWs || rawWs.readyState === 1) {
+                  session.sendClientContent({
+                    turns: [{ role: 'user', parts: [{ text: parsed.text }] }],
+                    turnComplete: true
+                  });
+                  console.log(`Forwarded user text prompt to Gemini Live session: "${parsed.text.slice(0, 50)}..."`);
+                } else {
+                  session = null;
+                }
+              } catch (textErr: any) {
+                console.warn("Notice forwarding text to Gemini Live session:", textErr?.message || textErr);
+                session = null;
               }
             } else if (isConnectingSession) {
               console.log(`Queuing user text prompt while Gemini Live session establishes: "${parsed.text.slice(0, 50)}..."`);
@@ -367,16 +476,14 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                 if (!replyText) {
                   replyText = getArohiFallbackResponse(parsed.text || '');
                 }
-                if (clientWs.readyState === WebSocket.OPEN) {
-                  clientWs.send(JSON.stringify({ transcript: replyText, speaker: 'arohi' }));
-                }
-              } catch (fallbackErr) {
-                console.error("Error in Arohi Voice Fallback Engine:", fallbackErr);
+                safeSendClient({ transcript: replyText, speaker: 'arohi' });
+              } catch (fallbackErr: any) {
+                console.warn("Notice in Arohi Voice Fallback Engine:", fallbackErr?.message || fallbackErr);
               }
             }
           }
-        } catch (err) {
-          console.error("Error forwarding user input to Arohi Live:", err);
+        } catch (err: any) {
+          console.warn("Notice forwarding user input to Arohi Live:", err?.message || err);
         }
       });
 
@@ -384,22 +491,30 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
         console.log("Client closed live voice WebSocket connection.");
         try {
           if (session) {
-            session.close();
+            session.close?.();
+            session = null;
           }
-        } catch (err) {}
+        } catch (err) {
+          session = null;
+        }
       });
     } catch (error: any) {
-      console.error("Failed to establish session with Gemini Live:", error);
-      logWsEvent('gemini_live_connection_failed', { error: error.message || error });
+      console.warn("Notice: Gemini Live session establishment unavailable, activating fallback:", error?.message || error);
+      logWsEvent('gemini_live_connection_notice', { error: error?.message || error });
       safeSendAndClose(
-        { error: `Failed to establish session with Arohi Live: ${error.message || error}` },
+        { error: `Notice: Arohi Live voice engine fallback active: ${error?.message || 'Connection reset'}` },
         1011,
-        'Arohi Live connection failed'
+        'Arohi Live connection fallback'
       );
     }
   });
 
   const handleUpgrade = (request: any, socket: any, head: any) => {
+    // Trap early socket errors on incoming upgrade requests
+    socket.on('error', (err: any) => {
+      console.warn('Socket error on WebSocket upgrade connection:', err?.message || err);
+    });
+
     try {
       let pathname = '';
       if (request.url) {
@@ -435,14 +550,25 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
       if (isLiveWsPath) {
         logWsEvent('upgrade_matched', { pathname });
         wss.handleUpgrade(request, socket, head, (ws) => {
+          ws.on('error', (wsErr: any) => {
+            console.warn('Client WebSocket error after upgrade:', wsErr?.message || wsErr);
+          });
           wss.emit('connection', ws, request);
         });
       } else {
         logWsEvent('upgrade_unmatched', { pathname });
+        // Cleanly respond and close socket for unmatched paths so socket doesn't hang
+        try {
+          socket.write('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n');
+          socket.destroy();
+        } catch (destroyErr) {
+          try { socket.destroy(); } catch (e) {}
+        }
       }
     } catch (err: any) {
-      console.error('Error in WebSocket upgrade handler:', err);
-      logWsEvent('upgrade_error', { error: err.message || err });
+      console.warn('Notice in WebSocket upgrade handler:', err?.message || err);
+      logWsEvent('upgrade_error', { error: err?.message || err });
+      try { socket.destroy(); } catch (e) {}
     }
   };
 

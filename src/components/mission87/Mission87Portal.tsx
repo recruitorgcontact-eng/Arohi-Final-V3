@@ -278,11 +278,11 @@ export default function Mission87Portal({
               </span>
             </div>
 
-            <div className="space-y-1.5 pt-2">
-              <p className="text-xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-300 to-yellow-200 tracking-tight leading-tight">
+            <div className="space-y-1.5 pt-2 font-display">
+              <p className="text-xl sm:text-3xl lg:text-4xl font-black font-newsreader tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-300 to-yellow-200 leading-tight">
                 87 MILLION ARE NOT WAITING FOR INDIA.
               </p>
-              <p className="text-xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 tracking-tight leading-tight">
+              <p className="text-xl sm:text-3xl lg:text-4xl font-black font-newsreader tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 leading-tight">
                 INDIA IS WAITING FOR WHAT 87 MILLION CAN BUILD.
               </p>
             </div>

@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { InboundVoiceAgent, VoiceProfileId } from './types';
 import { useBusinessOS } from './BusinessOSContext';
+import { INDIAN_22_LANGUAGES } from './telephonyData';
+import EnvironmentSoundSelector from './EnvironmentSoundSelector';
+import { BackgroundSoundType } from '../../utils/arohiAmbientNoise';
 
 interface InboundAgentModalProps {
   isOpen: boolean;
@@ -28,47 +31,59 @@ interface InboundAgentModalProps {
 const VOICE_PROFILES: { id: VoiceProfileId; name: string; description: string; gender: string; sampleAccent: string }[] = [
   {
     id: 'Arohi-Warm-Female',
-    name: 'Arohi Warm Female',
-    description: 'Polite, clear, friendly tone ideal for front desk and reception',
-    gender: 'Female',
-    sampleAccent: 'Indian English / Hinglish / Hindi'
+    name: 'Arohi (Signature Reception 24kHz HD)',
+    description: "Arohi's signature sweet, loving, articulate, and warm acoustic voice. Ideal for front desk, reception, clinic appointments, and VIP caller welcome.",
+    gender: 'Female (Flagship)',
+    sampleAccent: 'Indian English / Hinglish / Odia / Hindi (150+ Multilingual)'
   },
   {
     id: 'Arohi-Empathetic-Female',
-    name: 'Arohi Empathetic Care',
-    description: 'Soft, gentle, compassionate tone ideal for clinics and appointments',
+    name: 'Meera (Gentle Empathetic Care 24kHz HD)',
+    description: 'Calm, patient, compassionate tone ideal for healthcare clinics, citizen grievances & PwD assistance',
     gender: 'Female',
-    sampleAccent: 'Hindi / Odia / English'
+    sampleAccent: 'Odia (ଓଡ଼ିଆ) / Hindi / Indian English'
   },
   {
     id: 'Arohi-Executive-Male',
-    name: 'Arohi Executive Male',
-    description: 'Crisp, confident, authoritative tone ideal for sales & enterprise deals',
+    name: 'Arjun (Consultative Enterprise B2B 24kHz HD)',
+    description: 'Sharp, authoritative, consultative tone ideal for enterprise sales, lead qualification & real estate',
     gender: 'Male',
-    sampleAccent: 'Professional Indian English / Hindi'
+    sampleAccent: 'Professional Corporate Indian English / Odia / Hindi'
   },
   {
     id: 'Arohi-Energetic-Male',
-    name: 'Arohi Energetic Support',
-    description: 'Dynamic, fast-paced, problem-solving tone for 24/7 technical support',
+    name: 'Kabir (Agile Support & Logistics 24kHz HD)',
+    description: 'Dynamic, fast-paced, proactive tone for courier delivery confirmations, COD verification & 24/7 alerts',
     gender: 'Male',
-    sampleAccent: 'Multilingual 150+ Indian Regional'
+    sampleAccent: 'Multilingual 22 Official Indian Languages'
   }
 ];
 
 const LANGUAGES = [
+  'Odia (ଓଡ଼ିଆ) + English (Flagship)',
   'Hinglish (Hindi + English)',
   'Hindi (Pure / Shuddh)',
   'English (Indian Standard)',
-  'Odia (ଓଡ଼ିଆ)',
   'Bengali (বাংলা)',
-  'Tamil (தமிழ்)',
   'Telugu (తెలుగు)',
+  'Tamil (தமிழ்)',
   'Marathi (मराठी)',
   'Gujarati (ગુજરાતી)',
   'Kannada (ಕನ್ನಡ)',
   'Malayalam (മലയാളം)',
   'Punjabi (ਪੰਜਾਬੀ)',
+  'Assamese (অসমীয়া)',
+  'Maithili (मैथिली)',
+  'Santali (ᱥᱟᱱᱛᱟᱲᱤ)',
+  'Kashmiri (کٲشُر / कॉशुर)',
+  'Konkani (कोंकणी)',
+  'Sindhi (سنڌي / सिन्धी)',
+  'Dogri (डोगरी)',
+  'Manipuri (ꯃꯤꯇꯩꯂꯣꯟ / Meitei)',
+  'Bodo (बर\')',
+  'Sanskrit (संस्कृतम्)',
+  'Nepali (नेपाली)',
+  'Urdu (اردو)',
   '150+ Multilingual Auto-Detect'
 ];
 
@@ -106,6 +121,8 @@ export default function InboundAgentModal({ isOpen, onClose, agentToEdit }: Inbo
   const [forwardingPhoneNumber, setForwardingPhoneNumber] = useState(agentToEdit?.forwardingPhoneNumber || '+91 98765 43210');
   const [assignedPhoneNumber, setAssignedPhoneNumber] = useState(agentToEdit?.assignedPhoneNumber || '+91 80 4712 9905');
   const [operatingHours, setOperatingHours] = useState<InboundVoiceAgent['operatingHours']>(agentToEdit?.operatingHours || '24/7 Always Active');
+  const [backgroundSound, setBackgroundSound] = useState<BackgroundSoundType>(agentToEdit?.backgroundSound || 'office');
+  const [switchLanguageDuringCall, setSwitchLanguageDuringCall] = useState<boolean>(agentToEdit?.switchLanguageDuringCall ?? true);
   const [isActive, setIsActive] = useState(agentToEdit?.isActive ?? true);
 
   if (!isOpen) return null;
@@ -137,6 +154,8 @@ export default function InboundAgentModal({ isOpen, onClose, agentToEdit }: Inbo
       forwardingPhoneNumber: forwardingPhoneNumber.trim(),
       assignedPhoneNumber: assignedPhoneNumber.trim(),
       operatingHours,
+      backgroundSound,
+      switchLanguageDuringCall,
       isActive
     };
 
@@ -348,17 +367,41 @@ export default function InboundAgentModal({ isOpen, onClose, agentToEdit }: Inbo
 
           {/* Inbound Greeting Message */}
           <div>
-            <label className="block font-semibold text-zinc-800 dark:text-zinc-200 mb-1 flex items-center justify-between">
-              <span>Default Inbound Spoken Greeting *</span>
-              <span className="text-[10px] text-zinc-400 font-normal">Spoken as soon as caller connects</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block font-semibold text-zinc-800 dark:text-zinc-200">
+                Default Inbound Spoken Greeting *
+              </label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setGreetingMessage(`ନମସ୍କାର! ${businessName}କୁ ସ୍ୱାଗତ। ମୁଁ ଆପଣଙ୍କୁ ଆଜି କିପରି ସାହାଯ୍ୟ କରିପାରିବି?`)}
+                  className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold hover:bg-emerald-500/20 cursor-pointer"
+                >
+                  ଓଡ଼ିଆ (Odia)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGreetingMessage(`नमस्ते! ${businessName} में आपका स्वागत है। बताइए आज मैं आपकी क्या सहायता कर सकती हूँ?`)}
+                  className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-bold hover:bg-purple-500/20 cursor-pointer"
+                >
+                  हिन्दी
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGreetingMessage(`Hello and welcome to ${businessName}. How may I assist or direct your call today?`)}
+                  className="px-2 py-0.5 rounded-md bg-zinc-500/10 border border-zinc-500/20 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold hover:bg-zinc-500/20 cursor-pointer"
+                >
+                  English
+                </button>
+              </div>
+            </div>
             <textarea
               rows={2}
               value={greetingMessage}
               onChange={(e) => setGreetingMessage(e.target.value)}
               placeholder="e.g. Namaste! Welcome to Apex Innovations. How may I assist you today?"
               required
-              className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.1] text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 text-xs resize-none"
+              className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.1] text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 text-xs resize-none font-sans"
             />
           </div>
 
@@ -375,6 +418,16 @@ export default function InboundAgentModal({ isOpen, onClose, agentToEdit }: Inbo
               placeholder="Include company products, services, doctor schedules, pricing packages, location, working hours, and refund policies..."
               required
               className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.1] text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 text-xs font-mono resize-none leading-relaxed"
+            />
+          </div>
+
+          {/* Environment & Acoustic Ambient Noise Configuration */}
+          <div className="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-zinc-50/60 dark:bg-zinc-900/60">
+            <EnvironmentSoundSelector
+              selectedSound={backgroundSound}
+              onChangeSound={(sound) => setBackgroundSound(sound)}
+              switchLanguageDuringCall={switchLanguageDuringCall}
+              onToggleSwitchLanguage={(enabled) => setSwitchLanguageDuringCall(enabled)}
             />
           </div>
 

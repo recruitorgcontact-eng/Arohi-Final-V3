@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useBusinessOS } from './BusinessOSContext';
 import { BusinessOSModule } from './types';
+import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
 
 interface SyncRecord {
   id: string;
@@ -81,75 +82,18 @@ export default function BusinessBrainSyncView() {
   // Navigation Subtabs
   const [activeSubTab, setActiveSubTab] = useState<'voice_call' | 'brain_chat' | 'document_sync' | 'sync_history'>('voice_call');
 
-  // --- EXACT AROHI VOICE SYNTHESIS ENGINE ---
-  const [isArohiSpeaking, setIsArohiSpeaking] = useState(false);
-  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+  // --- TAB 1: CALL FACILITY (VOICE INGESTION & AUTO-SYNC) ---
+  const [isCallActive, setIsCallActive] = useState(false);
+  const isCallActiveRef = useRef(false);
+  isCallActiveRef.current = isCallActive;
+  const [callDuration, setCallDuration] = useState(0);
+  const [isMicListening, setIsMicListening] = useState(false);
+  const [spokenTranscript, setSpokenTranscript] = useState('');
+  const [manualVoiceInput, setManualVoiceInput] = useState('');
+  const [isProcessingSync, setIsProcessingSync] = useState(false);
+  const [lastSyncedItem, setLastSyncedItem] = useState<SyncRecord | null>(null);
 
-  const speakArohiVoice = (text: string) => {
-    if (isVoiceMuted || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
-
-      // Clean text of markdown asterisks/brackets
-      const cleanText = text.replace(/[*_#`]/g, '').trim();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.30; // Arohi's signature energetic & warm pitch
-      utterance.lang = 'en-IN';
-
-      const voices = window.speechSynthesis.getVoices();
-      if (voices && voices.length > 0) {
-        const strictlyFemaleVoices = voices.filter(v => {
-          const nameLower = v.name.toLowerCase();
-          const isExplicitMale = /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(nameLower) ||
-                                 /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
-          return !isExplicitMale;
-        });
-
-        const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
-        const preferredVoice = 
-          pool.find(v => (v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('hi-in')) && 
-            /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-          pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-          pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('hi-in')) ||
-          pool[0];
-
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
-      }
-
-      utterance.onstart = () => setIsArohiSpeaking(true);
-      utterance.onend = () => setIsArohiSpeaking(false);
-      utterance.onerror = () => setIsArohiSpeaking(false);
-
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('Speech synthesis error:', e);
-      setIsArohiSpeaking(false);
-    }
-  };
-
-  const stopSpeaking = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsArohiSpeaking(false);
-    }
-  };
-
-  useEffect(() => {
-    // Load voices cleanly
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-      };
-    }
-    return () => {
-      stopSpeaking();
-    };
-  }, []);
+  const recognitionRef = useRef<any>(null);
 
   // --- SYNC HISTORY STORE ---
   const [syncHistory, setSyncHistory] = useState<SyncRecord[]>([
@@ -177,16 +121,52 @@ export default function BusinessBrainSyncView() {
     }
   ]);
 
-  // --- TAB 1: CALL FACILITY (VOICE INGESTION & AUTO-SYNC) ---
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const [isMicListening, setIsMicListening] = useState(false);
-  const [spokenTranscript, setSpokenTranscript] = useState('');
-  const [manualVoiceInput, setManualVoiceInput] = useState('');
-  const [isProcessingSync, setIsProcessingSync] = useState(false);
-  const [lastSyncedItem, setLastSyncedItem] = useState<SyncRecord | null>(null);
+  // --- EXACT AROHI FLAGSHIP VOICE SYNTHESIS ENGINE (24kHz HD Neural Voice) ---
+  const [isArohiSpeaking, setIsArohiSpeaking] = useState(false);
+  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
 
-  const recognitionRef = useRef<any>(null);
+  const speakArohiVoice = (text: string) => {
+    if (isVoiceMuted) return;
+
+    // Immediately pause speech recognition to prevent loopback
+    stopSpeechRecognition();
+
+    playArohiVoice(text, {
+      voice: 'Zypher',
+      language: 'en-IN',
+      isMuted: isVoiceMuted,
+      allowBrowserRoboticVoice: false, // Strict: Never speak in robotic system voices
+      onStart: () => {
+        setIsArohiSpeaking(true);
+        stopSpeechRecognition();
+      },
+      onEnd: () => {
+        setIsArohiSpeaking(false);
+        if (isCallActiveRef.current) {
+          // Resume mic after Arohi completes verbal confirmation
+          setTimeout(() => {
+            if (isCallActiveRef.current) {
+              startSpeechRecognition();
+            }
+          }, 350);
+        }
+      },
+      onError: () => {
+        setIsArohiSpeaking(false);
+      }
+    });
+  };
+
+  const stopSpeaking = () => {
+    stopArohiVoice();
+    setIsArohiSpeaking(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   // Call duration counter
   useEffect(() => {
@@ -842,9 +822,9 @@ export default function BusinessBrainSyncView() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs font-bold text-purple-600 dark:text-purple-400">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Arohi Signature Voice</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold text-purple-600 dark:text-purple-400">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span>Arohi Flagship Voice (24kHz HD)</span>
                 </div>
               </div>
 
@@ -868,7 +848,7 @@ export default function BusinessBrainSyncView() {
                   <h3 className="text-lg font-black">Arohi Executive Intake Agent</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                     {isArohiSpeaking 
-                      ? 'Speaking in human-like Arohi voice...' 
+                      ? 'Speaking in human-like 24kHz HD Arohi voice...' 
                       : isMicListening 
                       ? 'Listening to you speak...' 
                       : isCallActive 

@@ -94,7 +94,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const outputAudioCtxRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
-  const speechRecognitionRef = useRef<any>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -138,221 +137,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
     return () => clearInterval(timer);
   }, []);
 
-  // Robust Browser Speech Recognition (Instant STT transcription with Zero-Touch Automatic Multilingual Mirroring)
-  useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    let isMounted = true;
-
-    if (!SpeechRecognition) {
-      console.warn('SpeechRecognition is not supported natively in this browser.');
-      return;
-    }
-
-    const detectLanguageFromTranscript = (text: string): string | null => {
-      if (!text) return null;
-      if (/[\u0B00-\u0B7F]/.test(text) || /\b(namaskar|kemiti|achha|achhanti|kahantu|katha|kan|karibi|kariba|mote|mate|mora|tame|apana|apananka|apananku|odisha|odia|khusi|lagiba|bhalo|bhala|kie|aji|kali|dhanyabad|suprabhat|subha|sandhya|kichi|sahajya|karantu|kuha)\b/i.test(text)) {
-        return 'or';
-      }
-      if (/[\u0980-\u09FF]/.test(text) || /\b(nomoshkar|namaskar|kemon|achhen|acho|achho|bolun|bolte|ki|bhalo|aami|ami|apni|tumi|bangla|amader|ekhane|kothay|keno|dhanyabad|shubh)\b/i.test(text)) {
-        return 'bn';
-      }
-      if (/[\u0900-\u097F]/.test(text) || /\b(namaste|kaise|kya|batao|bataiye|aap|tum|mujhe|mera|meri|karna|chahiye|shukriya|dhanyawad|suno|kijiye)\b/i.test(text)) {
-        return 'hi';
-      }
-      if (/[\u0C00-\u0C7F]/.test(text) || /\b(namaskaram|ela|unnaru|cheppandi|enti|nenu|meeru|telugu)\b/i.test(text)) {
-        return 'te';
-      }
-      if (/[\u0B80-\u0BFF]/.test(text) || /\b(vanakkam|eppadi|irukkinga|sollunga|enna|naan|neenga|tamil)\b/i.test(text)) {
-        return 'ta';
-      }
-      if (/[\u0A80-\u0AFF]/.test(text) || /\b(kem|cho|tame|aavu|gujarati)\b/i.test(text)) {
-        return 'gu';
-      }
-      if (/[\u0C80-\u0CFF]/.test(text) || /\b(hegiddira|hege|heli|kannada)\b/i.test(text)) {
-        return 'kn';
-      }
-      if (/[\u0D00-\u0D7F]/.test(text) || /\b(namaskaram|engane|undo|parayoo|malayalam)\b/i.test(text)) {
-        return 'ml';
-      }
-      if (/[\u0A00-\u0A7F]/.test(text) || /\b(sat|sri|akal|kiddan|punjabi)\b/i.test(text)) {
-        return 'pa';
-      }
-      return null;
-    };
-
-    const startRecognition = () => {
-      if (!isMounted || statusRef.current === 'ended' || statusRef.current === 'error') return;
-
-      try {
-        if (speechRecognitionRef.current) {
-          try { speechRecognitionRef.current.stop(); } catch (e) {}
-          speechRecognitionRef.current = null;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        
-        // Multi-dialect recognition support
-        const langMap: Record<string, string> = {
-          hi: 'hi-IN',
-          en: 'en-IN',
-          or: 'or-IN',
-          bn: 'bn-IN',
-          te: 'te-IN',
-          ta: 'ta-IN',
-          mr: 'mr-IN',
-          gu: 'gu-IN',
-          kn: 'kn-IN',
-          ml: 'ml-IN',
-          pa: 'pa-IN',
-          ur: 'ur-IN'
-        };
-        const targetLangCode = (activeLanguage && activeLanguage !== 'auto') 
-          ? (langMap[activeLanguage] || 'en-IN') 
-          : (language && language !== 'auto' ? (langMap[language] || 'en-IN') : 'en-IN');
-        recognition.lang = targetLangCode;
-
-        let silenceTimer: any = null;
-
-        recognition.onresult = (event: any) => {
-          if (!isMounted || isMutedRef.current) return;
-
-          let interimTranscript = '';
-          let finalTranscript = '';
-
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
-            } else {
-              interimTranscript += event.results[i][0].transcript;
-            }
-          }
-
-          const activeText = (finalTranscript || interimTranscript).trim();
-          if (!activeText) return;
-
-          // ZERO-LATENCY INSTANT BARGE-IN: If user begins speaking, cancel AI audio immediately & listen
-          if (
-            activeText.length >= 2 &&
-            (statusRef.current === 'speaking' || 
-            audioQueueRef.current.length > 0 || 
-            (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking))
-          ) {
-            stopAllPlayback();
-            setStatus('listening');
-            setCurrentSpeech('');
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-              try {
-                wsRef.current.send(JSON.stringify({ interrupted: true }));
-              } catch (e) {}
-            }
-          }
-
-          // Auto-detect spoken dialect on the fly
-          const autoLang = detectLanguageFromTranscript(activeText);
-          if (autoLang && autoLang !== activeLanguageRef.current) {
-            setActiveLanguage(autoLang);
-          }
-
-          setLiveUserSpeech(activeText);
-
-          if (silenceTimer) clearTimeout(silenceTimer);
-
-          const commitUserTurn = async (text: string) => {
-            if (!text || !text.trim()) return;
-
-            // Reset audio stream received flag for new turn
-            hasReceivedAudioStreamRef.current = false;
-            setLiveUserSpeech('');
-
-            const userTurn: SpeechTurn = {
-              speaker: 'user',
-              text: text,
-              timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-            };
-
-            setTurns(prev => [...prev, userTurn]);
-
-            const currentDetectedLang = detectLanguageFromTranscript(text) || activeLanguageRef.current || language || 'en';
-
-            // Forward text tokens simultaneously to WebSocket stream so Gemini receives both acoustic and linguistic tokens
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-              try {
-                wsRef.current.send(JSON.stringify({ text: text, lang: currentDetectedLang }));
-              } catch (e) {
-                console.warn('Error sending transcribed text prompt over WebSocket:', e);
-              }
-            } else {
-              // Resilient Voice API Turn Fallback
-              try {
-                const response = await fetch('/api/live-voice-turn', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    prompt: text,
-                    history: turns,
-                    language: currentDetectedLang,
-                    uid
-                  })
-                });
-                if (response.ok) {
-                  const data = await response.json();
-                  if (data.transcript && isMounted) {
-                    const replyText = data.transcript;
-                    setStatus('speaking');
-                    speakWithBrowserTTS(replyText);
-                  }
-                }
-              } catch (turnErr) {
-                console.warn('Live voice turn fetch fallback notice:', turnErr);
-              }
-            }
-          };
-
-          if (finalTranscript.trim()) {
-            commitUserTurn(finalTranscript.trim());
-          } else {
-            // Trigger turn completion after short silence
-            silenceTimer = setTimeout(() => {
-              if (isMounted && activeText) {
-                commitUserTurn(activeText);
-              }
-            }, 850);
-          }
-        };
-
-        recognition.onerror = (err: any) => {
-          console.warn('SpeechRecognition notice:', err?.error);
-        };
-
-        recognition.onend = () => {
-          if (isMounted && !isMutedRef.current && statusRef.current !== 'ended' && statusRef.current !== 'error') {
-            setTimeout(() => {
-              if (isMounted && !isMutedRef.current && statusRef.current !== 'ended' && statusRef.current !== 'error') {
-                try { recognition.start(); } catch (e) { startRecognition(); }
-              }
-            }, 300);
-          }
-        };
-
-        try { recognition.start(); } catch (e) {}
-        speechRecognitionRef.current = recognition;
-      } catch (err) {
-        console.warn('SpeechRecognition initialization notice:', err);
-      }
-    };
-
-    startRecognition();
-
-    return () => {
-      isMounted = false;
-      if (speechRecognitionRef.current) {
-        try { speechRecognitionRef.current.stop(); } catch (e) {}
-        speechRecognitionRef.current = null;
-      }
-    };
-  }, [activeLanguage, language]);
 
   // Auto-scroll transcript container to keep newest dialogue in view
   useEffect(() => {
@@ -819,6 +603,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
     const startSession = async () => {
       try {
+        stopAllPlayback();
         setStatus('connecting');
         hasReceivedAudioStreamRef.current = false;
 
@@ -839,9 +624,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           try {
             const data = JSON.parse(event.data);
 
-            // Raw PCM Audio Stream
+            // Raw PCM Audio Stream (Pure Gemini Live Voice)
             if (data.audio || (data.type === 'audio' && data.data)) {
               hasReceivedAudioStreamRef.current = true;
+              // Instantly cancel any browser speech synthesis to ensure zero voice overlap
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+              }
               setStatus('speaking');
               playAudioChunk(data.audio || data.data);
             } 
@@ -851,6 +640,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               const speaker = data.speaker || 'arohi';
 
               if (speaker === 'arohi') {
+                setLiveUserSpeech('');
                 const cleaned = textChunk.replace(/[*#`_~]/g, '');
                 if (cleaned) {
                   setStatus('speaking');
@@ -864,19 +654,18 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                     }
                     return prev + ' ' + cleaned;
                   });
-
-                  // If server didn't provide raw PCM audio stream, trigger regional browser TTS
-                  if (!hasReceivedAudioStreamRef.current) {
-                    speakWithBrowserTTS(cleaned);
-                  }
                 }
               } else if (speaker === 'user') {
                 const userCleaned = textChunk.replace(/[*#`_~]/g, '').trim();
                 if (userCleaned) {
+                  setLiveUserSpeech(userCleaned);
                   setTurns(prev => {
                     const last = prev[prev.length - 1];
-                    if (last && last.speaker === 'user' && (last.text.includes(userCleaned) || userCleaned.includes(last.text))) {
-                      return prev;
+                    if (last && last.speaker === 'user') {
+                      if (last.text === userCleaned) return prev;
+                      if (userCleaned.startsWith(last.text) || userCleaned.length > last.text.length) {
+                        return [...prev.slice(0, -1), { ...last, text: userCleaned }];
+                      }
                     }
                     return [
                       ...prev,
@@ -895,6 +684,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               stopAllPlayback();
               setStatus(isMutedRef.current ? 'muted' : 'listening');
               setCurrentSpeech('');
+              setLiveUserSpeech('');
             }
             // Turn Completion - commit current speech to turns history and clear streaming banner
             else if (data.turnComplete || data.type === 'turnComplete') {
@@ -916,12 +706,15 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                     ];
                   });
 
+                  // True fallback: Only if zero audio packets were received throughout this entire turn
                   if (!hasReceivedAudioStreamRef.current && cleanedText) {
                     speakWithBrowserTTS(cleanedText);
                   }
                 }
                 return '';
               });
+              // Reset stream received flag for the next conversational turn
+              hasReceivedAudioStreamRef.current = false;
             } else if (data.type === 'error' || data.error) {
               console.warn('Voice WebSocket notice:', data.message || data.error);
             }
@@ -1014,7 +807,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
           const rawBuffer = floatTo16BitPCM(downsampledData);
           const base64Pcm = arrayBufferToBase64(rawBuffer);
 
-          ws.send(JSON.stringify({ audio: base64Pcm }));
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.send(JSON.stringify({ audio: base64Pcm }));
+            } catch (sendErr) {
+              // Socket already closing or closed
+            }
+          }
         };
 
       } catch (err: any) {
@@ -1253,55 +1052,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       </header>
 
       {/* ========================================================================= */}
-      {/* 3. CENTER CONVERSATIONAL FLOW (TYPED LIVE TEXT ON SCREEN) */}
+      {/* 3. CENTER VIEW (CLEAN CALL SCREEN - TRANSCRIPTION LOG REMOVED) */}
       {/* ========================================================================= */}
-      <main className="relative z-10 flex-1 flex flex-col justify-center w-full max-w-lg mx-auto px-4 sm:px-6 my-auto select-text overflow-hidden">
-        
-        {/* Scrollable Conversation Stream Overlay */}
-        <div 
-          ref={transcriptContainerRef}
-          className="w-full max-h-[50vh] overflow-y-auto space-y-4 sm:space-y-6 no-scrollbar py-4"
-        >
-          {visibleTurns.map((turn, idx) => (
-            <div 
-              key={idx} 
-              className={`transition-all duration-300 ${
-                turn.speaker === 'user' ? 'text-left' : 'text-left'
-              }`}
-            >
-              {turn.speaker === 'arohi' ? (
-                /* Arohi Response: Crisp High-Contrast Bold White Typography */
-                <p className="text-white text-base sm:text-xl md:text-2xl font-bold leading-relaxed tracking-tight select-text">
-                  {turn.text}
-                </p>
-              ) : (
-                /* User Speech: Soft Dimmed Slate/Silver Typography */
-                <p className="text-slate-400 text-sm sm:text-base md:text-lg font-medium leading-normal select-text">
-                  {turn.text}
-                </p>
-              )}
-            </div>
-          ))}
-
-          {/* Real-time Streaming of Arohi's text if currently streaming */}
-          {currentSpeech && (
-            <div className="text-left animate-in fade-in duration-150">
-              <p className="text-white text-base sm:text-xl md:text-2xl font-bold leading-relaxed tracking-tight select-text">
-                {currentSpeech}
-                <span className="inline-block w-2 h-4 bg-cyan-400 ml-1.5 animate-pulse" />
-              </p>
-            </div>
-          )}
-
-          {/* Real-time Speech-to-Text of User speaking */}
-          {liveUserSpeech && (
-            <div className="text-left animate-in fade-in duration-150">
-              <p className="text-slate-400 text-sm sm:text-base md:text-lg font-medium leading-normal italic select-text">
-                {liveUserSpeech}...
-              </p>
-            </div>
-          )}
-
+      <main className="relative z-10 flex-1 flex flex-col justify-center items-center w-full max-w-lg mx-auto px-4 sm:px-6 my-auto select-none pointer-events-none">
+        {/* Invisible anchor refs preserved for stability */}
+        <div ref={transcriptContainerRef} className="hidden">
           <div ref={transcriptEndRef} />
         </div>
 

@@ -25,14 +25,42 @@ import {
   Globe,
   Languages,
   ShieldCheck,
-  Calendar
+  Calendar,
+  GitBranch
 } from 'lucide-react';
 import { useBusinessOS } from './BusinessOSContext';
 import { TelephonyCallRecord, InboundVoiceAgent } from './types';
 import InboundAgentModal from './InboundAgentModal';
 import InboundCallSimulatorModal from './InboundCallSimulatorModal';
+import TelephonyFlowCanvas from './TelephonyFlowCanvas';
+import IndianLanguageMatrixView from './IndianLanguageMatrixView';
+import OutboundCampaignView from './OutboundCampaignView';
+import VoiceAgentsTemplatesView from './VoiceAgentsTemplatesView';
+import VoicePromptStudioView from './VoicePromptStudioView';
+import InteractionInspectorModal from './InteractionInspectorModal';
+import DualModeVoiceTestModal from './DualModeVoiceTestModal';
+import ExotelDirectDialerModal from './ExotelDirectDialerModal';
+import BusinessVoiceAgentDashboard from './BusinessVoiceAgentDashboard';
+import {
+  ENTERPRISE_VOICE_TEMPLATES,
+  VoiceAgentTemplate,
+  createBlankVoiceTemplate,
+  SAMPLE_CALL_INTERACTIONS,
+  CallInteractionRecord
+} from './arohiPromptTemplateData';
+import { IndianLanguageOption } from './telephonyData';
 
-type ArohiCallTab = 'agents' | 'telecom' | 'logs' | 'workflows';
+type ArohiCallTab =
+  | 'voice-dashboard'
+  | 'templates'
+  | 'prompt-studio'
+  | 'flow-canvas'
+  | 'outbound'
+  | 'agents'
+  | 'telecom'
+  | 'logs'
+  | 'languages'
+  | 'workflows';
 
 export default function ArohiCallView() {
   const {
@@ -46,19 +74,30 @@ export default function ArohiCallView() {
   } = useBusinessOS();
 
   const safeCalls = calls || [];
-  const [activeTab, setActiveTab] = useState<ArohiCallTab>('agents');
+  const [activeTab, setActiveTab] = useState<ArohiCallTab>('voice-dashboard');
   const [selectedCall, setSelectedCall] = useState<TelephonyCallRecord | null>(safeCalls[0] || null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  // Arohi Voice Studio State
+  const [selectedTemplate, setSelectedTemplate] = useState<VoiceAgentTemplate>(ENTERPRISE_VOICE_TEMPLATES[0]);
+  const [isInspectorModalOpen, setIsInspectorModalOpen] = useState(false);
+  const [selectedInteraction, setSelectedInteraction] = useState<CallInteractionRecord | null>(SAMPLE_CALL_INTERACTIONS[0]);
+  const [isDualModeModalOpen, setIsDualModeModalOpen] = useState(false);
+  const [showExotelDialer, setShowExotelDialer] = useState(false);
 
   // Modals state
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
   const [agentToEdit, setAgentToEdit] = useState<InboundVoiceAgent | null>(null);
   const [isCallSimulatorOpen, setIsCallSimulatorOpen] = useState(false);
   const [selectedAgentForCall, setSelectedAgentForCall] = useState<InboundVoiceAgent | null>(null);
+  const [customSimulatorGreeting, setCustomSimulatorGreeting] = useState<string | undefined>(undefined);
+  const [customSimulatorLanguage, setCustomSimulatorLanguage] = useState<string | undefined>(undefined);
 
-  const handleOpenSimulator = (agent?: InboundVoiceAgent) => {
+  const handleOpenSimulator = (agent?: InboundVoiceAgent, greeting?: string, lang?: string) => {
     const targetAgent = agent || inboundAgents.find(a => a.id === activeInboundAgentId) || inboundAgents[0];
     setSelectedAgentForCall(targetAgent);
+    setCustomSimulatorGreeting(greeting);
+    setCustomSimulatorLanguage(lang);
     setIsCallSimulatorOpen(true);
   };
 
@@ -117,10 +156,18 @@ export default function ArohiCallView() {
         {/* Top Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
           <button
-            onClick={() => handleOpenSimulator(activeAgent)}
-            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+            onClick={() => setShowExotelDialer(true)}
+            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <PhoneOutgoing className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span>Direct Dial +91 Number (Exotel)</span>
+          </button>
+
+          <button
+            onClick={() => handleOpenSimulator(activeAgent)}
+            className="px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
             <span>Test Inbound Call</span>
           </button>
 
@@ -137,53 +184,181 @@ export default function ArohiCallView() {
       {/* Navigation Sub-Tabs */}
       <div className="flex items-center gap-1 bg-zinc-100/80 dark:bg-zinc-900/80 p-1 rounded-xl border border-black/[0.04] dark:border-white/[0.06] overflow-x-auto text-xs font-semibold">
         <button
+          onClick={() => setActiveTab('voice-dashboard')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'voice-dashboard'
+              ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs ring-1 ring-purple-500/30'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
+          <span>Business Voice Agent</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[9px] font-bold">
+            Live Dashboard
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'templates'
+              ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+          <span>Agent Templates</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[9px] font-bold">
+            Arohi OS
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('prompt-studio')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'prompt-studio'
+              ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <Bot className="w-3.5 h-3.5 text-indigo-500" />
+          <span>Prompt Studio &amp; Genie</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[9px] font-bold">
+            Chips &amp; Copilot
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('flow-canvas')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'flow-canvas'
+              ? 'bg-white dark:bg-zinc-800 text-[#d4af37] shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <GitBranch className="w-3.5 h-3.5 text-[#d4af37]" />
+          <span>Visual Call Flow Canvas</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-[#d4af37]/20 text-[#d4af37] text-[9px] font-bold">
+            Flow Engine
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('outbound')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'outbound'
+              ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <PhoneOutgoing className="w-3.5 h-3.5 text-purple-500" />
+          <span>Outbound Campaigns</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[9px] font-bold">
+            Dialer
+          </span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('agents')}
-          className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'agents'
               ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
-          <Bot className="w-3.5 h-3.5" />
-          <span>Inbound Voice Agents ({inboundAgents.length})</span>
+          <PhoneCall className="w-3.5 h-3.5" />
+          <span>Inbound Receptionists ({inboundAgents.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('telecom')}
-          className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'telecom'
               ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
           <Radio className="w-3.5 h-3.5" />
-          <span>Numbers & 1-Click Forwarding</span>
+          <span>Numbers &amp; 1-Click Forwarding</span>
         </button>
 
         <button
           onClick={() => setActiveTab('logs')}
-          className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'logs'
-              ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
+              ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
-          <PhoneCall className="w-3.5 h-3.5" />
-          <span>Call Intelligence Logs ({safeCalls.length})</span>
+          <PhoneCall className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Call Intelligence &amp; Inspector</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('languages')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'languages'
+              ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <Languages className="w-3.5 h-3.5 text-emerald-500" />
+          <span>22 Indian Languages Matrix</span>
         </button>
 
         <button
           onClick={() => setActiveTab('workflows')}
-          className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'workflows'
               ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
-          <span>Knowledge & Auto-Actions</span>
+          <span>Knowledge &amp; Auto-Actions</span>
         </button>
       </div>
+
+      {/* TAB: BUSINESS VOICE AGENT LIVE DASHBOARD */}
+      {activeTab === 'voice-dashboard' && (
+        <BusinessVoiceAgentDashboard
+          onOpenDialer={() => setShowExotelDialer(true)}
+          onOpenSimulator={() => handleOpenSimulator(activeAgent)}
+        />
+      )}
+
+      {/* TAB: AGENT TEMPLATES (Arohi Voice OS) */}
+      {activeTab === 'templates' && (
+        <VoiceAgentsTemplatesView
+          onSelectTemplate={(tmpl) => {
+            setSelectedTemplate(tmpl);
+            setActiveTab('prompt-studio');
+            showToast(`Loaded "${tmpl.title}" into Prompt Studio!`);
+          }}
+          onCreateFromScratch={() => {
+            const blank = createBlankVoiceTemplate();
+            setSelectedTemplate(blank);
+            setActiveTab('prompt-studio');
+            showToast('Created new blank agent in Prompt Studio!');
+          }}
+        />
+      )}
+
+      {/* TAB: PROMPT STUDIO & GENIE COPILOT */}
+      {activeTab === 'prompt-studio' && (
+        <VoicePromptStudioView
+          initialTemplate={selectedTemplate}
+          onSwitchToVisualFlow={() => setActiveTab('flow-canvas')}
+          onOpenTestAgentModal={() => setIsDualModeModalOpen(true)}
+          onOpenPhoneSimulator={() => {
+            if (activeAgent) {
+              handleOpenSimulator(activeAgent);
+            } else if (inboundAgents.length > 0) {
+              handleOpenSimulator(inboundAgents[0]);
+            }
+          }}
+        />
+      )}
 
       {/* TAB 1: INBOUND VOICE AGENTS */}
       {activeTab === 'agents' && (
@@ -354,7 +529,37 @@ export default function ArohiCallView() {
         </div>
       )}
 
-      {/* TAB 2: TELECOM NUMBERS & 1-CLICK FORWARDING */}
+      {/* TAB 2: VISUAL CALL FLOW CANVAS */}
+      {activeTab === 'flow-canvas' && (
+        <TelephonyFlowCanvas
+          onTestFlowInSimulator={(greeting, lang) => {
+            handleOpenSimulator(activeAgent, greeting, lang);
+          }}
+        />
+      )}
+
+      {/* TAB: OUTBOUND CAMPAIGNS (AUTONOMOUS MULTI-LINE DIALER) */}
+      {activeTab === 'outbound' && (
+        <OutboundCampaignView
+          onLaunchTestCall={(script) => {
+            handleOpenSimulator(activeAgent, script, 'Odia + English');
+          }}
+        />
+      )}
+
+      {/* TAB 3: 22 INDIAN LANGUAGES MATRIX (ODIA FIRST-CLASS) */}
+      {activeTab === 'languages' && (
+        <IndianLanguageMatrixView
+          onSelectLanguageForAgent={(lang) => {
+            handleOpenSimulator(activeAgent, lang.defaultGreeting, `${lang.name} (${lang.nativeName})`);
+          }}
+          onTestCallInLanguage={(lang) => {
+            handleOpenSimulator(activeAgent, lang.defaultGreeting, `${lang.name} (${lang.nativeName})`);
+          }}
+        />
+      )}
+
+      {/* TAB 4: TELECOM NUMBERS & 1-CLICK FORWARDING */}
       {activeTab === 'telecom' && (
         <div className="space-y-4">
           
@@ -523,7 +728,45 @@ export default function ArohiCallView() {
                   Inbound customer calls attended by Arohi AI voice receptionists
                 </p>
               </div>
-              <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">{safeCalls.length} Calls Recorded</span>
+              <button
+                onClick={() => {
+                  setSelectedInteraction(SAMPLE_CALL_INTERACTIONS[0]);
+                  setIsInspectorModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                <span>Open Interaction Inspector</span>
+              </button>
+            </div>
+
+            {/* Banner for Interaction Inspector Audit */}
+            <div
+              onClick={() => {
+                setSelectedInteraction(SAMPLE_CALL_INTERACTIONS[0]);
+                setIsInspectorModalOpen(true);
+              }}
+              className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20 flex items-center justify-between gap-3 cursor-pointer hover:border-blue-500/40 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                  QA
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span>Divya Nair · Smile Bright Dental (0:27)</span>
+                    <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      Completed
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Click to inspect full 2-column audit: 16 extracted entities + turn-by-turn synchronized Hindi audio playback.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                Audit Call &rarr;
+              </span>
             </div>
 
             <div className="space-y-2.5 max-h-[580px] overflow-y-auto pr-1">
@@ -725,14 +968,49 @@ export default function ArohiCallView() {
         agentToEdit={agentToEdit}
       />
 
-      <InboundCallSimulatorModal
-        isOpen={isCallSimulatorOpen}
-        onClose={() => {
-          setIsCallSimulatorOpen(false);
-          setSelectedAgentForCall(null);
-        }}
-        selectedAgent={selectedAgentForCall}
-      />
+      {isCallSimulatorOpen && (
+        <InboundCallSimulatorModal
+          isOpen={isCallSimulatorOpen}
+          onClose={() => {
+            setIsCallSimulatorOpen(false);
+            setSelectedAgentForCall(null);
+            setCustomSimulatorGreeting(undefined);
+            setCustomSimulatorLanguage(undefined);
+          }}
+          selectedAgent={selectedAgentForCall}
+          initialCustomGreeting={customSimulatorGreeting}
+          initialCustomLanguage={customSimulatorLanguage}
+        />
+      )}
+
+      {isInspectorModalOpen && selectedInteraction && (
+        <InteractionInspectorModal
+          isOpen={isInspectorModalOpen}
+          onClose={() => setIsInspectorModalOpen(false)}
+          interaction={selectedInteraction}
+          onSyncToCrm={(rec) => {
+            showToast(`Synced ${rec.variables.CustomerName || 'lead'} directly into Arohi CRM!`);
+          }}
+          onIssueInvoice={(rec) => {
+            showToast(`Generated GST draft invoice for ${rec.variables.IndicativeConsultationFee || '₹500'}!`);
+          }}
+        />
+      )}
+
+      {isDualModeModalOpen && (
+        <DualModeVoiceTestModal
+          isOpen={isDualModeModalOpen}
+          onClose={() => setIsDualModeModalOpen(false)}
+          agent={activeAgent}
+        />
+      )}
+
+      {showExotelDialer && (
+        <ExotelDirectDialerModal
+          isOpen={showExotelDialer}
+          onClose={() => setShowExotelDialer(false)}
+        />
+      )}
 
     </div>
   );

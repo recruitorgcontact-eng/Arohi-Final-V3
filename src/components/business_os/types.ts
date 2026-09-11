@@ -435,6 +435,8 @@ export interface InboundVoiceAgent {
   forwardingPhoneNumber?: string;
   assignedPhoneNumber?: string;
   operatingHours: '24/7 Always Active' | 'Business Hours (9 AM - 7 PM)' | 'After Hours & Weekends';
+  backgroundSound?: 'none' | 'office' | 'call_center' | 'traffic';
+  switchLanguageDuringCall?: boolean;
   isActive: boolean;
   totalCallsAttended: number;
   avgRating: number;

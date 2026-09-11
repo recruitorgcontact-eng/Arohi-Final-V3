@@ -1,18 +1,18 @@
-import React from 'react';
-import { Home, MessageSquare, Grid, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Home, Package, LayoutGrid, Compass, MoreHorizontal, X, User, Sparkles, MessageSquare, ShieldCheck, Briefcase, FileText, CreditCard, HelpCircle, Phone, Globe } from 'lucide-react';
 import { Language } from '../translations';
-import ArohiAvatar from './ArohiAvatar';
 
 interface BottomNavBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  language: Language;
+  language?: Language;
   onQuickChat?: (prompt: string) => void;
   setIsChatOpen?: (isOpen: boolean) => void;
   isChatOpen?: boolean;
   isChatMinimized?: boolean;
   setIsChatMinimized?: (isMin: boolean) => void;
   isDarkMode?: boolean;
+  onOpenSidebar?: () => void;
 }
 
 export default function BottomNavBar({ 
@@ -23,122 +23,329 @@ export default function BottomNavBar({
   isChatOpen,
   isChatMinimized,
   setIsChatMinimized,
-  isDarkMode = true
+  isDarkMode = true,
+  onOpenSidebar
 }: BottomNavBarProps) {
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+
+  // Active state determinations matching mock-up
+  const isHomeActive = activeTab === 'home';
+  const isProductsActive = [
+    'business-os', 
+    'assistant', 
+    'calling-agents', 
+    'exams', 
+    'institutions', 
+    'govt',
+    'products'
+  ].includes(activeTab);
+
+  const isSolutionsActive = [
+    'tools', 
+    'solutions', 
+    'syllabus', 
+    'courses'
+  ].includes(activeTab);
+
+  const isOpportunitiesActive = [
+    'opportunities', 
+    'jobs', 
+    'mission87', 
+    'career', 
+    'resume'
+  ].includes(activeTab);
+
+  const isMoreActive = [
+    'dashboard', 
+    'profile', 
+    'account', 
+    'pricing', 
+    'admin', 
+    'partner', 
+    'franchise', 
+    'faqs', 
+    'contact', 
+    'blogs'
+  ].includes(activeTab) || isMoreMenuOpen;
+
+  const handleProductsClick = () => {
+    setIsMoreMenuOpen(false);
+    if (activeTab === 'home') {
+      const el = document.getElementById('ecosystem-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 500, behavior: 'smooth' });
+      }
+    } else {
+      onTabChange('home');
+      setTimeout(() => {
+        const el = document.getElementById('ecosystem-section');
+        el?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  };
+
+  const handleSolutionsClick = () => {
+    setIsMoreMenuOpen(false);
+    if (activeTab === 'home') {
+      const el = document.getElementById('solutions-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        onTabChange('tools');
+      }
+    } else {
+      onTabChange('tools');
+    }
+  };
+
+  const handleMoreClick = () => {
+    if (onOpenSidebar) {
+      onOpenSidebar();
+    } else {
+      setIsMoreMenuOpen(prev => !prev);
+    }
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[80] p-3 pointer-events-none font-sans">
-      <div className={`max-w-md mx-auto rounded-3xl border px-5 py-2.5 flex items-center justify-between pointer-events-auto backdrop-blur-2xl shadow-2xl transition-all duration-300 ${
-        isDarkMode 
-          ? 'bg-[#0a0f20]/92 border-blue-500/20 text-slate-400 shadow-[0_15px_50px_rgba(0,0,0,0.85)]' 
-          : 'bg-white/90 border-slate-200/90 text-slate-600 shadow-[0_12px_45px_-8px_rgba(37,99,235,0.12)]'
-      }`}>
-        
-        {/* Home Tab */}
-        <button
-          onClick={() => {
-            onTabChange('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
-            activeTab === 'home' 
-              ? 'text-blue-600 dark:text-blue-400 font-black scale-105' 
-              : 'hover:text-blue-600 dark:hover:text-blue-400 text-slate-500 dark:text-slate-400'
-          }`}
+    <>
+      {/* Quick "More" Modal Drawer if sidebar handler not present or on click */}
+      {isMoreMenuOpen && (
+        <div 
+          className="fixed inset-0 z-[85] bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200"
+          onClick={() => setIsMoreMenuOpen(false)}
         >
-          <Home className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Home</span>
-        </button>
-
-        {/* Chat Tab */}
-        <button
-          onClick={() => {
-            onTabChange('arohi');
-            if (setIsChatOpen) setIsChatOpen(true);
-            if (setIsChatMinimized) setIsChatMinimized(false);
-            if (onQuickChat) onQuickChat("Hi Arohi, let's chat!");
-          }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
-            activeTab === 'arohi' 
-              ? 'text-blue-600 dark:text-blue-400 font-black scale-105' 
-              : 'hover:text-blue-600 dark:hover:text-blue-400 text-slate-500 dark:text-slate-400'
-          }`}
-        >
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Chat</span>
-        </button>
-
-        {/* Central Ask Arohi Floating Avatar Button */}
-        <div className="relative -mt-9 flex flex-col items-center justify-center">
-          {/* ASK AROHI! Floating Animated Pill Badge */}
-          <div className="mb-1 bg-gradient-to-r from-[#091533] via-[#1d4ed8] to-[#2563eb] text-white px-3 py-0.5 rounded-full border border-blue-400/60 text-[9px] font-black tracking-wider uppercase shadow-[0_4px_18px_rgba(37,99,235,0.45)] backdrop-blur-md flex items-center gap-1.5 whitespace-nowrap select-none pointer-events-none z-20 animate-pulse">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-ping shrink-0"></span>
-            <span>ASK AROHI! ✨</span>
-          </div>
-
-          {/* Core Circular Avatar Button */}
-          <button
-            onClick={() => {
-              if (isChatOpen) {
-                if (isChatMinimized) {
-                  if (setIsChatMinimized) setIsChatMinimized(false);
-                } else {
-                  if (setIsChatOpen) setIsChatOpen(false);
-                }
-              } else {
-                if (setIsChatOpen) setIsChatOpen(true);
-                if (setIsChatMinimized) setIsChatMinimized(false);
-                onTabChange('arohi');
-              }
-            }}
-            className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0 bg-transparent active:scale-95 transition-all duration-300 shadow-[0_8px_32px_rgba(37,99,235,0.4)] border-2 border-blue-400 hover:border-cyan-300 cursor-pointer overflow-visible group"
-            title="Talk to AROHI"
+          <div 
+            className={`w-full max-w-md mx-auto rounded-t-3xl border-t border-x p-5 space-y-4 shadow-2xl mb-16 animate-in slide-in-from-bottom duration-250 ${
+              isDarkMode 
+                ? 'bg-[#0f1424] border-zinc-800 text-white' 
+                : 'bg-white border-zinc-200 text-zinc-900'
+            }`}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* The Arohi image filling the entire button */}
-            <div className="w-full h-full rounded-full overflow-hidden bg-[#080c18]">
-              <ArohiAvatar className="w-full h-full scale-[1.08] object-cover transition-transform duration-500 group-hover:scale-120" />
+            <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <h3 className="text-sm font-black tracking-tight uppercase">Arohi AI Ecosystem & Suites</h3>
+              </div>
+              <button 
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Glowing ring animation */}
-            <span className="absolute inset-0 rounded-full border-2 border-blue-400/40 animate-ping opacity-60 pointer-events-none"></span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-semibold">
+              <button
+                onClick={() => {
+                  onTabChange('dashboard');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-blue-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <User className="w-4 h-4 text-blue-500 shrink-0" />
+                <span>My Profile & Wallet</span>
+              </button>
 
-            {/* Active green status light */}
-            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-[#00e676] rounded-full border-2 border-[#080c18] z-10 shadow-[0_0_8px_#00e676]"></span>
-          </button>
+              <button
+                onClick={() => {
+                  setIsMoreMenuOpen(false);
+                  if (setIsChatOpen) setIsChatOpen(true);
+                  if (setIsChatMinimized) setIsChatMinimized(false);
+                  if (onQuickChat) onQuickChat("Hi Arohi, let's explore!");
+                  onTabChange('arohi');
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-indigo-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>Ask Arohi AI</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onTabChange('mission87');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-emerald-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Mission 87 Portal</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onTabChange('pricing');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-amber-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <CreditCard className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Pricing Plans</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onTabChange('resume');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-purple-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <FileText className="w-4 h-4 text-purple-500 shrink-0" />
+                <span>ATS Resume AI</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onTabChange('faqs');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-rose-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <HelpCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                <span>FAQs &amp; Help Desk</span>
+              </button>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* Tools Tab */}
-        <button
-          onClick={() => {
-            onTabChange('tools');
-          }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
-            activeTab === 'tools' || activeTab === 'syllabus'
-              ? 'text-blue-600 dark:text-blue-400 font-black scale-105' 
-              : 'hover:text-blue-600 dark:hover:text-blue-400 text-slate-500 dark:text-slate-400'
-          }`}
-        >
-          <Grid className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Tools</span>
-        </button>
+      {/* 5-Item Bottom Navigation Bar matching the Mockup */}
+      <nav 
+        id="arohi-bottom-nav-bar"
+        className={`fixed bottom-0 left-0 right-0 z-[80] transition-all duration-300 font-sans border-t select-none ${
+          isDarkMode 
+            ? 'bg-[#0b0e17]/96 border-zinc-800/80 text-zinc-400 backdrop-blur-xl shadow-[0_-8px_30px_rgba(0,0,0,0.7)]' 
+            : 'bg-white/98 border-zinc-200/90 text-zinc-500 backdrop-blur-xl shadow-[0_-4px_25px_rgba(0,0,0,0.06)]'
+        }`}
+      >
+        <div className="max-w-lg mx-auto px-2 py-1.5 flex items-center justify-around">
+          
+          {/* 1. Home Tab */}
+          <button
+            type="button"
+            id="nav-tab-home"
+            onClick={() => {
+              setIsMoreMenuOpen(false);
+              onTabChange('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex-1 py-1 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer rounded-xl group ${
+              isHomeActive 
+                ? 'text-blue-600 dark:text-blue-400 font-black' 
+                : 'hover:text-blue-600 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400'
+            }`}
+          >
+            <div className={`transition-transform duration-200 group-hover:scale-110 ${isHomeActive ? 'scale-105' : ''}`}>
+              <Home 
+                className="w-5 h-5" 
+                fill={isHomeActive ? "currentColor" : "none"} 
+                strokeWidth={isHomeActive ? 2.5 : 2} 
+              />
+            </div>
+            <span className={`text-[10px] sm:text-[11px] leading-none tracking-tight ${isHomeActive ? 'font-black' : 'font-semibold'}`}>
+              Home
+            </span>
+          </button>
 
-        {/* Profile Tab */}
-        <button
-          onClick={() => {
-            onTabChange('dashboard');
-          }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 transition-all cursor-pointer rounded-xl ${
-            activeTab === 'dashboard' || activeTab === 'account' || activeTab === 'profile'
-              ? 'text-blue-600 dark:text-blue-400 font-black scale-105' 
-              : 'hover:text-blue-600 dark:hover:text-blue-400 text-slate-500 dark:text-slate-400'
-          }`}
-        >
-          <User className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Profile</span>
-        </button>
+          {/* 2. Products Tab (Isometric 3D Box Icon) */}
+          <button
+            type="button"
+            id="nav-tab-products"
+            onClick={handleProductsClick}
+            className={`flex-1 py-1 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer rounded-xl group ${
+              isProductsActive 
+                ? 'text-blue-600 dark:text-blue-400 font-black' 
+                : 'hover:text-blue-600 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400'
+            }`}
+          >
+            <div className={`transition-transform duration-200 group-hover:scale-110 ${isProductsActive ? 'scale-105' : ''}`}>
+              <Package 
+                className="w-5 h-5" 
+                fill={isProductsActive ? "currentColor" : "none"} 
+                fillOpacity={isProductsActive ? 0.2 : 0}
+                strokeWidth={isProductsActive ? 2.5 : 2} 
+              />
+            </div>
+            <span className={`text-[10px] sm:text-[11px] leading-none tracking-tight ${isProductsActive ? 'font-black' : 'font-semibold'}`}>
+              Products
+            </span>
+          </button>
 
-      </div>
-    </div>
+          {/* 3. Solutions Tab (2x2 Grid Icon) */}
+          <button
+            type="button"
+            id="nav-tab-solutions"
+            onClick={handleSolutionsClick}
+            className={`flex-1 py-1 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer rounded-xl group ${
+              isSolutionsActive 
+                ? 'text-blue-600 dark:text-blue-400 font-black' 
+                : 'hover:text-blue-600 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400'
+            }`}
+          >
+            <div className={`transition-transform duration-200 group-hover:scale-110 ${isSolutionsActive ? 'scale-105' : ''}`}>
+              <LayoutGrid 
+                className="w-5 h-5" 
+                fill={isSolutionsActive ? "currentColor" : "none"} 
+                strokeWidth={isSolutionsActive ? 2.5 : 2} 
+              />
+            </div>
+            <span className={`text-[10px] sm:text-[11px] leading-none tracking-tight ${isSolutionsActive ? 'font-black' : 'font-semibold'}`}>
+              Solutions
+            </span>
+          </button>
+
+          {/* 4. Opportunities Tab (Compass Icon) */}
+          <button
+            type="button"
+            id="nav-tab-opportunities"
+            onClick={() => {
+              setIsMoreMenuOpen(false);
+              onTabChange('opportunities');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex-1 py-1 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer rounded-xl group ${
+              isOpportunitiesActive 
+                ? 'text-blue-600 dark:text-blue-400 font-black' 
+                : 'hover:text-blue-600 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400'
+            }`}
+          >
+            <div className={`transition-transform duration-200 group-hover:scale-110 ${isOpportunitiesActive ? 'scale-105' : ''}`}>
+              <Compass 
+                className="w-5 h-5" 
+                strokeWidth={isOpportunitiesActive ? 2.5 : 2} 
+              />
+            </div>
+            <span className={`text-[10px] sm:text-[11px] leading-none tracking-tight ${isOpportunitiesActive ? 'font-black' : 'font-semibold'}`}>
+              Opportunities
+            </span>
+          </button>
+
+          {/* 5. More Tab (3 Horizontal Dots Icon) */}
+          <button
+            type="button"
+            id="nav-tab-more"
+            onClick={handleMoreClick}
+            className={`flex-1 py-1 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer rounded-xl group ${
+              isMoreActive 
+                ? 'text-blue-600 dark:text-blue-400 font-black' 
+                : 'hover:text-blue-600 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400'
+            }`}
+          >
+            <div className={`transition-transform duration-200 group-hover:scale-110 ${isMoreActive ? 'scale-105' : ''}`}>
+              <MoreHorizontal 
+                className="w-5 h-5" 
+                strokeWidth={isMoreActive ? 3 : 2} 
+              />
+            </div>
+            <span className={`text-[10px] sm:text-[11px] leading-none tracking-tight ${isMoreActive ? 'font-black' : 'font-semibold'}`}>
+              More
+            </span>
+          </button>
+
+        </div>
+      </nav>
+    </>
   );
 }
-
-
