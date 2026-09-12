@@ -7495,6 +7495,75 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
   }
 });
 
+// Universal Multilingual Speech-to-Text Transcriber (Gemini Multimodal Audio)
+app.post('/api/transcribe-audio', async (req, res) => {
+  try {
+    const { audioBase64, mimeType = 'audio/webm', languageHint = 'en' } = req.body;
+    if (!audioBase64 || typeof audioBase64 !== 'string') {
+      return res.status(400).json({ success: false, error: 'audioBase64 is required' });
+    }
+
+    const client = getAiClient('v1beta') || getAiClient('v1alpha');
+    if (!client) {
+      return res.status(503).json({ success: false, error: 'Gemini client not initialized' });
+    }
+
+    const cleanBase64 = audioBase64.includes('base64,') ? audioBase64.split('base64,')[1] : audioBase64;
+    const cleanMime = mimeType.split(';')[0].trim() || 'audio/webm';
+
+    // Model fallback sequence strictly adhering to locked aliases
+    const modelCandidates = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    let transcribedText = '';
+
+    for (const modelName of modelCandidates) {
+      try {
+        const response = await client.models.generateContent({
+          model: modelName,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: cleanMime,
+                    data: cleanBase64
+                  }
+                },
+                {
+                  text: `You are an accurate, verbatim speech-to-text transcriber for Arohi AI.
+Transcribe the user's spoken words verbatim into text.
+Language hint: ${languageHint}.
+Support all languages including Odia, Hindi, English, Bengali, Telugu, Tamil, Marathi, Punjabi, Gujarati, Urdu, Malayalam, Kannada, and international languages.
+CRITICAL RULES:
+1. Output ONLY the verbatim spoken words transcribed.
+2. DO NOT add any greeting, preamble, apology, conversational answer, or markdown quotes.
+3. If no intelligible speech is present or the audio is silent, output nothing (empty string).`
+                }
+              ]
+            }
+          ]
+        });
+
+        const outputText = response?.text || response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (outputText.trim()) {
+          transcribedText = outputText.trim();
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Transcribe attempt with ${modelName} failed:`, err?.message || err);
+      }
+    }
+
+    return res.json({
+      success: true,
+      text: transcribedText
+    });
+  } catch (error: any) {
+    console.error('Error in /api/transcribe-audio:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to transcribe audio' });
+  }
+});
+
 // Flagship Arohi Zypher High-Fidelity Audio TTS Synthesizer
 const arohiZypherAudioCache = new Map<string, { audioBase64: string; mimeType: string }>();
 let lastGeminiTtsCooldownTimestamp = 0;

@@ -3,6 +3,7 @@
   "description": "Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. India’s sovereign LLM cum LMM AI ecosystem with 150+ languages live voice AI.",
   "requestFramePermissions": [
     "microphone",
+    "camera",
     "geolocation"
   ],
   "majorCapabilities": [

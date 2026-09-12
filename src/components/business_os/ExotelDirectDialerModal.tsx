@@ -365,7 +365,7 @@ export default function ExotelDirectDialerModal({
         if (data.isCallerIdPending || (!data.liveDialDispatched && data.exotelError)) {
           setCallerIdWarning(
             data.exotelError?.reason ||
-            'Exotel Virtual Number (Caller ID) is pending KYC verification. Connected automatically via Instant Duplex AudioStream so you can test without delay!'
+            'Exotel Virtual Number (Caller ID) is pending KYC verification. Connected automatically via Direct Voice Call so you can test without delay!'
           );
         }
 
@@ -392,9 +392,9 @@ export default function ExotelDirectDialerModal({
         }, 2200);
 
         if (data.liveDialDispatched) {
-          showToast(`Live Exotel PSTN call placed to ${data.phoneNumber}!`);
+          showToast(`Live Exotel call placed to ${data.phoneNumber}!`);
         } else {
-          showToast(`Connected via Duplex AudioStream (Caller ID pending KYC)`);
+          showToast(`Connected via Direct Voice Call (Caller ID pending verification)`);
         }
       } else {
         setCallState('idle');
@@ -652,7 +652,7 @@ export default function ExotelDirectDialerModal({
                 <p className="text-[11px] text-amber-800 dark:text-amber-300/90 leading-relaxed">
                   Under Indian Telecom regulations (TRAI & Department of Telecom), Exotel cannot allocate a dedicated virtual Caller ID (ExoPhone) immediately until business KYC documents (GST, PAN, Letter of Undertaking) are verified (typically 24–72 hrs).
                   <span className="block mt-1 font-semibold text-zinc-900 dark:text-white">
-                    ⚡ Zero Waiting Required: Select <span className="underline decoration-purple-500 underline-offset-2">"Instant Duplex AudioStream"</span> below to run two-way voice conversations with 24kHz Indian neural voice and microphone right now!
+                    ⚡ Zero Waiting Required: Select <span className="underline decoration-purple-500 underline-offset-2">"Direct Voice Call"</span> below to talk directly with the AI using your microphone right now!
                   </span>
                 </p>
               </div>
@@ -694,10 +694,10 @@ export default function ExotelDirectDialerModal({
                     <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 space-y-1">
                       <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                         <span className="w-4 h-4 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 flex items-center justify-center text-[10px] font-bold">3</span>
-                        Instant AudioStream Ready
+                        Instant Voice Call Ready
                       </div>
                       <p className="text-zinc-500 text-[10px] leading-relaxed">
-                        Don't let telecom paperwork stop your progress. Arohi AI gives you direct two-way duplex audio with microphone speech-to-text so you can talk with the AI immediately.
+                        Don't let telecom paperwork stop your progress. Arohi AI provides direct two-way voice calling with your microphone so you can talk with the AI immediately.
                       </p>
                     </div>
                   </div>
@@ -718,14 +718,14 @@ export default function ExotelDirectDialerModal({
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="font-bold text-xs flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
                       <Zap className="w-3.5 h-3.5" />
-                      <span>⚡ Instant Duplex AudioStream</span>
+                      <span>⚡ Direct Voice Call (Instant)</span>
                     </div>
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       Active Now • 0s Wait
                     </span>
                   </div>
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-normal">
-                    No Caller ID needed. Direct two-way voice with 24kHz Indian neural voice, microphone speech input, and instant CRM logging.
+                    No Caller ID needed. Direct two-way conversation with natural Indian voice, microphone speech input, and automatic CRM logging.
                   </p>
                 </button>
 
@@ -930,7 +930,7 @@ export default function ExotelDirectDialerModal({
                   </div>
 
                   <p className="text-xs text-purple-200 leading-relaxed">
-                    Once placed, Exotel will ring the customer's phone and stream high-fidelity 24kHz bi-directional audio with real-time Indian cadence and automatic CRM disposition.
+                    Once placed, Exotel will ring the customer's phone and connect a natural, real-time voice call with automatic CRM updates.
                   </p>
 
                   <button
@@ -962,12 +962,12 @@ export default function ExotelDirectDialerModal({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold">
-                        {callState === 'dialing' && 'Connecting to Exotel BSIP Trunk...'}
+                        {callState === 'dialing' && 'Connecting phone line...'}
                         {callState === 'ringing' && `Telecom Ringing: ${phoneNumber} (${detectedCarrier})...`}
                         {callState === 'connected' && `Live Call In Progress with ${customerName}`}
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/10 text-purple-300">
-                        {isLiveCarrier ? 'Live PSTN/GSM Trunk' : 'Duplex AudioStream'}
+                        {isLiveCarrier ? 'Live Phone Line' : 'Direct Voice Call'}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-400">
@@ -1015,15 +1015,15 @@ export default function ExotelDirectDialerModal({
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                      <span>{isAgentSpeaking ? `${agentName} is Speaking (24kHz HD Voice)` : 'Listening for Caller Response...'}</span>
+                      <span>{isAgentSpeaking ? `${agentName} is Speaking...` : 'Listening for Caller Response...'}</span>
                       {isAgentSpeaking && (
                         <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono">
-                          Indian Cadence ({language.split(' ')[0]})
+                          Natural Cadence ({language.split(' ')[0]})
                         </span>
                       )}
                     </div>
                     <p className="text-[11px] text-zinc-500">
-                      Round-trip Latency: <strong className="text-emerald-600">~620ms</strong> (VAD: 130ms | STT: 150ms | Core: 200ms | TTS: 140ms)
+                      Call Quality: <strong className="text-emerald-600 font-semibold">Excellent</strong> (Instant Responsiveness)
                     </p>
                   </div>
                 </div>
@@ -1150,7 +1150,7 @@ export default function ExotelDirectDialerModal({
         <div className="px-6 py-3 border-t border-black/[0.06] dark:border-white/[0.08] bg-zinc-50/70 dark:bg-zinc-900/50 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 text-zinc-500">
             <Radio className="w-3.5 h-3.5 text-purple-600" />
-            <span>Exotel SIP Trunk • E.164 +91 Compliant • Duplex AudioStream 8/16/24kHz</span>
+            <span>Verified Cloud Telephony • Indian +91 Calling • Crystal Clear Audio</span>
           </div>
 
           <div className="flex items-center gap-2">

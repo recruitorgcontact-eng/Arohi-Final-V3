@@ -210,7 +210,7 @@ export default function GenieAuditModal({
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span>Indian Speech Vernacular Grounding</span>
                 </div>
-                <span className="font-bold">24kHz NEURAL ACTIVE</span>
+                <span className="font-bold">NATURAL VOICE READY</span>
               </div>
             </div>
 

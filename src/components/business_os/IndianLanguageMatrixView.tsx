@@ -58,7 +58,7 @@ export default function IndianLanguageMatrixView({
 
     stopArohiVoice();
     setIsPlayingCode(lang.code);
-    showToast(`Playing ${lang.name} (${lang.nativeName}) with Arohi Flagship 24kHz HD Voice...`);
+    showToast(`Playing ${lang.name} (${lang.nativeName}) with Arohi Natural Voice...`);
 
     playArohiVoice(lang.defaultGreeting, {
       voice: 'Zypher',

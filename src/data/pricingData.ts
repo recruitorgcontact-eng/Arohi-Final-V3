@@ -508,3 +508,326 @@ export function detectUserCurrency(): 'INR' | 'USD' {
 export function getPricingTiers(currency: 'INR' | 'USD' = 'INR'): PricingTier[] {
   return currency === 'USD' ? INTERNATIONAL_PRICING_TIERS : PRICING_TIERS;
 }
+
+export interface ArohiOneTier {
+  id: string;
+  name: string;
+  tagline: string;
+  badge?: string;
+  isPopular?: boolean;
+  priceINR: number;
+  priceUSD: number;
+  annualPriceINR: number;
+  annualPriceUSD: number;
+  trialDays: number;
+  trialMinutes: number;
+  seats: number | string;
+  agentsCount: number | string;
+  voiceMinutes: number;
+  overageRateINR: number;
+  overageRateUSD: number;
+  description: string;
+  features: string[];
+  recommendedFor: string;
+  agentsIncluded: string[];
+}
+
+export const AROHI_ONE_TIERS: ArohiOneTier[] = [
+  {
+    id: 'arohi_one_starter',
+    name: 'Starter OS',
+    tagline: 'Micro-Enterprises & Solo Professionals',
+    badge: '03 Days Free Trial',
+    priceINR: 4999,
+    priceUSD: 149,
+    annualPriceINR: 49990, // 2 Months Free
+    annualPriceUSD: 1490,
+    trialDays: 3,
+    trialMinutes: 100,
+    seats: 3,
+    agentsCount: 2,
+    voiceMinutes: 600,
+    overageRateINR: 3.90,
+    overageRateUSD: 0.12,
+    description: 'Autonomous AI Business OS starter pack with unified CRM, appointment management, and 2 active voice agents.',
+    recommendedFor: 'Clinics, consultants, local service providers, single-location shops.',
+    agentsIncluded: ['Smart AI Receptionist', 'Appointment Scheduling Agent'],
+    features: [
+      '3 Team / Operator Seats included',
+      '2 Active Autonomous Voice Agents',
+      '600 Voice Minutes / Month (~10 Hours)',
+      '03-Day Free Trial (100 Test Minutes)',
+      'Unified Lead & Customer CRM',
+      'WhatsApp & Email Automation Bots',
+      'Automated Call Transcripts & Summaries',
+      '10 Regional Indian Languages + English',
+      'Overage: ₹3.90 / minute ($0.12 / min)',
+      'Direct Razorpay UPI / Card / NetBanking'
+    ]
+  },
+  {
+    id: 'arohi_one_growth',
+    name: 'Growth OS',
+    tagline: 'The Core Digital Workforce',
+    badge: '★ Most Popular',
+    isPopular: true,
+    priceINR: 14999,
+    priceUSD: 399,
+    annualPriceINR: 149990, // 2 Months Free
+    annualPriceUSD: 3990,
+    trialDays: 3,
+    trialMinutes: 150,
+    seats: 10,
+    agentsCount: 5,
+    voiceMinutes: 2500,
+    overageRateINR: 3.20,
+    overageRateUSD: 0.10,
+    description: 'The complete AI Workforce replacing 3-5 human telecallers with automated pipelines, outbound sales, and support.',
+    recommendedFor: 'Growing SMBs, D2C brands, real estate firms, hospitality, private academies.',
+    agentsIncluded: ['Smart Receptionist', 'Inbound Support Desk', 'Outbound Sales Qualifier', 'CSAT Feedback Agent', 'Marketing Follow-up'],
+    features: [
+      '10 Team / Operator Seats included',
+      '5 Active Autonomous Voice Agents',
+      '2,500 Voice Minutes / Month (~42 Hours)',
+      '03-Day Free Trial (150 Test Minutes)',
+      'Multi-Pipeline Deal & Lead Tracking',
+      'Automated Outbound Campaign Dialer',
+      'Sub-Second Conversational Voice Latency',
+      'Webhook, Zapier & API Integrations',
+      '50+ Global & Vernacular Languages',
+      'Overage: ₹3.20 / minute ($0.10 / min)',
+      'Priority Razorpay & Corporate Billing'
+    ]
+  },
+  {
+    id: 'arohi_one_scale',
+    name: 'Scale OS',
+    tagline: 'High-Volume & Regulated BFSI Workforce',
+    badge: 'High Performance',
+    priceINR: 34999,
+    priceUSD: 899,
+    annualPriceINR: 349990, // 2 Months Free
+    annualPriceUSD: 8990,
+    trialDays: 3,
+    trialMinutes: 250,
+    seats: 25,
+    agentsCount: 12,
+    voiceMinutes: 7500,
+    overageRateINR: 2.50,
+    overageRateUSD: 0.08,
+    description: 'Heavy-duty enterprise workforce for loan repayments, debt recovery, patient triage, and multi-branch operations.',
+    recommendedFor: 'NBFCs, lending institutions, hospitals, educational chains, multi-city sales teams.',
+    agentsIncluded: ['Loan Repayment Agent', 'Late-Stage Recovery Specialist', 'Healthcare Triage Desk', 'Admissions Counselor', 'VIP Concierge', '+ 7 more personas'],
+    features: [
+      '25 Team / Operator Seats included',
+      '12 Active Autonomous Voice Agents',
+      '7,500 Voice Minutes / Month (~125 Hours)',
+      '03-Day Free Trial (250 Test Minutes)',
+      'Predictive Parallel Auto-Dialer',
+      'Custom Knowledgebase RAG Ingestion',
+      'Human-Agent Live Warm Call Handoff',
+      'Custom Voice Cloning Studio Included',
+      'Full 150+ Multilingual Voice Engine',
+      'Overage: ₹2.50 / minute ($0.08 / min)',
+      'Dedicated Account Support & SLA'
+    ]
+  },
+  {
+    id: 'arohi_one_enterprise',
+    name: 'Enterprise OS',
+    tagline: 'Sovereign & National Scale Deployment',
+    badge: 'Custom Fleet',
+    priceINR: 89000,
+    priceUSD: 2499,
+    annualPriceINR: 890000,
+    annualPriceUSD: 24990,
+    trialDays: 3,
+    trialMinutes: 500,
+    seats: 'Unlimited',
+    agentsCount: '25+ Custom',
+    voiceMinutes: 20000,
+    overageRateINR: 1.80,
+    overageRateUSD: 0.06,
+    description: 'Custom private VPC or on-premise installation with dedicated LLM fine-tuning, core banking integration, and unlimited users.',
+    recommendedFor: 'Banks, government bodies, telecom operators, nationwide insurance networks.',
+    agentsIncluded: ['Custom Fleet Tailored to Enterprise Specifications'],
+    features: [
+      'Unlimited User & Operator Seats',
+      '25+ Custom Fleet Personas & Workflows',
+      '20,000 to 100,000+ Minutes / Month',
+      'Dedicated Private VPC / Cloud Run Instance',
+      'Custom Fine-Tuned Proprietary Models',
+      'Core Banking / ERP Direct Connectors',
+      '99.95% Guaranteed Uptime SLA',
+      'Dedicated Technical Account Manager',
+      'Overage: Down to ₹1.50 - ₹1.80 / min ($0.05 / min)',
+      'Corporate Purchase Orders & Invoicing'
+    ]
+  }
+];
+
+export interface ArohiVoiceAgentTier {
+  id: string;
+  name: string;
+  badge?: string;
+  isPopular?: boolean;
+  priceINR: number;
+  priceUSD: number;
+  annualPriceINR: number;
+  annualPriceUSD: number;
+  trialDays: number;
+  trialMinutes: number;
+  voiceMinutes: number;
+  agentsCount: number | string;
+  overageRateINR: number;
+  overageRateUSD: number;
+  description: string;
+  features: string[];
+  recommendedFor: string;
+}
+
+export const AROHI_CALLING_AGENT_TIERS: ArohiVoiceAgentTier[] = [
+  {
+    id: 'voice_lite',
+    name: 'Voice Lite',
+    badge: '03 Days Free Trial',
+    priceINR: 2999,
+    priceUSD: 79,
+    annualPriceINR: 29990,
+    annualPriceUSD: 790,
+    trialDays: 3,
+    trialMinutes: 75,
+    voiceMinutes: 500,
+    agentsCount: 1,
+    overageRateINR: 4.20,
+    overageRateUSD: 0.13,
+    description: 'Single dedicated AI phone agent for inquiries, reception, or appointment scheduling.',
+    recommendedFor: 'Clinics, dental offices, single consultants, local boutiques.',
+    features: [
+      '1 Dedicated AI Agent Persona',
+      '500 Voice Minutes / Month (~8.3 Hours)',
+      '03-Day Free Trial (75 Test Minutes)',
+      'Inbound & Outbound Calling',
+      'Instant Call Recordings & Transcripts',
+      'Overage: ₹4.20 / minute ($0.13 / min)',
+      'Razorpay Instant Activation'
+    ]
+  },
+  {
+    id: 'voice_pro',
+    name: 'Voice Pro',
+    badge: '★ Best Value',
+    isPopular: true,
+    priceINR: 9999,
+    priceUSD: 269,
+    annualPriceINR: 99990,
+    annualPriceUSD: 2690,
+    trialDays: 3,
+    trialMinutes: 150,
+    voiceMinutes: 2200,
+    agentsCount: 3,
+    overageRateINR: 3.40,
+    overageRateUSD: 0.10,
+    description: '3 synchronized voice agents covering front-desk reception, outbound qualification, and support.',
+    recommendedFor: 'D2C brands, hospitality, hotels, coaching institutes, customer service desks.',
+    features: [
+      '3 Active AI Agent Personas',
+      '2,200 Voice Minutes / Month (~36.6 Hours)',
+      '03-Day Free Trial (150 Test Minutes)',
+      'Simultaneous Multi-Call Handling',
+      'Custom Context & Knowledge Injection',
+      '50+ Vernacular Languages',
+      'Overage: ₹3.40 / minute ($0.10 / min)',
+      'Razorpay Instant Activation'
+    ]
+  },
+  {
+    id: 'voice_fleet',
+    name: 'Voice Fleet',
+    badge: 'High Volume',
+    priceINR: 24999,
+    priceUSD: 649,
+    annualPriceINR: 249990,
+    annualPriceUSD: 6490,
+    trialDays: 3,
+    trialMinutes: 250,
+    voiceMinutes: 6500,
+    agentsCount: 8,
+    overageRateINR: 2.60,
+    overageRateUSD: 0.08,
+    description: 'Fleet of 8 autonomous agents handling high-throughput call centers, reminders, and verification.',
+    recommendedFor: 'Real estate developers, admission offices, NBFC telecalling desks.',
+    features: [
+      '8 Active AI Agent Personas',
+      '6,500 Voice Minutes / Month (~108 Hours)',
+      '03-Day Free Trial (250 Test Minutes)',
+      'Predictive Campaign Auto-Dialer',
+      'CRM Webhook & Live Call Handoff',
+      'Sub-Second Response Latency',
+      'Overage: ₹2.60 / minute ($0.08 / min)',
+      'Razorpay Instant Activation'
+    ]
+  },
+  {
+    id: 'voice_10k',
+    name: 'Voice 10K Pack',
+    badge: 'Enterprise Bulk',
+    priceINR: 38000,
+    priceUSD: 999,
+    annualPriceINR: 380000,
+    annualPriceUSD: 9990,
+    trialDays: 3,
+    trialMinutes: 350,
+    voiceMinutes: 10000,
+    agentsCount: 15,
+    overageRateINR: 2.20,
+    overageRateUSD: 0.07,
+    description: '10,000 voice minutes fleet for aggressive debt recovery, lead verification, and survey blitzes.',
+    recommendedFor: 'Debt recovery agencies, finance companies, telecom and utility desks.',
+    features: [
+      '15 Active AI Agent Personas',
+      '10,000 Voice Minutes / Month (~166 Hours)',
+      '03-Day Free Trial (350 Test Minutes)',
+      'High Concurrency (100+ simultaneous lines)',
+      'Strict Regulatory & PII Compliance Mode',
+      'Overage: ₹2.20 / minute ($0.07 / min)',
+      'Corporate Payment & Custom Invoicing'
+    ]
+  }
+];
+
+export const AROHI_ADDONS = [
+  {
+    id: 'addon_extra_agent',
+    name: 'Additional AI Voice Persona',
+    priceINR: 2499,
+    priceUSD: 69,
+    cycle: '/month',
+    desc: 'Deploy an extra pre-trained industry AI voice agent with 250 bonus minutes included.'
+  },
+  {
+    id: 'addon_voice_cloning',
+    name: 'Executive Voice Cloning Studio',
+    priceINR: 9999,
+    priceUSD: 199,
+    cycle: 'one-time setup + ₹1,499/mo',
+    desc: 'Clone the voice of your founder, CEO, or brand ambassador for lifelike automated calls.'
+  },
+  {
+    id: 'addon_virtual_number',
+    name: 'Virtual Direct Dial (DID) Number',
+    priceINR: 499,
+    priceUSD: 10,
+    cycle: '/month',
+    desc: 'Dedicated local business telephone number (Mumbai, Delhi, Bengaluru, etc.) or US/UK number.'
+  },
+  {
+    id: 'addon_tollfree_number',
+    name: 'Indian 1800 Toll-Free Number',
+    priceINR: 1499,
+    priceUSD: 39,
+    cycle: '/month',
+    desc: 'Official 1800 toll-free inbound number routed directly to your Arohi AI Receptionist.'
+  }
+];
+

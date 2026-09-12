@@ -31,28 +31,28 @@ interface InboundAgentModalProps {
 const VOICE_PROFILES: { id: VoiceProfileId; name: string; description: string; gender: string; sampleAccent: string }[] = [
   {
     id: 'Arohi-Warm-Female',
-    name: 'Arohi (Signature Reception 24kHz HD)',
-    description: "Arohi's signature sweet, loving, articulate, and warm acoustic voice. Ideal for front desk, reception, clinic appointments, and VIP caller welcome.",
-    gender: 'Female (Flagship)',
+    name: 'Arohi (Warm Reception Voice)',
+    description: "Arohi's sweet, articulate, and welcoming voice. Ideal for front desk, reception, clinic appointments, and VIP caller welcome.",
+    gender: 'Female (Signature)',
     sampleAccent: 'Indian English / Hinglish / Odia / Hindi (150+ Multilingual)'
   },
   {
     id: 'Arohi-Empathetic-Female',
-    name: 'Meera (Gentle Empathetic Care 24kHz HD)',
+    name: 'Meera (Gentle Empathetic Care Voice)',
     description: 'Calm, patient, compassionate tone ideal for healthcare clinics, citizen grievances & PwD assistance',
     gender: 'Female',
     sampleAccent: 'Odia (ଓଡ଼ିଆ) / Hindi / Indian English'
   },
   {
     id: 'Arohi-Executive-Male',
-    name: 'Arjun (Consultative Enterprise B2B 24kHz HD)',
+    name: 'Arjun (Consultative Enterprise Voice)',
     description: 'Sharp, authoritative, consultative tone ideal for enterprise sales, lead qualification & real estate',
     gender: 'Male',
     sampleAccent: 'Professional Corporate Indian English / Odia / Hindi'
   },
   {
     id: 'Arohi-Energetic-Male',
-    name: 'Kabir (Agile Support & Logistics 24kHz HD)',
+    name: 'Kabir (Agile Support & Logistics Voice)',
     description: 'Dynamic, fast-paced, proactive tone for courier delivery confirmations, COD verification & 24/7 alerts',
     gender: 'Male',
     sampleAccent: 'Multilingual 22 Official Indian Languages'

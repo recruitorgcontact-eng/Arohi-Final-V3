@@ -304,7 +304,7 @@ export default function VoiceAgentsTemplatesView({
             </span>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-3xl leading-relaxed">
-            Battle-tested Indian enterprise telephone agents. Fully equipped with conversational guardrails, 24kHz HD neural voices, multi-phase state machines, and direct CRM webhooks.
+            Battle-tested Indian enterprise telephone agents. Fully equipped with conversational guidance, natural human-like voices, intelligent workflows, and direct CRM webhooks.
           </p>
         </div>
 
@@ -355,8 +355,8 @@ export default function VoiceAgentsTemplatesView({
             onChange={(e) => setSelectedVoiceFilter(e.target.value)}
             className="px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="All">All Voice Models</option>
-            <option value="Zypher">Arohi (Signature Reception 24kHz)</option>
+            <option value="All">All Voice Styles</option>
+            <option value="Zypher">Arohi (Warm &amp; Professional Reception)</option>
             <option value="Aoede">Meera (Gentle Empathetic Care)</option>
             <option value="Fenrir">Arjun (Consultative Enterprise B2B)</option>
             <option value="Puck">Kabir (Agile Support & Logistics)</option>
@@ -479,7 +479,7 @@ export default function VoiceAgentsTemplatesView({
                       {/* Audition Button */}
                       <button
                         onClick={(e) => handleToggleAudition(template, e)}
-                        title={isAuditioning ? 'Stop audition' : 'Audition greeting in HD Neural Voice'}
+                        title={isAuditioning ? 'Stop preview' : 'Listen to voice greeting'}
                         className={`px-2 py-0.5 rounded-md text-[10px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
                           isAuditioning
                             ? 'bg-rose-500 text-white animate-pulse'
@@ -510,7 +510,7 @@ export default function VoiceAgentsTemplatesView({
                 <div className="pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
                     <Bot className="w-3 h-3 text-[#d4af37]" />
-                    <span>{getVoiceDisplayShort(template.recommendedVoice)} · 24kHz</span>
+                    <span>{getVoiceDisplayShort(template.recommendedVoice)} · Studio Voice</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">

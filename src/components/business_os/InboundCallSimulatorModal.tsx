@@ -529,7 +529,7 @@ export default function InboundCallSimulatorModal({
                   </div>
 
                   <div className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">
-                    {isSpeaking ? `🔊 ${agent?.name} speaking via 24kHz HD Voice...` : isListening ? '🎙️ Listening to you...' : '📞 Speak into mic or type below'}
+                    {isSpeaking ? `🔊 ${agent?.name} speaking in natural voice...` : isListening ? '🎙️ Listening to you...' : '📞 Speak into mic or type below'}
                   </div>
 
                   {/* Call Action Controls */}
@@ -622,11 +622,11 @@ export default function InboundCallSimulatorModal({
                 )}
               </div>
 
-              {/* Real-time Sub-500ms Latency Badge */}
+              {/* Real-time Response Status Badge */}
               <div className="flex items-center gap-1.5">
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                  <span>⚡ Latency: {lastTurnLatencyMs || 320}ms</span>
+                  <span>⚡ Response: Instant</span>
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/20 text-[#d4af37] text-[10px] font-bold">
                   22 Langs
@@ -654,7 +654,7 @@ export default function InboundCallSimulatorModal({
                     Click "Dial Inbound Call" to test live 22-language voice conversation.
                   </p>
                   <p className="text-[11px] text-zinc-400">
-                    Supports native speech in Odia (ଓଡ଼ିଆ), Hindi, Hinglish, and Indian English with sub-500ms turnaround.
+                    Supports native speech in Odia (ଓଡ଼ିଆ), Hindi, Hinglish, and Indian English with instant response.
                   </p>
                 </div>
               )}

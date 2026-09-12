@@ -22,9 +22,15 @@ import {
   Settings, 
   Bookmark, 
   Trash2,
-  Globe
+  Globe,
+  Download,
+  FileText,
+  Bot,
+  Clock,
+  ArrowRight,
+  ChevronUp
 } from 'lucide-react';
-import { formatDuration, SpeechTurn } from '../lib/pdfGenerator';
+import { formatDuration, SpeechTurn, generateCallSummaryPDF, analyzeTurns } from '../lib/pdfGenerator';
 
 interface SavedSnapshot {
   id: string;
@@ -111,6 +117,21 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
   const statusRef = useRef<string>(status);
   const hasReceivedAudioStreamRef = useRef<boolean>(false);
   const liveTypingTimerRef = useRef<any>(null);
+
+  const turnsRef = useRef<SpeechTurn[]>(turns);
+  useEffect(() => {
+    turnsRef.current = turns;
+  }, [turns]);
+
+  const currentSpeechRef = useRef<string>('');
+  useEffect(() => {
+    currentSpeechRef.current = currentSpeech;
+  }, [currentSpeech]);
+
+  const liveUserSpeechRef = useRef<string>('');
+  useEffect(() => {
+    liveUserSpeechRef.current = liveUserSpeech;
+  }, [liveUserSpeech]);
 
   // Sync status to ref
   useEffect(() => {
@@ -407,7 +428,10 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       utterance.rate = 1.0;
       utterance.pitch = 1.35;
 
+      let hasSpoken = false;
       const setVoiceAndSpeak = () => {
+        if (hasSpoken) return;
+        hasSpoken = true;
         try {
           const voices = window.speechSynthesis.getVoices();
           if (voices && voices.length > 0) {
@@ -420,14 +444,13 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               return !isExplicitMale;
             });
 
-            const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
-
             const preferredVoice = 
-              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
+              strictlyFemaleVoices.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang)) && 
                 /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-              pool.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
-              pool.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
-              pool.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in'));
+              strictlyFemaleVoices.find(v => (v.lang.toLowerCase().startsWith(shortLang) || v.lang.toLowerCase().includes(shortLang))) ||
+              strictlyFemaleVoices.find(v => /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)) ||
+              strictlyFemaleVoices.find(v => v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('-in')) ||
+              (strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices[0] : null);
 
             if (preferredVoice) {
               utterance.voice = preferredVoice;
@@ -659,6 +682,25 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                 const userCleaned = textChunk.replace(/[*#`_~]/g, '').trim();
                 if (userCleaned) {
                   setLiveUserSpeech(userCleaned);
+
+                  // Dynamically mirror spoken script to match regional languages
+                  if (/[\u0B00-\u0B7F]/.test(userCleaned) && activeLanguageRef.current !== 'or') {
+                    activeLanguageRef.current = 'or';
+                    setActiveLanguage('or');
+                  } else if (/[\u0900-\u097F]/.test(userCleaned) && activeLanguageRef.current !== 'hi') {
+                    activeLanguageRef.current = 'hi';
+                    setActiveLanguage('hi');
+                  } else if (/[\u0980-\u09FF]/.test(userCleaned) && activeLanguageRef.current !== 'bn') {
+                    activeLanguageRef.current = 'bn';
+                    setActiveLanguage('bn');
+                  } else if (/[\u0C00-\u0C7F]/.test(userCleaned) && activeLanguageRef.current !== 'te') {
+                    activeLanguageRef.current = 'te';
+                    setActiveLanguage('te');
+                  } else if (/[\u0B80-\u0BFF]/.test(userCleaned) && activeLanguageRef.current !== 'ta') {
+                    activeLanguageRef.current = 'ta';
+                    setActiveLanguage('ta');
+                  }
+
                   setTurns(prev => {
                     const last = prev[prev.length - 1];
                     if (last && last.speaker === 'user') {
@@ -688,6 +730,11 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
             }
             // Turn Completion - commit current speech to turns history and clear streaming banner
             else if (data.turnComplete || data.type === 'turnComplete') {
+              // Ensure any accidental browser speech synthesis queue is immediately purged
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+              }
+
               setCurrentSpeech(fullText => {
                 const cleanedText = (fullText || '').trim();
                 if (cleanedText) {
@@ -705,11 +752,6 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                       }
                     ];
                   });
-
-                  // True fallback: Only if zero audio packets were received throughout this entire turn
-                  if (!hasReceivedAudioStreamRef.current && cleanedText) {
-                    speakWithBrowserTTS(cleanedText);
-                  }
                 }
                 return '';
               });
@@ -873,14 +915,68 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
 
   const handleEndCall = () => {
     cleanup();
-    if (onCallComplete) {
-      onCallComplete({
-        duration: duration,
-        turns: turns,
-        date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
-        summaryText: ''
-      });
+    setStatus('ended');
+
+    // Compile final turns including any ongoing user or Arohi speech
+    const finalTurns = [...turnsRef.current];
+    const pendingUser = (liveUserSpeechRef.current || '').trim();
+    if (pendingUser) {
+      const last = finalTurns[finalTurns.length - 1];
+      if (!last || last.speaker !== 'user' || last.text !== pendingUser) {
+        finalTurns.push({
+          speaker: 'user',
+          text: pendingUser,
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        });
+      }
     }
+    const pendingArohi = (currentSpeechRef.current || '').trim();
+    if (pendingArohi) {
+      const last = finalTurns[finalTurns.length - 1];
+      if (!last || last.speaker !== 'arohi' || last.text !== pendingArohi) {
+        finalTurns.push({
+          speaker: 'arohi',
+          text: pendingArohi,
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+    }
+
+    const dateFormatted = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+    const localAnalysis = analyzeTurns(finalTurns);
+    const isCareer = localAnalysis?.isCareerRelated || finalTurns.some(t => /job|career|resume|interview|salary|skill|exam|work|scheme/i.test(t.text));
+    const summaryText = localAnalysis?.summary || "The consultation concluded with actionable insights.";
+
+    const callPayload = {
+      duration,
+      turns: finalTurns,
+      date: dateFormatted,
+      summaryText,
+      analysis: localAnalysis,
+      isCareerRelated: isCareer
+    };
+
+    // 1. Immediately store payload in sessionStorage so chat window can ingest it seamlessly
+    try {
+      sessionStorage.setItem('pending_voice_call_summary', JSON.stringify(callPayload));
+    } catch (e) {}
+
+    // 2. Dispatch event for already-mounted chat components to display the summary message
+    try {
+      window.dispatchEvent(new CustomEvent('arohi_voice_call_completed', { detail: callPayload }));
+    } catch (e) {}
+
+    // 3. Trigger parent callbacks
+    if (onCallComplete) {
+      onCallComplete(callPayload);
+    }
+
+    // 4. Automatically navigate directly to the recent chat window
+    if (onNavigateTab) {
+      onNavigateTab('chat');
+    }
+
+    // 5. Instantly close the call modal without showing any intermediate summary screens
     onClose();
   };
 
@@ -1280,7 +1376,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Voice Persona:</span>
-                <span className="font-mono text-white">Zypher (Arohi Regional)</span>
+                <span className="font-mono text-white">Arohi Natural Voice</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Model Engine:</span>

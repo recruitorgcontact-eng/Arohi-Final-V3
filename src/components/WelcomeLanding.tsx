@@ -51,7 +51,8 @@ import {
   PhoneCall,
   Camera,
   Layers,
-  Volume2
+  Volume2,
+  Loader2
 } from 'lucide-react';
 import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
@@ -288,30 +289,56 @@ export default function WelcomeLanding({
   const [drawerLangSearch, setDrawerLangSearch] = useState('');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [micAudioLevel, setMicAudioLevel] = useState<number>(0);
   const recognitionRef = useRef<any>(null);
+  const isDesiredListeningRef = useRef<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const animFrameRef = useRef<number | null>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
-  const spokenTranscriptRef = useRef<string>('');
-  const autoSubmitTimerRef = useRef<any>(null);
-  const hasSubmittedVoiceRef = useRef<boolean>(false);
+  const baseInputBeforeVoiceRef = useRef<string>('');
+
+  // Universal Robust Speech Recognition Result Parser
+  // Handles standard W3C final/interim tokens and Android Chrome cumulative prefixes cleanly
+  const parseSpeechResults = (results: any): string => {
+    if (!results || results.length === 0) return '';
+    let finalPart = '';
+    let interimPart = '';
+
+    for (let i = 0; i < results.length; ++i) {
+      const item = results[i];
+      const text = (item && item[0]?.transcript ? item[0].transcript : '').trim();
+      if (!text) continue;
+
+      if (item.isFinal) {
+        const prevClean = finalPart.trim().toLowerCase();
+        const currClean = text.toLowerCase();
+        if (prevClean && currClean.startsWith(prevClean)) {
+          finalPart = text + ' ';
+        } else {
+          finalPart += text + ' ';
+        }
+      } else {
+        interimPart = text;
+      }
+    }
+
+    return (finalPart + interimPart).trim();
+  };
 
   useEffect(() => {
     return () => {
-      stopVoiceListening(false);
+      stopVoiceListening();
     };
   }, []);
 
-  // Safe voice stop helper
-  const stopVoiceListening = (submitIfTextAvailable = false) => {
-    if (autoSubmitTimerRef.current) {
-      clearTimeout(autoSubmitTimerRef.current);
-      autoSubmitTimerRef.current = null;
-    }
+  // Safe voice stop helper - stops speech-to-text cleanly and preserves text in input
+  const stopVoiceListening = () => {
+    isDesiredListeningRef.current = false;
 
+    // 1. Stop SpeechRecognition
     if (recognitionRef.current) {
       try {
         recognitionRef.current.onend = null;
@@ -321,6 +348,14 @@ export default function WelcomeLanding({
       recognitionRef.current = null;
     }
 
+    // 2. Stop MediaRecorder if running
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    }
+
+    // 3. Stop MediaStream
     if (mediaStreamRef.current) {
       try {
         mediaStreamRef.current.getTracks().forEach(t => t.stop());
@@ -328,218 +363,199 @@ export default function WelcomeLanding({
       mediaStreamRef.current = null;
     }
 
-    if (audioContextRef.current) {
-      try {
-        audioContextRef.current.close();
-      } catch (e) {}
-      audioContextRef.current = null;
-    }
-
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-
     setIsListening(false);
     setMicAudioLevel(0);
-
-    if (submitIfTextAvailable && !hasSubmittedVoiceRef.current) {
-      const query = spokenTranscriptRef.current.trim() || landingInputText.trim();
-      if (query.length > 0) {
-        hasSubmittedVoiceRef.current = true;
-        setLandingInputText('');
-        spokenTranscriptRef.current = '';
-        if (onQuickChat) {
-          onQuickChat(query);
-        } else {
-          onEnter();
-        }
-      }
-    }
   };
 
-  // Submit recorded voice query directly to Arohi Chat
-  const submitVoiceQuery = (textToSubmit?: string) => {
-    if (hasSubmittedVoiceRef.current) return;
-    const finalQuery = (textToSubmit || spokenTranscriptRef.current || landingInputText).trim();
-    if (!finalQuery) {
-      stopVoiceListening(false);
-      return;
-    }
+  // Fallback voice recorder + Gemini audio transcription for browsers without Web Speech API
+  const startMediaRecorderFallback = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setSpeechError("Speech-to-text is not supported in this browser. Please type your message.");
+        setTimeout(() => setSpeechError(null), 5000);
+        return;
+      }
 
-    hasSubmittedVoiceRef.current = true;
-    stopVoiceListening(false);
-    setLandingInputText('');
-    spokenTranscriptRef.current = '';
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
 
-    if (onQuickChat) {
-      onQuickChat(finalQuery);
-    } else {
-      onEnter();
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : 'audio/wav';
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        if (audioBlob.size > 1200) {
+          setIsTranscribing(true);
+          try {
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+              try {
+                const base64Audio = reader.result as string;
+                const res = await fetch('/api/transcribe-audio', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    audioBase64: base64Audio,
+                    mimeType,
+                    languageHint: language
+                  })
+                });
+                const data = await res.json();
+                if (data.success && data.text) {
+                  setLandingInputText((prev) => {
+                    const prefix = prev.trim() ? prev.trim() + ' ' : '';
+                    return prefix + data.text.trim();
+                  });
+                }
+              } catch (err) {
+                console.warn("Transcription request error:", err);
+              } finally {
+                setIsTranscribing(false);
+              }
+            };
+          } catch (err) {
+            console.warn("Audio read failed:", err);
+            setIsTranscribing(false);
+          }
+        } else {
+          setIsTranscribing(false);
+        }
+      };
+
+      recorder.start(250);
+      setIsListening(true);
+      setSpeechError(null);
+    } catch (err: any) {
+      console.warn("MediaRecorder fallback error:", err);
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        setSpeechError("Microphone permission was denied. Please allow microphone access in browser settings.");
+      } else {
+        setSpeechError("Microphone could not be opened. Please check browser settings.");
+      }
+      setTimeout(() => setSpeechError(null), 5000);
+      stopVoiceListening();
     }
   };
 
   const toggleVoiceInput = async () => {
-    if (isListening) {
-      // If already listening, stopping should submit any spoken query
-      const currentSpoken = spokenTranscriptRef.current.trim() || landingInputText.trim();
-      if (currentSpoken) {
-        submitVoiceQuery(currentSpoken);
-      } else {
-        stopVoiceListening(false);
-      }
-      return;
-    }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechError("Speech Recognition is not supported by this browser. Opening Arohi Live Voice...");
-      if (onQuickChat) {
-        onQuickChat("Hello Arohi, I want to talk to you via voice.");
-      } else {
-        onEnter();
-      }
-      setTimeout(() => setSpeechError(null), 4000);
+    // If already listening or transcribing, clicking mic immediately stops it and keeps text
+    if (isListening || isTranscribing) {
+      isDesiredListeningRef.current = false;
+      stopVoiceListening();
       return;
     }
 
     setSpeechError(null);
-    hasSubmittedVoiceRef.current = false;
-    spokenTranscriptRef.current = '';
-    setLandingInputText('');
+    isDesiredListeningRef.current = true;
+    baseInputBeforeVoiceRef.current = landingInputText.trim() ? landingInputText.trim() + ' ' : '';
 
-    // Warm up microphone permissions and create audio visualizer
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaStreamRef.current = stream;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-        try {
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioContextClass) {
-            const ctx = new AudioContextClass();
-            audioContextRef.current = ctx;
-            const analyser = ctx.createAnalyser();
-            analyser.fftSize = 64;
-            const source = ctx.createMediaStreamSource(stream);
-            source.connect(analyser);
+    // 1. Preferred Native Web Speech API (Chrome, Edge, Safari, Android Chrome)
+    if (SpeechRecognition) {
+      try {
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
 
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
-            const checkVolume = () => {
-              if (!audioContextRef.current) return;
-              analyser.getByteFrequencyData(dataArray);
-              let sum = 0;
-              for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
-              }
-              const avg = sum / dataArray.length;
-              setMicAudioLevel(Math.min(100, Math.round((avg / 128) * 100)));
-              animFrameRef.current = requestAnimationFrame(checkVolume);
-            };
-            checkVolume();
+        const langMap: Record<string, string> = {
+          en: 'en-IN',
+          hi: 'hi-IN',
+          or: 'or-IN',
+          bn: 'bn-IN',
+          te: 'te-IN',
+          ta: 'ta-IN',
+          mr: 'mr-IN',
+          gu: 'gu-IN',
+          pa: 'pa-IN',
+          kn: 'kn-IN',
+          ml: 'ml-IN',
+          ur: 'ur-IN'
+        };
+        rec.lang = langMap[language] || 'en-IN';
+
+        rec.onstart = () => {
+          setIsListening(true);
+          setSpeechError(null);
+        };
+
+        rec.onresult = (event: any) => {
+          const spoken = parseSpeechResults(event.results);
+          if (spoken) {
+            setLandingInputText(baseInputBeforeVoiceRef.current + spoken);
           }
-        } catch (audioErr) {
-          console.warn("Audio meter init skipped:", audioErr);
-        }
-      }
-    } catch (permErr: any) {
-      console.warn("getUserMedia permission error:", permErr);
-      if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
-        setSpeechError("Microphone permission denied. Please allow microphone in your browser settings to use voice input.");
-        setTimeout(() => setSpeechError(null), 5000);
-        return;
-      }
-    }
+        };
 
-    try {
-      const rec = new SpeechRecognition();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.maxAlternatives = 1;
-
-      const langMap: Record<string, string> = {
-        en: 'en-IN',
-        hi: 'hi-IN',
-        or: 'or-IN',
-        bn: 'bn-IN',
-        te: 'te-IN',
-        ta: 'ta-IN',
-        mr: 'mr-IN',
-        gu: 'gu-IN',
-        pa: 'pa-IN',
-        kn: 'kn-IN',
-        ml: 'ml-IN',
-        ur: 'ur-IN'
-      };
-      rec.lang = langMap[language] || 'en-IN';
-
-      rec.onstart = () => {
-        setIsListening(true);
-        setSpeechError(null);
-      };
-
-      rec.onresult = (event: any) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-        for (let i = 0; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+        rec.onerror = (event: any) => {
+          // 'no-speech' happens when user pauses to think; ignore so session stays active
+          if (event.error === 'no-speech') {
+            return;
           }
-        }
-        const cleanTranscript = (finalTranscript + interimTranscript).trim();
-        if (cleanTranscript) {
-          spokenTranscriptRef.current = cleanTranscript;
-          setLandingInputText(cleanTranscript);
-
-          // Reset silence timer on every newly recognized chunk of speech
-          if (autoSubmitTimerRef.current) {
-            clearTimeout(autoSubmitTimerRef.current);
+          console.warn("Speech recognition error:", event.error);
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setSpeechError("Microphone permission was denied. Please allow microphone in browser settings.");
+            isDesiredListeningRef.current = false;
+            stopVoiceListening();
+          } else if (event.error === 'audio-capture') {
+            setSpeechError("Microphone is currently unavailable. Please check microphone hardware.");
+            isDesiredListeningRef.current = false;
+            stopVoiceListening();
+          } else if (event.error === 'network') {
+            // In case speech network is blocked, fallback to MediaRecorder
+            isDesiredListeningRef.current = false;
+            stopVoiceListening();
+            startMediaRecorderFallback();
           }
-          // After 2.0 seconds of silence following spoken words, auto-submit to chat
-          autoSubmitTimerRef.current = setTimeout(() => {
-            if (spokenTranscriptRef.current.trim().length > 0) {
-              submitVoiceQuery(spokenTranscriptRef.current.trim());
+        };
+
+        rec.onend = () => {
+          // If browser fired onend prematurely due to silence pause, seamlessly restart
+          if (isDesiredListeningRef.current) {
+            try {
+              rec.start();
+            } catch (e) {
+              setTimeout(() => {
+                if (isDesiredListeningRef.current) {
+                  try {
+                    rec.start();
+                  } catch (err) {
+                    setIsListening(false);
+                    isDesiredListeningRef.current = false;
+                  }
+                }
+              }, 120);
             }
-          }, 2000);
-        }
-      };
+          } else {
+            setIsListening(false);
+          }
+        };
 
-      rec.onerror = (event: any) => {
-        console.warn("Speech recognition error:", event.error);
-        if (event.error === 'not-allowed') {
-          setSpeechError("Microphone permission was denied. Please allow microphone access to speak.");
-          stopVoiceListening(false);
-        } else if (event.error === 'audio-capture') {
-          setSpeechError("No microphone hardware found. Please check your mic connection.");
-          stopVoiceListening(false);
-        } else if (event.error === 'no-speech') {
-          // Keep listening for speech without throwing a harsh error
-        } else if (event.error === 'network') {
-          setSpeechError("Network error with speech recognition service. Please try again.");
-          stopVoiceListening(false);
-        }
-      };
-
-      rec.onend = () => {
-        // If recognition ended naturally and user had spoken something, submit it!
-        const queryToSubmit = spokenTranscriptRef.current.trim();
-        if (queryToSubmit.length > 0 && !hasSubmittedVoiceRef.current) {
-          submitVoiceQuery(queryToSubmit);
-        } else {
-          setIsListening(false);
-        }
-      };
-
-      recognitionRef.current = rec;
-      rec.start();
-    } catch (err: any) {
-      console.error("Speech recognition start failed:", err);
-      stopVoiceListening(false);
-      setSpeechError("Could not start voice input. You can open Arohi Voice Call for direct interactive speech.");
-      setTimeout(() => setSpeechError(null), 4000);
+        recognitionRef.current = rec;
+        // Start recognition directly without blocking getUserMedia
+        rec.start();
+        return;
+      } catch (err: any) {
+        console.warn("SpeechRecognition start exception, falling back to MediaRecorder:", err);
+      }
     }
+
+    // 2. Resilient Fallback for browsers without Web Speech
+    startMediaRecorderFallback();
   };
 
   useEffect(() => {
@@ -554,6 +570,9 @@ export default function WelcomeLanding({
 
   const handlePromptSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (isListening || isTranscribing) {
+      stopVoiceListening();
+    }
     const query = landingInputText.trim() || "Hello Arohi, I want to learn more!";
     if (onQuickChat) {
       onQuickChat(query);
@@ -1169,7 +1188,7 @@ export default function WelcomeLanding({
                       handlePromptSubmit();
                     }
                   }}
-                  placeholder={isListening ? "Listening... Speak now in your language 🎙️" : "Ask Arohi anything..."}
+                  placeholder={isListening ? "Listening... Speak now in your language 🎙️" : isTranscribing ? "Transcribing speech to text..." : "Ask Arohi anything..."}
                   className={`w-full bg-transparent text-sm sm:text-base font-normal outline-none px-2.5 py-1.5 leading-relaxed max-h-48 min-h-[64px] sm:min-h-[76px] overflow-y-auto resize-none custom-scrollbar ${
                     isListening
                       ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
@@ -1240,43 +1259,51 @@ export default function WelcomeLanding({
               <div className="mt-2.5 p-3.5 rounded-2xl bg-[#15171e] border border-rose-500/40 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn">
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <div className="flex items-end gap-1 h-6 px-2 py-1 bg-black/50 rounded-lg border border-rose-500/30">
-                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(20, Math.min(100, micAudioLevel * 1.4))}%`, animationDuration: '400ms' }}></span>
-                    <span className="w-1 bg-amber-400 rounded-full animate-bounce" style={{ height: `${Math.max(30, Math.min(100, micAudioLevel * 1.8))}%`, animationDuration: '300ms', animationDelay: '100ms' }}></span>
-                    <span className="w-1 bg-cyan-400 rounded-full animate-bounce" style={{ height: `${Math.max(40, Math.min(100, micAudioLevel * 2.0))}%`, animationDuration: '500ms', animationDelay: '150ms' }}></span>
-                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: `${Math.max(25, Math.min(100, micAudioLevel * 1.5))}%`, animationDuration: '350ms', animationDelay: '75ms' }}></span>
+                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: '65%', animationDuration: '400ms' }}></span>
+                    <span className="w-1 bg-amber-400 rounded-full animate-bounce" style={{ height: '90%', animationDuration: '300ms', animationDelay: '100ms' }}></span>
+                    <span className="w-1 bg-cyan-400 rounded-full animate-bounce" style={{ height: '75%', animationDuration: '500ms', animationDelay: '150ms' }}></span>
+                    <span className="w-1 bg-rose-400 rounded-full animate-bounce" style={{ height: '80%', animationDuration: '350ms', animationDelay: '75ms' }}></span>
                   </div>
 
                   <div className="min-w-0 flex-1 text-left">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
                       <span className="text-[11px] font-bold text-rose-300 uppercase tracking-wider font-mono">
-                        Listening ({LANGUAGES_LIST.find(l => l.code === language)?.english || 'Native'})...
+                        Voice Typing ({LANGUAGES_LIST.find(l => l.code === language)?.english || 'Native'})...
                       </span>
                     </div>
                     <p className="text-xs text-white font-medium truncate mt-0.5 max-w-[280px] sm:max-w-[360px]">
-                      {landingInputText ? `"${landingInputText}"` : "Speak clearly into your microphone..."}
+                      {landingInputText ? `"${landingInputText}"` : "Speak now — words are typed into your text box..."}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={stopVoiceListening}
+                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
+                  >
+                    Done Speaking
+                  </button>
                   {landingInputText.trim().length > 0 && (
                     <button
                       type="button"
-                      onClick={() => submitVoiceQuery(landingInputText)}
+                      onClick={() => handlePromptSubmit()}
                       className="px-3 py-1.5 rounded-xl bg-[#d4af37] text-zinc-950 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs hover:scale-105"
                     >
-                      <Send className="w-3 h-3" /> Ask Arohi
+                      <Send className="w-3 h-3" /> Send
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => stopVoiceListening(true)}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
-                  >
-                    Done
-                  </button>
                 </div>
+              </div>
+            )}
+
+            {/* Transcribing Indicator for Fallback Voice Recording */}
+            {isTranscribing && (
+              <div className="mt-2.5 p-3 rounded-2xl bg-[#15171e] border border-cyan-500/30 shadow-xl flex items-center gap-2.5 text-xs text-cyan-300 animate-fadeIn">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
+                <span>Transcribing speech into input box...</span>
               </div>
             )}
 
@@ -2161,10 +2188,43 @@ export default function WelcomeLanding({
             language={language} 
             onNavigateTab={(tab) => {
               setIsDirectVoiceCallModalOpen(false);
-              setActiveTab(tab);
+              if (tab === 'chat' || tab === 'arohi') {
+                if (setIsChatOpen) {
+                  setIsChatOpen(true);
+                }
+                setActiveTab('arohi');
+              } else {
+                setActiveTab(tab);
+              }
               onEnter();
             }}
             uid={user?.uid}
+            onCallComplete={(summary) => {
+              setIsDirectVoiceCallModalOpen(false);
+              if (setIsChatOpen) {
+                setIsChatOpen(true);
+              }
+              setActiveTab('arohi');
+              onEnter();
+              try {
+                let list: any[] = [];
+                try {
+                  const stored = localStorage.getItem('recruit_activities');
+                  if (stored) list = JSON.parse(stored);
+                } catch (e) {}
+                const newAct = {
+                  id: `act-${Date.now()}`,
+                  type: 'call',
+                  title: 'Voice Call Consultation Completed',
+                  description: `${Math.floor(summary.duration / 60)}m ${summary.duration % 60}s consultation with Arohi AI`,
+                  timestamp: new Date().toISOString()
+                };
+                list = [newAct, ...list].slice(0, 15);
+                localStorage.setItem('recruit_activities', JSON.stringify(list));
+                window.dispatchEvent(new Event('storage'));
+                window.dispatchEvent(new Event('recruit_activities_update'));
+              } catch (e) {}
+            }}
           />
         </div>,
         document.body

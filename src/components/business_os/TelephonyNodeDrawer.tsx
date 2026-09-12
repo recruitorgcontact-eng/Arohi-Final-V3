@@ -155,7 +155,7 @@ export default function TelephonyNodeDrawer({
                   ? 'bg-purple-600 text-white border-purple-500 animate-pulse'
                   : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border-black/5 dark:border-white/5'
               }`}
-              title="Preview Spoken Dialogue in Flagship 24kHz HD Voice"
+              title="Preview Spoken Dialogue in Natural Voice"
             >
               {isPlayingPreview ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">Voice Test</span>
@@ -247,7 +247,7 @@ export default function TelephonyNodeDrawer({
                   className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono leading-relaxed"
                 />
                 <p className="text-[11px] text-zinc-500 mt-1">
-                  💡 Natural pause tokens: Use commas and periods for conversational pacing. Sub-45 spoken words is optimal for sub-500ms voice cadence.
+                  💡 Natural pause tokens: Use commas and periods for conversational pacing. Sub-45 spoken words is optimal for quick, snappy responses.
                 </p>
               </div>
 
@@ -267,10 +267,10 @@ export default function TelephonyNodeDrawer({
               <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 text-xs">
                 <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-bold mb-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Arohi Flagship 24kHz Voice Output</span>
+                  <span>Arohi Natural Voice Output</span>
                 </div>
                 <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80">
-                  This dialogue will be synthesized using the 24kHz studio HD neural voice engine (`Zypher`) with authentic Indian vernacular inflection.
+                  This dialogue will be spoken using Arohi's natural studio voice with authentic Indian regional inflection.
                 </p>
               </div>
             </div>
@@ -407,7 +407,7 @@ export default function TelephonyNodeDrawer({
                   <span>Custom Webhook Integration</span>
                 </div>
                 <p className="text-[11px] text-zinc-500">
-                  When triggered, Arohi executes this HTTP payload mid-call while the caller remains live on the phone line with sub-500ms voice continuity.
+                  When triggered, Arohi executes this HTTP payload mid-call while the caller remains live on the phone line with seamless voice continuity.
                 </p>
                 <div className="p-2.5 rounded-lg bg-black/5 dark:bg-black/40 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
                   POST /api/arohi-one/voice-agents/webhook/inbound

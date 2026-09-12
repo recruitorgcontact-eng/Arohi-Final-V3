@@ -94,7 +94,7 @@ const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 // INITIAL_REVIEWS and Review interface are imported from ./data/reviewsData
 
 export default function App() {
-  const { user, userData, loading, updateApplications, updateUserSubscription } = useAuth();
+  const { user, userData, loading, updateApplications, updateUserSubscription, updateArohiCalls } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup' | 'forgot' | 'onboarding'>('signin');
   const [authUpgradePrompt, setAuthUpgradePrompt] = useState<string | null>(null);
@@ -500,6 +500,20 @@ export default function App() {
         description: 'Anonymous visitor loaded Arohiai.com landing interface'
       })
     }).catch(err => console.log('Telemetry offline:', err));
+  }, []);
+
+  // Global listener for Arohi Voice Call completion: automatically opens recent chat window
+  useEffect(() => {
+    const handleVoiceCallCompleted = () => {
+      setIsChatOpen(true);
+      setIsChatMinimized(false);
+      setHasEntered(true);
+      setActiveTab('arohi');
+    };
+    window.addEventListener('arohi_voice_call_completed', handleVoiceCallCompleted);
+    return () => {
+      window.removeEventListener('arohi_voice_call_completed', handleVoiceCallCompleted);
+    };
   }, []);
 
   useEffect(() => {
@@ -2319,6 +2333,7 @@ export default function App() {
             onUpdateAppStatus={handleUpdateAppStatus}
           />
         );
+      case 'chat':
       case 'guide':
       case 'arohi':
         return (
@@ -2481,7 +2496,13 @@ export default function App() {
           setHasEntered(true);
         }} 
         setActiveTab={(tab) => {
-          setActiveTab(tab);
+          if (tab === 'chat' || tab === 'arohi') {
+            setIsChatOpen(true);
+            setIsChatMinimized(false);
+            setActiveTab('arohi');
+          } else {
+            setActiveTab(tab);
+          }
           setHasEntered(true);
         }}
         setIsChatOpen={setIsChatOpen}
@@ -4939,6 +4960,78 @@ export default function App() {
               setHasEntered(true);
             }}
             uid={user?.uid}
+            onCallComplete={async (summaryData) => {
+              try {
+                const durationFormatted = summaryData.duration > 0 
+                  ? `${Math.floor(summaryData.duration / 60)}m ${summaryData.duration % 60}s`
+                  : '0m';
+
+                const cleanTurns = (summaryData.turns || []).filter(
+                  (t: any) => t && t.text && typeof t.text === 'string' && t.text.trim().length > 0
+                );
+
+                let callAnalysis = summaryData.analysis;
+                let computedSummaryText = summaryData.summaryText;
+
+                if (cleanTurns.length > 0) {
+                  try {
+                    const res = await fetch('/api/analyze-call', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        turns: cleanTurns,
+                        callDuration: summaryData.duration,
+                        uid: user?.uid
+                      })
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      if (data.analysis) {
+                        callAnalysis = data.analysis;
+                        computedSummaryText = data.analysis.summary || computedSummaryText;
+                      }
+                    }
+                  } catch (err) {
+                    console.error('Error analyzing call transcript turns in direct call:', err);
+                  }
+                }
+
+                const newCallItem = {
+                  id: `call-${Date.now()}`,
+                  duration: summaryData.duration,
+                  turns: cleanTurns,
+                  date: summaryData.date,
+                  summaryText: computedSummaryText || (cleanTurns.length > 0 ? 'Voice Consultation with Arohi AI' : `Voice call completed (${durationFormatted})`),
+                  isCareerRelated: callAnalysis ? !callAnalysis.topics?.business : true,
+                  analysis: callAnalysis || undefined
+                };
+
+                const existingCalls = userData?.arohiCalls || JSON.parse(localStorage.getItem('guest_arohi_calls') || '[]');
+                const updatedCalls = [newCallItem, ...existingCalls];
+                if (user && updateArohiCalls) {
+                  updateArohiCalls(updatedCalls);
+                } else {
+                  localStorage.setItem('guest_arohi_calls', JSON.stringify(updatedCalls));
+                }
+
+                try {
+                  const stored = localStorage.getItem('recruit_activities');
+                  let list = stored ? JSON.parse(stored) : [];
+                  list = [{
+                    id: `act-${Date.now()}`,
+                    type: 'chat',
+                    title: 'Arohi Voice Consultation Finished',
+                    description: `Completed a voice call (${durationFormatted}).`,
+                    timestamp: new Date().toISOString()
+                  }, ...list].slice(0, 15);
+                  localStorage.setItem('recruit_activities', JSON.stringify(list));
+                  window.dispatchEvent(new Event('storage'));
+                  window.dispatchEvent(new Event('recruit_activities_update'));
+                } catch (actErr) {}
+              } catch (err) {
+                console.error('Error completing voice call in App:', err);
+              }
+            }}
           />
         </div>,
         document.body

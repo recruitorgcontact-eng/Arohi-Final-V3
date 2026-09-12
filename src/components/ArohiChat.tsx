@@ -1783,58 +1783,46 @@ export default function ArohiChat({
     );
 
     let callAnalysis = summaryData.analysis;
-    let computedSummaryText = summaryData.summaryText;
+    let computedSummaryText = summaryData.summaryText || (cleanTurns.length > 0 ? 'Discussion on user query and Arohi AI guidance.' : 'The consultation concluded with actionable insights.');
 
-    // If we have spoken dialogue turns, analyze the conversation on the server to obtain genuine discussion points
-    if (cleanTurns.length > 0) {
-      try {
-        const res = await fetch('/api/analyze-call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            turns: cleanTurns,
-            callDuration: summaryData.duration,
-            uid: user?.uid
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.analysis) {
-            callAnalysis = data.analysis;
-            computedSummaryText = data.analysis.summary || computedSummaryText;
-          }
-        }
-      } catch (err) {
-        console.error('Error analyzing call transcript turns:', err);
+    const buildSummaryCardContent = (analysis: any, textSummary: string, durFormatted: string) => {
+      let content = `📞 **Voice Consultation Summary** (${durFormatted})\n\n`;
+      if (textSummary) {
+        content += `📌 **Call Discussion & Summary**:\n${textSummary}\n\n`;
       }
-    }
-
-    let summaryCardContent = '';
-    if (callAnalysis?.summary) {
-      summaryCardContent = `📞 **Voice Consultation Completed** (${durationFormatted})\n\n` +
-        `📌 **Key Discussion Points on Call**:\n${callAnalysis.summary}\n\n`;
-
-      if (callAnalysis.priorities && Array.isArray(callAnalysis.priorities) && callAnalysis.priorities.length > 0) {
-        summaryCardContent += `🎯 **Takeaways & Recommended Next Steps**:\n`;
-        callAnalysis.priorities.forEach((p: string) => {
-          summaryCardContent += `• ${p}\n`;
+      if (analysis?.priorities && Array.isArray(analysis.priorities) && analysis.priorities.length > 0) {
+        content += `🎯 **Key Takeaways & Actionable Next Steps**:\n`;
+        analysis.priorities.forEach((p: string) => {
+          content += `• ${p}\n`;
         });
-        summaryCardContent += `\n`;
+        content += `\n`;
       }
-      summaryCardContent += `*Feel free to continue this discussion, ask follow-up questions, or request additional guidance right here in chat!*`;
-    } else {
-      summaryCardContent = `📞 **Voice Consultation Ended** (${durationFormatted})\n\nThank you for speaking with AROHI. How else can I assist you today?`;
-    }
+      if (analysis?.recommendations && Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0) {
+        content += `💡 **Recommendations**:\n`;
+        analysis.recommendations.forEach((r: string) => {
+          content += `• ${r}\n`;
+        });
+        content += `\n`;
+      }
+      content += `✨ *I have documented our call summary above. Let's continue our discussion right here in chat—what would you like to explore or do next?*`;
+      return content;
+    };
 
+    const messageId = `call-end-${Date.now()}`;
     const newMsg: Message = {
-      id: `call-end-${Date.now()}`,
+      id: messageId,
       role: 'assistant',
-      content: summaryCardContent,
+      content: buildSummaryCardContent(callAnalysis, computedSummaryText, durationFormatted),
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
     
     const updatedMessages = [...messages, newMsg];
     setMessages(updatedMessages);
+
+    // Auto-scroll to bottom of chat immediately
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 
     // Save and sync the updated chat
     let targetChatId = activeChatId;
@@ -1907,6 +1895,38 @@ export default function ArohiChat({
       'Arohi Voice Consultation Finished',
       `Completed a voice call (${durationFormatted}).`
     );
+
+    // If dialogue turns were recorded, refine the summary card asynchronously in background
+    if (cleanTurns.length > 0) {
+      fetch('/api/analyze-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          turns: cleanTurns,
+          callDuration: summaryData.duration,
+          uid: user?.uid
+        })
+      })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.analysis) {
+          const refinedContent = buildSummaryCardContent(data.analysis, data.analysis.summary || computedSummaryText, durationFormatted);
+          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: refinedContent } : m));
+          setSavedChats(prevChats => prevChats.map(chat => {
+            if (chat.id === targetChatId) {
+              return {
+                ...chat,
+                messages: chat.messages.map(m => m.id === messageId ? { ...m, content: refinedContent } : m)
+              };
+            }
+            return chat;
+          }));
+        }
+      })
+      .catch(err => {
+        console.warn('Call analysis background refinement skipped:', err);
+      });
+    }
   };
 
   const handleDownloadResumeDocx = async (resumeData: any, messageId: string) => {
@@ -2345,6 +2365,7 @@ export default function ArohiChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const isDesiredRecordingRef = useRef<boolean>(false);
   const simulationIntervalRef = useRef<any>(null);
 
   // Auto-scroll to bottom of messages / speech-to-text transcript
@@ -2388,6 +2409,40 @@ export default function ArohiChat({
       handleSendMessage(initialPrompt);
     }
   }, [initialPrompt]);
+
+  // Ingest any pending voice call summary and listen for completed voice calls
+  useEffect(() => {
+    const ingestPendingSummary = () => {
+      try {
+        const stored = sessionStorage.getItem('pending_voice_call_summary');
+        if (stored) {
+          sessionStorage.removeItem('pending_voice_call_summary');
+          const data = JSON.parse(stored);
+          if (data && (data.duration > 0 || (data.turns && data.turns.length > 0))) {
+            handleVoiceCallComplete(data);
+          }
+        }
+      } catch (e) {
+        console.error('Error checking pending voice call summary:', e);
+      }
+    };
+
+    ingestPendingSummary();
+
+    const handleCallCompletedEvent = (e: any) => {
+      if (e && e.detail) {
+        try {
+          sessionStorage.removeItem('pending_voice_call_summary');
+        } catch (err) {}
+        handleVoiceCallComplete(e.detail);
+      }
+    };
+
+    window.addEventListener('arohi_voice_call_completed', handleCallCompletedEvent);
+    return () => {
+      window.removeEventListener('arohi_voice_call_completed', handleCallCompletedEvent);
+    };
+  }, []);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || input;
@@ -3285,10 +3340,40 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     }
   };
 
+  // Universal Robust Speech Recognition Result Parser
+  const parseSpeechResults = (results: any): string => {
+    if (!results || results.length === 0) return '';
+    let finalPart = '';
+    let interimPart = '';
+
+    for (let i = 0; i < results.length; ++i) {
+      const item = results[i];
+      const text = (item && item[0]?.transcript ? item[0].transcript : '').trim();
+      if (!text) continue;
+
+      if (item.isFinal) {
+        const prevClean = finalPart.trim().toLowerCase();
+        const currClean = text.toLowerCase();
+        if (prevClean && currClean.startsWith(prevClean)) {
+          finalPart = text + ' ';
+        } else {
+          finalPart += text + ' ';
+        }
+      } else {
+        interimPart = text;
+      }
+    }
+
+    return (finalPart + interimPart).trim();
+  };
+
   const toggleRecording = async () => {
     if (recording) {
+      isDesiredRecordingRef.current = false;
       if (recognitionRef.current) {
         try {
+          recognitionRef.current.onend = null;
+          recognitionRef.current.onerror = null;
           recognitionRef.current.stop();
         } catch (e) {
           console.error(e);
@@ -3299,24 +3384,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     } else {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("Speech recognition is not supported in this browser. Please type your message or open Arohi Voice Call for interactive speech.");
+        console.warn("Speech recognition is not supported in this browser.");
         return;
       }
 
-      // Warm up microphone permissions
       try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-      } catch (permErr: any) {
-        console.warn("getUserMedia permission error in chat:", permErr);
-        if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
-          alert("Microphone permission denied. Please allow microphone access in your browser settings to use voice input.");
-          return;
-        }
-      }
-
-      try {
+        isDesiredRecordingRef.current = true;
         const rec = new SpeechRecognition();
         rec.continuous = true;
         rec.interimResults = true;
@@ -3344,39 +3417,48 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         };
 
         rec.onresult = (event: any) => {
-          let finalTranscript = '';
-          let interimTranscript = '';
-          for (let i = 0; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + ' ';
-            } else {
-              interimTranscript += event.results[i][0].transcript;
-            }
-          }
-          const cleanText = (finalTranscript + interimTranscript).trim();
+          const cleanText = parseSpeechResults(event.results);
           if (cleanText) {
             setInput(cleanText);
           }
         };
 
         rec.onerror = (event: any) => {
-          console.error('Speech recognition error in chat:', event.error);
-          if (event.error === 'not-allowed') {
-            alert("Microphone permission was denied. Please allow microphone in browser settings.");
-            setRecording(false);
-          } else if (event.error !== 'no-speech') {
-            setRecording(false);
+          // 'no-speech' indicates temporary silence or pausing to think
+          if (event.error === 'no-speech') {
+            return;
           }
+          console.error('Speech recognition error in chat:', event.error);
+          isDesiredRecordingRef.current = false;
+          setRecording(false);
         };
 
         rec.onend = () => {
-          setRecording(false);
+          if (isDesiredRecordingRef.current) {
+            try {
+              rec.start();
+            } catch (e) {
+              setTimeout(() => {
+                if (isDesiredRecordingRef.current) {
+                  try {
+                    rec.start();
+                  } catch (err) {
+                    setRecording(false);
+                    isDesiredRecordingRef.current = false;
+                  }
+                }
+              }, 120);
+            }
+          } else {
+            setRecording(false);
+          }
         };
 
         recognitionRef.current = rec;
         rec.start();
       } catch (e) {
         console.error('Speech recognition start failed:', e);
+        isDesiredRecordingRef.current = false;
         setRecording(false);
       }
     }

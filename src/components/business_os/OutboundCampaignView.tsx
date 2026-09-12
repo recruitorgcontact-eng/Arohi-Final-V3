@@ -138,7 +138,7 @@ export default function OutboundCampaignView({ onLaunchTestCall }: { onLaunchTes
 
     stopArohiVoice();
     setIsPlayingScriptId(camp.id);
-    showToast(`Playing Outbound Pitch with Arohi 24kHz HD Voice...`);
+    showToast(`Playing Outbound Pitch with Arohi Voice...`);
 
     playArohiVoice(camp.scriptOpening, {
       voice: 'Zypher',
@@ -334,7 +334,7 @@ export default function OutboundCampaignView({ onLaunchTestCall }: { onLaunchTes
                         ? 'bg-purple-600 text-white border-purple-500 animate-pulse'
                         : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-black/5 dark:border-white/5'
                     }`}
-                    title="Audition Opening Pitch in 24kHz HD Voice"
+                    title="Audition Opening Pitch in Arohi Natural Voice"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     <span>{isPlaying ? 'Speaking...' : 'Audition Pitch'}</span>
@@ -454,7 +454,7 @@ export default function OutboundCampaignView({ onLaunchTestCall }: { onLaunchTes
                   onChange={(e) => setNewAgentName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white focus:outline-none font-semibold"
                 >
-                  <option value="Arohi Executive Intake Agent">Arohi Executive Intake Agent (24kHz HD Zypher)</option>
+                  <option value="Arohi Executive Intake Agent">Arohi Executive Intake Agent (Signature Voice)</option>
                   <option value="Arohi Invoicing Agent">Arohi Invoicing Agent (Odia + Hinglish)</option>
                   <option value="Arohi Swasthya Caretaker">Arohi Swasthya Caretaker (Native Odia)</option>
                   <option value="Arohi Support Specialist">Arohi Support Specialist (Indian English + Hindi)</option>
@@ -463,7 +463,7 @@ export default function OutboundCampaignView({ onLaunchTestCall }: { onLaunchTes
 
               <div>
                 <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Opening Voice Pitch (Arohi 24kHz HD Output)
+                  Opening Voice Pitch (Spoken Greeting)
                 </label>
                 <textarea
                   rows={3}

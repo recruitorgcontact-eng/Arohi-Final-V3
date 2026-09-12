@@ -1033,10 +1033,10 @@ export default function ArohiExamsArena({
               }`}
               title={
                 isArohiSpeaking
-                  ? 'Arohi Zypher is speaking (Click to pause)'
+                  ? 'Arohi is speaking (Click to pause)'
                   : isVoiceMuted
-                  ? 'Arohi Zypher Voice Muted (Click to enable live commentary)'
-                  : 'Arohi Zypher HD Voice Active (Click to replay announcement)'
+                  ? 'Arohi Voice Muted (Click to enable live commentary)'
+                  : 'Arohi Voice Active (Click to replay announcement)'
               }
             >
               {isVoiceMuted ? (
@@ -1045,7 +1045,7 @@ export default function ArohiExamsArena({
                 <Volume2 className={`w-3 h-3 ${isArohiSpeaking ? 'text-amber-300 animate-bounce' : 'text-purple-300'} shrink-0`} />
               )}
               <span className="text-[9px] sm:text-[10px] font-black tracking-tight">
-                {isArohiSpeaking ? 'Zypher Speaking...' : isVoiceMuted ? 'Muted' : 'Arohi Zypher'}
+                {isArohiSpeaking ? 'Arohi Speaking...' : isVoiceMuted ? 'Muted' : 'Arohi Voice'}
               </span>
               {isArohiSpeaking && (
                 <span className="flex gap-0.5 items-end h-2 ml-0.5">

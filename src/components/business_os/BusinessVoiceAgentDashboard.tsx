@@ -412,7 +412,7 @@ export default function BusinessVoiceAgentDashboard({
                 : '0s'}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-1">Full 24kHz bi-directional dialog</p>
+          <p className="text-[11px] text-zinc-400 mt-1">Natural two-way voice conversation</p>
         </div>
 
         {/* Multilingual Coverage */}
@@ -546,7 +546,7 @@ export default function BusinessVoiceAgentDashboard({
                   No Active Calls Underway
                 </h4>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Arohi Voicebot Fleet is ready on carrier standby to dial Indian mobile numbers with sub-second latency.
+                  Arohi Voicebot Fleet is ready on carrier standby to dial Indian mobile numbers with instant response time.
                 </p>
               </div>
             </div>
@@ -794,23 +794,23 @@ export default function BusinessVoiceAgentDashboard({
                   </span>
                 </div>
 
-                {/* Agent Technical Spec */}
+                {/* Agent Spec */}
                 <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-purple-500/20 text-zinc-600 dark:text-zinc-400">
                   <div>
                     <span className="text-zinc-400 block text-[10px]">Voice Profile:</span>
-                    <strong className="text-zinc-800 dark:text-zinc-200">Arohi (Signature Reception 24kHz HD)</strong>
+                    <strong className="text-zinc-800 dark:text-zinc-200">Arohi (Warm Receptionist Voice)</strong>
                   </div>
                   <div>
                     <span className="text-zinc-400 block text-[10px]">Primary Language:</span>
                     <strong className="text-zinc-800 dark:text-zinc-200">{selectedCall.language || 'Hinglish / Odia'}</strong>
                   </div>
                   <div>
-                    <span className="text-zinc-400 block text-[10px]">Telecom Gateway:</span>
-                    <strong className="text-zinc-800 dark:text-zinc-200">{selectedCall.carrier || 'Exotel BSIP (+91)'}</strong>
+                    <span className="text-zinc-400 block text-[10px]">Calling Line:</span>
+                    <strong className="text-zinc-800 dark:text-zinc-200">{selectedCall.carrier ? 'Cloud Telecom (+91)' : 'Direct Business Line'}</strong>
                   </div>
                   <div>
-                    <span className="text-zinc-400 block text-[10px]">Reasoning Engine:</span>
-                    <strong className="text-purple-600 dark:text-purple-400">Arohi Neural 3.6 Flash</strong>
+                    <span className="text-zinc-400 block text-[10px]">AI Intelligence:</span>
+                    <strong className="text-purple-600 dark:text-purple-400">Arohi AI Core</strong>
                   </div>
                 </div>
               </div>
@@ -874,7 +874,7 @@ export default function BusinessVoiceAgentDashboard({
                             <button
                               onClick={() => handlePlayTurnAudio(turn.text, idx, selectedCall.language)}
                               className="p-1 rounded-md text-zinc-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer"
-                              title={isPlaying ? 'Stop voice playback' : 'Listen with Arohi Neural Voice'}
+                              title={isPlaying ? 'Stop voice playback' : 'Listen with Arohi Voice'}
                             >
                               {isPlaying ? (
                                 <Pause className="w-3 h-3 text-purple-600 animate-pulse" />

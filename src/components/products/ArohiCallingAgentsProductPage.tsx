@@ -200,10 +200,10 @@ export default function ArohiCallingAgentsProductPage({
             )}
             <span>
               {audioLoading 
-                ? 'Connecting 24kHz Stream...' 
+                ? 'Connecting Voice Preview...' 
                 : isPlayingAudio 
                   ? 'Stop Voice Demo' 
-                  : 'Hear Arohi Flagship Voice (0:45)'}
+                  : 'Hear Voice Sample (0:45)'}
             </span>
           </button>
         </div>
@@ -214,14 +214,14 @@ export default function ArohiCallingAgentsProductPage({
             <div className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${isPlayingAudio ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500/70'}`}></span>
               <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider font-mono">
-                Live Acoustic Telephony Channel (24kHz)
+                Live Voice Call Channel
               </span>
             </div>
 
-            {/* Arohi Flagship Voice Acoustic Badge */}
+            {/* Arohi Voice Persona Badge */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-xs font-bold font-mono tracking-tight">Arohi Flagship Voice</span>
+              <span className="text-xs font-bold font-mono tracking-tight">Arohi Natural Voice</span>
             </div>
           </div>
 
@@ -235,10 +235,10 @@ export default function ArohiCallingAgentsProductPage({
               <div className="flex flex-wrap items-center justify-between gap-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-                    Arohi Voice Agent (Flagship Zypher)
+                    Arohi Voice Agent (Warm &amp; Natural)
                   </h3>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">
-                    FLAGSHIP 24kHz
+                    STUDIO QUALITY
                   </span>
                 </div>
                 <span className="text-xs font-mono font-bold text-emerald-500">
@@ -250,7 +250,7 @@ export default function ArohiCallingAgentsProductPage({
                 &ldquo;{agentProfiles[selectedAgentIndex].sampleText}&rdquo;
               </p>
 
-              {/* Animated Live Acoustic Waveform */}
+              {/* Animated Live Voice Waveform */}
               <div className="flex items-center gap-1 mt-3 h-8 px-3 py-1 bg-black/5 dark:bg-black/40 rounded-xl border border-black/5 dark:border-white/5">
                 {[40, 65, 85, 30, 95, 75, 45, 80, 60, 90, 50, 70, 85, 40, 65, 80, 55, 90, 45, 60].map((h, i) => (
                   <span
@@ -291,14 +291,14 @@ export default function ArohiCallingAgentsProductPage({
                 )}
                 <span>
                   {audioLoading 
-                    ? 'Streaming 24kHz...' 
+                    ? 'Playing Sample...' 
                     : isPlayingAudio 
                       ? 'Stop Voice' 
-                      : 'Listen Arohi Flagship Voice'}
+                      : 'Listen to Voice Sample'}
                 </span>
               </button>
               <span className="text-xs text-zinc-500 hidden sm:inline">
-                {isPlayingAudio ? '● Arohi Flagship Studio Voice Live Stream' : 'Authentic human-like voice identical to Arohi Live Call'}
+                {isPlayingAudio ? '● Arohi Voice Live Preview' : 'Authentic human-like voice with natural regional inflection'}
               </span>
             </div>
             <button

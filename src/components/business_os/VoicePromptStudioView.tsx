@@ -589,7 +589,7 @@ export default function VoicePromptStudioView({
               </span>
             </div>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-              {template.category} · {getVoiceDisplayName(recommendedVoice)} (24kHz HD) · {template.language}
+              {template.category} · {getVoiceDisplayName(recommendedVoice)} · {template.language}
             </p>
           </div>
         </div>
@@ -598,7 +598,7 @@ export default function VoicePromptStudioView({
           {/* Audition Opening Line */}
           <button
             onClick={handleToggleAudition}
-            title={isAuditioning ? 'Stop speaking' : 'Audition opening line in 24kHz HD Voice'}
+            title={isAuditioning ? 'Stop speaking' : 'Listen to opening greeting'}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               isAuditioning
                 ? 'bg-rose-500 text-white animate-pulse'
@@ -1489,7 +1489,7 @@ export default function VoicePromptStudioView({
               {/* Voice Profile Selector */}
               <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3">
                 <span className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
-                  Neural Voice Persona (24kHz HD Telephony)
+                  Voice Persona (Natural Indian Accent)
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

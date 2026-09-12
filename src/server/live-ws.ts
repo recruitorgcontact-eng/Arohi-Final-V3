@@ -174,10 +174,19 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
         "\n- TONE & DELIVERY: Speak with clean warmth, professional enthusiasm, and clear articulation. Speak naturally and directly to the user. Do NOT use repetitive forced filler greetings like 'Namaste ji!', 'Namaskar ji!', or 'Haan ji!'." +
         "\n- For standard casual conversational Q&A, keep responses clear, warm, and conversational (2-4 sentences)." +
         "\n- STRICT NON-STOP STORYTELLING & SPEECH MANDATE: You are granted EXPLICIT SPECIAL PERMISSION to recite and narrate long stories and speeches during voice calls! When the user asks you to give a speech for students/startups, address an auditorium, tell a story, or recite 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' (in Odia, Hindi, English, or ANY language), ONCE A STORY HAS BEEN INITIATED, ALL 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR 'Are you listening?' PROMPTS ARE STRICTLY DISABLED AND FORBIDDEN! YOU MUST NARRATE THE ENTIRE STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE UNBROKEN STREAM WITHOUT EVER STOPPING TO ASK 'Are you still there?', 'Should I continue?', 'Shall I proceed?', OR ANY OTHER CONTINUATION OR PRESENCE QUESTION! Recite the complete unabridged narrative from beginning to end in full scale without stopping midway. Take whatever time is needed (10, 12, 15+ minutes or as long as it takes). NEVER ask 'Are you still there?' or 'Should I continue?'. ONLY pause if the user actively interrupts or speaks into their microphone!" +
-        "\n\n=== INITIAL CALL WELCOME & DYNAMIC REAL-TIME MULTILINGUAL ADAPTATION ===" +
-        "\n- WELCOME GREETING IN ENGLISH: ALWAYS begin incoming voice calls with a warm, cheerful, and natural welcoming greeting in ENGLISH (e.g., 'Hello! I am Arohi, your AI guide. How can I help you today?')." +
-        "\n- INSTANT DYNAMIC MULTILINGUAL ADAPTATION: You are fully multilingual across 150+ languages (English, Hindi/हिंदी, Odia/ଓଡ଼ିଆ, Bengali/বাংলা, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Kannada, Malayalam, Punjabi, Urdu, Spanish, French, German, Japanese, and more)." +
-        "\n- AS SOON AS THE USER SPEAKS IN ANY REGIONAL OR GLOBAL LANGUAGE (such as Odia, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, etc., or spoken/transliterated words like 'kemiti achha', 'mote business kariba ku achhi', 'mujhe guidance chahiye', 'state schemes bisayare kuha'), YOU MUST IMMEDIATELY AND SEAMLESSLY PIVOT TO REPLY IN THAT EXACT USER'S SPOKEN LANGUAGE with native fluency, sweet tone, and warmth!" +
+        "\n\n=== INITIAL CALL WELCOME & SEAMLESS REAL-TIME MULTILINGUAL MIRRORING ===" +
+        (reqLang === 'or' || reqLang.toLowerCase().includes('odia')
+          ? "\n- CALLER SELECTED ODIA (ଓଡ଼ିଆ): Greet the user with a warm, natural 1-sentence welcome in Odia (e.g., 'ନମସ୍କାର! ମୁଁ ଆରୋହୀ, ଆପଣଙ୍କ AI ସାଥୀ। ଆଜି ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?')."
+          : (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')
+            ? "\n- CALLER SELECTED HINDI (हिंदी): Greet the user with a warm, natural 1-sentence welcome in Hindi (e.g., 'नमस्ते! मैं आरोही हूँ, आपकी AI साथी। आज मैं आपकी क्या सहायता कर सकती हूँ?')."
+            : (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')
+              ? "\n- CALLER SELECTED BENGALI (বাংলা): Greet the user with a warm, natural 1-sentence welcome in Bengali."
+              : "\n- WELCOME GREETING: ALWAYS begin incoming calls with a warm, cheerful, and natural welcoming greeting in English (e.g., 'Hello! I am Arohi, your AI guide. How can I help you today?')."
+            )
+          )
+        ) +
+        "\n- INSTANT DYNAMIC MULTILINGUAL MIRRORING: You are fully multilingual across 150+ languages (English, Odia/ଓଡ଼ିଆ, Hindi/हिंदी, Bengali/বাংলা, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Kannada, Malayalam, Punjabi, Urdu, Spanish, French, German, Japanese, etc.)." +
+        "\n- AS SOON AS THE USER SPEAKS IN ANY REGIONAL OR GLOBAL LANGUAGE (such as Odia, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, etc., or spoken/transliterated words like 'kemiti achha', 'mote business kariba ku achhi', 'mujhe guidance chahiye', 'state schemes bisayare kuha'), YOU MUST IMMEDIATELY AND SEAMLESSLY PIVOT TO REPLY IN THAT EXACT USER'S SPOKEN LANGUAGE with native fluency, sweet tone, and warmth! NEVER respond in English when the user speaks in Odia, Hindi, or any regional Indian language!" +
         "\n- If the user speaks English, continue answering in English. If the user changes language at any time during the conversation, switch immediately to match their spoken language on that very turn!" +
         "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'—ALWAYS search Google and provide accurate, up-to-the-second news!";
 
@@ -386,13 +395,20 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
             }
           } else if (!isReadAloud && session) {
             try {
-              const greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
+              let greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
+              if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
+                greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Odia (ଓଡ଼ିଆ) introducing yourself as Arohi (ଆରୋହୀ) and asking how you can help today (e.g. 'ନମସ୍କାର! ମୁଁ ଆରୋହୀ, ଆପଣଙ୍କ AI ସାଥୀ। ଆଜି ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?').";
+              } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
+                greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Hindi (हिंदी) introducing yourself as Arohi (आरोही) and asking how you can help today (e.g. 'नमस्ते! मैं आरोही हूँ, आपकी AI साथी। आज मैं आपकी क्या मदद कर सकती हूँ?').";
+              } else if (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')) {
+                greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Bengali (বাংলা) introducing yourself as Arohi and asking how you can help today.";
+              }
 
               session.sendClientContent({
                 turns: [{ role: 'user', parts: [{ text: greetingInstruction }] }],
                 turnComplete: true
               });
-              console.log("Triggered instant Arohi welcome greeting on call connect.");
+              console.log(`Triggered instant Arohi welcome greeting on call connect (language: ${reqLang}).`);
             } catch (greetErr) {
               console.warn("Could not trigger initial welcome greeting:", greetErr);
             }

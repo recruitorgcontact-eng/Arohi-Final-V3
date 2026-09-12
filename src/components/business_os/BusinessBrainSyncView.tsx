@@ -824,7 +824,7 @@ export default function BusinessBrainSyncView() {
 
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold text-purple-600 dark:text-purple-400">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Arohi Flagship Voice (24kHz HD)</span>
+                  <span>Arohi Signature Voice</span>
                 </div>
               </div>
 
@@ -848,7 +848,7 @@ export default function BusinessBrainSyncView() {
                   <h3 className="text-lg font-black">Arohi Executive Intake Agent</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                     {isArohiSpeaking 
-                      ? 'Speaking in human-like 24kHz HD Arohi voice...' 
+                      ? 'Speaking in natural Arohi voice...' 
                       : isMicListening 
                       ? 'Listening to you speak...' 
                       : isCallActive 

@@ -475,7 +475,7 @@ export default function TelephonyFlowCanvas({ onTestFlowInSimulator }: Telephony
                     return;
                   }
 
-                  showToast('Playing node audio via Arohi 24kHz HD Neural Voice...');
+                  showToast('Playing node dialogue with Arohi Natural Voice...');
                   playArohiVoice(selectedNode.config.dialogueText, {
                     voice: 'Zypher',
                     onStart: () => setIsPlayingNodePreview(true),
@@ -490,7 +490,7 @@ export default function TelephonyFlowCanvas({ onTestFlowInSimulator }: Telephony
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isPlayingNodePreview ? 'Playing 24kHz HD Voice...' : 'Preview in Arohi 24kHz HD Voice'}</span>
+                <span>{isPlayingNodePreview ? 'Playing Voice...' : 'Preview in Natural Voice'}</span>
               </button>
             </div>
           </div>

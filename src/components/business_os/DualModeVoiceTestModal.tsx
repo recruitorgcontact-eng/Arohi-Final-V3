@@ -236,7 +236,7 @@ export default function DualModeVoiceTestModal({
       flowNodes.find(n => n.id === 'node-greeting')?.config.dialogueText ||
       'ନମସ୍କାର! ଆରୋହୀ ଏଣ୍ଟରପ୍ରାଇଜେସ୍ ତରଫରୁ ସ୍ୱାଗତ। ମୁଁ ଆପଣଙ୍କୁ ଆଜି କିପରି ସାହାଯ୍ୟ କରିପାରିବି?';
     speakText(greetingText);
-    showToast(`Arohi 24kHz HD Voice Call connected! [Ambient: ${backgroundSound}]`);
+    showToast(`Arohi Voice Call connected! [Ambient: ${backgroundSound}]`);
   };
 
   const handleEndCall = () => {
@@ -294,7 +294,7 @@ export default function DualModeVoiceTestModal({
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1">
                   <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-                  <span>24kHz HD Voice</span>
+                  <span>Arohi Natural Voice</span>
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -494,7 +494,7 @@ export default function DualModeVoiceTestModal({
               {isSpeaking && (
                 <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-3 py-2 rounded-xl w-fit animate-pulse border border-purple-500/20">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Arohi is speaking via 24kHz HD Voice...</span>
+                  <span>Arohi is speaking...</span>
                 </div>
               )}
 
@@ -616,10 +616,10 @@ export default function DualModeVoiceTestModal({
             <div className="mt-auto p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 text-[11px] space-y-1 text-purple-800 dark:text-purple-300">
               <div className="font-bold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Arohi Audio Pipeline Active</span>
+                <span>Arohi Voice Active</span>
               </div>
               <p className="text-[10px] opacity-90">
-                Operating with sub-500ms voice turn latency and continuous 24kHz HD studio neural voice synthesis.
+                Operating with natural conversational pacing and studio-quality voice synthesis.
               </p>
             </div>
           </div>

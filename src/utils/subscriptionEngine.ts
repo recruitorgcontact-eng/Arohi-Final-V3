@@ -8,6 +8,7 @@
 import { UserData } from '../context/AuthContext';
 
 export const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+export const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 export const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 export const LIFETIME_MS = 50 * 365 * 24 * 60 * 60 * 1000; // 50 years
@@ -232,13 +233,13 @@ export function computeSubscriptionState(input: SubscriptionEngineInput): Subscr
   }
 
   const trialElapsed = currentTime - resolvedTrialStart;
-  const isTrialTimeRemaining = trialElapsed < TWO_DAYS_MS;
+  const isTrialTimeRemaining = trialElapsed < THREE_DAYS_MS;
   
   // STRICT RULE: If the user is subscribed, trial is FALSE (never show trial badge or expired badge)
   const isTrialActive = !isSubscribed && isTrialTimeRemaining;
   const isTrialExpired = !isSubscribed && !isTrialTimeRemaining;
 
-  const trialMsRemaining = isTrialActive ? Math.max(0, TWO_DAYS_MS - trialElapsed) : 0;
+  const trialMsRemaining = isTrialActive ? Math.max(0, THREE_DAYS_MS - trialElapsed) : 0;
   const trialDaysRemaining = isSubscribed ? 0 : Math.floor(trialMsRemaining / (1000 * 60 * 60 * 24));
   const trialHoursRemaining = isSubscribed ? 0 : Math.floor(trialMsRemaining / (1000 * 60 * 60));
   const trialMinutesRemaining = isSubscribed ? 0 : Math.floor((trialMsRemaining % (1000 * 60 * 60)) / (1000 * 60));
@@ -315,3 +316,36 @@ export function persistSubscriptionActivation(params: {
 
   return { endDate, subs, details };
 }
+
+/**
+ * Activates a 03-Day Free Trial for Arohi One or Arohi Voice Agent plans
+ */
+export function activateProductTrial(params: {
+  productId: string;
+  productName: string;
+  trialDays?: number;
+  trialMinutes?: number;
+}): { trialStart: number; trialEnd: number; productName: string } {
+  const now = Date.now();
+  const trialDays = params.trialDays || 3;
+  const trialEnd = now + (trialDays * 24 * 60 * 60 * 1000);
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('arohi_trial_start', now.toString());
+      localStorage.setItem('arohi_trial_end', trialEnd.toString());
+      localStorage.setItem('arohi_trial_product_id', params.productId);
+      localStorage.setItem('arohi_trial_product_name', params.productName);
+      if (params.trialMinutes) {
+        localStorage.setItem('arohi_trial_minutes', params.trialMinutes.toString());
+      }
+    } catch (e) {}
+  }
+
+  return {
+    trialStart: now,
+    trialEnd,
+    productName: params.productName
+  };
+}
+
