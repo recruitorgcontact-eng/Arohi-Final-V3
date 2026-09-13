@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Layers,
   Crown,
-  HeartHandshake
+  HeartHandshake,
+  CreditCard
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -122,6 +123,14 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       icon: HeartHandshake,
       badge: '15% Comm.',
       description: 'AECN Centers & Sovereign Growth'
+    },
+    {
+      id: 'pricing',
+      label: 'Plans & Pricing',
+      icon: CreditCard,
+      badge: '₹399 / Trial',
+      badgeGold: true,
+      description: 'Business OS, Calling Fleet, Individual & CBT'
     }
   ];
 

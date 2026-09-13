@@ -14,18 +14,21 @@ import {
   FileCheck, 
   ShieldCheck, 
   Play,
-  Award
+  Award,
+  CreditCard
 } from 'lucide-react';
 
 interface ArohiExamsProductPageProps {
   onStartExams: () => void;
   onNavigateTab: (tab: string) => void;
+  onNavigatePricing?: (category?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams') => void;
   isDarkMode?: boolean;
 }
 
 export default function ArohiExamsProductPage({
   onStartExams,
   onNavigateTab,
+  onNavigatePricing,
   isDarkMode = true
 }: ArohiExamsProductPageProps) {
   const badges = [
@@ -132,8 +135,15 @@ export default function ArohiExamsProductPage({
         {/* CTAs */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
+            onClick={() => onNavigatePricing ? onNavigatePricing('exams') : onNavigateTab('pricing')}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <CreditCard className="w-4 h-4 text-slate-950" />
+            <span>CBT Exam Passes (From ₹99)</span>
+          </button>
+          <button
             onClick={onStartExams}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2"
           >
             <span>Start Practice Tests</span>
             <ArrowRight className="w-4 h-4" />
@@ -241,6 +251,36 @@ export default function ArohiExamsProductPage({
           <div className="p-4 rounded-2xl bg-white/70 dark:bg-[#15171e]/70 border border-black/6 dark:border-white/8">
             <div className="text-2xl sm:text-3xl font-black text-purple-500 font-display">100%</div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">Syllabus Alignment</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Exam Pass Pricing CTA Banner */}
+      <section className="max-w-4xl mx-auto px-4 pb-8">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-950/70 via-orange-950/70 to-slate-900 border-2 border-amber-500/40 text-center space-y-4 shadow-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase tracking-wider">
+            <span>⚡ ALL-INDIA CBT TEST SERIES PASSES</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-black text-white">
+            Unlock Unlimited Tests &amp; AI Doubt Solving
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Choose Silver Pass (₹99 for 30 days), Gold Pass (₹249 for 90 days), or Platinum Pass (₹499 for 365 days). Covers 500+ government, medical, and banking exams.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => onNavigatePricing ? onNavigatePricing('exams') : onNavigateTab('pricing')}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center gap-2"
+            >
+              <CreditCard className="w-4 h-4 text-slate-950" />
+              <span>Explore Exam Passes (From ₹99) →</span>
+            </button>
+            <button
+              onClick={onStartExams}
+              className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              Try Free Mock Test
+            </button>
           </div>
         </div>
       </section>

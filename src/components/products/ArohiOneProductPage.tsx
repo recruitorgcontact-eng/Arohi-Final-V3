@@ -19,18 +19,21 @@ import {
   PhoneCall, 
   Globe, 
   Play, 
-  Layers
+  Layers,
+  CreditCard
 } from 'lucide-react';
 
 interface ArohiOneProductPageProps {
   onLaunchBusinessOS: () => void;
   onNavigateTab: (tab: string) => void;
+  onNavigatePricing?: (category?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams') => void;
   isDarkMode?: boolean;
 }
 
 export default function ArohiOneProductPage({
   onLaunchBusinessOS,
   onNavigateTab,
+  onNavigatePricing,
   isDarkMode = true
 }: ArohiOneProductPageProps) {
   const [selectedModule, setSelectedModule] = useState(0);
@@ -144,6 +147,13 @@ export default function ArohiOneProductPage({
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <button
+            onClick={() => onNavigatePricing ? onNavigatePricing('arohi_one') : onNavigateTab('pricing')}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <CreditCard className="w-4 h-4 text-slate-950" />
+            <span>Plans &amp; 03-Day Trial (From ₹4,999)</span>
+          </button>
           <button
             onClick={onLaunchBusinessOS}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2"
@@ -335,6 +345,36 @@ export default function ArohiOneProductPage({
           <div className="p-4 rounded-2xl bg-white/70 dark:bg-[#15171e]/70 border border-black/6 dark:border-white/8">
             <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-display">99.9%</div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">Uptime &amp; Data Security</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Pricing & 3-Day Trial CTA Banner */}
+      <section className="max-w-4xl mx-auto px-4 pb-8">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-950/80 via-indigo-950/80 to-slate-900 border-2 border-blue-500/40 text-center space-y-4 shadow-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider">
+            <span>⚡ ZERO-RISK 72-HOUR TRIAL</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-black text-white">
+            Ready to deploy Arohi One across your business?
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Choose from Starter OS (₹4,999/mo), Growth OS (₹14,999/mo), Scale OS (₹34,999/mo), or Enterprise OS (₹89,000/mo). All tiers include a 03-Day Risk-Free Trial.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => onNavigatePricing ? onNavigatePricing('arohi_one') : onNavigateTab('pricing')}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Explore Arohi One Pricing &amp; Plans →</span>
+            </button>
+            <button
+              onClick={onLaunchBusinessOS}
+              className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              Open Sandbox Demo
+            </button>
           </div>
         </div>
       </section>

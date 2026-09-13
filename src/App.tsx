@@ -918,6 +918,13 @@ export default function App() {
     path4: 0,
   });
   const [pendingSubscriptionDetail, setPendingSubscriptionDetail] = useState<{ tierName: string; price: number; margin: number } | null>(null);
+  const [pricingCategory, setPricingCategory] = useState<'arohi_one' | 'calling_agents' | 'individual' | 'exams'>('arohi_one');
+
+  const handleNavigatePricing = (category: 'arohi_one' | 'calling_agents' | 'individual' | 'exams' = 'arohi_one') => {
+    setPricingCategory(category);
+    setActiveTab('pricing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const [checkoutPath, setCheckoutPath] = useState<{ id: string; title: string; price: string } | null>(null);
   const [customerEmailInput, setCustomerEmailInput] = useState<string>('');
@@ -2121,6 +2128,7 @@ export default function App() {
             subscriptionDetails={subscriptionDetails}
             onSubscribe={handleSubscribe}
             onNavigateTab={(tab) => setActiveTab(tab)}
+            defaultProductCategory={pricingCategory}
             onOpenCheckout={(path, detail) => {
               setPendingSubscriptionDetail(detail);
               if (!user) {
@@ -2213,6 +2221,7 @@ export default function App() {
               setActiveTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onNavigatePricing={handleNavigatePricing}
             isDarkMode={isDarkMode}
           />
         );
@@ -2253,6 +2262,7 @@ export default function App() {
               setActiveTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onNavigatePricing={handleNavigatePricing}
             isDarkMode={isDarkMode}
           />
         );
@@ -2267,6 +2277,7 @@ export default function App() {
               setActiveTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onNavigatePricing={handleNavigatePricing}
             isDarkMode={isDarkMode}
           />
         );
@@ -2532,6 +2543,7 @@ export default function App() {
         }}
         onSetSubscriptionEndDate={handleSetSubscriptionEndDate}
         currency={currency}
+        onNavigatePricing={handleNavigatePricing}
         onOpen3DLearning={(topicId) => {
           if (topicId) setGlobal3DTopic(topicId);
           setIsGlobal3DLearningOpen(true);

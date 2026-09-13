@@ -921,12 +921,42 @@ export interface PresentationChartData {
   }[];
 }
 
+export interface SlideMetricItem {
+  value: string;
+  label: string;
+  trend?: string; // e.g. "+142% YoY" or "Target 2026"
+  trendPositive?: boolean;
+}
+
+export interface SlideCardItem {
+  title: string;
+  desc: string;
+  tag?: string;
+  icon?: string;
+}
+
+export interface SlideProcessStep {
+  step: string | number;
+  title: string;
+  desc: string;
+}
+
+export interface SlideComparisonItem {
+  aspect: string;
+  traditional: string;
+  arohiSolution: string;
+}
+
 export interface SlideData {
   title: string;
   subtitle?: string;
+  layout?: 'standard' | 'metrics_grid' | 'bento_cards' | 'process_flow' | 'comparison_table' | 'split_chart';
   bullets?: string[];
-  cards?: { title: string; desc: string }[];
+  cards?: SlideCardItem[];
   keyMetric?: { value: string; label: string };
+  metrics?: SlideMetricItem[];
+  processSteps?: SlideProcessStep[];
+  comparison?: SlideComparisonItem[];
   callout?: string;
   chart?: PresentationChartData;
 }
@@ -938,6 +968,8 @@ export type PresentationThemeKey =
   | 'corporate_navy'
   | 'apple_keynote'
   | 'vibrant_sunburst'
+  | 'obsidian_neon'
+  | 'crimson_executive'
   | 'purple'
   | 'midnight';
 
@@ -1089,6 +1121,86 @@ export const PRESENTATION_THEMES: Record<string, ThemeConfig> = {
     badgeText: '✦  EXECUTIVE PRESENTATION DECK',
     chartColors: ['7C3AED', 'F59E0B', '2563EB', '10B981', 'EC4899'],
     pillColor: '7C3AED'
+  },
+  obsidian_neon: {
+    key: 'obsidian_neon',
+    name: 'Obsidian Neon (Cyberpunk & Next-Gen AI)',
+    coverBg: '070913', // Ultra-deep Obsidian
+    slideBg: '0C1021', // Dark Glass Stage
+    headerBg: '131A33', // Deep Tech Blue
+    brandAccent: '06B6D4', // Electric Cyan
+    brandSecondary: 'EC4899', // Neon Pink
+    cardBg: '111936',
+    cardBorder: '0EA5E9',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: '94A3B8',
+    textColorDark: 'F1F5F9',
+    badgeBg: '083344',
+    badgeBorder: '06B6D4',
+    badgeColor: '67E8F9',
+    badgeText: '✦  NEXT-GEN INTELLIGENCE DECK',
+    chartColors: ['06B6D4', 'EC4899', '8B5CF6', '10B981', 'F59E0B'],
+    pillColor: '06B6D4'
+  },
+  crimson_executive: {
+    key: 'crimson_executive',
+    name: 'Crimson Executive (High-Impact Sovereign)',
+    coverBg: '180508', // Deep Crimson Shadow
+    slideBg: 'FFF8F8', // Rose White
+    headerBg: '4C0519', // Deep Burgundy
+    brandAccent: 'E11D48', // Crimson Red
+    brandSecondary: 'F59E0B', // Warm Amber
+    cardBg: 'FFF1F2',
+    cardBorder: 'FDA4AF',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'FECDD3',
+    textColorDark: '4C0519',
+    badgeBg: '4C0519',
+    badgeBorder: 'E11D48',
+    badgeColor: 'FDE047',
+    badgeText: '✦  SOVEREIGN STRATEGIC BRIEF',
+    chartColors: ['E11D48', 'F59E0B', '4F46E5', '0D9488', '7C3AED'],
+    pillColor: 'E11D48'
+  },
+  purple: {
+    key: 'purple',
+    name: 'Royal Amethyst (Arohi Signature)',
+    coverBg: '140A28', // Royal Deep Purple
+    slideBg: 'FAF8FF', // Soft Iris White
+    headerBg: '2E1065', // Midnight Violet
+    brandAccent: '8B5CF6', // Purple Glow
+    brandSecondary: 'F59E0B',
+    cardBg: 'F5F3FF',
+    cardBorder: 'DDD6FE',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'C4B5FD',
+    textColorDark: '2E1065',
+    badgeBg: '2E1065',
+    badgeBorder: '8B5CF6',
+    badgeColor: 'FDE047',
+    badgeText: '✦  EXECUTIVE PRESENTATION DECK',
+    chartColors: ['8B5CF6', 'F59E0B', '06B6D4', '10B981', 'EC4899'],
+    pillColor: '8B5CF6'
+  },
+  midnight: {
+    key: 'midnight',
+    name: 'Midnight Black (Cinema Stealth)',
+    coverBg: '050508', // True Pitch Black
+    slideBg: '0A0A10', // Deep Stealth Stage
+    headerBg: '12121A', // Carbon
+    brandAccent: '38BDF8', // Cyan Ice
+    brandSecondary: 'A855F7',
+    cardBg: '141420',
+    cardBorder: '27273A',
+    textColorPrimary: 'FFFFFF',
+    textColorMuted: 'A1A1AA',
+    textColorDark: 'F4F4F5',
+    badgeBg: '181824',
+    badgeBorder: '38BDF8',
+    badgeColor: '7DD3FC',
+    badgeText: '✦  CONFIDENTIAL STRATEGY BRIEF',
+    chartColors: ['38BDF8', 'A855F7', '34D399', 'FBBF24', 'F43F5E'],
+    pillColor: '38BDF8'
   }
 };
 
@@ -1477,7 +1589,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
       const hasChart = Boolean(slide.chart && slide.chart.labels?.length && slide.chart.datasets?.length);
 
       // Key Metric Card if available (and not colliding with chart)
-      if (slide.keyMetric && !hasChart) {
+      if (slide.keyMetric && !hasChart && (!slide.metrics || slide.metrics.length === 0)) {
         s.addShape(pptx.ShapeType.roundRect, {
           x: 0.8,
           y: currentY,
@@ -1513,8 +1625,158 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
         });
       }
 
-      // Render Bullets
-      if (slide.bullets && slide.bullets.length > 0) {
+      // 1. INFOGRAPHIC: Multi-Metric Showcase Grid (e.g., 3-4 KPI stat cards)
+      if (slide.metrics && slide.metrics.length > 0) {
+        const count = Math.min(slide.metrics.length, 4);
+        const cardW = (11.7 - (count - 1) * 0.3) / count;
+        slide.metrics.slice(0, count).forEach((m, mIdx) => {
+          const cardX = 0.8 + mIdx * (cardW + 0.3);
+          s.addShape(pptx.ShapeType.roundRect, {
+            x: cardX,
+            y: currentY,
+            w: cardW,
+            h: 1.4,
+            fill: { color: theme.cardBg },
+            line: { color: theme.cardBorder, width: 1 },
+            rectRadius: 0.12
+          });
+
+          s.addText(m.value, {
+            x: cardX + 0.1,
+            y: currentY + 0.12,
+            w: cardW - 0.2,
+            h: 0.65,
+            fontSize: 22,
+            bold: true,
+            color: theme.brandAccent,
+            align: 'center',
+            fontFace: 'Arial'
+          });
+
+          const labelText = m.trend ? `${m.label}\n(${m.trend})` : m.label;
+          s.addText(labelText, {
+            x: cardX + 0.1,
+            y: currentY + 0.78,
+            w: cardW - 0.2,
+            h: 0.5,
+            fontSize: 9,
+            bold: true,
+            color: theme.textColorDark,
+            align: 'center',
+            fontFace: 'Arial'
+          });
+        });
+        currentY += 1.6;
+      }
+
+      // 2. INFOGRAPHIC: Bento Cards Grid (e.g. 2, 3, or 4 Feature/Pillar Cards)
+      if (slide.cards && slide.cards.length > 0 && !hasChart) {
+        const count = Math.min(slide.cards.length, 3);
+        const colW = (11.7 - (count - 1) * 0.35) / count;
+        slide.cards.slice(0, count).forEach((card, cIdx) => {
+          const cardX = 0.8 + cIdx * (colW + 0.35);
+          s.addShape(pptx.ShapeType.roundRect, {
+            x: cardX,
+            y: currentY,
+            w: colW,
+            h: 2.3,
+            fill: { color: theme.cardBg },
+            line: { color: theme.cardBorder, width: 1 },
+            rectRadius: 0.14
+          });
+
+          if (card.tag) {
+            s.addText(card.tag.toUpperCase(), {
+              x: cardX + 0.2,
+              y: currentY + 0.15,
+              w: colW - 0.4,
+              h: 0.25,
+              fontSize: 8,
+              bold: true,
+              color: theme.brandAccent,
+              fontFace: 'Arial'
+            });
+          }
+
+          s.addText(card.title, {
+            x: cardX + 0.2,
+            y: currentY + (card.tag ? 0.42 : 0.2),
+            w: colW - 0.4,
+            h: 0.5,
+            fontSize: 13,
+            bold: true,
+            color: theme.textColorDark,
+            fontFace: 'Arial'
+          });
+
+          s.addText(card.desc, {
+            x: cardX + 0.2,
+            y: currentY + (card.tag ? 0.95 : 0.75),
+            w: colW - 0.4,
+            h: 1.25,
+            fontSize: 10,
+            color: theme.textColorDark,
+            fontFace: 'Arial',
+            wrap: true
+          });
+        });
+        currentY += 2.5;
+      }
+
+      // 3. INFOGRAPHIC: Process / Step Flow (e.g. 3-4 steps)
+      if (slide.processSteps && slide.processSteps.length > 0) {
+        const count = Math.min(slide.processSteps.length, 4);
+        const stepW = (11.7 - (count - 1) * 0.25) / count;
+        slide.processSteps.slice(0, count).forEach((step, sIdx) => {
+          const stepX = 0.8 + sIdx * (stepW + 0.25);
+          s.addShape(pptx.ShapeType.roundRect, {
+            x: stepX,
+            y: currentY,
+            w: stepW,
+            h: 2.1,
+            fill: { color: theme.cardBg },
+            line: { color: theme.cardBorder, width: 1 },
+            rectRadius: 0.12
+          });
+
+          s.addText(`STEP ${step.step}`, {
+            x: stepX + 0.15,
+            y: currentY + 0.15,
+            w: stepW - 0.3,
+            h: 0.3,
+            fontSize: 10,
+            bold: true,
+            color: theme.brandAccent,
+            fontFace: 'Arial'
+          });
+
+          s.addText(step.title, {
+            x: stepX + 0.15,
+            y: currentY + 0.48,
+            w: stepW - 0.3,
+            h: 0.5,
+            fontSize: 12,
+            bold: true,
+            color: theme.textColorDark,
+            fontFace: 'Arial'
+          });
+
+          s.addText(step.desc, {
+            x: stepX + 0.15,
+            y: currentY + 1.0,
+            w: stepW - 0.3,
+            h: 0.95,
+            fontSize: 9.5,
+            color: theme.textColorDark,
+            fontFace: 'Arial',
+            wrap: true
+          });
+        });
+        currentY += 2.3;
+      }
+
+      // Render Bullets (if not already handled by cards/process flow)
+      if (slide.bullets && slide.bullets.length > 0 && (!slide.cards || slide.cards.length === 0) && (!slide.processSteps || slide.processSteps.length === 0)) {
         let bulletX = 0.8;
         let bulletW = 11.5; // Safe padding inside 13.333" widescreen
 
@@ -1541,7 +1803,7 @@ export async function exportToPPTX(filenameTitle: string, presentation: Presenta
           x: bulletX,
           y: currentY,
           w: bulletW,
-          h: hasChart ? 3.9 : 4.1,
+          h: hasChart ? 3.9 : Math.max(1.8, 5.5 - currentY),
           valign: 'top',
           margin: 0.15,
           wrap: true

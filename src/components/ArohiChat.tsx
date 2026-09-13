@@ -7,7 +7,8 @@ import {
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
-  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Wand2, Upload
+  Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Wand2, Upload,
+  Square
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -28,7 +29,9 @@ import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArohiChatLink, parsePlainSegmentsWithLinks } from './ArohiChatLink';
 import InChatMessageQuiz from './mocktests/InChatMessageQuiz';
-import { ArohiThinkingIndicator } from './ArohiThinkingIndicator';
+import { ArohiThinkingIndicator, extractThoughtAndContent } from './ArohiThinkingIndicator';
+import { ArohiTaskProgressCard, parseMessageTaskProgress } from './ArohiTaskProgressCard';
+import { ArohiCodeSnippet } from './ArohiCodeSnippet';
 import { getChatDisplayDate, getCallDisplayDate, formatRelativeChatDate, extractChatTimestamp } from '../utils/dateUtils';
 
 interface Message {
@@ -306,6 +309,11 @@ function renderMarkdown(
   let listType: 'ul' | 'ol' | null = null;
   let olCounter = 0;
 
+  // Multi-line code block accumulator
+  let inCodeBlock = false;
+  let codeBlockLang = '';
+  let codeBlockLines: string[] = [];
+
   const pushList = (key: number) => {
     if (currentList.length > 0) {
       if (listType === 'ul') {
@@ -351,6 +359,38 @@ function renderMarkdown(
 
   lines.forEach((line, index) => {
     const trimmed = line.trim();
+
+    // Check for Fenced Code Block delimiters (```lang or ```)
+    if (trimmed.startsWith('```')) {
+      pushList(index);
+      if (inCodeBlock) {
+        // End of code block -> Flush ArohiCodeSnippet
+        const completeCode = codeBlockLines.join('\n');
+        elements.push(
+          <ArohiCodeSnippet
+            key={`code-block-${index}`}
+            code={completeCode}
+            language={codeBlockLang}
+            isDarkMode={isDarkMode}
+          />
+        );
+        inCodeBlock = false;
+        codeBlockLang = '';
+        codeBlockLines = [];
+        return;
+      } else {
+        // Start of code block
+        inCodeBlock = true;
+        codeBlockLang = trimmed.slice(3).trim();
+        codeBlockLines = [];
+        return;
+      }
+    }
+
+    if (inCodeBlock) {
+      codeBlockLines.push(line);
+      return;
+    }
     
     // Check for Headers & Media
     if (trimmed.includes('<video') || trimmed.startsWith('@[video]') || trimmed.startsWith('![video]')) {
@@ -560,6 +600,19 @@ function renderMarkdown(
   });
 
   pushList(lines.length);
+
+  // If response finished while still inside a code block (e.g. streaming or unclosed code block)
+  if (inCodeBlock && codeBlockLines.length > 0) {
+    const completeCode = codeBlockLines.join('\n');
+    elements.push(
+      <ArohiCodeSnippet
+        key={`code-block-end`}
+        code={completeCode}
+        language={codeBlockLang}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
 
   return <div className={`space-y-1.5 ${isDarkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{elements}</div>;
 }
@@ -820,6 +873,16 @@ export default function ArohiChat({
   const [uploadedFile, setUploadedFile] = useState<{ name: string; mimeType: string; base64: string } | null>(null);
   const [isDownloadingResume, setIsDownloadingResume] = useState<string | null>(null);
   const [selectedAudienceCategory, setSelectedAudienceCategory] = useState<string>('all');
+  const streamAbortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStopGeneration = () => {
+    if (streamAbortControllerRef.current) {
+      streamAbortControllerRef.current.abort();
+      streamAbortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    setMessages(prev => prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m));
+  };
 
   // ChatGPT-Style Expandable Attachment Menu State & Input Refs
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
@@ -3119,9 +3182,13 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       effectiveSystemContext = `${effectiveSystemContext}\n${projIntro}${projRules}`.trim();
     }
 
+    const abortCtrl = new AbortController();
+    streamAbortControllerRef.current = abortCtrl;
+
     try {
       const response = await fetch('/api/chat-stream', {
         method: 'POST',
+        signal: abortCtrl.signal,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -3218,7 +3285,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           topic: activeTopic
         })
       }).catch(() => {});
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        setIsLoading(false);
+        streamAbortControllerRef.current = null;
+        return;
+      }
       console.warn('Primary stream fetch encountered an issue, attempting standard POST fallback:', error);
       let fallbackText = '';
       
@@ -4175,8 +4247,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               ? parseMessageCallSummary(msg.content)
               : { cleanedContent: msg.content, summaryData: null };
 
+            const thoughtParsed = msg.role === 'assistant'
+              ? extractThoughtAndContent(summaryParsed.cleanedContent)
+              : { cleanedContent: msg.content, thought: null };
+
             const resumeParsed = msg.role === 'assistant' 
-              ? parseMessageResume(summaryParsed.cleanedContent) 
+              ? parseMessageResume(thoughtParsed.cleanedContent) 
               : { cleanedContent: msg.content, resumeData: null };
 
             const presentationParsed = msg.role === 'assistant'
@@ -4191,6 +4267,10 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               ? parseMessageMcpPayload(spreadsheetParsed.cleanedContent)
               : { cleanedContent: msg.content, mcpData: null };
 
+            const taskProgressParsed = msg.role === 'assistant'
+              ? parseMessageTaskProgress(parsed.cleanedContent)
+              : { cleanedContent: msg.content, taskProgressData: null };
+
             const isLiked = likedMessageIds.includes(msg.id);
             const isDisliked = dislikedMessageIds.includes(msg.id);
             const isCopied = copiedMessageId === msg.id;
@@ -4201,34 +4281,25 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 key={msg.id}
                 className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-4xl mx-auto w-full`}
               >
-                {/* Message Header Role Tag */}
-                <div className="flex items-center gap-2 mb-1 px-1">
-                  {msg.role === 'assistant' ? (
-                    <div className="flex items-center gap-2">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${
-                        isDarkMode 
-                          ? 'bg-blue-950/60 text-blue-200 border border-blue-800/60' 
-                          : 'bg-blue-50 text-blue-800 border border-blue-200'
-                      }`}>
-                        <Bot className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                        <span>Arohi Xaldra 7.0</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={`flex items-center gap-1.5 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      <span>You</span>
-                    </div>
-                  )}
-                  <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{msg.timestamp}</span>
-                </div>
+                {/* Message Header */}
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-1.5 px-1 select-none">
+                    <span className={`text-xs font-semibold tracking-wide ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
+                      Arohi 20B
+                    </span>
+                    <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>
+                      {msg.timestamp}
+                    </span>
+                  </div>
+                )}
 
                 {/* Message Content Container */}
                 <div className={`w-full text-left ${
                   msg.role === 'user'
                     ? (isDarkMode 
-                        ? 'bg-[#0f172a] text-slate-100 border border-blue-900/40 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed shadow-sm'
-                        : 'bg-white text-slate-900 border border-slate-200/80 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl max-w-[85%] text-[15px] sm:text-[16px] leading-relaxed shadow-sm')
-                    : (isDarkMode ? 'text-slate-200 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]' : 'text-slate-800 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]')
+                        ? 'bg-[#1e2029] text-slate-100 border border-slate-700/50 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl sm:rounded-3xl max-w-[85%] sm:max-w-[78%] text-[15px] sm:text-[15.5px] leading-relaxed shadow-sm'
+                        : 'bg-slate-100 text-slate-900 border border-slate-200 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl sm:rounded-3xl max-w-[85%] sm:max-w-[78%] text-[15px] sm:text-[15.5px] leading-relaxed shadow-sm')
+                    : (isDarkMode ? 'text-slate-100 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]' : 'text-slate-900 py-1 font-normal text-[15.5px] sm:text-[16px] leading-[1.7]')
                 }`}>
                   {/* Parse standard markdown formatting */}
                   <div className={`prose ${
@@ -4238,7 +4309,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   } max-w-none text-[15.5px] sm:text-[16px] leading-[1.7] ${
                     msg.role === 'assistant' ? 'font-sans tracking-normal space-y-2.5' : ''
                   }`}>
-                    {msg.role === 'assistant' && msg.isStreaming && !parsed.cleanedContent ? (
+                    {msg.role === 'assistant' && msg.isStreaming && !taskProgressParsed.cleanedContent ? (
                       <ArohiThinkingIndicator 
                         isDarkMode={isDarkMode} 
                         isLive={true} 
@@ -4246,14 +4317,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       />
                     ) : (
                       <>
-                        {msg.role === 'assistant' && parsed.cleanedContent && (
+                        {msg.role === 'assistant' && taskProgressParsed.cleanedContent && (
                           <ArohiThinkingIndicator 
                             isDarkMode={isDarkMode} 
                             isLive={false} 
                             duration={msg.thinkingDuration || 2.4} 
+                            reasoning={thoughtParsed.thought || undefined}
+                            userPrompt={messages.slice(0, messages.findIndex(m => m.id === msg.id)).reverse().find(m => m.role === 'user')?.content}
+                            responsePreview={taskProgressParsed.cleanedContent}
                           />
                         )}
-                        {renderMarkdown(parsed.cleanedContent, isDarkMode, onNavigateTab, (src, alt) => {
+                        {renderMarkdown(taskProgressParsed.cleanedContent, isDarkMode, onNavigateTab, (src, alt) => {
                           setStudioGeneratedImage(src);
                           setStudioPrompt(alt);
                           setIsImageStudioOpen(true);
@@ -4264,6 +4338,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                       </>
                     )}
                   </div>
+
+                  {/* Task Progress Card */}
+                  {taskProgressParsed.taskProgressData && (
+                    <ArohiTaskProgressCard
+                      data={taskProgressParsed.taskProgressData}
+                      isDarkMode={isDarkMode}
+                    />
+                  )}
 
                   {presentationParsed.presentationData && (
                     <InChatMessagePresentation
@@ -4554,13 +4636,12 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </div>
           )}
 
-          {/* Arohi Xaldra 7.0 Model Indicator */}
+          {/* Arohi 20B Model Indicator */}
           <div className="flex items-center justify-between px-3 pb-1.5 text-[11px]">
             <div className="flex items-center gap-1.5 font-semibold select-none">
-              <Bot className="w-3.5 h-3.5 text-blue-500" />
               <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Model:</span>
               <span className={isDarkMode ? 'text-slate-200 font-semibold' : 'text-slate-900 font-semibold'}>
-                Arohi Xaldra 7.0
+                Arohi 20B
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium">
@@ -4569,185 +4650,206 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </div>
           </div>
 
-          {/* Floating Minimalist Capsule Dock */}
+          {/* Floating Minimalist Capsule Dock with Continuously Changing Gradient Border */}
           <div 
             id="chat-input-bar-container"
-            className={`${
+            className={`relative p-[1.5px] rounded-full transition-all duration-300 shadow-lg ${
               recording
-                ? 'bg-slate-900 border-rose-500/70 shadow-xl ring-2 ring-rose-500/40'
-                : isDarkMode 
-                  ? 'bg-[#090d1a]/90 border-slate-800/90 shadow-xl shadow-black/40 backdrop-blur-xl' 
-                  : 'bg-white/95 border-slate-200/90 shadow-lg shadow-blue-600/5 backdrop-blur-xl'
-            } border rounded-2xl sm:rounded-3xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-end gap-1.5 sm:gap-2 transition-all`}
+                ? 'thebar-gradient-border-recording'
+                : 'thebar-gradient-border'
+            }`}
           >
-            
-            {/* Expandable Attachment Menu (+) */}
-            <div className="relative shrink-0 flex items-center mb-0.5" ref={attachMenuRef}>
+            <div className={`w-full rounded-full flex items-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 gap-1.5 sm:gap-2 transition-colors ${
+              isDarkMode 
+                ? 'bg-[#0d0f17] text-slate-100' 
+                : 'bg-white text-slate-900 shadow-xs'
+            }`}>
+              
+              {/* Expandable Attachment Menu (Paperclip icon) */}
+              <div className="relative shrink-0 flex items-center" ref={attachMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsAttachMenuOpen(prev => !prev)}
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                    isAttachMenuOpen
+                      ? (isDarkMode ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-600 text-white shadow-sm')
+                      : (isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900')
+                  }`}
+                  title="Add files, photos, or capture with camera"
+                  aria-label="Attachment options"
+                >
+                  <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform duration-200" />
+                </button>
+
+                {/* Hidden File Inputs */}
+                {/* 1. Camera Capture */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    handleFileUpload(e);
+                    setIsAttachMenuOpen(false);
+                  }}
+                  className="hidden"
+                />
+
+                {/* 2. Photos / Gallery */}
+                <input
+                  ref={photosInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    handleFileUpload(e);
+                    setIsAttachMenuOpen(false);
+                  }}
+                  className="hidden"
+                />
+
+                {/* 3. Files & Documents */}
+                <input
+                  ref={filesInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.doc,.txt,.csv,.xlsx,.pptx,image/*"
+                  onChange={(e) => {
+                    handleFileUpload(e);
+                    setIsAttachMenuOpen(false);
+                  }}
+                  className="hidden"
+                />
+
+                {/* Expandable Menu Popover (Smooth Fade & Scale Animation) */}
+                {isAttachMenuOpen && (
+                  <div 
+                    className={`absolute bottom-full left-0 mb-3 w-48 sm:w-52 rounded-2xl shadow-2xl border p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl ${
+                      isDarkMode 
+                        ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-100 shadow-black/60' 
+                        : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/40'
+                    }`}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      {/* Option 1: Camera */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAttachMenuOpen(false);
+                          cameraInputRef.current?.click();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                          isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                          isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
+                        }`}>
+                          <Camera className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-[13px]">Camera</span>
+                      </button>
+
+                      {/* Option 2: Photos */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAttachMenuOpen(false);
+                          photosInputRef.current?.click();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                          isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                          isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
+                        }`}>
+                          <ImageIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-[13px]">Photos</span>
+                      </button>
+
+                      {/* Option 3: Files */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAttachMenuOpen(false);
+                          filesInputRef.current?.click();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
+                          isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                          isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
+                        }`}>
+                          <Paperclip className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-[13px]">Files</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Text Input / Multi-line Area with Scrollbar */}
+              <div className="flex-1 min-w-0 flex items-center py-0.5">
+                <textarea
+                  ref={chatTextareaRef}
+                  rows={1}
+                  placeholder={recording ? "Listening... Speak now 🎙️" : "Ask Arohi AI..."}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e?.target?.value ?? "");
+                    adjustChatTextareaHeight();
+                  }}
+                  onKeyDown={handleKeyPress}
+                  className={`w-full bg-transparent px-2 sm:px-2.5 py-1 text-[14px] sm:text-[15px] leading-[20px] max-h-32 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
+                    recording 
+                      ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
+                      : isDarkMode ? 'text-slate-100 placeholder-slate-400' : 'text-slate-900 placeholder-slate-400'
+                  } focus:outline-none font-normal`}
+                />
+              </div>
+
+              {/* Microphone Speech to Text Button */}
               <button
                 type="button"
-                onClick={() => setIsAttachMenuOpen(prev => !prev)}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
-                  isAttachMenuOpen
-                    ? (isDarkMode ? 'bg-blue-600 text-white rotate-45 shadow-sm' : 'bg-blue-600 text-white rotate-45 shadow-sm')
-                    : (isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900')
+                onClick={toggleRecording}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all shrink-0 cursor-pointer flex items-center justify-center ${
+                  recording 
+                    ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-500/40' 
+                    : (isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900')
                 }`}
-                title="Add files, photos, or capture with camera"
-                aria-label="Attachment options"
+                title={recording ? "Stop listening" : "Speech to text (Voice Input)"}
               >
-                <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform duration-200" />
+                <Mic className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${recording ? 'animate-bounce' : ''}`} />
               </button>
 
-              {/* Hidden File Inputs */}
-              {/* 1. Camera Capture */}
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => {
-                  handleFileUpload(e);
-                  setIsAttachMenuOpen(false);
-                }}
-                className="hidden"
-              />
-
-              {/* 2. Photos / Gallery */}
-              <input
-                ref={photosInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  handleFileUpload(e);
-                  setIsAttachMenuOpen(false);
-                }}
-                className="hidden"
-              />
-
-              {/* 3. Files & Documents */}
-              <input
-                ref={filesInputRef}
-                type="file"
-                accept=".pdf,.docx,.doc,.txt,.csv,.xlsx,.pptx,image/*"
-                onChange={(e) => {
-                  handleFileUpload(e);
-                  setIsAttachMenuOpen(false);
-                }}
-                className="hidden"
-              />
-
-              {/* Expandable Menu Popover (Smooth Fade & Scale Animation) */}
-              {isAttachMenuOpen && (
-                <div 
-                  className={`absolute bottom-full left-0 mb-3 w-48 sm:w-52 rounded-2xl shadow-2xl border p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl ${
-                    isDarkMode 
-                      ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-100 shadow-black/60' 
-                      : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/40'
-                  }`}
+              {/* Stop Generation Button (When loading) OR Send Button (When idle) */}
+              {isLoading ? (
+                <button
+                  type="button"
+                  onClick={handleStopGeneration}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#1c1d27] hover:bg-[#272937] border border-rose-500/90 text-rose-400 shadow-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
+                  title="Stop generation"
                 >
-                  <div className="flex flex-col gap-0.5">
-                    {/* Option 1: Camera */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAttachMenuOpen(false);
-                        cameraInputRef.current?.click();
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
-                      }`}>
-                        <Camera className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-semibold text-[13px]">Camera</span>
-                    </button>
-
-                    {/* Option 2: Photos */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAttachMenuOpen(false);
-                        photosInputRef.current?.click();
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
-                      }`}>
-                        <ImageIcon className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-semibold text-[13px]">Photos</span>
-                    </button>
-
-                    {/* Option 3: Files */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAttachMenuOpen(false);
-                        filesInputRef.current?.click();
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium transition-colors cursor-pointer group ${
-                        isDarkMode ? 'hover:bg-slate-800/80 text-slate-200 hover:text-white' : 'hover:bg-slate-100 text-slate-800 hover:text-slate-950'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isDarkMode ? 'bg-slate-800 text-slate-300 group-hover:text-white group-hover:bg-slate-700' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
-                      }`}>
-                        <Paperclip className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-semibold text-[13px]">Files</span>
-                    </button>
-                  </div>
-                </div>
+                  <Square className="w-3.5 h-3.5 fill-rose-500 text-rose-500 rounded-xs" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage()}
+                  disabled={!input.trim() && !uploadedFileName}
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all shrink-0 flex items-center justify-center cursor-pointer ${
+                    (!input.trim() && !uploadedFileName)
+                      ? (isDarkMode ? 'bg-slate-800/60 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed')
+                      : 'bg-white hover:bg-slate-100 text-slate-900 shadow-md active:scale-95 hover:scale-105'
+                  }`}
+                  title="Send message"
+                >
+                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
               )}
             </div>
-
-            {/* Text Input / Multi-line Area with Scrollbar */}
-            <div className="flex-1 min-w-0 flex items-center py-0.5">
-              <textarea
-                ref={chatTextareaRef}
-                rows={1}
-                placeholder={recording ? "Listening... Speak now 🎙️" : "Ask anything or tell me what you want to achieve..."}
-                value={input}
-                onChange={(e) => {
-                  setInput(e?.target?.value ?? "");
-                  adjustChatTextareaHeight();
-                }}
-                onKeyDown={handleKeyPress}
-                className={`w-full bg-transparent px-2 sm:px-2.5 py-1 text-[14px] sm:text-[14.5px] leading-[20px] max-h-32 min-h-[38px] overflow-y-auto resize-none chat-input-scrollbar ${
-                  recording 
-                    ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
-                    : isDarkMode ? 'text-slate-100 placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
-                } focus:outline-none font-normal`}
-              />
-            </div>
-
-            {/* Microphone Speech to Text Button */}
-            <button
-              onClick={toggleRecording}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl transition-all shrink-0 cursor-pointer flex items-center justify-center mb-0.5 ${
-                recording 
-                  ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-500/40' 
-                  : (isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900')
-              }`}
-              title={recording ? "Stop listening" : "Speech to text (Voice Input)"}
-            >
-              <Mic className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${recording ? 'animate-bounce' : ''}`} />
-            </button>
-
-            {/* Send Button */}
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={(!input.trim() && !uploadedFileName) || isLoading}
-              className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white disabled:bg-none disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 rounded-xl shadow-md shadow-blue-600/25 cursor-pointer disabled:cursor-not-allowed transition-all shrink-0 flex items-center justify-center mb-0.5 active:scale-95"
-              title="Send message"
-            >
-              <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </button>
           </div>
 
           <div className={`mt-2 text-center text-[11px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} font-normal flex items-center justify-center`}>

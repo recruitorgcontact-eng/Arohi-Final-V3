@@ -20,19 +20,22 @@ import {
   Award,
   Zap,
   Phone,
-  Loader2
+  Loader2,
+  CreditCard
 } from 'lucide-react';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
 
 interface ArohiCallingAgentsProductPageProps {
   onLaunchLiveDashboard: () => void;
   onNavigateTab: (tab: string) => void;
+  onNavigatePricing?: (category?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams') => void;
   isDarkMode?: boolean;
 }
 
 export default function ArohiCallingAgentsProductPage({
   onLaunchLiveDashboard,
   onNavigateTab,
+  onNavigatePricing,
   isDarkMode = true
 }: ArohiCallingAgentsProductPageProps) {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -180,6 +183,13 @@ export default function ArohiCallingAgentsProductPage({
 
         {/* CTAs */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <button
+            onClick={() => onNavigatePricing ? onNavigatePricing('calling_agents') : onNavigateTab('pricing')}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <CreditCard className="w-4 h-4 text-slate-950" />
+            <span>Fleet Plans &amp; Minutes (From ₹2,999)</span>
+          </button>
           <button
             onClick={onLaunchLiveDashboard}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
@@ -425,6 +435,36 @@ export default function ArohiCallingAgentsProductPage({
           <div className="p-4 rounded-2xl bg-white/70 dark:bg-[#15171e]/70 border border-black/6 dark:border-white/8">
             <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-display">99.9%</div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">Carrier Grade SLA</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Telephony Fleet Pricing Banner */}
+      <section className="max-w-4xl mx-auto px-4 pb-8">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-950/80 via-teal-950/80 to-slate-900 border-2 border-emerald-500/40 text-center space-y-4 shadow-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
+            <span>⚡ 72-HOUR FLEET TRIAL • INSTANT DID SETUP</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-black text-white">
+            Ready to deploy an autonomous AI calling fleet?
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Choose from Voice Lite (₹2,999/mo with 600 mins), Voice Pro (₹9,999/mo with 2,200 mins), Voice Fleet (₹24,999/mo with 6,000 mins), or High-Volume 10K Pack (₹38,000/mo). Add executive voice cloning or 1800 numbers anytime.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => onNavigatePricing ? onNavigatePricing('calling_agents') : onNavigateTab('pricing')}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center gap-2"
+            >
+              <CreditCard className="w-4 h-4 text-slate-950" />
+              <span>Explore Voice Agent Plans &amp; Add-ons →</span>
+            </button>
+            <button
+              onClick={onLaunchLiveDashboard}
+              className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              Open Dialing Studio
+            </button>
           </div>
         </div>
       </section>

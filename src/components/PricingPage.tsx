@@ -8,6 +8,7 @@ import {
 import { 
   PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PricingTier, 
   AROHI_ONE_TIERS, AROHI_CALLING_AGENT_TIERS, AROHI_ADDONS,
+  AROHI_EXAM_PASSES, ArohiExamPass,
   ArohiOneTier, ArohiVoiceAgentTier,
   detectUserCurrency, getPricingTiers 
 } from '../data/pricingData';
@@ -27,7 +28,7 @@ interface PricingPageProps {
   onNavigateTab?: (tab: string) => void;
   onOpenCheckout?: (path: { id: string; title: string; price: string }, detail: { tierName: string; price: number; margin: number; currency?: string }) => void;
   onOpenAuth?: () => void;
-  defaultProductCategory?: 'arohi_one' | 'calling_agents' | 'individual';
+  defaultProductCategory?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams';
 }
 
 export default function PricingPage({
@@ -55,8 +56,15 @@ export default function PricingPage({
     }
   };
 
-  // Product Category Switcher Tab: 'arohi_one' | 'calling_agents' | 'individual'
-  const [productCategory, setProductCategory] = useState<'arohi_one' | 'calling_agents' | 'individual'>(defaultProductCategory);
+  // Product Category Switcher Tab: 'arohi_one' | 'calling_agents' | 'individual' | 'exams'
+  const [productCategory, setProductCategory] = useState<'arohi_one' | 'calling_agents' | 'individual' | 'exams'>(defaultProductCategory);
+
+  // Sync category if defaultProductCategory changes externally
+  useEffect(() => {
+    if (defaultProductCategory) {
+      setProductCategory(defaultProductCategory);
+    }
+  }, [defaultProductCategory]);
 
   const currentTiers = getPricingTiers(activeCurrency);
   const symbol = activeCurrency === 'USD' ? '$' : '₹';
@@ -235,6 +243,64 @@ export default function PricingPage({
       billingText: '/Month',
       margin: tier.margin
     });
+  };
+
+  const handleBuyExamPass = (pass: ArohiExamPass) => {
+    const finalPrice = activeCurrency === 'USD' ? pass.priceUSD : pass.priceINR;
+    const formattedPrice = `${symbol}${finalPrice}`;
+    
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + pass.validityDays);
+    const passObj = {
+      tier: pass.tier,
+      name: pass.name,
+      testsRemaining: pass.totalTests,
+      totalTests: pass.totalTests,
+      activatedAt: new Date().toISOString(),
+      expiresAt: expiryDate.toISOString(),
+      validityDays: pass.validityDays,
+      paymentMethod: 'Razorpay UPI/Card',
+      status: 'active'
+    };
+    
+    if (onOpenCheckout) {
+      onOpenCheckout(
+        {
+          id: pass.id,
+          title: pass.name,
+          price: `${formattedPrice} (${pass.validityDays} Days Validity)`
+        },
+        {
+          tierName: pass.name,
+          price: finalPrice,
+          margin: Math.round(finalPrice * 0.5),
+          currency: activeCurrency
+        }
+      );
+      try {
+        localStorage.setItem('arohi_active_exam_pass', JSON.stringify(passObj));
+      } catch (e) {}
+    } else {
+      openRazorpayCheckout({
+        amountInRupees: finalPrice,
+        currency: activeCurrency,
+        planName: pass.name,
+        userEmail: 'student@arohiai.com',
+        userName: 'Arohi Exam Aspirant',
+        onSuccess: () => {
+          try {
+            localStorage.setItem('arohi_active_exam_pass', JSON.stringify(passObj));
+          } catch (e) {}
+          if (onSubscribe) {
+            onSubscribe(pass.id, pass.name, 'Razorpay Pass Checkout');
+          }
+          alert(`🎉 Exam Pass Activated! You now have ${pass.totalTests} Full CBT Mock Tests unlocked for ${pass.validityDays} days.`);
+        },
+        onError: (err) => {
+          alert(`Payment Notice: ${err.message || 'Payment could not be completed.'}`);
+        }
+      });
+    }
   };
 
   return (
@@ -505,6 +571,22 @@ export default function PricingPage({
             >
               <BookOpen className="w-4 h-4" />
               <span>🎓 Arohi Pro (Personal &amp; Students)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setProductCategory('exams')}
+              className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center gap-2.5 ${
+                productCategory === 'exams'
+                  ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 shadow-xl scale-105'
+                  : 'text-slate-300 hover:text-white hover:bg-purple-900/40'
+              }`}
+            >
+              <Award className="w-4 h-4 text-amber-300" />
+              <span>📝 Arohi Exams™ (CBT Passes)</span>
+              <span className="bg-emerald-950 text-emerald-300 border border-emerald-400/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full hidden sm:inline">
+                From ₹99
+              </span>
             </button>
           </div>
         </div>
@@ -1220,6 +1302,137 @@ export default function PricingPage({
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW 4: AROHI EXAMS™ CBT MOCK TEST PASSES                                */}
+      {/* ========================================================================= */}
+      {productCategory === 'exams' && (
+        <div className="space-y-8 animate-fade-in">
+          {/* Section Hero Banner */}
+          <div className="bg-gradient-to-r from-[#0d1f1c] via-[#091b17] to-[#0d1f1c] border-2 border-emerald-500/50 p-6 sm:p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(16,185,129,0.15)] text-left flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950 border border-emerald-400/50 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span>OFFICIAL NTA / TCS-iON STYLE CBT EXAM PASSES</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">
+                Arohi Exams™ Passes — 1,000s of High-Yield CBT Mock Tests
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                Realistic Computer-Based Tests with All-India Rank (AIR), category-wise cutoff benchmarking, instant question shuffle, AI weakness diagnostics, and official watermarked digital marksheets with PDF export.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateTab && onNavigateTab('mocktests')}
+              className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-emerald-500/30 transition-all cursor-pointer flex items-center gap-2 shrink-0"
+            >
+              <Rocket className="w-4 h-4" />
+              <span>Launch CBT Arena</span>
+            </button>
+          </div>
+
+          {/* Exam Pass Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            {AROHI_EXAM_PASSES.map((pass) => {
+              const price = activeCurrency === 'USD' ? pass.priceUSD : pass.priceINR;
+              const originalPrice = activeCurrency === 'USD' ? pass.priceUSD * 4 : pass.originalPriceINR;
+
+              return (
+                <div
+                  key={pass.id}
+                  className={`p-6 sm:p-7 rounded-[2.5rem] border-2 transition-all relative flex flex-col justify-between ${
+                    pass.popular
+                      ? 'bg-gradient-to-b from-[#0e2722] via-[#091a16] to-[#05110e] border-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.25)] scale-[1.02]'
+                      : 'bg-[#0a1412]/80 border-emerald-900/60 hover:border-emerald-700/60'
+                  }`}
+                >
+                  {pass.popular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg border border-emerald-300">
+                      ★ Most Popular Choice
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest block mb-1">
+                        {pass.badge}
+                      </span>
+                      <h3 className="text-xl font-black text-white">{pass.name}</h3>
+                      <p className="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+                        {pass.description}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-black/40 border border-emerald-500/30 flex items-baseline justify-between">
+                      <div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-3xl font-black text-white">{symbol}{price}</span>
+                          <span className="text-xs text-slate-400 line-through">
+                            {symbol}{originalPrice}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-emerald-300 font-bold">
+                          One-time access • {pass.validityDays} Days Validity
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-amber-300">{pass.totalTests} Mocks</div>
+                        <div className="text-[10px] text-slate-400 font-medium">({pass.totalQuestions} Questions)</div>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2 pt-2 border-t border-emerald-950/70 text-xs text-slate-200 font-semibold leading-relaxed">
+                      {pass.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="pt-6 mt-4 border-t border-emerald-950/70 space-y-2">
+                    <button
+                      onClick={() => handleBuyExamPass(pass)}
+                      className={`w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                        pass.popular
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg'
+                          : 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>Activate {pass.name.split('™')[1] || pass.name} ({symbol}{price})</span>
+                    </button>
+                    <p className="text-[10px] text-center text-slate-400 font-medium">
+                      Instant Razorpay activation • UPI, Cards &amp; NetBanking
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* All Supported Exams Strip */}
+          <div className="p-5 rounded-2xl bg-black/40 border border-emerald-500/30 text-left space-y-3">
+            <div className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Covers All Indian School &amp; National Competitive Exams</span>
+            </div>
+            <div className="flex flex-wrap gap-2 text-[11px]">
+              {[
+                'Class 1-10 CBSE/ICSE/State Board', 'AIIMS NORCET Nursing', 'OSSSC Combined / RI / AMIN',
+                'SSC CGL / CHSL / MTS', 'UPSC CSE Prelims GS & CSAT', 'IBPS / SBI PO & Clerk',
+                'RRB NTPC & Group D', 'NEET & JEE Main Foundation', 'UGC NET Paper 1',
+                'CTET / OTET / OSSTET', 'Odisha Police SI & Constable', 'Defence NDA / CDS'
+              ].map((exam, i) => (
+                <span key={i} className="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-medium">
+                  ✓ {exam}
+                </span>
+              ))}
             </div>
           </div>
         </div>

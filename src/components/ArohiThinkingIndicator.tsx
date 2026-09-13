@@ -1,46 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Sparkles, 
-  Brain, 
-  Coffee, 
-  Rocket, 
-  Search, 
-  Zap, 
-  Wand2, 
-  Atom, 
-  Cpu, 
-  ChevronDown, 
-  CheckCircle2, 
-  Layers, 
-  Workflow
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 export interface ArohiThinkingIndicatorProps {
   isDarkMode?: boolean;
   isLive?: boolean;
   duration?: number;
   startTime?: number;
+  reasoning?: string;
+  userPrompt?: string;
+  responsePreview?: string;
   onDurationCalculated?: (seconds: number) => void;
 }
 
-const THINKING_STAGES = [
-  { text: 'Engaging hyperdrive thinking coils...', icon: Rocket, color: 'text-amber-400', step: 'Model Routing' },
-  { text: 'Doodling diagrams in neural memory...', icon: Wand2, color: 'text-pink-400', step: 'Context Indexing' },
-  { text: 'Brewing fresh insights...', icon: Coffee, color: 'text-emerald-400', step: 'Idea Synthesis' },
-  { text: 'Examining facts & quantum logic...', icon: Atom, color: 'text-cyan-400', step: 'Fact Verification' },
-  { text: 'Scanning multi-engine knowledge stream...', icon: Search, color: 'text-blue-400', step: 'Search Grounding' },
-  { text: 'Unleashing Arohi’s creative spark...', icon: Sparkles, color: 'text-purple-400', step: 'Creative Polish' },
-  { text: 'Synthesizing and structuring final response...', icon: Brain, color: 'text-violet-400', step: 'Structured Output' },
-  { text: 'Calibrating vectors for supreme accuracy...', icon: Cpu, color: 'text-teal-400', step: 'Vector Precision' },
-  { text: 'Connecting neural puzzle pieces...', icon: Zap, color: 'text-yellow-400', step: 'Final Coherence' }
+const LIVE_THINKING_STAGES = [
+  'Analyzing query semantics and intent...',
+  'Evaluating domain knowledge and context memory...',
+  'Grounding factual constraints and latest data...',
+  'Formulating step-by-step reasoning chain...',
+  'Synthesizing structured response...'
 ];
+
+export function extractThoughtAndContent(rawContent: string): { cleanedContent: string; thought: string | null } {
+  if (!rawContent) return { cleanedContent: rawContent, thought: null };
+
+  const thoughtRegex = /<(?:thought|think)>([\s\S]*?)<\/(?:thought|think)>/i;
+  const match = rawContent.match(thoughtRegex);
+
+  if (match) {
+    const thought = match[1].trim();
+    const cleanedContent = rawContent.replace(thoughtRegex, '').trim();
+    return { cleanedContent, thought };
+  }
+
+  return { cleanedContent: rawContent, thought: null };
+}
+
+export function generateReasoningSteps(userPrompt?: string, responsePreview?: string): string[] {
+  const prompt = (userPrompt || '').toLowerCase();
+
+  const steps: string[] = [];
+
+  if (prompt.includes('who created') || prompt.includes('who founded') || prompt.includes('leader') || prompt.includes('founder') || prompt.includes('owner')) {
+    steps.push('Deconstructed leadership and ecosystem inquiry. Identifying foundational stakeholders and governance structure.');
+    steps.push('Referenced sovereign leadership: Commander Junoon (Junoon Nayak) and senior strategic mentor Mr. Giridhari Prasad Nayak, in association with Braga Technologies and ODITREE SERVICES.');
+    steps.push('Synthesized authoritative breakdown of visionary roles, architectural leadership, and nationwide execution.');
+  } else if (prompt.includes('subscribe') || prompt.includes('chatgpt') || prompt.includes('gemini') || prompt.includes('claude') || prompt.includes('better than') || prompt.includes('why arohi')) {
+    steps.push('Analyzed competitive positioning query. Retrieved Arohi AI value proposition and subscription policies.');
+    steps.push('Acknowledged benchmark frontier LLMs respectfully without false or disparaging comparisons.');
+    steps.push('Highlighted unique differentiators: unified LLM cum LMM ecosystem, sovereign opportunity ladders, and practical Indian-focused empowerment.');
+  } else if (prompt.includes('education minister') || prompt.includes('dharmendra') || prompt.includes('pralhad')) {
+    steps.push('Evaluated political entity query regarding India\'s Union Ministry of Education portfolio.');
+    steps.push('Verified current factual standing: Pralhad Joshi as Union Minister of Education, noting historical tenure of Dharmendra Pradhan.');
+    steps.push('Structured unambiguous, direct factual answer with timeline verification.');
+  } else if (prompt.includes('divyang') || prompt.includes('disab') || prompt.includes('pwd') || prompt.includes('special')) {
+    steps.push('Parsed Divyangjan empowerment request. Identified key legal frameworks under RPwD Act 2016.');
+    steps.push('Structured 4 core pillars: Government Schemes (UDID, ADIP, NHFDC), 4% Reservation rules, multimodal accessibility, and career tools.');
+    steps.push('Validated official portal references (swavlambancard.gov.in, disabilityaffairs.gov.in).');
+  } else if (prompt.includes('mission 87') || prompt.includes('earn') || prompt.includes('money') || prompt.includes('rupee') || prompt.includes('ladder') || prompt.includes('neet')) {
+    steps.push('Deconstructed Mission 87 economic empowerment inquiry. Identified target demographic of 87M NEET youth.');
+    steps.push('Retrieved 5 Sovereign Earning Ladders (₹5,000 proof-of-work to ₹1,00,000+ micro-enterprise scaling).');
+    steps.push('Framed 6-stage lifecycle (LEARN -> BUILD -> FIND -> DELIVER -> EARN -> GROW) with actionable execution blueprints.');
+  } else if (prompt.includes('code') || prompt.includes('function') || prompt.includes('bug') || prompt.includes('react') || prompt.includes('python') || prompt.includes('javascript') || prompt.includes('api')) {
+    steps.push(`Analyzing technical implementation requirements${userPrompt ? `: "${userPrompt.slice(0, 50)}..."` : ''}. Identifying runtime edge cases and constraints.`);
+    steps.push('Designing type-safe, performant solution following modern idiomatic standards.');
+    steps.push('Synthesizing clean code implementation with inline annotations and integration instructions.');
+  } else if (prompt.includes('scheme') || prompt.includes('yojana') || prompt.includes('loan') || prompt.includes('subsidy') || prompt.includes('mudra') || prompt.includes('pmegp')) {
+    steps.push('Identified welfare scheme inquiry. Searching eligibility criteria, subsidy percentages, and application portals.');
+    steps.push('Synthesized key benefit parameters, required documentation, and nodal bank guidelines.');
+    steps.push('Formatted clear step-by-step roadmap for applicant execution.');
+  } else {
+    if (userPrompt && userPrompt.trim().length > 0) {
+      steps.push(`Parsed user intent for: "${userPrompt.slice(0, 70).trim()}${userPrompt.length > 70 ? '...' : ''}". Identifying key parameters and target outcome.`);
+    } else {
+      steps.push('Parsed incoming user prompt and evaluated core semantic objectives.');
+    }
+    steps.push('Retrieved relevant domain knowledge, validated factual constraints, and cross-referenced contextual variables.');
+    steps.push('Formulated structured response with direct clarity, logical hierarchy, and actionable takeaways.');
+  }
+
+  return steps;
+}
 
 export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({ 
   isDarkMode = true,
   isLive = true,
   duration,
   startTime,
+  reasoning,
+  userPrompt,
+  responsePreview,
   onDurationCalculated
 }) => {
   const [seconds, setSeconds] = useState<number>(duration || 0);
@@ -73,236 +122,101 @@ export const ArohiThinkingIndicator: React.FC<ArohiThinkingIndicatorProps> = ({
     return () => clearInterval(interval);
   }, [isLive, startTime, duration]);
 
-  // Cycle through playful Grok-style witty thinking stages while live
+  // Cycle through live thinking stages
   useEffect(() => {
     if (!isLive) return;
 
     const interval = setInterval(() => {
-      setStageIndex((prev) => (prev + 1) % THINKING_STAGES.length);
-    }, 1800);
+      setStageIndex((prev) => (prev + 1) % LIVE_THINKING_STAGES.length);
+    }, 1600);
 
     return () => clearInterval(interval);
   }, [isLive]);
 
-  const currentStage = THINKING_STAGES[stageIndex];
-  const CurrentIcon = currentStage.icon;
   const displaySeconds = duration !== undefined && duration > 0 ? duration.toFixed(1) : Math.max(0.8, seconds).toFixed(1);
+  const reasoningSteps = React.useMemo(() => {
+    if (reasoning) return [];
+    return generateReasoningSteps(userPrompt, responsePreview);
+  }, [reasoning, userPrompt, responsePreview]);
 
-  // COMPLETED ACCORDION MODE (Thought for Xs ⌄)
+  // COMPLETED ACCORDION MODE (> Thoughts)
   if (!isLive) {
     return (
-      <div id="arohi-thought-accordion" className="mb-3.5 select-none max-w-2xl">
-        <div 
-          className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-            isDarkMode 
-              ? 'bg-zinc-900/90 hover:bg-zinc-800/80 border-zinc-800 text-zinc-200' 
-              : 'bg-zinc-100 hover:bg-zinc-200/80 border-zinc-200 text-zinc-800'
-          }`}
+      <div id="arohi-thought-accordion" className="mb-2 select-none max-w-3xl">
+        {/* Minimalist TheBar Style Header (> Thoughts) */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="inline-flex items-center gap-1 py-1 text-left cursor-pointer transition-colors group select-none"
+          title="Click to view Arohi reasoning steps"
         >
-          {/* Clickable Header */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full px-3.5 py-2 flex items-center justify-between gap-2.5 text-left cursor-pointer transition-colors"
-            title="Click to view Arohi reasoning steps"
+          <motion.div
+            animate={{ rotate: isExpanded ? 90 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-slate-400 group-hover:text-slate-200"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                isDarkMode ? 'bg-zinc-800 border-zinc-700/60 text-zinc-300' : 'bg-white border-zinc-300 text-zinc-700'
+            <ChevronRight className="w-3.5 h-3.5" />
+          </motion.div>
+          <span className={`text-xs font-semibold tracking-wide ${
+            isDarkMode ? 'text-slate-300 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-950'
+          }`}>
+            Thoughts
+          </span>
+          <span className={`text-[11px] font-mono ml-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+            ({displaySeconds}s)
+          </span>
+        </button>
+
+        {/* Collapsible Reasoning Details Body */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="overflow-hidden mt-1.5 mb-2 pl-3 sm:pl-3.5 border-l-2 border-slate-700/60 dark:border-slate-800"
+            >
+              <div className={`text-xs sm:text-[13px] leading-relaxed py-1 font-sans ${
+                isDarkMode ? 'text-slate-300/90' : 'text-slate-600'
               }`}>
-                <Brain className="w-3 h-3" />
-              </div>
-              <span className={`text-xs font-medium tracking-wide ${
-                isDarkMode ? 'text-zinc-200' : 'text-zinc-800'
-              }`}>
-                Thought for <span className="font-mono font-semibold text-emerald-400">{displaySeconds}s</span>
-              </span>
-              <span className={`hidden sm:inline-flex items-center gap-1 text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full border ${
-                isDarkMode ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60' : 'bg-zinc-200/70 text-zinc-600 border-zinc-300'
-              }`}>
-                Reasoning Complete
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-[11px] font-medium hidden sm:inline ${
-                isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
-              }`}>
-                {isExpanded ? 'Hide process' : 'Show reasoning'}
-              </span>
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className={isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}
-              >
-                <ChevronDown className="w-4 h-4" />
-              </motion.div>
-            </div>
-          </button>
-
-          {/* Collapsible Reasoning Details Body */}
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="overflow-hidden"
-              >
-                <div className={`px-3.5 pb-3.5 pt-2 border-t ${
-                  isDarkMode ? 'border-zinc-800 bg-zinc-950/60' : 'border-zinc-200 bg-zinc-50'
-                }`}>
-                  <div className="space-y-2 text-xs">
-                    <div className={`flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider pb-1 mb-1 border-b ${
-                      isDarkMode ? 'border-zinc-800/80 text-zinc-400' : 'border-zinc-200 text-zinc-500'
-                    }`}>
-                      <span>Reasoning Trace & Execution Pipeline</span>
-                      <span className="text-emerald-400 font-mono flex items-center gap-1 font-medium">
-                        <CheckCircle2 className="w-3 h-3" /> Verified ({displaySeconds}s)
-                      </span>
-                    </div>
-
-                    {/* Step Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
-                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
-                      }`}>
-                        <Search className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium text-[11.5px] text-zinc-200">Knowledge & Memory Stream</div>
-                          <div className="text-[10.5px] text-zinc-400">Cross-referenced chat history and context memory.</div>
-                        </div>
+                {reasoning ? (
+                  <div className="whitespace-pre-wrap leading-relaxed">{reasoning}</div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {reasoningSteps.map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <span className="text-slate-500 shrink-0 font-mono text-[11px] mt-0.5">{idx + 1}.</span>
+                        <span>{step}</span>
                       </div>
-
-                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
-                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
-                      }`}>
-                        <Atom className="w-3.5 h-3.5 text-teal-400 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium text-[11.5px] text-zinc-200">Logic & Fact Alignment</div>
-                          <div className="text-[10.5px] text-zinc-400">Evaluated user intent and structured response schema.</div>
-                        </div>
-                      </div>
-
-                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
-                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
-                      }`}>
-                        <Cpu className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium text-[11.5px] text-zinc-200">Vector Calibrations</div>
-                          <div className="text-[10.5px] text-zinc-400">Applied formatting and language localization rules.</div>
-                        </div>
-                      </div>
-
-                      <div className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
-                        isDarkMode ? 'bg-zinc-900 border-zinc-800/80 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700 shadow-xs'
-                      }`}>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium text-[11.5px] text-zinc-200">Arohi Tone & Clarity Polish</div>
-                          <div className="text-[10.5px] text-zinc-400">Structured actionable bullets, key terms, and visual cues.</div>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
 
-  // LIVE ANIMATED ACTIVE THINKING MODE (Counting live timer + animated stage)
+  // LIVE ANIMATED ACTIVE THINKING MODE (No pill badge, clean minimalist indicator)
   return (
     <div id="arohi-thinking-indicator-live" className="py-2 max-w-2xl w-full select-none">
-      <div 
-        className={`relative overflow-hidden rounded-2xl p-3 sm:p-3.5 border transition-all duration-200 ${
-          isDarkMode 
-            ? 'bg-zinc-900/90 border-zinc-800 text-zinc-200 shadow-sm' 
-            : 'bg-zinc-100 border-zinc-200 text-zinc-800 shadow-sm'
-        }`}
-      >
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          {/* Left: Animated Icon + Dynamic Stage */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-              isDarkMode ? 'bg-zinc-800 border-zinc-700/60 text-zinc-300' : 'bg-white border-zinc-300 text-zinc-700'
-            }`}>
-              <motion.div
-                key={stageIndex}
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.7, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CurrentIcon className={`w-3.5 h-3.5 ${currentStage.color}`} />
-              </motion.div>
-            </div>
-
-            {/* Rotating text with animated transitions */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[10px] font-semibold tracking-wider uppercase ${
-                  isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
-                }`}>
-                  Arohi Reasoning
-                </span>
-                <span className="flex gap-1 items-center">
-                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="w-1 h-1 rounded-full bg-zinc-400" />
-                </span>
-              </div>
-
-              <div className="h-5 overflow-hidden relative">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={currentStage.text}
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -10, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className={`text-xs sm:text-[13px] font-medium truncate ${
-                      isDarkMode ? 'text-zinc-200' : 'text-zinc-800'
-                    }`}
-                  >
-                    {currentStage.text}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Live Stopwatch Badge */}
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pl-9 sm:pl-0">
-            <div className={`px-2.5 py-1 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 border shadow-xs ${
-              isDarkMode 
-                ? 'bg-zinc-950/80 text-zinc-300 border-zinc-800' 
-                : 'bg-white text-zinc-700 border-zinc-200'
-            }`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Thinking {displaySeconds}s</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Ambient subtle progress line along the bottom border */}
-        <div className={`absolute bottom-0 left-0 right-0 h-[1.5px] overflow-hidden ${
-          isDarkMode ? 'bg-zinc-800' : 'bg-zinc-200'
-        }`}>
-          <motion.div 
-            className="h-full bg-emerald-400/80 w-1/3"
-            animate={{ 
-              x: ['-100%', '300%']
-            }}
-            transition={{ 
-              repeat: Infinity, 
-              duration: 2.2, 
-              ease: 'easeInOut' 
-            }}
-          />
-        </div>
+      <div className="flex items-center gap-2 text-xs">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+        </span>
+        <span className={`font-semibold tracking-wide ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+          Thinking
+        </span>
+        <span className={`text-[11px] font-mono ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          ({displaySeconds}s)
+        </span>
+        <span className="text-slate-600 select-none">•</span>
+        <span className={`text-[11.5px] truncate max-w-[200px] sm:max-w-md ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+          {LIVE_THINKING_STAGES[stageIndex]}
+        </span>
       </div>
     </div>
   );

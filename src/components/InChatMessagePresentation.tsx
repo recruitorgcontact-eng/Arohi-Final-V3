@@ -443,50 +443,193 @@ export default function InChatMessagePresentation({
               </p>
             )}
 
-            {/* Split layout: Bullets & Chart/Metrics */}
-            <div className="mt-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-              {/* Bullets & Metric Left Column */}
-              <div className={activeSlide.chart ? 'md:col-span-6 space-y-3' : 'md:col-span-12 space-y-3'}>
-                {/* Metric Banner if available */}
-                {activeSlide.keyMetric && (
-                  <div
-                    className="p-3 rounded-xl border inline-block"
-                    style={{
-                      backgroundColor: `#${currentTheme.brandAccent}15`,
-                      borderColor: `#${currentTheme.brandAccent}40`
-                    }}
-                  >
+            {/* Split layout: Bullets & Chart/Metrics OR Rich Infographic Archetypes */}
+            <div className="mt-3.5 space-y-4">
+              {/* 1. Multi-Metric Showcase Grid (e.g. 3-4 KPI Stat Cards) */}
+              {activeSlide.metrics && activeSlide.metrics.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {activeSlide.metrics.map((m, mIdx) => (
                     <div
-                      className="text-xl font-black"
-                      style={{ color: `#${currentTheme.brandAccent}` }}
+                      key={mIdx}
+                      className="p-3 rounded-xl border text-center transition-all hover:scale-[1.02]"
+                      style={{
+                        backgroundColor: `#${currentTheme.brandAccent}12`,
+                        borderColor: `#${currentTheme.brandAccent}35`
+                      }}
                     >
-                      {activeSlide.keyMetric.value}
+                      <div
+                        className="text-lg sm:text-2xl font-black tracking-tight"
+                        style={{ color: `#${currentTheme.brandAccent}` }}
+                      >
+                        {m.value}
+                      </div>
+                      <div className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-0.5 leading-tight">
+                        {m.label}
+                      </div>
+                      {m.trend && (
+                        <div
+                          className="text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded-full inline-block"
+                          style={{
+                            backgroundColor: m.trendPositive !== false ? '#10B98120' : '#EF444420',
+                            color: m.trendPositive !== false ? '#059669' : '#DC2626'
+                          }}
+                        >
+                          {m.trend}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
-                      {activeSlide.keyMetric.label}
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
 
-                {/* Bullets List */}
-                {activeSlide.bullets && activeSlide.bullets.length > 0 && (
-                  <ul className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
-                    {activeSlide.bullets.map((bullet, bIdx) => (
-                      <li key={bIdx} className="flex items-start gap-2">
+              {/* 2. Bento Cards Layout (2, 3, or 4 Feature / Pillar Cards) */}
+              {activeSlide.cards && activeSlide.cards.length > 0 && !activeSlide.chart && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {activeSlide.cards.map((card, cIdx) => (
+                    <div
+                      key={cIdx}
+                      className="p-3.5 rounded-xl border flex flex-col justify-between transition-all hover:shadow-md"
+                      style={{
+                        backgroundColor: isDarkMode ? '#13192f' : '#f8fafc',
+                        borderColor: `#${currentTheme.brandAccent}35`
+                      }}
+                    >
+                      <div>
+                        {card.tag && (
+                          <span
+                            className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded inline-block mb-1.5"
+                            style={{
+                              backgroundColor: `#${currentTheme.brandAccent}20`,
+                              color: `#${currentTheme.brandAccent}`
+                            }}
+                          >
+                            {card.tag}
+                          </span>
+                        )}
+                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white leading-snug">
+                          {card.title}
+                        </h4>
+                        <p className="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 mt-1.5 leading-relaxed">
+                          {card.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 3. Process Flow / Roadmap Archetype (Horizontal step progression) */}
+              {activeSlide.processSteps && activeSlide.processSteps.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                  {activeSlide.processSteps.map((step, sIdx) => (
+                    <div
+                      key={sIdx}
+                      className="p-3 rounded-xl border relative transition-all"
+                      style={{
+                        backgroundColor: isDarkMode ? '#151c33' : '#f1f5f9',
+                        borderColor: `#${currentTheme.brandAccent}30`
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
                         <span
-                          className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white"
                           style={{ backgroundColor: `#${currentTheme.brandAccent}` }}
-                        />
-                        <span>{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                        >
+                          {step.step}
+                        </span>
+                        <span className="text-[9px] font-bold text-zinc-400">PHASE</span>
+                      </div>
+                      <div className="text-xs font-bold text-zinc-900 dark:text-white">
+                        {step.title}
+                      </div>
+                      <div className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-1 leading-snug">
+                        {step.desc}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              {/* Chart Right Column if present */}
-              {activeSlide.chart && (
-                <div className="md:col-span-6">
+              {/* 4. Comparison Table Archetype (Traditional vs Arohi Solution) */}
+              {activeSlide.comparison && activeSlide.comparison.length > 0 && (
+                <div className="rounded-xl border overflow-hidden text-xs">
+                  <div className="grid grid-cols-12 font-bold p-2 bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                    <div className="col-span-4">Strategic Dimension</div>
+                    <div className="col-span-4 text-zinc-500">Traditional Method</div>
+                    <div className="col-span-4" style={{ color: `#${currentTheme.brandAccent}` }}>Arohi Solution</div>
+                  </div>
+                  {activeSlide.comparison.map((row, rIdx) => (
+                    <div
+                      key={rIdx}
+                      className="grid grid-cols-12 p-2 border-b border-zinc-100 dark:border-zinc-800/40 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/20"
+                    >
+                      <div className="col-span-4 font-semibold text-zinc-900 dark:text-zinc-100">{row.aspect}</div>
+                      <div className="col-span-4 text-zinc-500 line-through decoration-zinc-400">{row.traditional}</div>
+                      <div className="col-span-4 font-bold" style={{ color: `#${currentTheme.brandAccent}` }}>{row.arohiSolution}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Standard Bullets & Metric Left Column (if not replaced by cards/process flow) */}
+              {(!activeSlide.cards || activeSlide.cards.length === 0) &&
+                (!activeSlide.processSteps || activeSlide.processSteps.length === 0) &&
+                (!activeSlide.comparison || activeSlide.comparison.length === 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                  <div className={activeSlide.chart ? 'md:col-span-6 space-y-3' : 'md:col-span-12 space-y-3'}>
+                    {/* Metric Banner if available and no multi-metric array */}
+                    {activeSlide.keyMetric && (!activeSlide.metrics || activeSlide.metrics.length === 0) && (
+                      <div
+                        className="p-3 rounded-xl border inline-block"
+                        style={{
+                          backgroundColor: `#${currentTheme.brandAccent}15`,
+                          borderColor: `#${currentTheme.brandAccent}40`
+                        }}
+                      >
+                        <div
+                          className="text-xl font-black"
+                          style={{ color: `#${currentTheme.brandAccent}` }}
+                        >
+                          {activeSlide.keyMetric.value}
+                        </div>
+                        <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
+                          {activeSlide.keyMetric.label}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bullets List */}
+                    {activeSlide.bullets && activeSlide.bullets.length > 0 && (
+                      <ul className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
+                        {activeSlide.bullets.map((bullet, bIdx) => (
+                          <li key={bIdx} className="flex items-start gap-2">
+                            <span
+                              className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
+                              style={{ backgroundColor: `#${currentTheme.brandAccent}` }}
+                            />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Chart Right Column if present */}
+                  {activeSlide.chart && (
+                    <div className="md:col-span-6">
+                      <SlideChartRenderer
+                        chart={activeSlide.chart}
+                        themeColors={currentTheme.chartColors}
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Chart Full-Width or Bottom if bento cards or metrics exist */}
+              {activeSlide.chart && (activeSlide.cards?.length || activeSlide.processSteps?.length) && (
+                <div className="mt-3">
                   <SlideChartRenderer
                     chart={activeSlide.chart}
                     themeColors={currentTheme.chartColors}

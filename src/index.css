@@ -807,5 +807,90 @@ html.light .chat-scrollbar::-webkit-scrollbar-thumb {
   animation: voice-ripple-expand 3s cubic-bezier(0.1, 0.7, 0.1, 1) infinite 2s;
 }
 
+/* THEBAR / AROHI CHAT ANIMATED SHIFTING GRADIENT BORDER SYSTEM */
+@keyframes thebar-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes thebar-aurora-glow {
+  0%, 100% {
+    box-shadow: 0 4px 20px -2px rgba(236, 72, 153, 0.3), 0 0 16px -3px rgba(99, 102, 241, 0.25);
+  }
+  33% {
+    box-shadow: 0 4px 24px -2px rgba(6, 182, 212, 0.35), 0 0 18px -3px rgba(168, 85, 247, 0.3);
+  }
+  66% {
+    box-shadow: 0 4px 24px -2px rgba(245, 158, 11, 0.3), 0 0 20px -3px rgba(236, 72, 153, 0.3);
+  }
+}
+
+@keyframes thebar-pill-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.thebar-gradient-border {
+  background: linear-gradient(
+    115deg,
+    #ff3366,
+    #d946ef,
+    #8b5cf6,
+    #3b82f6,
+    #06b6d4,
+    #10b981,
+    #f59e0b,
+    #ff3366
+  );
+  background-size: 350% 350%;
+  animation: thebar-gradient-shift 8s ease infinite, thebar-aurora-glow 9s ease-in-out infinite;
+}
+
+.thebar-gradient-border:focus-within {
+  animation: thebar-gradient-shift 4s ease infinite, thebar-aurora-glow 5s ease-in-out infinite;
+}
+
+.thebar-gradient-border-recording {
+  background: linear-gradient(
+    115deg,
+    #ef4444,
+    #f43f5e,
+    #fb7185,
+    #ec4899,
+    #f43f5e,
+    #ef4444
+  );
+  background-size: 300% 300%;
+  animation: thebar-gradient-shift 2.5s ease infinite;
+  box-shadow: 0 0 25px rgba(244, 63, 94, 0.45);
+}
+
+.thebar-pill-glow {
+  background: linear-gradient(
+    90deg,
+    #f43f5e,
+    #a855f7,
+    #3b82f6,
+    #06b6d4,
+    #f43f5e
+  );
+  background-size: 250% 250%;
+  animation: thebar-pill-shimmer 6s linear infinite;
+}
+
 
 

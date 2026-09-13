@@ -16,6 +16,8 @@ import {
   PenTool, 
   Calendar, 
   ChevronRight, 
+  ChevronDown,
+  Check,
   ShieldCheck, 
   Globe, 
   Zap, 
@@ -58,6 +60,7 @@ import { Language, getTranslation } from '../translations';
 import { LANGUAGES_LIST } from './Header';
 import { useAuth } from '../context/AuthContext';
 import ArohiAvatar from './ArohiAvatar';
+import { buildPersonalizedMotivationalLines, shuffleHeadlines } from '../data/motivationalHeadlines';
 import ArohiVoiceCall from './ArohiVoiceCall';
 import HeaderNotifications from './HeaderNotifications';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
@@ -97,6 +100,7 @@ interface WelcomeLandingProps {
   onSetSubscriptionEndDate?: (newTimestamp: number) => void;
   currency?: 'INR' | 'USD';
   onStartVoiceCall?: () => void;
+  onNavigatePricing?: (category?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams') => void;
 }
 
 export default function WelcomeLanding({ 
@@ -123,7 +127,8 @@ export default function WelcomeLanding({
   onRenewSubscription,
   onSetSubscriptionEndDate,
   currency = 'INR',
-  onStartVoiceCall
+  onStartVoiceCall,
+  onNavigatePricing
 }: WelcomeLandingProps) {
   const { user, userData } = useAuth();
   const [isDirectVoiceCallModalOpen, setIsDirectVoiceCallModalOpen] = useState(false);
@@ -167,100 +172,16 @@ export default function WelcomeLanding({
     return first ? first.charAt(0).toUpperCase() + first.slice(1) : '';
   }, [user, userData]);
 
-  // Cheerful, motivational hero headlines with super-premium luxury palettes
+  // Expansive 60+ dynamic motivational hero headlines with randomized non-repeating shuffle
   const motivationalLines = useMemo(() => {
-    if (cleanFirstName) {
-      return [
-        {
-          before: "Tell me what you want to achieve, ",
-          name: cleanFirstName,
-          after: "...",
-          gradientDark: "from-white via-sky-200 to-blue-400",
-          gradientLight: "from-zinc-950 via-blue-900 to-indigo-700",
-          tag: "YOUR VISION"
-        },
-        {
-          before: "What big dream are we building today, ",
-          name: cleanFirstName,
-          after: "?",
-          gradientDark: "from-amber-100 via-[#f5eed6] to-[#d4af37]",
-          gradientLight: "from-zinc-950 via-amber-900 to-yellow-700",
-          tag: "BUILD BIG"
-        },
-        {
-          before: "Let's turn your ideas into reality, ",
-          name: cleanFirstName,
-          after: "!",
-          gradientDark: "from-emerald-100 via-teal-200 to-cyan-300",
-          gradientLight: "from-zinc-950 via-emerald-900 to-teal-700",
-          tag: "MAKE IT REAL"
-        },
-        {
-          before: "Ready to unlock infinite opportunities, ",
-          name: cleanFirstName,
-          after: "?",
-          gradientDark: "from-rose-100 via-pink-200 to-violet-300",
-          gradientLight: "from-zinc-950 via-purple-900 to-rose-700",
-          tag: "NEW HORIZONS"
-        },
-        {
-          before: "Lead, create, and inspire today, ",
-          name: cleanFirstName,
-          after: "!",
-          gradientDark: "from-white via-cyan-200 to-blue-400",
-          gradientLight: "from-zinc-950 via-cyan-900 to-blue-700",
-          tag: "SOVEREIGN CREATOR"
-        }
-      ];
-    }
-    return [
-      {
-        before: "Tell me what you want to achieve",
-        name: "",
-        after: "...",
-        gradientDark: "from-white via-sky-200 to-blue-400",
-        gradientLight: "from-zinc-950 via-blue-900 to-indigo-700",
-        tag: "ONE AI"
-      },
-      {
-        before: "What big dream are we building today",
-        name: "",
-        after: "?",
-        gradientDark: "from-amber-100 via-[#f5eed6] to-[#d4af37]",
-        gradientLight: "from-zinc-950 via-amber-900 to-yellow-700",
-        tag: "BUILD BIG"
-      },
-      {
-        before: "Let's turn your ideas into reality",
-        name: "",
-        after: "!",
-        gradientDark: "from-emerald-100 via-teal-200 to-cyan-300",
-        gradientLight: "from-zinc-950 via-emerald-900 to-teal-700",
-        tag: "MAKE IT REAL"
-      },
-      {
-        before: "Ready to unlock infinite opportunities",
-        name: "",
-        after: "?",
-        gradientDark: "from-rose-100 via-pink-200 to-violet-300",
-        gradientLight: "from-zinc-950 via-purple-900 to-rose-700",
-        tag: "NEW HORIZONS"
-      },
-      {
-        before: "Your potential is limitless—let's create",
-        name: "",
-        after: "!",
-        gradientDark: "from-white via-cyan-200 to-blue-400",
-        gradientLight: "from-zinc-950 via-cyan-900 to-blue-700",
-        tag: "INFINITE POSSIBILITIES"
-      }
-    ];
+    const rawLines = buildPersonalizedMotivationalLines(cleanFirstName);
+    return shuffleHeadlines(rawLines);
   }, [cleanFirstName]);
 
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const [isHeadlineHovered, setIsHeadlineHovered] = useState(false);
 
-  // Auto-advance motivational headlines every 3.8 seconds smoothly
+  // Auto-advance motivational headlines every 3.8 seconds smoothly across the 60 unique variations
   useEffect(() => {
     if (isHeadlineHovered) return;
     const timer = setInterval(() => {
@@ -288,6 +209,8 @@ export default function WelcomeLanding({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [drawerLangSearch, setDrawerLangSearch] = useState('');
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [dockLangSearch, setDockLangSearch] = useState('');
+  const [dockLangTab, setDockLangTab] = useState<'all' | 'india'>('india');
   const [isListening, setIsListening] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -1146,7 +1069,7 @@ export default function WelcomeLanding({
                 } bg-clip-text text-transparent`}>
                   {motivationalLines[headlineIndex]?.before}
                   {motivationalLines[headlineIndex]?.name && (
-                    <span className="font-apple not-italic font-bold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 dark:from-[#fbbf24] dark:via-[#facc15] dark:to-[#f59e0b] bg-clip-text text-transparent px-1 inline-block drop-shadow-[0_1px_8px_rgba(245,158,11,0.25)]">
+                    <span className="font-apple not-italic font-bold tracking-tight bg-clip-text text-transparent px-1 inline-block transition-all duration-300 bg-gradient-to-r from-blue-950 via-indigo-900 to-violet-950 drop-shadow-[0_1px_2px_rgba(30,27,75,0.2)] dark:bg-gradient-to-r dark:from-[#fbbf24] dark:via-[#facc15] dark:to-[#f59e0b] dark:drop-shadow-[0_1px_8px_rgba(245,158,11,0.28)]">
                       {motivationalLines[headlineIndex]?.name}
                     </span>
                   )}
@@ -1161,95 +1084,242 @@ export default function WelcomeLanding({
           </p>
         </div>
 
-        {/* Universal Sovereign Input Dock */}
+        {/* Universal Sovereign Input Dock with Animated Running Gradient Aura Border */}
         <div className="relative">
           <form onSubmit={handlePromptSubmit} className="relative">
-            <div className={`flex flex-col rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 border transition-all ${
-              isListening
-                ? 'bg-rose-500/5 border-rose-500 shadow-md ring-2 ring-rose-500/30'
-                : isDarkMode 
-                  ? 'atelier-dock-dark' 
-                  : 'atelier-dock-light'
-            }`}>
-              
-              {/* Text Input Area with Smooth Inner Scrolling */}
-              <div className="w-full pt-1">
-                <textarea 
-                  ref={landingTextareaRef}
-                  rows={2}
-                  value={landingInputText}
-                  onChange={(e) => {
-                    setLandingInputText(e?.target?.value ?? "");
-                    adjustLandingTextareaHeight();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handlePromptSubmit();
-                    }
-                  }}
-                  placeholder={isListening ? "Listening... Speak now in your language 🎙️" : isTranscribing ? "Transcribing speech to text..." : "Ask Arohi anything..."}
-                  className={`w-full bg-transparent text-sm sm:text-base font-normal outline-none px-2.5 py-1.5 leading-relaxed max-h-48 min-h-[64px] sm:min-h-[76px] overflow-y-auto resize-none custom-scrollbar ${
-                    isListening
-                      ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
-                      : isDarkMode ? 'text-white placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
-                  }`}
-                />
-              </div>
-
-              {/* Bottom Row inside Input Dock: Tools, Voice & Send */}
-              <div className="flex items-center justify-between pt-3 pb-0.5 border-t border-black/5 dark:border-white/5">
-                <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                    <Globe className="w-3 h-3 text-[#d4af37]" />
-                    <span>{LANGUAGES_LIST.find(l => l.code === language)?.native || '150+ Langs'}</span>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                    <span>Private &amp; Sovereign</span>
-                  </div>
+            <div 
+              id="landing-chat-input-bar-container"
+              className={`relative p-[1.5px] sm:p-[2px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-xl ${
+                isListening
+                  ? 'thebar-gradient-border-recording'
+                  : 'thebar-gradient-border'
+              }`}
+            >
+              <div className={`w-full flex flex-col rounded-[calc(theme(borderRadius.2xl)-1.5px)] sm:rounded-[calc(theme(borderRadius.3xl)-2px)] p-3 sm:p-4 transition-all ${
+                isDarkMode 
+                  ? 'bg-[#0e1017] text-white shadow-inner' 
+                  : 'bg-white text-zinc-900 shadow-sm'
+              }`}>
+                
+                {/* Text Input Area with Smooth Inner Scrolling */}
+                <div className="w-full pt-0.5">
+                  <textarea 
+                    ref={landingTextareaRef}
+                    rows={2}
+                    value={landingInputText}
+                    onChange={(e) => {
+                      setLandingInputText(e?.target?.value ?? "");
+                      adjustLandingTextareaHeight();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handlePromptSubmit();
+                      }
+                    }}
+                    placeholder={isListening ? "Listening... Speak now in your language 🎙️" : isTranscribing ? "Transcribing speech to text..." : "Ask Arohi anything..."}
+                    className={`w-full bg-transparent text-sm sm:text-base font-normal outline-none px-2 py-1 leading-relaxed max-h-48 min-h-[64px] sm:min-h-[76px] overflow-y-auto resize-none custom-scrollbar ${
+                      isListening
+                        ? 'text-rose-400 dark:text-rose-300 font-medium placeholder-rose-400/80 animate-pulse'
+                        : isDarkMode ? 'text-white placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
+                    }`}
+                  />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Camera / Vision Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleQuickAction("Please analyze this diagram or document image.")}
-                    className="p-2 rounded-xl transition-all cursor-pointer text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10"
-                    title="Camera & Vision"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </button>
+                {/* Bottom Row inside Input Dock: Tools, Voice & Send */}
+                <div className="flex items-center justify-between pt-2.5 pb-0.5 border-t border-black/5 dark:border-white/8">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs relative">
+                    {/* Interactive Language Selector Popover Trigger */}
+                    <div className="relative" ref={langDropdownRef}>
+                      <button
+                        type="button"
+                        id="welcome-chat-lang-btn"
+                        onClick={() => setIsLangOpen(prev => !prev)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer border ${
+                          isLangOpen
+                            ? 'bg-blue-500/20 border-blue-500/40 text-blue-600 dark:text-blue-400 shadow-xs'
+                            : 'bg-black/5 dark:bg-white/5 border-transparent text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10 hover:border-black/10 dark:hover:border-white/10'
+                        }`}
+                        title="Choose Language (Indian & 150+ Global Languages)"
+                      >
+                        <Globe className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span className="font-bold">{LANGUAGES_LIST.find(l => l.code === language)?.native || 'English'}</span>
+                        <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
+                      </button>
 
-                  {/* Voice Button */}
-                  <button
-                    type="button"
-                    onClick={toggleVoiceInput}
-                    className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
-                      isListening
-                        ? 'bg-rose-600 text-white ring-4 ring-rose-500/40 animate-pulse'
-                        : isDarkMode
-                        ? 'bg-white/10 hover:bg-white/15 text-zinc-200 hover:text-white'
-                        : 'bg-black/5 hover:bg-black/10 text-zinc-700'
-                    }`}
-                    title={isListening ? "Stop listening" : "Speak to Arohi (Voice Recognition)"}
-                  >
-                    <Mic className={`w-4 h-4 ${isListening ? 'animate-bounce' : ''}`} />
-                  </button>
+                      {/* Expandable Language Menu Popover */}
+                      <AnimatePresence>
+                        {isLangOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className={`absolute left-0 bottom-full mb-2 w-72 sm:w-80 rounded-2xl p-3 shadow-2xl border backdrop-blur-xl z-50 text-left ${
+                              isDarkMode
+                                ? 'bg-[#0f1322]/95 border-blue-900/40 text-slate-100 shadow-black/80'
+                                : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-400/20'
+                            }`}
+                          >
+                            {/* Header: Title + Close */}
+                            <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/10">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm">🇮🇳</span>
+                                <span className="text-xs font-bold tracking-tight">Select Language</span>
+                              </div>
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                                150+ Langs
+                              </span>
+                            </div>
 
-                  {/* Send Button */}
-                  <button
-                    type="submit"
-                    disabled={landingInputText.trim().length === 0 && !isListening}
-                    className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
-                      landingInputText.trim().length > 0
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-xs hover:scale-105 active:scale-95'
-                        : 'bg-black/5 dark:bg-white/5 text-zinc-400 cursor-not-allowed'
-                    }`}
-                    title="Send message"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                            {/* Category Filter Tabs: Indian vs All */}
+                            <div className="grid grid-cols-2 gap-1 p-1 mt-2 mb-2 rounded-xl bg-black/5 dark:bg-black/40">
+                              <button
+                                type="button"
+                                onClick={() => setDockLangTab('india')}
+                                className={`py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                                  dockLangTab === 'india'
+                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                                }`}
+                              >
+                                <span>🇮🇳</span>
+                                <span>Indian Languages</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDockLangTab('all')}
+                                className={`py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                                  dockLangTab === 'all'
+                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                                }`}
+                              >
+                                <span>🌐</span>
+                                <span>All 150+</span>
+                              </button>
+                            </div>
+
+                            {/* Instant Search Bar */}
+                            <div className="relative mb-2">
+                              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
+                              <input
+                                type="text"
+                                value={dockLangSearch}
+                                onChange={(e) => setDockLangSearch(e.target.value)}
+                                placeholder="Search Hindi, Odia, Tamil..."
+                                className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-xl border outline-none transition-all ${
+                                  isDarkMode
+                                    ? 'bg-[#141b30] border-blue-950 text-slate-100 placeholder:text-slate-500 focus:border-blue-500'
+                                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-400'
+                                }`}
+                              />
+                              {dockLangSearch && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDockLangSearch('')}
+                                  className="absolute right-2.5 top-2 text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-white font-bold"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Scrollable Language Options List */}
+                            <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                              {LANGUAGES_LIST.filter((l) => {
+                                if (dockLangTab === 'india' && l.region !== 'India') {
+                                  return false;
+                                }
+                                if (!dockLangSearch.trim()) return true;
+                                const q = dockLangSearch.toLowerCase();
+                                return (
+                                  l.native.toLowerCase().includes(q) ||
+                                  l.english.toLowerCase().includes(q) ||
+                                  l.code.toLowerCase().includes(q)
+                                );
+                              }).map((l) => {
+                                const isSelected = language === l.code;
+                                return (
+                                  <button
+                                    key={l.code}
+                                    type="button"
+                                    onClick={() => {
+                                      onLanguageChange(l.code as Language);
+                                      setIsLangOpen(false);
+                                      setDockLangSearch('');
+                                    }}
+                                    className={`px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between min-w-0 border ${
+                                      isSelected
+                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 shadow-md shadow-blue-900/30'
+                                        : isDarkMode
+                                        ? 'bg-[#141b30]/80 hover:bg-[#1c2645] border-blue-950/60 text-slate-200 hover:border-blue-500/40'
+                                        : 'bg-slate-50 hover:bg-blue-50 border-slate-200/80 text-slate-800 hover:text-blue-700'
+                                    }`}
+                                  >
+                                    <div className="min-w-0 pr-1">
+                                      <p className="text-xs font-bold truncate leading-tight">{l.native}</p>
+                                      <p className={`text-[10px] truncate ${isSelected ? 'text-blue-100' : 'text-zinc-400'}`}>
+                                        {l.english}
+                                      </p>
+                                    </div>
+                                    {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                      <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                      <span>Private &amp; Sovereign</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Camera / Vision Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAction("Please analyze this diagram or document image.")}
+                      className="p-2 rounded-xl transition-all cursor-pointer text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10"
+                      title="Camera & Vision"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+
+                    {/* Voice Button */}
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                        isListening
+                          ? 'bg-rose-600 text-white ring-4 ring-rose-500/40 animate-pulse'
+                          : isDarkMode
+                          ? 'bg-white/10 hover:bg-white/15 text-zinc-200 hover:text-white'
+                          : 'bg-black/5 hover:bg-black/10 text-zinc-700'
+                      }`}
+                      title={isListening ? "Stop listening" : "Speak to Arohi (Voice Recognition)"}
+                    >
+                      <Mic className={`w-4 h-4 ${isListening ? 'animate-bounce' : ''}`} />
+                    </button>
+
+                    {/* Send Button */}
+                    <button
+                      type="submit"
+                      disabled={landingInputText.trim().length === 0 && !isListening}
+                      className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                        landingInputText.trim().length > 0
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-xs hover:scale-105 active:scale-95'
+                          : 'bg-black/5 dark:bg-white/5 text-zinc-400 cursor-not-allowed'
+                      }`}
+                      title="Send message"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1369,42 +1439,36 @@ export default function WelcomeLanding({
             </button>
           </div>
 
-          {/* DIRECT AROHI VOICE CALL - SEAMLESS LIVE BUBBLE HERO TRIGGER (NO BACKGROUND TAB) */}
+          {/* DIRECT AROHI INTERACTIVE ACTION BAR (CALL AROHI on Left & CHAT WITH AROHI on Right) */}
           <div className="mt-5 sm:mt-6">
-            <button
-              type="button"
-              id="direct-voice-call-frontpage-btn"
-              onClick={() => {
-                if (onStartVoiceCall) {
-                  onStartVoiceCall();
-                } else {
-                  setIsDirectVoiceCallModalOpen(true);
-                }
-              }}
-              className="group w-full flex items-center justify-between gap-3.5 sm:gap-5 p-2 sm:p-3 rounded-2xl transition-all duration-300 cursor-pointer text-left hover:bg-zinc-500/5 focus:outline-hidden"
-            >
-              <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
+            <div className={`p-2.5 sm:p-3.5 rounded-2xl border transition-all duration-300 ${
+              isDarkMode 
+                ? 'bg-[#15171e]/70 border-white/8 hover:border-white/15' 
+                : 'bg-white/80 border-black/8 hover:border-black/15 shadow-sm'
+            }`}>
+              {/* Header Details with Avatar, Title and Live Badges */}
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 {/* Arohi Live Animated Bubble with Ambient Halo */}
                 <div className="relative flex items-center justify-center shrink-0">
                   {/* Subtle Ambient Radial Glow */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/30 via-fuchsia-500/30 to-violet-600/30 blur-md group-hover:blur-lg group-hover:scale-110 transition-all duration-500 pointer-events-none" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/30 via-fuchsia-500/30 to-violet-600/30 blur-md pointer-events-none" />
                   
                   {/* Arohi Live Orb Component */}
-                  <div className="w-13 h-13 sm:w-15 sm:h-15 relative z-10">
-                    <ArohiAvatar className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 relative z-10">
+                    <ArohiAvatar className="w-full h-full" />
                   </div>
 
                   {/* Active Live Beacon Indicator */}
-                  <span className="absolute -top-0.5 -right-0.5 z-20 flex h-3.5 w-3.5">
+                  <span className="absolute -top-0.5 -right-0.5 z-20 flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-[#0d0e12]"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white dark:border-[#0d0e12]"></span>
                   </span>
                 </div>
 
-                {/* Text written side of the bubble */}
-                <div className="min-w-0">
+                {/* Text Title & Subtitle */}
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-white font-display group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-white font-display">
                       Direct Arohi Voice Call
                     </h3>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 dark:bg-emerald-400/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -1420,13 +1484,49 @@ export default function WelcomeLanding({
                 </div>
               </div>
 
-              {/* Minimal Call Pill Action */}
-              <div className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold transition-all group-hover:scale-105">
-                <Phone className="w-3.5 h-3.5 animate-pulse text-blue-500" />
-                <span className="whitespace-nowrap">Call Arohi</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              {/* Action Buttons: Left Side Call Arohi, Right Side Chat with Arohi */}
+              <div className="mt-3 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/60 grid grid-cols-2 gap-2.5 sm:gap-3">
+                {/* Left: Call Arohi Button */}
+                <button
+                  type="button"
+                  id="direct-voice-call-frontpage-btn"
+                  onClick={() => {
+                    if (onStartVoiceCall) {
+                      onStartVoiceCall();
+                    } else {
+                      setIsDirectVoiceCallModalOpen(true);
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 cursor-pointer shadow-xs"
+                  title="Start instant live voice call with Arohi"
+                >
+                  <Phone className="w-3.5 h-3.5 animate-pulse text-blue-500 shrink-0" />
+                  <span className="whitespace-nowrap">Call Arohi</span>
+                  <ArrowRight className="w-3.5 h-3.5 shrink-0 hidden xs:inline" />
+                </button>
+
+                {/* Right: Chat with Arohi Button */}
+                <button
+                  type="button"
+                  id="direct-chat-with-arohi-frontpage-btn"
+                  onClick={() => {
+                    if (onQuickChat) {
+                      onQuickChat("Hello Arohi!");
+                    } else if (setActiveTab) {
+                      setActiveTab('arohi');
+                    } else {
+                      onEnter();
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 cursor-pointer shadow-xs"
+                  title="Open live chat with Arohi"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                  <span className="whitespace-nowrap">Chat with Arohi</span>
+                  <ArrowRight className="w-3.5 h-3.5 shrink-0 hidden xs:inline" />
+                </button>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Hero Visual: "For a Brighter India" Graphic Banner */}
@@ -1899,6 +1999,74 @@ export default function WelcomeLanding({
             </button>
           </div>
         )}
+
+        {/* Quick Ecosystem Subscription Hub Switcher Bar */}
+        <div className="rounded-2xl p-3 sm:p-4 bg-slate-900/80 dark:bg-[#120f26]/80 border border-slate-700/50 dark:border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-left">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+            <span className="text-[11px] sm:text-xs font-bold text-slate-200">
+              Explore All Subscription Plans:
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap justify-center sm:justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigatePricing) {
+                  onNavigatePricing('arohi_one');
+                } else {
+                  setActiveTab('pricing');
+                }
+                onEnter();
+              }}
+              className="px-2.5 py-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-300 text-[11px] font-bold transition-all cursor-pointer"
+            >
+              🏢 Business OS (₹4,999)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigatePricing) {
+                  onNavigatePricing('calling_agents');
+                } else {
+                  setActiveTab('pricing');
+                }
+                onEnter();
+              }}
+              className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer"
+            >
+              📞 Voice Fleet (₹2,999)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigatePricing) {
+                  onNavigatePricing('exams');
+                } else {
+                  setActiveTab('pricing');
+                }
+                onEnter();
+              }}
+              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-300 text-[11px] font-bold transition-all cursor-pointer"
+            >
+              📝 CBT Exam Pass (₹99)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigatePricing) {
+                  onNavigatePricing('individual');
+                } else {
+                  setActiveTab('pricing');
+                }
+                onEnter();
+              }}
+              className="px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/30 text-purple-300 text-[11px] font-bold transition-all cursor-pointer"
+            >
+              👤 Individual (₹399)
+            </button>
+          </div>
+        </div>
 
       </main>
 

@@ -831,3 +831,94 @@ export const AROHI_ADDONS = [
   }
 ];
 
+export interface ArohiExamPass {
+  id: string;
+  tier: 'silver' | 'gold' | 'platinum';
+  name: string;
+  priceINR: number;
+  originalPriceINR: number;
+  priceUSD: number;
+  totalTests: number;
+  questionsPerTest: number;
+  totalQuestions: number;
+  validityDays: number;
+  badge: string;
+  popular?: boolean;
+  description: string;
+  features: string[];
+}
+
+export const AROHI_EXAM_PASSES: ArohiExamPass[] = [
+  {
+    id: 'pass_silver_99',
+    tier: 'silver',
+    name: 'Arohi Exams™ Starter Silver Pass',
+    priceINR: 99,
+    originalPriceINR: 499,
+    priceUSD: 3,
+    totalTests: 10,
+    questionsPerTest: 100,
+    totalQuestions: 1000,
+    validityDays: 30,
+    badge: 'Starter Speed Prep (30 Days)',
+    description: 'Unlock 10 Full-Length CBT Tests (1,000 Questions) across School (Class 1-10) and All Indian Competitive Exams.',
+    features: [
+      '10 Full-Length CBT Tests (1,000 Questions total)',
+      '30 Days Unlimited Portal Access',
+      'Dynamic Question & Option Shuffle on every attempt',
+      'Official CBT Engine with timer & question palette',
+      'Instant Scorecard, All-India Rank (AIR) & Percentile',
+      'Official Watermarked Digital Marksheet & PDF Export',
+      'School (Class 1-10) & Central/State Competitive Exams'
+    ]
+  },
+  {
+    id: 'pass_gold_199',
+    tier: 'gold',
+    name: 'Arohi Exams™ Gold Pass',
+    priceINR: 199,
+    originalPriceINR: 899,
+    priceUSD: 5,
+    totalTests: 25,
+    questionsPerTest: 100,
+    totalQuestions: 2500,
+    validityDays: 90,
+    badge: 'Most Popular Choice (90 Days)',
+    popular: true,
+    description: 'Unlock 25 Full-Length CBT Tests (2,500 Questions) + AI Weakness Diagnostic & 1-Click Tutor.',
+    features: [
+      '25 Full-Length CBT Tests (2,500 Questions total)',
+      '90 Days Unlimited Portal Validity',
+      'All Categories Unlocked (School 1-10, AIIMS, OSSSC, SSC, UPSC, Bank, Railway)',
+      'AI Weakness Diagnostic & Remedial Practice Reviews',
+      '1-Click "Ask Arohi AI" Instant Doubt Clarification in Chat',
+      'All-India Leaderboard with Category-Wise Cutoff Benchmarking',
+      'Official Performance Marksheet & PDF Export'
+    ]
+  },
+  {
+    id: 'pass_platinum_299',
+    tier: 'platinum',
+    name: 'Arohi Exams™ Platinum Mega Pass',
+    priceINR: 299,
+    originalPriceINR: 1499,
+    priceUSD: 9,
+    totalTests: 60,
+    questionsPerTest: 100,
+    totalQuestions: 6000,
+    validityDays: 365,
+    badge: 'Maximum Value • 1 Full Year (365 Days)',
+    description: 'Unlock 60 Full-Length CBT Tests (6,000 Questions) + Unlimited AI Weakness Re-tests & 1-Click Live Tutor.',
+    features: [
+      '60 Full-Length CBT Tests (6,000 Questions total)',
+      '365 Days (1 Full Year) Complete Access Validity',
+      'All 20+ Categories Unlocked (Class 1-10, AIIMS, NEET, JEE, OPSC, SSC, UPSC, Banking)',
+      'Unlimited AI Weakness Diagnostic, 7-Day Sprint Plans & Remedial Tests',
+      '1-Click "Ask Arohi AI" Instant Doubt Clarification in Live Chat',
+      'All-India Leaderboard with State & Category Cutoff Benchmarking',
+      'Priority Evaluation with Official Watermarked Digital Certificate & PDF Export'
+    ]
+  }
+];
+
+

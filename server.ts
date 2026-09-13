@@ -6775,40 +6775,82 @@ Construct this JSON strictly based on details discussed, or use standard profess
         messageText.toLowerCase().includes('powerpoint') ||
         messageText.toLowerCase().includes('keynote')
       ) {
-        dynamicInstruction += `\n\n[CRITICAL PRESENTATION & SLIDE DECK DIRECTIVE:
+        dynamicInstruction += `\n\n[CRITICAL SUPER-PREMIUM PRESENTATION & SLIDE DECK DIRECTIVE:
 1. NO PROGRAMMING CODE: You MUST NEVER write Python code, scripts (like python-pptx, import pptx, RGBColor, def add_header, slide.shapes), or markdown code blocks. The user wants the ACTUAL HUMAN PRESENTATION SLIDES!
-2. INDUSTRY-SPECIFIC THEMES & AESTHETICS: Tailor the tone and theme to the user's specific domain:
-   - NGO, Social Impact, Non-Profit, Save the Children, Environment: Set "theme": "emerald_warmth"
-   - Real Estate, Architecture, Property, Construction, Hospitality: Set "theme": "luxury_slate"
+2. SUPER-PREMIUM DESIGNER THEMES & PALETTES: Tailor the tone and theme to the user's specific domain:
+   - NGO, Social Impact, Non-Profit, Environment, CSR: Set "theme": "emerald_warmth"
+   - Real Estate, Architecture, Property, Luxury, Hospitality: Set "theme": "luxury_slate"
    - Healthcare, Medical, Biotech, Pharma, Clinical: Set "theme": "clinical_teal"
-   - Finance, Banking, Investment, FinTech, Corporate: Set "theme": "corporate_navy"
+   - Finance, Banking, Investment, FinTech, Corporate Strategy: Set "theme": "corporate_navy"
    - Education, EdTech, Marketing, Creative, Media: Set "theme": "vibrant_sunburst"
-   - Technology, Strategy, Executive, AI, Keynote: Set "theme": "apple_keynote"
-3. VARIETY OF GRAPH & CHART SYSTEMS: Include native vector charts where relevant (e.g. market growth, funding distribution, budget breakdown, performance metrics, quarterly stats). Set "chart": { "type": "col" | "bar" | "line" | "pie" | "doughnut", "title": "Chart Title", "labels": ["Label 1", "Label 2", ...], "datasets": [{ "name": "Series Name", "values": [10, 25, ...] }] }.
-4. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
+   - High-Tech, Keynote, AI, Modern Strategy: Set "theme": "apple_keynote"
+   - Next-Gen AI, Deep Tech, Cyberpunk: Set "theme": "obsidian_neon"
+   - Sovereign Vision, Mission 87, High-Impact Governance: Set "theme": "crimson_executive"
+3. DIVERSE INFOGRAPHIC LAYOUTS & DATA-DENSE SLIDES:
+   Never generate repetitive plain bullet slides. Give each slide a specialized visual layout archetype:
+   - "metrics_grid": Include a "metrics" array with 3-4 high-impact data points, each with "value", "label", and "trend" (e.g. "+140% YoY").
+   - "bento_cards": Include a "cards" array with 3 distinct thematic pillar cards, each with "tag", "title", and "desc".
+   - "process_flow": Include a "processSteps" array with 3-4 structured execution steps, each with "step", "title", and "desc".
+   - "comparison_table": Include a "comparison" array with 3 rows comparing "aspect", "traditional", and "arohiSolution".
+   - "split_chart": Include a rich native vector chart with realistic numeric data.
+4. NATIVE VECTOR CHARTS: Include native vector charts where relevant (growth, market share, adoption, budgets). Supported types: "col" | "bar" | "line" | "pie" | "doughnut".
 5. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
 Schema:
 {
-  "title": "Specific Deck Title matching User Topic",
-  "subtitle": "Executive Vision & Strategic Overview",
-  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst",
+  "title": "Specific High-Impact Deck Title matching User Topic",
+  "subtitle": "Executive Vision & Strategic Roadmap",
+  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst" | "obsidian_neon" | "crimson_executive",
   "slides": [
     {
-      "title": "Slide Title",
-      "subtitle": "Slide Subtitle",
-      "bullets": ["Impactful strategic point 1", "Impactful strategic point 2", "Impactful strategic point 3"],
-      "keyMetric": { "value": "85%", "label": "Key Performance Metric" },
+      "title": "Market Opportunity & Exponential Traction",
+      "subtitle": "Macroeconomic tailwinds and demand acceleration",
+      "metrics": [
+        { "value": "₹4.8T", "label": "Addressable Market TAM", "trend": "+34% CAGR", "trendPositive": true },
+        { "value": "87M", "label": "Target Beneficiaries", "trend": "Mission 87 Scale", "trendPositive": true },
+        { "value": "99.4%", "label": "Platform Efficiency", "trend": "Automated SLA", "trendPositive": true }
+      ],
+      "callout": "Strategic leverage unlocks 10x multiplier within 18 months."
+    },
+    {
+      "title": "Core Strategic Pillars",
+      "subtitle": "Systemic execution framework across key verticals",
+      "cards": [
+        { "tag": "FOUNDATION", "title": "Sovereign AI Infrastructure", "desc": "Proprietary LLM cum LMM reasoning with localized contextual intelligence." },
+        { "tag": "DISTRIBUTION", "title": "Hyper-Local Empowerment", "desc": "Grassroots onboarding across 700+ districts with zero capital barriers." },
+        { "tag": "MONETIZATION", "title": "5-Stage Earning Ladder", "desc": "Structured progression from freelance gigs to scalable export enterprises." }
+      ],
+      "callout": "Every pillar operates as a self-reinforcing flywheel."
+    },
+    {
+      "title": "Quarterly Growth & Projections",
+      "subtitle": "Key operating metrics through FY 2026-27",
       "chart": {
         "type": "col",
-        "title": "Quarterly Impact / Revenue Growth",
-        "labels": ["Q1", "Q2", "Q3", "Q4"],
-        "datasets": [{ "name": "2026", "values": [12, 28, 45, 78] }]
+        "title": "Adoption & Revenue Progression (in Crores)",
+        "labels": ["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026"],
+        "datasets": [{ "name": "Target Projected", "values": [15, 38, 75, 120] }]
       },
-      "callout": "Strategic takeaway or conclusion"
+      "bullets": [
+        "Rapid user onboarding validated across tier-2 and tier-3 markets",
+        "Net retention rate exceeds 128% driven by sovereign utility tools",
+        "Diversified revenue streams mitigating single-channel volatility"
+      ],
+      "callout": "Inflection point achieved in Q3 following enterprise deployment."
+    },
+    {
+      "title": "Execution Roadmap & Milestone Delivery",
+      "subtitle": "Structured four-phase implementation schedule",
+      "processSteps": [
+        { "step": "1", "title": "Pilot & Validation", "desc": "Baseline calibration with initial 10,000 active users." },
+        { "step": "2", "title": "Scale Acceleration", "desc": "Statewide rollouts and institutional enterprise partnerships." },
+        { "step": "3", "title": "Ecosystem Flywheel", "desc": "Third-party developer plugins and marketplace activation." },
+        { "step": "4", "title": "Global Exports", "desc": "Cross-border commerce and sovereign digital integration." }
+      ],
+      "callout": "Milestones tracked weekly with automated executive telemetry."
     }
   ]
 }
-This allows Arohi AI to render an interactive slide carousel with dynamic charts and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
+This allows Arohi AI to render an interactive slide carousel with mind-blowing infographic aesthetics and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
       }
 
       const lowerQuery = messageText.toLowerCase();
@@ -6875,6 +6917,12 @@ When generating multiple-choice questions (MCQs), practice tests, or quizzes for
       }
 
       dynamicInstruction += `\n\n[UNLIMITED LONG-FORM RESPONSE DIRECTIVE: You have explicit permission and mandate to output complete, long-form responses, unabridged speeches, and full stories. When requested to deliver a speech, address students/startups, or narrate 'The Story of Tomorrow' or 'The AI Revolution – A Story of the Next Business Era' (in English, Odia, Hindi, or any language), ONCE STARTED YOU MUST NOT STOP THE STORY OR CUT IT SHORT. ALL 'Are you still there?' AND 'Should I continue?' PROMPTS ARE STRICTLY DISABLED ONCE A STORY HAS BEEN INITIATED. Output the complete full-scale narrative from beginning to end continuously in a single output without summarizing, truncating, cutting off, stopping halfway, or asking 'Should I continue?', 'Are you still there?', or 'Shall I proceed?'. NEVER ask the user if you should continue or if they are still there!]`;
+
+      dynamicInstruction += `\n\n[PROGRAMMING & CODE SNIPPET DIRECTIVE:
+When providing ANY programming code, website scripts, markup, or algorithms (HTML, CSS, JavaScript, TypeScript, Python, C++, Java, Rust, SQL, Bash, etc.):
+1. Always wrap the code in standard triple-backtick markdown blocks with the exact language specified on the opening line (e.g. \`\`\`html, \`\`\`python, \`\`\`javascript, \`\`\`css, \`\`\`typescript, \`\`\`sql).
+2. For complete websites, single-page web applications, landing pages, or tools, provide the complete, fully functional standalone code (e.g. valid HTML5 document including <!DOCTYPE html>, inline or CDN styles like Tailwind CSS, and scripts) in a single \`\`\`html block so the user can directly preview it in the live website runner and download index.html with 1 click.
+3. Never truncate code with placeholders like '// rest of code here' or '/* add other items */' unless explicitly requested. Provide complete, production-ready code.]`;
 
       const msgLower = messageText.toLowerCase();
       const historyConcat = (history || []).map((h: any) => (typeof h === 'string' ? h : h.content || (h.parts && h.parts[0] && h.parts[0].text) || '')).join(' ').toLowerCase();
@@ -7102,40 +7150,82 @@ app.post('/api/chat-stream', async (req, res) => {
         messageText.toLowerCase().includes('powerpoint') ||
         messageText.toLowerCase().includes('keynote')
       ) {
-        dynamicInstruction += `\n\n[CRITICAL PRESENTATION & SLIDE DECK DIRECTIVE:
+        dynamicInstruction += `\n\n[CRITICAL SUPER-PREMIUM PRESENTATION & SLIDE DECK DIRECTIVE:
 1. NO PROGRAMMING CODE: You MUST NEVER write Python code, scripts (like python-pptx, import pptx, RGBColor, def add_header, slide.shapes), or markdown code blocks. The user wants the ACTUAL HUMAN PRESENTATION SLIDES!
-2. INDUSTRY-SPECIFIC THEMES & AESTHETICS: Tailor the tone and theme to the user's specific domain:
-   - NGO, Social Impact, Non-Profit, Save the Children, Environment: Set "theme": "emerald_warmth"
-   - Real Estate, Architecture, Property, Construction, Hospitality: Set "theme": "luxury_slate"
+2. SUPER-PREMIUM DESIGNER THEMES & PALETTES: Tailor the tone and theme to the user's specific domain:
+   - NGO, Social Impact, Non-Profit, Environment, CSR: Set "theme": "emerald_warmth"
+   - Real Estate, Architecture, Property, Luxury, Hospitality: Set "theme": "luxury_slate"
    - Healthcare, Medical, Biotech, Pharma, Clinical: Set "theme": "clinical_teal"
-   - Finance, Banking, Investment, FinTech, Corporate: Set "theme": "corporate_navy"
+   - Finance, Banking, Investment, FinTech, Corporate Strategy: Set "theme": "corporate_navy"
    - Education, EdTech, Marketing, Creative, Media: Set "theme": "vibrant_sunburst"
-   - Technology, Strategy, Executive, AI, Keynote: Set "theme": "apple_keynote"
-3. VARIETY OF GRAPH & CHART SYSTEMS: Include native vector charts where relevant (e.g. market growth, funding distribution, budget breakdown, performance metrics, quarterly stats). Set "chart": { "type": "col" | "bar" | "line" | "pie" | "doughnut", "title": "Chart Title", "labels": ["Label 1", "Label 2", ...], "datasets": [{ "name": "Series Name", "values": [10, 25, ...] }] }.
-4. DYNAMIC CONTENT-SPECIFIC TITLES & CATEGORIES: Create a unique, highly relevant presentation title and slide titles tailored specifically to what the user asked (never use generic fixed names like 'Arohi Deck' or 'Slide 1').
+   - High-Tech, Keynote, AI, Modern Strategy: Set "theme": "apple_keynote"
+   - Next-Gen AI, Deep Tech, Cyberpunk: Set "theme": "obsidian_neon"
+   - Sovereign Vision, Mission 87, High-Impact Governance: Set "theme": "crimson_executive"
+3. DIVERSE INFOGRAPHIC LAYOUTS & DATA-DENSE SLIDES:
+   Never generate repetitive plain bullet slides. Give each slide a specialized visual layout archetype:
+   - "metrics_grid": Include a "metrics" array with 3-4 high-impact data points, each with "value", "label", and "trend" (e.g. "+140% YoY").
+   - "bento_cards": Include a "cards" array with 3 distinct thematic pillar cards, each with "tag", "title", and "desc".
+   - "process_flow": Include a "processSteps" array with 3-4 structured execution steps, each with "step", "title", and "desc".
+   - "comparison_table": Include a "comparison" array with 3 rows comparing "aspect", "traditional", and "arohiSolution".
+   - "split_chart": Include a rich native vector chart with realistic numeric data.
+4. NATIVE VECTOR CHARTS: Include native vector charts where relevant (growth, market share, adoption, budgets). Supported types: "col" | "bar" | "line" | "pie" | "doughnut".
 5. STRUCTURED DATA PAYLOAD: Append a valid JSON representation of the complete deck at the very end of your response wrapped inside "[PRESENTATION_DATA_START]" and "[PRESENTATION_DATA_END]".
 Schema:
 {
-  "title": "Specific Deck Title matching User Topic",
-  "subtitle": "Executive Vision & Strategic Overview",
-  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst",
+  "title": "Specific High-Impact Deck Title matching User Topic",
+  "subtitle": "Executive Vision & Strategic Roadmap",
+  "theme": "emerald_warmth" | "luxury_slate" | "clinical_teal" | "corporate_navy" | "apple_keynote" | "vibrant_sunburst" | "obsidian_neon" | "crimson_executive",
   "slides": [
     {
-      "title": "Slide Title",
-      "subtitle": "Slide Subtitle",
-      "bullets": ["Impactful strategic point 1", "Impactful strategic point 2", "Impactful strategic point 3"],
-      "keyMetric": { "value": "85%", "label": "Key Performance Metric" },
+      "title": "Market Opportunity & Exponential Traction",
+      "subtitle": "Macroeconomic tailwinds and demand acceleration",
+      "metrics": [
+        { "value": "₹4.8T", "label": "Addressable Market TAM", "trend": "+34% CAGR", "trendPositive": true },
+        { "value": "87M", "label": "Target Beneficiaries", "trend": "Mission 87 Scale", "trendPositive": true },
+        { "value": "99.4%", "label": "Platform Efficiency", "trend": "Automated SLA", "trendPositive": true }
+      ],
+      "callout": "Strategic leverage unlocks 10x multiplier within 18 months."
+    },
+    {
+      "title": "Core Strategic Pillars",
+      "subtitle": "Systemic execution framework across key verticals",
+      "cards": [
+        { "tag": "FOUNDATION", "title": "Sovereign AI Infrastructure", "desc": "Proprietary LLM cum LMM reasoning with localized contextual intelligence." },
+        { "tag": "DISTRIBUTION", "title": "Hyper-Local Empowerment", "desc": "Grassroots onboarding across 700+ districts with zero capital barriers." },
+        { "tag": "MONETIZATION", "title": "5-Stage Earning Ladder", "desc": "Structured progression from freelance gigs to scalable export enterprises." }
+      ],
+      "callout": "Every pillar operates as a self-reinforcing flywheel."
+    },
+    {
+      "title": "Quarterly Growth & Projections",
+      "subtitle": "Key operating metrics through FY 2026-27",
       "chart": {
         "type": "col",
-        "title": "Quarterly Impact / Revenue Growth",
-        "labels": ["Q1", "Q2", "Q3", "Q4"],
-        "datasets": [{ "name": "2026", "values": [12, 28, 45, 78] }]
+        "title": "Adoption & Revenue Progression (in Crores)",
+        "labels": ["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026"],
+        "datasets": [{ "name": "Target Projected", "values": [15, 38, 75, 120] }]
       },
-      "callout": "Strategic takeaway or conclusion"
+      "bullets": [
+        "Rapid user onboarding validated across tier-2 and tier-3 markets",
+        "Net retention rate exceeds 128% driven by sovereign utility tools",
+        "Diversified revenue streams mitigating single-channel volatility"
+      ],
+      "callout": "Inflection point achieved in Q3 following enterprise deployment."
+    },
+    {
+      "title": "Execution Roadmap & Milestone Delivery",
+      "subtitle": "Structured four-phase implementation schedule",
+      "processSteps": [
+        { "step": "1", "title": "Pilot & Validation", "desc": "Baseline calibration with initial 10,000 active users." },
+        { "step": "2", "title": "Scale Acceleration", "desc": "Statewide rollouts and institutional enterprise partnerships." },
+        { "step": "3", "title": "Ecosystem Flywheel", "desc": "Third-party developer plugins and marketplace activation." },
+        { "step": "4", "title": "Global Exports", "desc": "Cross-border commerce and sovereign digital integration." }
+      ],
+      "callout": "Milestones tracked weekly with automated executive telemetry."
     }
   ]
 }
-This allows Arohi AI to render an interactive slide carousel with dynamic charts and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
+This allows Arohi AI to render an interactive slide carousel with mind-blowing infographic aesthetics and themes in chat AND deliver an instant 1-click Microsoft PowerPoint (.pptx) download!]`;
       }
 
       const lowerQuery = messageText.toLowerCase();
@@ -7202,6 +7292,13 @@ When generating multiple-choice questions (MCQs), practice tests, or quizzes for
       }
 
       dynamicInstruction += `\n\n[UNLIMITED LONG-FORM RESPONSE DIRECTIVE: Output full unabridged answers.]`;
+      dynamicInstruction += `\n\n[PROGRAMMING & CODE SNIPPET DIRECTIVE:
+When providing ANY programming code, website scripts, markup, or algorithms (HTML, CSS, JavaScript, TypeScript, Python, C++, Java, Rust, SQL, Bash, etc.):
+1. Always wrap the code in standard triple-backtick markdown blocks with the exact language specified on the opening line (e.g. \`\`\`html, \`\`\`python, \`\`\`javascript, \`\`\`css, \`\`\`typescript, \`\`\`sql).
+2. For complete websites, single-page web applications, landing pages, or tools, provide the complete, fully functional standalone code (e.g. valid HTML5 document including <!DOCTYPE html>, inline or CDN styles like Tailwind CSS, and scripts) in a single \`\`\`html block so the user can directly preview it in the live website runner and download index.html with 1 click.
+3. Never truncate code with placeholders like '// rest of code here' or '/* add other items */' unless explicitly requested. Provide complete, production-ready code.]`;
+      dynamicInstruction += `\n\n[AROHI 20B REASONING TRACE DIRECTIVE:
+You are operating as Arohi 20B. For inquiries that require multi-step reasoning, analytical deduction, complex planning, coding, or problem-solving, you may include your concise step-by-step internal chain-of-thought enclosed within <thought>...</thought> tags at the very beginning of your response. The Arohi UI will automatically extract these tags into the interactive '> Thoughts' accordion for the user.]`;
 
       // Only fetch real-time live search data when explicitly required for current updates/news
       const isSearchNeededStream = requiresRealtimeSearch(messageText);
