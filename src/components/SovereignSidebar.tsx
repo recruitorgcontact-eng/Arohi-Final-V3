@@ -22,7 +22,8 @@ import {
   Layers,
   Crown,
   HeartHandshake,
-  CreditCard
+  CreditCard,
+  Zap
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -46,6 +47,7 @@ interface SovereignSidebarProps {
   remainingMinutes?: number;
   remainingSeconds?: number;
   onUpgradeClick?: () => void;
+  onOpenConnectors?: () => void;
   arohiCoinBalance?: number;
 }
 
@@ -66,6 +68,7 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
   remainingHours = 0,
   remainingMinutes = 0,
   onUpgradeClick,
+  onOpenConnectors,
   arohiCoinBalance = 0,
 }) => {
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
@@ -80,6 +83,13 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       icon: MessageSquare,
       badge: 'Universal',
       description: 'Conversational LLM cum LMM'
+    },
+    {
+      id: 'connectors',
+      label: 'Arohi Connect™',
+      icon: Zap,
+      badge: '100+ Apps',
+      description: 'Sheets, WhatsApp, Tally & APIs'
     },
     {
       id: 'business-os',
@@ -231,7 +241,11 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
                 <button
                   key={suite.id}
                   onClick={() => {
-                    setActiveTab(suite.id);
+                    if (suite.id === 'connectors' && onOpenConnectors) {
+                      onOpenConnectors();
+                    } else {
+                      setActiveTab(suite.id);
+                    }
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer group ${
                     isSelected

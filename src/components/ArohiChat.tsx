@@ -16,6 +16,11 @@ import Arohi3DLearningWorkspace from './learning3d/Arohi3DLearningWorkspace';
 import McpGatewayModal from './McpGatewayModal';
 import McpApprovalCard from './McpApprovalCard';
 import McpWorkflowOrchestratorModal from './McpWorkflowOrchestratorModal';
+import ArohiConnectModal from './connectors/ArohiConnectModal';
+import ConnectorActionCard from './connectors/ConnectorActionCard';
+import CommerceActionCard from './connectors/CommerceActionCard';
+import { detectCommerceDispatch } from '../utils/actionDispatchers';
+import { CommerceDispatchItem } from '../types/connectors';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import ArohiAvatar from './ArohiAvatar';
 import { Language, getTranslation, getWelcomeContent, getSuggestedPrompts } from '../translations';
@@ -785,6 +790,54 @@ function parseMessageMcpPayload(content: string) {
   };
 }
 
+function parseMessageConnectorAction(content: string) {
+  const startIndex = content.indexOf('[AROHI_CONNECTOR_ACTION_START]');
+  const endIndex = content.indexOf('[AROHI_CONNECTOR_ACTION_END]');
+  
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const rawJson = content.substring(startIndex + '[AROHI_CONNECTOR_ACTION_START]'.length, endIndex);
+    const textWithoutJson = content.substring(0, startIndex) + content.substring(endIndex + '[AROHI_CONNECTOR_ACTION_END]'.length);
+    try {
+      const parsedData = JSON.parse(rawJson);
+      return {
+        cleanedContent: textWithoutJson.trim(),
+        connectorAction: parsedData
+      };
+    } catch (e) {
+      console.error("Failed to parse connector action JSON in message", e);
+    }
+  }
+  return {
+    cleanedContent: content,
+    connectorAction: null
+  };
+}
+
+function parseMessageCommerceDispatch(content: string): { cleanedContent: string; commerceDispatch: CommerceDispatchItem | null } {
+  const startIndex = content.indexOf('[AROHI_COMMERCE_DISPATCH_START]');
+  const endIndex = content.indexOf('[AROHI_COMMERCE_DISPATCH_END]');
+  
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const rawJson = content.substring(startIndex + '[AROHI_COMMERCE_DISPATCH_START]'.length, endIndex);
+    const textWithoutJson = content.substring(0, startIndex) + content.substring(endIndex + '[AROHI_COMMERCE_DISPATCH_END]'.length);
+    try {
+      const parsedData = JSON.parse(rawJson);
+      return {
+        cleanedContent: textWithoutJson.trim(),
+        commerceDispatch: parsedData as CommerceDispatchItem
+      };
+    } catch (e) {
+      console.error("Failed to parse commerce dispatch JSON in message", e);
+    }
+  }
+
+  const detected = detectCommerceDispatch(content);
+  return {
+    cleanedContent: content,
+    commerceDispatch: detected
+  };
+}
+
 function parseMessagePresentation(content: string) {
   const startIndex = content.indexOf('[PRESENTATION_DATA_START]');
   const endIndex = content.indexOf('[PRESENTATION_DATA_END]');
@@ -930,6 +983,7 @@ export default function ArohiChat({
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [isMcpGatewayOpen, setIsMcpGatewayOpen] = useState(false);
   const [isWorkflowOrchestratorOpen, setIsWorkflowOrchestratorOpen] = useState(false);
+  const [isConnectorsModalOpen, setIsConnectorsModalOpen] = useState(false);
   const [isRefreshingMemory, setIsRefreshingMemory] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -4282,6 +4336,18 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                   </button>
                   <button
                     onClick={() => {
+                      setIsConnectorsModalOpen(true);
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center justify-between cursor-pointer`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Zap className="w-3.5 h-3.5 text-indigo-400" /> Arohi Connect™
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">100+</span>
+                  </button>
+                  <button
+                    onClick={() => {
                       if (currentChatObj) {
                         setMoveChatModalTarget({
                           chatId: currentChatObj.id,
@@ -4451,6 +4517,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               ? parseMessageTaskProgress(parsed.cleanedContent)
               : { cleanedContent: msg.content, taskProgressData: null };
 
+            const connectorActionParsed = msg.role === 'assistant'
+              ? parseMessageConnectorAction(taskProgressParsed.cleanedContent)
+              : { cleanedContent: msg.content, connectorAction: null };
+
+            const commerceDispatchParsed = msg.role === 'assistant' && !msg.isStreaming
+              ? parseMessageCommerceDispatch(connectorActionParsed.cleanedContent)
+              : { cleanedContent: connectorActionParsed.cleanedContent, commerceDispatch: null };
+
             const isLiked = likedMessageIds.includes(msg.id);
             const isDisliked = dislikedMessageIds.includes(msg.id);
             const isCopied = copiedMessageId === msg.id;
@@ -4572,6 +4646,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
 
                   {parsed.mcpData && (
                     <McpApprovalCard payload={parsed.mcpData} isDarkMode={isDarkMode} />
+                  )}
+
+                  {connectorActionParsed.connectorAction && (
+                    <ConnectorActionCard request={connectorActionParsed.connectorAction} isDarkMode={isDarkMode} />
+                  )}
+
+                  {commerceDispatchParsed.commerceDispatch && (
+                    <CommerceActionCard item={commerceDispatchParsed.commerceDispatch} isDarkMode={isDarkMode} />
                   )}
 
                   {msg.role === 'assistant' && !msg.isStreaming && parsed.cleanedContent && (
@@ -4822,6 +4904,22 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             className="flex items-center gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar select-none"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
+            {/* Arohi Connect Universal Integrations Hub Shortcut */}
+            <button
+              type="button"
+              onClick={() => setIsConnectorsModalOpen(true)}
+              title="Arohi Connect™: 100+ Universal Integrations, Webhooks & Custom APIs"
+              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
+                isDarkMode
+                  ? 'bg-indigo-950/50 text-indigo-300 border-indigo-500/40 hover:bg-indigo-900/60 hover:border-indigo-400 shadow-xs'
+                  : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 shadow-xs'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+              <span>Connect</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
+
             {SPECIALIZED_CREATION_CHIPS.map((chip) => {
               const Icon = chip.icon;
               const isActive = activeSpecializedMode === chip.id;
@@ -7353,6 +7451,14 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         isOpen={isWorkflowOrchestratorOpen}
         onClose={() => setIsWorkflowOrchestratorOpen(false)}
         onSendPromptToChat={(promptText) => handleSendMessage(promptText)}
+      />
+
+      {/* Arohi Connect Universal Integrations & Custom REST API Modal */}
+      <ArohiConnectModal
+        isOpen={isConnectorsModalOpen}
+        onClose={() => setIsConnectorsModalOpen(false)}
+        onSendPromptToChat={(promptText) => handleSendMessage(promptText)}
+        isDarkMode={isDarkMode}
       />
 
       {/* ChatGPT-style Arohi Projects Workspace Modal */}

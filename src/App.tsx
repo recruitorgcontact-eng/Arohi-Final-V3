@@ -65,6 +65,7 @@ import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PATH_DETAILS, getTokenLimit
 import { computeSubscriptionState, isValidCouponCode, persistSubscriptionActivation, isLifetimeVipEmail, TWO_DAYS_MS, THIRTY_DAYS_MS } from './utils/subscriptionEngine';
 import TokenWarningToastContainer from './components/TokenWarningToastContainer';
 import { openRazorpayCheckout } from './lib/razorpay';
+import ArohiConnectModal from './components/connectors/ArohiConnectModal';
 
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
@@ -96,6 +97,7 @@ const INITIAL_MOCK_APPLICATIONS: Application[] = [];
 export default function App() {
   const { user, userData, loading, updateApplications, updateUserSubscription, updateArohiCalls } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isConnectorsModalOpen, setIsConnectorsModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup' | 'forgot' | 'onboarding'>('signin');
   const [authUpgradePrompt, setAuthUpgradePrompt] = useState<string | null>(null);
   const [hasEntered, setHasEntered] = useState(() => {
@@ -4840,6 +4842,7 @@ export default function App() {
         remainingMinutes={remainingMinutes}
         remainingSeconds={remainingSeconds}
         onUpgradeClick={() => handleInitiateUpgrade(0, true)}
+        onOpenConnectors={() => setIsConnectorsModalOpen(true)}
         arohiCoinBalance={arohiCoinBalance}
       />
 
@@ -5049,6 +5052,20 @@ export default function App() {
         </div>,
         document.body
       )}
+
+      {/* Arohi Connect Universal Integrations & Custom REST API Hub Modal */}
+      <ArohiConnectModal
+        isOpen={isConnectorsModalOpen}
+        onClose={() => setIsConnectorsModalOpen(false)}
+        onSendPromptToChat={(p) => {
+          setChatInitialPrompt(p);
+          setIsChatOpen(true);
+          setIsChatMinimized(false);
+          setHasEntered(true);
+          setActiveTab('arohi');
+        }}
+        isDarkMode={isDarkMode}
+      />
 
     </div>
   );
