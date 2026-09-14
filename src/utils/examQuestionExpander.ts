@@ -1,4 +1,10 @@
 import { MockTest, ExamQuestion, ExamSection } from '../types/examTypes';
+import {
+  EXPANDED_QUANT_TEMPLATES,
+  EXPANDED_REASONING_TEMPLATES,
+  EXPANDED_GS_TEMPLATES,
+  EXPANDED_ENGLISH_TEMPLATES
+} from '../data/megaGrandQuestionBanks';
 
 // Topic-specific authentic question generator interfaces
 export interface QuestionTemplate {
@@ -1942,22 +1948,22 @@ export function getSubjectPureTemplateBank(sec: ExamSection, test: MockTest): Qu
 
   // 3. Quantitative Aptitude / Mathematics
   if (/quant|math|arithmetic|numerical|algebra|geometry/i.test(sName)) {
-    return QUANT_MATH_TEMPLATES;
+    return [...QUANT_MATH_TEMPLATES, ...EXPANDED_QUANT_TEMPLATES];
   }
 
   // 4. Reasoning / Intelligence / Mental Ability
   if (/reasoning|intelligence|logical|analytical|mental/i.test(sName)) {
-    return REASONING_TEMPLATES;
+    return [...REASONING_TEMPLATES, ...EXPANDED_REASONING_TEMPLATES];
   }
 
   // 5. CSAT & Mental Ability (Paper 2)
   if (/csat|mental ability|paper 2|paper-2/i.test(sName)) {
-    return [...CSAT_APTITUDE_COMPREHENSION_TEMPLATES, ...REASONING_TEMPLATES, ...QUANT_MATH_TEMPLATES];
+    return [...CSAT_APTITUDE_COMPREHENSION_TEMPLATES, ...REASONING_TEMPLATES, ...EXPANDED_REASONING_TEMPLATES, ...QUANT_MATH_TEMPLATES, ...EXPANDED_QUANT_TEMPLATES];
   }
 
   // 6. English / Verbal Language
   if (/english|verbal|comprehension|vocabulary/i.test(sName)) {
-    return ENGLISH_TEMPLATES;
+    return [...ENGLISH_TEMPLATES, ...EXPANDED_ENGLISH_TEMPLATES];
   }
 
   // 7. Computer Knowledge & Digital IT Literacy
@@ -2058,7 +2064,7 @@ export function getSubjectPureTemplateBank(sec: ExamSection, test: MockTest): Qu
   }
 
   // 13. General Studies & Civil Services Default
-  return CIVIL_SERVICES_GS_TEMPLATES;
+  return [...CIVIL_SERVICES_GS_TEMPLATES, ...EXPANDED_GS_TEMPLATES];
 }
 
 // Deterministic FNV-1a Hash String function for pseudo-random set generation
@@ -2206,42 +2212,52 @@ export function ensureTestComplete(test: MockTest, setNumber: number = 1): MockT
       for (let i = 0; i < shortage; i++) {
         let tmpl: QuestionTemplate;
         // Deterministic set index offset
-        const setOffsetIndex = i + (activeSet - 1) * 19;
+        const setOffsetIndex = i + (activeSet - 1) * 31;
 
-        if (isQuantSection) {
+        // 1. Prefer distinct authentic questions from the template bank first
+        const bankOffset = (activeSet - 1) * 25 + i;
+        if (templateBank.length > 0 && bankOffset < templateBank.length) {
+          tmpl = templateBank[bankOffset];
+        } else if (templateBank.length > 0 && i < templateBank.length) {
+          tmpl = templateBank[i];
+        } else if (isQuantSection) {
           tmpl = generateDynamicMathVariation(setOffsetIndex);
         } else if (isReasoningSection) {
           tmpl = generateDynamicReasoningVariation(setOffsetIndex);
         } else if (isEnglishSection) {
           tmpl = generateDynamicEnglishVariation(setOffsetIndex);
-        } else if (i < templateBank.length && activeSet === 1) {
-          tmpl = templateBank[i];
-        } else if (templateBank.length > 0 && activeSet > 1 && (i % 3 === 0)) {
-          const bankIndex = (i + (activeSet - 1) * 7) % templateBank.length;
+        } else if (templateBank.length > 0) {
+          const bankIndex = (i + (activeSet - 1) * 11) % templateBank.length;
           tmpl = templateBank[bankIndex];
         } else {
           tmpl = generateDynamicGSVariation(setOffsetIndex, sec.name);
         }
 
-        // If duplicate text was already added, create a distinct parameter variation
+        // Strict deduplication: if questionText already seen, try dynamic generator with step-shifted seed
         let questionText = tmpl.text;
-        if (seenQuestionTexts.has(questionText.trim().toLowerCase())) {
+        let dedupAttempt = 1;
+        while (seenQuestionTexts.has(questionText.trim().toLowerCase().slice(0, 60)) && dedupAttempt <= 5) {
           if (isQuantSection) {
-            tmpl = generateDynamicMathVariation(setOffsetIndex + shortage + 7);
+            tmpl = generateDynamicMathVariation(setOffsetIndex + dedupAttempt * 17);
             questionText = tmpl.text;
           } else if (isReasoningSection) {
-            tmpl = generateDynamicReasoningVariation(setOffsetIndex + shortage + 13);
+            tmpl = generateDynamicReasoningVariation(setOffsetIndex + dedupAttempt * 19);
             questionText = tmpl.text;
           } else if (isEnglishSection) {
-            tmpl = generateDynamicEnglishVariation(setOffsetIndex + shortage + 5);
+            tmpl = generateDynamicEnglishVariation(setOffsetIndex + dedupAttempt * 13);
+            questionText = tmpl.text;
+          } else if (templateBank.length > 0) {
+            const nextIndex = (i + dedupAttempt * 13 + (activeSet - 1) * 7) % templateBank.length;
+            tmpl = templateBank[nextIndex];
             questionText = tmpl.text;
           } else {
-            // Append a distinct sub-context indicator
-            questionText = `${tmpl.text} (Set ${activeSet} • Q${i + 1})`;
+            tmpl = generateDynamicGSVariation(setOffsetIndex + dedupAttempt * 11, sec.name);
+            questionText = tmpl.text;
           }
+          dedupAttempt++;
         }
 
-        seenQuestionTexts.add(questionText.trim().toLowerCase());
+        seenQuestionTexts.add(questionText.trim().toLowerCase().slice(0, 60));
 
         let finalOptions = tmpl.options.map(o => ({ ...o }));
         let finalCorrectAnswer = tmpl.correctAnswer;

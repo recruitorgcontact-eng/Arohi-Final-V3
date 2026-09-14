@@ -4320,6 +4320,7 @@ export default function App() {
             initialPrompt={chatInitialPrompt}
             language={language}
             isDarkMode={isDarkMode}
+            currency={currency}
             isFullscreen={isChatFullscreen}
             onToggleFullscreen={() => setIsChatFullscreen((prev) => !prev)}
             onNavigateTab={(tab) => {

@@ -238,15 +238,23 @@ export function parseMcqsFromText(text: string): ParsedQuizQuestion[] {
     }
 
     if (questionText && options.length >= 2) {
-      questions.push({
-        id: `chat_q_${questionNumber}_${idx}`,
-        questionNumber: questionNumber,
-        text: questionText,
-        options,
-        correctOption,
-        explanation,
-        topic: subjectOrTopic
-      });
+      // Deduplicate: ignore identical or near-identical question text if already parsed
+      const normalizedKey = questionText.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
+      const isDuplicate = questions.some(q => 
+        q.text.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50) === normalizedKey
+      );
+
+      if (!isDuplicate) {
+        questions.push({
+          id: `chat_q_${questionNumber}_${idx}`,
+          questionNumber: questionNumber,
+          text: questionText,
+          options,
+          correctOption,
+          explanation,
+          topic: subjectOrTopic
+        });
+      }
     }
   });
 

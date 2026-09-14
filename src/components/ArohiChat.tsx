@@ -8,7 +8,7 @@ import {
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
   Music, Disc, Play, Pause, Radio, Headphones, Navigation, Compass, Route,
   Brain, Cpu, Layers, Workflow, Clock, Folder, FolderPlus, FolderOpen, Grid, Box, Maximize2, Minimize2, Eye, ChevronDown, Wand2, Upload,
-  Square
+  Square, GraduationCap, Rocket
 } from 'lucide-react';
 import ArohiProjectsModal, { ArohiProject } from './ArohiProjectsModal';
 import MoveChatToProjectModal from './MoveChatToProjectModal';
@@ -24,6 +24,7 @@ import { generateCallSummaryPDF, generateResumePDF, analyzeTurns } from '../lib/
 import { exportToPDF, exportToWord, exportToExcel, exportToPPTX, parseContentToSlides, PresentationData, ExcelWorkbookData, parseContentToExcelData } from '../lib/documentExporter';
 import InChatMessagePresentation from './InChatMessagePresentation';
 import InChatMessageSpreadsheet from './InChatMessageSpreadsheet';
+import ArohiUpgradeModal from './ArohiUpgradeModal';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -69,7 +70,105 @@ interface ArohiChatProps {
   onToggleFullscreen?: () => void;
   language?: Language;
   isDarkMode?: boolean;
+  currency?: 'INR' | 'USD';
+  onUpgradeClick?: () => void;
 }
+
+export type SpecializedCreationMode = 'mission87' | 'jobs' | 'slides' | 'study' | 'docs' | 'websites' | 'sheets' | 'research';
+
+export interface CreationChipItem {
+  id: SpecializedCreationMode;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  prefix: string;
+  badge: string;
+  desc: string;
+  activeColorDark: string;
+  activeColorLight: string;
+}
+
+export const SPECIALIZED_CREATION_CHIPS: CreationChipItem[] = [
+  {
+    id: 'mission87',
+    label: 'Mission 87',
+    icon: Rocket,
+    prefix: 'Guide me on Mission 87 Sovereign Earning Ladders (₹5,000 to ₹1,00,000+/mo) for ',
+    badge: '₹5K-₹100K/mo',
+    desc: 'Sovereign Earning Ladders & NEET Youth Movement',
+    activeColorDark: 'bg-gradient-to-r from-orange-500/25 to-amber-500/20 text-orange-400 border-orange-500/80 shadow-xs shadow-orange-500/20',
+    activeColorLight: 'bg-orange-50 text-orange-950 border-orange-400 shadow-xs'
+  },
+  {
+    id: 'jobs',
+    label: 'Jobs',
+    icon: Briefcase,
+    prefix: 'Find latest jobs, exam notifications, and eligibility criteria for ',
+    badge: 'Sarkari & Private',
+    desc: 'Job Alerts, Eligibility & Application Links',
+    activeColorDark: 'bg-gradient-to-r from-cyan-500/25 to-teal-500/20 text-cyan-300 border-cyan-400/80 shadow-xs shadow-cyan-500/20',
+    activeColorLight: 'bg-cyan-50 text-cyan-950 border-cyan-400 shadow-xs'
+  },
+  {
+    id: 'slides',
+    label: 'Slides',
+    icon: Presentation,
+    prefix: 'Generate a professional 6-slide presentation on ',
+    badge: 'PPTX',
+    desc: 'Interactive Slide Deck & PPTX Export',
+    activeColorDark: 'bg-gradient-to-r from-amber-500/25 to-orange-500/20 text-amber-300 border-amber-400/80 shadow-xs shadow-amber-500/20',
+    activeColorLight: 'bg-amber-50 text-amber-900 border-amber-400 shadow-xs'
+  },
+  {
+    id: 'study',
+    label: 'Study',
+    icon: GraduationCap,
+    prefix: 'Create an in-depth exam study guide and high-yield practice quiz on ',
+    badge: 'Guide & Quiz',
+    desc: 'Syllabus Breakdown & Flashcards',
+    activeColorDark: 'bg-gradient-to-r from-sky-500/25 to-blue-500/20 text-sky-300 border-sky-400/80 shadow-xs shadow-sky-500/20',
+    activeColorLight: 'bg-sky-50 text-sky-900 border-sky-400 shadow-xs'
+  },
+  {
+    id: 'docs',
+    label: 'Docs',
+    icon: FileText,
+    prefix: 'Draft a formal, comprehensive document / report on ',
+    badge: 'Word .docx',
+    desc: 'Structured Document with DOCX Export',
+    activeColorDark: 'bg-gradient-to-r from-indigo-500/25 to-violet-500/20 text-indigo-300 border-indigo-400/80 shadow-xs shadow-indigo-500/20',
+    activeColorLight: 'bg-indigo-50 text-indigo-900 border-indigo-400 shadow-xs'
+  },
+  {
+    id: 'websites',
+    label: 'Websites',
+    icon: Globe,
+    prefix: 'Build a complete, responsive modern landing page / web app for ',
+    badge: 'Live Code',
+    desc: 'Modern Web Page / App Code',
+    activeColorDark: 'bg-gradient-to-r from-emerald-500/25 to-teal-500/20 text-emerald-300 border-emerald-400/80 shadow-xs shadow-emerald-500/20',
+    activeColorLight: 'bg-emerald-50 text-emerald-900 border-emerald-400 shadow-xs'
+  },
+  {
+    id: 'sheets',
+    label: 'Sheets',
+    icon: FileSpreadsheet,
+    prefix: 'Generate a structured spreadsheet with formulas and sample data for ',
+    badge: 'Excel .xlsx',
+    desc: 'Calculated Grid & Excel Export',
+    activeColorDark: 'bg-gradient-to-r from-green-500/25 to-emerald-500/20 text-green-300 border-green-400/80 shadow-xs shadow-green-500/20',
+    activeColorLight: 'bg-green-50 text-green-900 border-green-400 shadow-xs'
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    icon: Search,
+    prefix: 'Perform a deep research investigation with sources and facts on ',
+    badge: 'Deep Search',
+    desc: 'Fact-checked Investigation & Citations',
+    activeColorDark: 'bg-gradient-to-r from-purple-500/25 to-pink-500/20 text-purple-300 border-purple-400/80 shadow-xs shadow-purple-500/20',
+    activeColorLight: 'bg-purple-50 text-purple-900 border-purple-400 shadow-xs'
+  }
+];
 
 function getGmailWebUrl(mailtoUrl: string): string {
   try {
@@ -818,11 +917,14 @@ export default function ArohiChat({
   isFullscreen = true,
   onToggleFullscreen,
   language = 'en', 
-  isDarkMode = true 
+  isDarkMode = true,
+  currency = 'INR',
+  onUpgradeClick
 }: ArohiChatProps) {
   const { user, userData, userMemory, refreshPersonalizationMemory } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [is3DLearningOpen, setIs3DLearningOpen] = useState(false);
   const [active3DTopic, setActive3DTopic] = useState('human_heart');
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
@@ -865,6 +967,50 @@ export default function ArohiChat({
   useEffect(() => {
     adjustChatTextareaHeight();
   }, [input]);
+
+  // Specialized Creation & Mode Chips State (Slides, Study, Docs, Websites, Sheets, Research)
+  const [activeSpecializedMode, setActiveSpecializedMode] = useState<SpecializedCreationMode | null>(null);
+
+  const handleSelectSpecializedChip = (chip: CreationChipItem) => {
+    // If clicking already active chip, toggle off
+    if (activeSpecializedMode === chip.id) {
+      setActiveSpecializedMode(null);
+      return;
+    }
+
+    setActiveSpecializedMode(chip.id);
+
+    const currentText = input.trim();
+    let updatedText = '';
+
+    // Check if current text already begins with any chip's prefix
+    const existingChip = SPECIALIZED_CREATION_CHIPS.find(c =>
+      currentText.toLowerCase().startsWith(c.prefix.toLowerCase().trim())
+    );
+
+    if (existingChip) {
+      // User is switching between chips: preserve the core topic typed so far
+      const topic = currentText.slice(existingChip.prefix.trim().length).trim();
+      updatedText = topic ? `${chip.prefix}${topic}` : chip.prefix;
+    } else if (!currentText) {
+      updatedText = chip.prefix;
+    } else {
+      // User has existing query: wrap it contextually
+      updatedText = `${chip.prefix}${currentText}`;
+    }
+
+    setInput(updatedText);
+
+    // Smoothly focus textarea and position cursor at the very end
+    setTimeout(() => {
+      if (chatTextareaRef.current) {
+        chatTextareaRef.current.focus();
+        const len = updatedText.length;
+        chatTextareaRef.current.setSelectionRange(len, len);
+        adjustChatTextareaHeight();
+      }
+    }, 40);
+  };
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -1155,7 +1301,7 @@ export default function ArohiChat({
           keyTakeaways: data.keyTakeaways || [],
           documentName: data.documentName || docResearchFile?.name || 'Research Report',
           mode: data.mode || docResearchMode,
-          provider: data.provider || 'gemini-2.5-flash',
+          provider: data.provider || 'gemini-3.6-flash',
         };
         setDocResearchReport(reportObj);
         setDocResearchHistory(prev => [
@@ -1217,7 +1363,7 @@ export default function ArohiChat({
           routeInfo: data.routeInfo || null,
           centerCoord: data.centerCoord || { lat: 28.6139, lng: 77.2090, zoom: 12 },
           mode: data.mode || mapsMode,
-          provider: data.provider || 'gemini-2.5-flash-google-maps'
+          provider: data.provider || 'gemini-3.6-flash-google-maps'
         };
         setMapsReport(reportObj);
         setMapsHistory(prev => [
@@ -1271,7 +1417,7 @@ export default function ArohiChat({
           editedContent: data.editedContent || '',
           multiStepPipeline: data.multiStepPipeline || [],
           mode: data.mode || intelligenceMode,
-          provider: data.provider || 'gemini-2.5-flash'
+          provider: data.provider || 'gemini-3.6-flash'
         });
       }
     } catch (e) {
@@ -2524,6 +2670,7 @@ export default function ArohiChat({
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
+    setActiveSpecializedMode(null);
     
     const fileToSend = uploadedFile;
     setUploadedFileName(null);
@@ -3381,6 +3528,8 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
     setSavedChats(updatedChats);
     setActiveChatId(newChatId);
     setMessages(newChat.messages);
+    setInput('');
+    setActiveSpecializedMode(null);
 
     if (user) {
       updateArohiChats(updatedChats).catch(() => {});
@@ -4036,17 +4185,17 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       <div className={`flex-1 flex flex-col min-w-0 ${isDarkMode ? 'bg-[#070b16]' : 'bg-[#f8fafc]'} relative h-full`}>
         
         {/* Arohi Lumina Top Header Bar */}
-        <div className={`${isDarkMode ? 'bg-[#090d1a]/85 border-slate-800/80 backdrop-blur-xl' : 'bg-white/85 border-slate-200/80 shadow-xs backdrop-blur-xl'} border-b px-4 py-3 flex justify-between items-center z-20 shrink-0`}>
-          <div className="flex items-center gap-3 min-w-0">
+        <div className={`${isDarkMode ? 'bg-[#090d1a]/85 border-slate-800/80 backdrop-blur-xl' : 'bg-white/85 border-slate-200/80 shadow-xs backdrop-blur-xl'} border-b px-3 sm:px-4 py-2 sm:py-2.5 flex justify-between items-center z-20 shrink-0`}>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 mr-1.5">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className={`p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-xl transition-colors cursor-pointer`}
+              className={`p-1.5 sm:p-2 ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} rounded-xl transition-colors cursor-pointer shrink-0`}
               title="Toggle Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="min-w-0 flex items-center gap-2">
-              <h1 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} text-base sm:text-lg tracking-tight truncate`}>
+            <div className="min-w-0 flex items-center gap-1.5 sm:gap-2">
+              <h1 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} text-sm sm:text-base md:text-lg tracking-tight truncate`}>
                 {activeChatTitle || 'Arohi AI'}
               </h1>
               {currentChatObj?.projectId && (
@@ -4069,37 +4218,68 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* Ultra-Sleek Upgrade Micro-Button */}
+            <button
+              id="chat-header-upgrade-button"
+              type="button"
+              onClick={() => {
+                if (onUpgradeClick) {
+                  onUpgradeClick();
+                } else {
+                  setIsUpgradeModalOpen(true);
+                }
+              }}
+              className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-wide transition-all cursor-pointer inline-flex items-center justify-center shadow-xs active:scale-95 border ${
+                isDarkMode
+                  ? 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 hover:text-white border-purple-500/40 hover:border-purple-400/70 shadow-purple-950/30'
+                  : 'bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-900 border-purple-200 hover:border-purple-300 shadow-xs'
+              }`}
+              title="Upgrade to Arohi Pro, Business OS or Voice Fleet"
+            >
+              <span>Upgrade</span>
+            </button>
+
+            {/* Voice Call Button - Compact */}
             <button
               onClick={() => setIsVoiceCallOpen(true)}
-              className={`px-3 py-1.5 rounded-full ${isDarkMode ? 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs`}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-full ${isDarkMode ? 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs`}
               title="Start Live Voice Call"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span className={`text-[11px] font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800'} hidden xs:inline`}>Voice</span>
+              <span className={`text-[11px] font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800'} hidden sm:inline`}>Voice</span>
             </button>
 
+            {/* Camera Button - Hidden on mobile, accessible via More Options */}
             <button
               onClick={() => handleSendMessage("Activate live video camera stream analysis")}
-              className={`p-2 rounded-xl ${isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700/70' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'} border transition-all cursor-pointer`}
+              className={`hidden sm:flex p-1.5 sm:p-2 rounded-xl ${isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700/70' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'} border transition-all cursor-pointer`}
               title="Camera Stream"
             >
               <Camera className="w-4 h-4" />
             </button>
 
-            {/* 3D Learning Button hidden as requested by user */}
-
+            {/* Options Dropdown Menu */}
             <div className="relative">
               <button
                 onClick={() => setActiveMessageMenuId(activeMessageMenuId === 'header' ? null : 'header')}
-                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
+                className={`p-1.5 sm:p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
                 title="Options"
               >
-                <MoreHorizontal className="w-5 h-5" />
+                <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               {activeMessageMenuId === 'header' && (
-                <div className={`absolute right-0 top-11 w-56 ${isDarkMode ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-200 shadow-2xl backdrop-blur-xl' : 'bg-white/95 border-slate-200 text-slate-700 shadow-xl backdrop-blur-xl'} border rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                <div className={`absolute right-0 top-10 sm:top-11 w-56 ${isDarkMode ? 'bg-[#0d1326]/95 border-slate-700/80 text-slate-200 shadow-2xl backdrop-blur-xl' : 'bg-white/95 border-slate-200 text-slate-700 shadow-xl backdrop-blur-xl'} border rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150`}>
+                  <button
+                    onClick={() => {
+                      handleSendMessage("Activate live video camera stream analysis");
+                      setActiveMessageMenuId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold ${isDarkMode ? 'text-slate-200 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-100'} rounded-xl flex items-center gap-2 sm:hidden`}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-indigo-400" /> Camera Stream Analysis
+                  </button>
                   <button
                     onClick={() => {
                       if (currentChatObj) {
@@ -4211,30 +4391,30 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             {onToggleFullscreen && (
               <button
                 onClick={onToggleFullscreen}
-                className={`hidden sm:flex p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
+                className={`hidden sm:flex p-1.5 sm:p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
                 title={isFullscreen ? "Exit Full Screen" : "Full Screen Size"}
               >
-                {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                {isFullscreen ? <Minimize2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
             )}
 
             {onMinimize && (
               <button
                 onClick={onMinimize}
-                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
+                className={`hidden sm:flex p-1.5 sm:p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'} transition-colors cursor-pointer`}
                 title="Minimize Chat"
               >
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             )}
 
             {onClose && (
               <button
                 onClick={onClose}
-                className={`p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50'} transition-colors cursor-pointer`}
+                className={`p-1.5 sm:p-2 rounded-xl ${isDarkMode ? 'text-slate-300 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50'} transition-colors cursor-pointer`}
                 title="Close Chat"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             )}
           </div>
@@ -4636,18 +4816,55 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             </div>
           )}
 
-          {/* Arohi 20B Model Indicator */}
-          <div className="flex items-center justify-between px-3 pb-1.5 text-[11px]">
-            <div className="flex items-center gap-1.5 font-semibold select-none">
-              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Model:</span>
-              <span className={isDarkMode ? 'text-slate-200 font-semibold' : 'text-slate-900 font-semibold'}>
-                Arohi 20B
-              </span>
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse shadow-xs shadow-emerald-400/50"></span>
-              <span className={isDarkMode ? 'text-emerald-400/90 font-medium' : 'text-emerald-700 font-medium'}>Zero-Downtime Active</span>
-            </div>
+          {/* Specialized Creation & Mode Chips (Slides, Study, Docs, Websites, Sheets, Research) */}
+          <div 
+            id="chat-specialized-mode-chips"
+            className="flex items-center gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar select-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {SPECIALIZED_CREATION_CHIPS.map((chip) => {
+              const Icon = chip.icon;
+              const isActive = activeSpecializedMode === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  id={`chat-chip-${chip.id}`}
+                  type="button"
+                  onClick={() => handleSelectSpecializedChip(chip)}
+                  title={`${chip.label}: ${chip.desc}`}
+                  className={`group flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
+                    isActive
+                      ? isDarkMode
+                        ? chip.activeColorDark
+                        : chip.activeColorLight
+                      : isDarkMode
+                        ? 'bg-[#10141e]/90 text-slate-300 border-slate-700/60 hover:bg-[#181d2c] hover:border-slate-500/80 hover:text-white'
+                        : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-xs'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${
+                    isActive 
+                      ? (isDarkMode ? 'text-white' : 'text-slate-900') 
+                      : (isDarkMode ? 'text-slate-400 group-hover:text-slate-200' : 'text-slate-500 group-hover:text-slate-800')
+                  }`} />
+                  <span className={isActive ? 'font-semibold' : 'font-medium'}>{chip.label}</span>
+                  {isActive && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSpecializedMode(null);
+                      }}
+                      className={`ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] opacity-75 hover:opacity-100 transition-opacity ${
+                        isDarkMode ? 'hover:bg-white/20 text-white' : 'hover:bg-black/10 text-slate-800'
+                      }`}
+                      title="Deselect mode"
+                    >
+                      ✕
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Floating Minimalist Capsule Dock with Continuously Changing Gradient Border */}
@@ -7175,6 +7392,15 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
           isDarkMode={isDarkMode}
         />
       )}
+
+      {/* Sleek Upgrade & All Products Pricing Modal */}
+      <ArohiUpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        currency={currency}
+        onNavigateTab={onNavigateTab}
+        isDarkMode={isDarkMode}
+      />
 
     </div>
   );
