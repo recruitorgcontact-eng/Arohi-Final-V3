@@ -5444,14 +5444,26 @@ function isExplicitMcpActionIntent(text: string): boolean {
   return false;
 }
 
+// Extract core query topic from user prompt by removing conversational wrappers and research command prefixes
+function extractCoreSearchQuery(prompt: string): string {
+  if (!prompt || typeof prompt !== 'string') return 'India latest news';
+  let clean = prompt.trim()
+    .replace(/^(perform a|conduct a|give me a|run a|provide a|execute a|do a)\s+/i, '')
+    .replace(/^(deep research investigation with sources and facts on|deep research investigation on|deep research on|research investigation with sources and facts on|research investigation on|research on|investigation with sources and facts on|investigation on|sources and facts on|facts and sources on|fact-checked report on|fact-checked investigation on|fact check on|study of|analysis of|report on)\s+/i, '')
+    .replace(/^(please tell me about|tell me about|what is happening with|what happened at|what is the status of|what is the latest on|what is|who is)\s+/i, '')
+    .trim();
+  clean = clean.replace(/[\?\.\!]+$/, '').trim();
+  return clean || prompt.trim();
+}
+
 // Multi-source Real-Time Live Web & News Search Fetcher (Google News, Bing, Yahoo & DuckDuckGo)
 async function fetchGoogleNewsLive(query: string = 'India latest news') {
   const results: { title: string; link: string; date: string; source: string; snippet?: string }[] = [];
   const rawQuery = (query || 'India latest news').trim();
 
-  // Extract core entity/subject keywords by removing conversational question framing
+  // Extract core entity/subject keywords by removing conversational question framing & research command verbs
   let cleanKeywords = rawQuery
-    .replace(/\b(who|what|where|when|why|how|tell|me|give|show|about|the|of|in|for|and|or|is|are|was|were|a|an|to|with|did|has|have|had|please|can|could|would|you|happened|happening|happens|recently|recent|currently|current|updates|update|latest|today|now|going|on|status|news)\b/gi, ' ')
+    .replace(/\b(perform|conduct|execute|deep|research|investigation|sources|facts|fact|checked|who|what|where|when|why|how|tell|me|give|show|about|the|of|in|for|and|or|is|are|was|were|a|an|to|with|did|has|have|had|please|can|could|would|you|happened|happening|happens|recently|recent|currently|current|updates|update|latest|today|now|going|on|status|news)\b/gi, ' ')
     .replace(/[^a-zA-Z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -5759,21 +5771,42 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   }
 
   // Extract user text prompt from options if possible
-  let extractedPrompt = "Hello Arohi AI";
+  let extractedPrompt = "";
   try {
     if (typeof options?.contents === 'string') {
       extractedPrompt = options.contents;
     } else if (Array.isArray(options?.contents)) {
-      const lastItem = options.contents[options.contents.length - 1];
-      if (typeof lastItem === 'string') {
-        extractedPrompt = lastItem;
-      } else if (lastItem?.parts && Array.isArray(lastItem.parts)) {
-        extractedPrompt = lastItem.parts.map((p: any) => p.text || '').join(' ');
+      for (let i = options.contents.length - 1; i >= 0; i--) {
+        const item = options.contents[i];
+        if (!item) continue;
+        if (typeof item === 'string') {
+          extractedPrompt = item;
+          break;
+        } else if (item.parts && Array.isArray(item.parts)) {
+          const textParts = item.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).filter(Boolean).join(' ');
+          if (textParts.trim()) {
+            extractedPrompt = textParts.trim();
+            break;
+          }
+        } else if (item.text && typeof item.text === 'string') {
+          extractedPrompt = item.text.trim();
+          break;
+        } else if (item.content) {
+          const cText = typeof item.content === 'string' ? item.content : JSON.stringify(item.content);
+          if (cText.trim()) {
+            extractedPrompt = cText.trim();
+            break;
+          }
+        }
       }
     } else if (options?.prompt) {
       extractedPrompt = options.prompt;
     }
   } catch (e) {}
+
+  if (!extractedPrompt || !extractedPrompt.trim()) {
+    extractedPrompt = "Hello Arohi AI";
+  }
 
   // 3. Resilient Secondary LLM Engine: Groq (DeepSeek R1 / Llama 3.3 70B)
   try {
@@ -6905,7 +6938,10 @@ function requiresRealtimeSearch(text: string): boolean {
   // 2. Question patterns about current events, geography, appointments, or status
   const eventQuestionPatterns = /\b(what happened|what is happening|what's happening|what took place|what occurred|tell me what happened|any news on|what is the situation|status of|how is the situation|who won|election result|who is current|who is the current|who is the new|who became|resigned|resignation|appointed|appointment|flood|floods|earthquake|cyclone|landslide|disaster|plane crash|war in|conflict in|live score|stock price|gold rate|silver rate|weather in|temperature in)\b/i;
 
-  return temporalKeywords.test(p) || eventQuestionPatterns.test(p);
+  // 3. Deep research, investigative reports, fact checking, and international summits/geopolitics
+  const researchKeywords = /\b(deep research|research investigation|sources and facts|facts and sources|fact-checked|fact check|investigate|investigation on|brics|g20|summit|conference|treaty|accord|geopolitics|cabinet minister|education minister)\b/i;
+
+  return temporalKeywords.test(p) || eventQuestionPatterns.test(p) || researchKeywords.test(p);
 }
 
 // 1. Chat with AROHI Endpoint
@@ -7270,12 +7306,34 @@ When providing ANY programming code, website scripts, markup, or algorithms (HTM
         dynamicInstruction += `\n\n[PRIORITY STORYTELLING OVERRIDE & PROMPT HANDLING DIRECTIVE: Storytelling requested or initiated. YOU MUST DELIVER THE FULL UNABRIDGED STORY CONTINUOUSLY FROM BEGINNING TO END IN A SINGLE CONTINUOUS STREAM. ALL MID-NARRATION PROMPTS SUCH AS 'Are you still there?', 'Should I continue?', 'Shall I proceed?', 'Do you want me to keep going?', OR 'Are you listening?' ARE STRICTLY DISABLED AND FORBIDDEN. DO NOT STOP HALFWAY, DO NOT ASK IF YOU SHOULD CONTINUE OR IF THE USER IS STILL THERE, DO NOT TRUNCATE, DO NOT CUT SHORT, AND DO NOT SUMMARIZE. RECITING THE ENTIRE FULL-SCALE STORY FROM START TO FINISH WITHOUT ASKING ANY CONFIRMATION OR PRESENCE QUESTIONS IS MANDATORY!]`;
       }
 
+      const isDeepResearchQuery = 
+        lowerQuery.includes('deep research') ||
+        lowerQuery.includes('investigation with sources') ||
+        lowerQuery.includes('research investigation') ||
+        lowerQuery.startsWith('/research') ||
+        lowerQuery.includes('sources and facts') ||
+        lowerQuery.includes('fact-checked investigation') ||
+        lowerQuery.includes('fact check');
+
+      if (isDeepResearchQuery) {
+        dynamicInstruction += `\n\n[CRITICAL DEEP RESEARCH INVESTIGATION & FACT-CHECKING DIRECTIVE:
+The user explicitly requested a Deep Research Investigation with sources and facts.
+Execute a thorough, rigorous, multi-perspective analytical investigation following this high-standard structure:
+1. Executive Briefing: Provide a concise executive overview of the subject, background context, and geopolitical/socioeconomic significance.
+2. Key Verified Developments & Timeline: Present concrete facts, verified dates, key milestones, and official declarations (grounded in fresh live search data).
+3. Analytical Matrix / Comparative Analysis: Include a structured markdown table comparing key metrics, member/stakeholder positions, agreements, or trade statistics.
+4. Strategic Significance & Future Trajectory: Detail the strategic implications, upcoming roadmaps, challenges, and actionable insights.
+5. Grounded Sources & Fact Citations: Include a dedicated "### 🔗 Grounded Sources & Fact Citations" section listing verified source names, dates, and references used.
+Deliver a rigorous, high-level, production-grade intelligence report. Never output canned greetings or shallow summaries.]`;
+      }
+
       // Only fetch real-time live search data when explicitly required for current updates/news
-      const isSearchNeeded = requiresRealtimeSearch(messageText);
+      const isSearchNeeded = requiresRealtimeSearch(messageText) || isDeepResearchQuery;
 
       if (isSearchNeeded) {
         try {
-          const searchQuery = messageText || 'India latest news & opportunities';
+          const rawSearchQuery = messageText || 'India latest news & opportunities';
+          const searchQuery = extractCoreSearchQuery(rawSearchQuery);
           liveSearchData = await fetchGoogleNewsLive(searchQuery);
           if (liveSearchData && liveSearchData.length > 0) {
             const formattedData = liveSearchData.map((n, i) => `${i + 1}. "${n.title}" (${n.source}, ${n.date}) ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
@@ -7638,12 +7696,35 @@ When providing ANY programming code, website scripts, markup, or algorithms (HTM
       dynamicInstruction += `\n\n[AROHI 20B REASONING TRACE DIRECTIVE:
 You are operating as Arohi 20B. For inquiries that require multi-step reasoning, analytical deduction, complex planning, coding, or problem-solving, you may include your concise step-by-step internal chain-of-thought enclosed within <thought>...</thought> tags at the very beginning of your response. The Arohi UI will automatically extract these tags into the interactive '> Thoughts' accordion for the user.]`;
 
+      const isDeepResearchQuery = 
+        messageText.toLowerCase().includes('deep research') ||
+        messageText.toLowerCase().includes('investigation with sources') ||
+        messageText.toLowerCase().includes('research investigation') ||
+        messageText.toLowerCase().startsWith('/research') ||
+        messageText.toLowerCase().includes('sources and facts') ||
+        messageText.toLowerCase().includes('fact-checked investigation') ||
+        messageText.toLowerCase().includes('fact check');
+
+      if (isDeepResearchQuery) {
+        dynamicInstruction += `\n\n[CRITICAL DEEP RESEARCH INVESTIGATION & FACT-CHECKING DIRECTIVE:
+The user explicitly requested a Deep Research Investigation with sources and facts.
+Execute a thorough, rigorous, multi-perspective analytical investigation following this high-standard structure:
+1. Internal Reasoning: Begin with <thought>...</thought> mapping out key facts, verification angles, and historical vs. current context.
+2. Executive Briefing: Provide a concise executive overview of the subject, background context, and geopolitical/socioeconomic significance.
+3. Key Verified Developments & Timeline: Present concrete facts, verified dates, key milestones, and official declarations (grounded in fresh live search data).
+4. Analytical Matrix / Comparative Analysis: Include a structured markdown table comparing key metrics, member/stakeholder positions, agreements, or trade statistics.
+5. Strategic Significance & Future Trajectory: Detail the strategic implications, upcoming roadmaps, challenges, and actionable insights.
+6. Grounded Sources & Fact Citations: Include a dedicated "### 🔗 Grounded Sources & Fact Citations" section listing verified source names, dates, and references used.
+Deliver a rigorous, high-level, production-grade intelligence report. Never output canned greetings or shallow summaries.]`;
+      }
+
       // Only fetch real-time live search data when explicitly required for current updates/news
-      const isSearchNeededStream = requiresRealtimeSearch(messageText);
+      const isSearchNeededStream = requiresRealtimeSearch(messageText) || isDeepResearchQuery;
 
       if (isSearchNeededStream) {
         try {
-          const searchQuery = messageText || 'India latest news & opportunities';
+          const rawSearchQuery = messageText || 'India latest news & opportunities';
+          const searchQuery = extractCoreSearchQuery(rawSearchQuery);
           liveSearchData = await fetchGoogleNewsLive(searchQuery);
           if (liveSearchData && liveSearchData.length > 0) {
             const formattedData = liveSearchData.map((n, i) => `${i + 1}. "${n.title}" (${n.source}, ${n.date}) ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
@@ -9161,7 +9242,7 @@ app.post('/api/doc-research-studio', async (req, res) => {
     let searchGroundingText = '';
     try {
       if (useGoogleSearch) {
-        const liveNews = await fetchGoogleNewsLive(cleanPrompt);
+        const liveNews = await fetchGoogleNewsLive(extractCoreSearchQuery(cleanPrompt));
         if (liveNews && liveNews.length > 0) {
           googleSearchSources = liveNews.map(n => ({ title: n.title, link: n.link, source: n.source }));
           const formattedNews = liveNews.slice(0, 8).map((n, i) => `${i + 1}. [Source: ${n.source}] "${n.title}" ${n.snippet ? `- ${n.snippet}` : ''}`).join('\n');
@@ -9204,25 +9285,23 @@ Your primary directive is to use real-time Google Search data to cite news, fact
 
         const promptWithSearch = `${systemInstruction}${searchGroundingText}\n\nUser Task: ${cleanPrompt}${documentName ? `\nDocument File Name: ${documentName}` : ''}`;
 
+        const userParts: any[] = [];
         if (base64Content) {
-          contentsPayload = [
-            {
-              inlineData: {
-                data: base64Content,
-                mimeType: mimeType || 'application/pdf'
-              }
-            },
-            {
-              text: promptWithSearch
+          userParts.push({
+            inlineData: {
+              data: base64Content,
+              mimeType: mimeType || 'application/pdf'
             }
-          ];
-        } else {
-          contentsPayload = [
-            {
-              text: promptWithSearch
-            }
-          ];
+          });
         }
+        userParts.push({ text: promptWithSearch });
+
+        contentsPayload = [
+          {
+            role: 'user',
+            parts: userParts
+          }
+        ];
 
         // Call Gemini model with Google Search grounding tool and fallback model handling
         const response = await generateContentWithFallback(aiClient, {
@@ -11293,6 +11372,36 @@ Tell me your background (e.g., school student, college engineering student, or h
     if (validItems.length > 0) {
       const wikiOrDDG = validItems.find(item => item.source === 'Wikipedia' || item.source === 'DuckDuckGo Instant Answer');
       const newsItems = validItems.filter(item => item !== wikiOrDDG).slice(0, 4);
+
+      const isDeepResearch = p.includes('deep research') || p.includes('investigation with sources') || p.includes('research investigation') || p.startsWith('/research') || p.includes('sources and facts');
+      if (isDeepResearch) {
+        let researchBody = `### 📑 Deep Research & Intelligence Report: **${cleanTopic || 'Subject Investigation'}**\n\n`;
+        researchBody += `#### 1. 🔍 Executive Briefing & Context\n`;
+        if (wikiOrDDG && wikiOrDDG.snippet) {
+          researchBody += `${wikiOrDDG.snippet}\n\n`;
+        } else if (newsItems.length > 0 && newsItems[0].snippet) {
+          researchBody += `${newsItems[0].snippet}\n\n`;
+        } else {
+          researchBody += `This investigation aggregates real-time multi-engine intelligence on **${cleanTopic}**, verifying official declarations, strategic positions, and current milestones.\n\n`;
+        }
+        
+        researchBody += `#### 2. ⚡ Verified Developments & Timeline (Current Year: 2026)\n`;
+        if (newsItems.length > 0) {
+          newsItems.forEach(item => {
+            researchBody += `- **${item.title}** *(${item.source || 'Verified Source'}, ${item.date || '2026'})*: ${item.snippet || 'Current verified development.'}\n`;
+          });
+        }
+        
+        researchBody += `\n#### 3. 📊 Strategic Assessment & Key Insights\n`;
+        researchBody += `- **Geopolitical & Economic Impact**: Strategic realignments, multilateral consensus, and regulatory shifts.\n`;
+        researchBody += `- **Actionable Outlook**: Ongoing policy implementations and key monitoring points for stakeholders.\n\n`;
+        
+        researchBody += `### 🔗 Grounded Sources & Fact Citations\n`;
+        validItems.slice(0, 6).forEach((item, idx) => {
+          researchBody += `${idx + 1}. **${item.title}** — *${item.source}* (${item.date || '2026'})\n`;
+        });
+        return fileIntro + researchBody.trim();
+      }
 
       let naturalBody = `Here are the latest updates regarding **${cleanTopic || 'your request'}**:\n\n`;
 

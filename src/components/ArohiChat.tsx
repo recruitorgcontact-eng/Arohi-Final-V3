@@ -3127,20 +3127,26 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
       return;
     }
 
-    const isDocResearchRequest = lowerText.startsWith('/doc') ||
-                                 lowerText.startsWith('/research') ||
-                                 lowerText.includes('feature 6') ||
-                                 lowerText.includes('feature #6') ||
-                                 lowerText.includes('deep research') ||
-                                 lowerText.includes('pdf vision') ||
-                                 lowerText.includes('analyze document') ||
-                                 lowerText.includes('doc research');
+    // Document & PDF Vision OCR Studio is only for document/file attachments or explicit OCR commands
+    const isDocOcrRequest = Boolean(
+      (fileToSend && (
+        lowerText.startsWith('/doc') ||
+        lowerText.startsWith('/ocr') ||
+        lowerText.includes('pdf vision') ||
+        lowerText.includes('ocr document') ||
+        lowerText.includes('extract text from') ||
+        lowerText.includes('analyze document') ||
+        lowerText.includes('doc research')
+      )) ||
+      lowerText.startsWith('/ocr') ||
+      lowerText.startsWith('/docvision')
+    );
 
-    if (isDocResearchRequest) {
+    if (isDocOcrRequest) {
       let promptText = text
-        .replace(/^(feature 6|feature #6|implement feature 6|\/doc|\/research|deep research|pdf vision|analyze document|doc research)/i, '')
+        .replace(/^(\/ocr|\/docvision|\/doc|pdf vision|ocr document|analyze document|doc research)/i, '')
         .trim();
-      if (!promptText) promptText = "Perform deep research and document vision OCR analysis.";
+      if (!promptText) promptText = "Perform document vision OCR analysis.";
 
       const loadingMsgId = (Date.now() + 1).toString();
       const loadingAssistantMessage: Message = {
@@ -4904,22 +4910,6 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
             className="flex items-center gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar select-none"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            {/* Arohi Connect Universal Integrations Hub Shortcut */}
-            <button
-              type="button"
-              onClick={() => setIsConnectorsModalOpen(true)}
-              title="Arohi Connect™: 100+ Universal Integrations, Webhooks & Custom APIs"
-              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
-                isDarkMode
-                  ? 'bg-indigo-950/50 text-indigo-300 border-indigo-500/40 hover:bg-indigo-900/60 hover:border-indigo-400 shadow-xs'
-                  : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 shadow-xs'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-              <span>Connect</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            </button>
-
             {SPECIALIZED_CREATION_CHIPS.map((chip) => {
               const Icon = chip.icon;
               const isActive = activeSpecializedMode === chip.id;
