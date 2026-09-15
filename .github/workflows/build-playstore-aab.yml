@@ -58,6 +58,9 @@ jobs:
             npx cap sync android
           fi
 
+      - name: Generate Clean Android Launcher & Splash Assets
+        run: node scripts/generate-android-icons.cjs
+
       - name: Prepare Release Signing Keystore
         id: prepare-keystore
         run: |
