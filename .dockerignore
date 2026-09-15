@@ -1,0 +1,4 @@
+# Ignore mobile native directories and CI workflows from Docker builds
+android/
+ios/
+.github/
