@@ -75,30 +75,12 @@ jobs:
           KEY_ALIAS_SECRET: ${{ secrets.KEY_ALIAS }}
           KEY_PASS_SECRET: ${{ secrets.KEY_PASSWORD }}
         run: |
-          mkdir -p android/app/keystore
           KEYSTORE_PATH="android/app/keystore/arohi-release.jks"
+          STORE_PASS="${KEYSTORE_PASS_SECRET:-arohiai2026}"
+          KEY_ALIAS="${KEY_ALIAS_SECRET:-arohi-upload-key}"
+          KEY_PASS="${KEY_PASS_SECRET:-arohiai2026}"
           
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "Using production keystore from GitHub Secrets..."
-            echo "$KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 -di > "$KEYSTORE_PATH"
-            STORE_PASS="${KEYSTORE_PASS_SECRET:-arohiai2026}"
-            KEY_ALIAS="${KEY_ALIAS_SECRET:-arohi-upload-key}"
-            KEY_PASS="${KEY_PASS_SECRET:-arohiai2026}"
-          else
-            echo "Generating valid release upload keystore..."
-            STORE_PASS="arohiai2026"
-            KEY_ALIAS="arohi-upload-key"
-            KEY_PASS="arohiai2026"
-            keytool -genkeypair -v \
-              -keystore "$KEYSTORE_PATH" \
-              -alias "$KEY_ALIAS" \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass "$STORE_PASS" \
-              -keypass "$KEY_PASS" \
-              -dname "CN=Arohi AI, OU=Mobile Engineering, O=Braga Technologies Private Limited, L=Bhubaneswar, ST=Odisha, C=IN"
-          fi
+          node scripts/prepare-keystore.cjs
 
           # Output keystore fingerprint info for Google Play Console / Firebase
           echo "=== Keystore SHA-256 Fingerprint ==="
