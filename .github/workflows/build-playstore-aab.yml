@@ -93,21 +93,19 @@ jobs:
           # Create credentials documentation for the user
           mkdir -p keystore-backup
           cp "$KEYSTORE_PATH" keystore-backup/arohi-release.jks
-          cat << 'EOF' > keystore-backup/KEYSTORE_CREDENTIALS_README.txt
-===================================================================
-AROHI AI - GOOGLE PLAY STORE UPLOAD KEYSTORE CREDENTIALS
-===================================================================
-File: arohi-release.jks
-Keystore Password: arohiai2026
-Key Alias: arohi-upload-key
-Key Password: arohiai2026
-Validity: 10,000 days (~27 years)
-
-IMPORTANT:
-Keep this arohi-release.jks file safe! Google Play Console requires
-all future updates (.aab) of Arohi AI to be signed with this exact key.
-===================================================================
-EOF
+          echo "===================================================================" > keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "AROHI AI - GOOGLE PLAY STORE UPLOAD KEYSTORE CREDENTIALS" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "===================================================================" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "File: arohi-release.jks" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "Keystore Password: arohiai2026" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "Key Alias: arohi-upload-key" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "Key Password: arohiai2026" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "Validity: 10,000 days (~27 years)" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "IMPORTANT:" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "Keep this arohi-release.jks file safe! Google Play Console requires" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "all future updates (.aab) of Arohi AI to be signed with this exact key." >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
+          echo "===================================================================" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
 
           # Set environment variables for Gradle
           echo "KEYSTORE_FILE=keystore/arohi-release.jks" >> $GITHUB_ENV
