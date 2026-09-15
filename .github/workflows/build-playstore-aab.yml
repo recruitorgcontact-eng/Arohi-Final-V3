@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       version_code:
-        description: 'Android Version Code (increment for each Play Store release, e.g. 1, 2, 3)'
+        description: 'Android Version Code (increment for each Play Store release, e.g. 2, 3, 4)'
         required: true
-        default: '1'
+        default: '2'
       version_name:
-        description: 'Android Version Name (semantic version, e.g. 1.0.0)'
+        description: 'Android Version Name (semantic version, e.g. 1.0.1)'
         required: true
-        default: '1.0.0'
+        default: '1.0.1'
 
 jobs:
   build-playstore-aab:
@@ -38,11 +38,12 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Setup Android SDK Environment
+      - name: Setup Android SDK Environment (API 36)
         run: |
           mkdir -p android
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" "platforms;android-35" || true
 
       - name: Install Node Dependencies
         run: npm install
@@ -117,8 +118,8 @@ jobs:
           echo "KEY_PASSWORD=$KEY_PASS" >> $GITHUB_ENV
 
           # Versioning variables
-          V_CODE="${{ github.event.inputs.version_code || '1' }}"
-          V_NAME="${{ github.event.inputs.version_name || '1.0.0' }}"
+          V_CODE="${{ github.event.inputs.version_code || '2' }}"
+          V_NAME="${{ github.event.inputs.version_name || '1.0.1' }}"
           echo "VERSION_CODE=$V_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$V_NAME" >> $GITHUB_ENV
 
