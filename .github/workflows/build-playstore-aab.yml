@@ -82,6 +82,13 @@ jobs:
           
           node scripts/prepare-keystore.cjs
 
+          # Export RFC PEM certificate for Google Play Console upload key reset
+          keytool -export -rfc \
+            -keystore "$KEYSTORE_PATH" \
+            -alias "$KEY_ALIAS" \
+            -file "upload_certificate.pem" \
+            -storepass "$STORE_PASS"
+
           # Output keystore fingerprint info for Google Play Console / Firebase
           echo "=== Keystore SHA-256 Fingerprint ==="
           keytool -list -v -keystore "$KEYSTORE_PATH" -alias "$KEY_ALIAS" -storepass "$STORE_PASS" | grep -E "SHA1|SHA256" || true
@@ -89,6 +96,7 @@ jobs:
           # Create credentials documentation for the user
           mkdir -p keystore-backup
           cp "$KEYSTORE_PATH" keystore-backup/arohi-release.jks
+          cp upload_certificate.pem keystore-backup/upload_certificate.pem
           echo "===================================================================" > keystore-backup/KEYSTORE_CREDENTIALS_README.txt
           echo "AROHI AI - GOOGLE PLAY STORE UPLOAD KEYSTORE CREDENTIALS" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
           echo "===================================================================" >> keystore-backup/KEYSTORE_CREDENTIALS_README.txt
@@ -177,6 +185,14 @@ jobs:
         with:
           name: ArohiAI-Release-APK
           path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload Google Play Upload Certificate (.pem)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Google-Play-Upload-Certificate-PEM
+          path: upload_certificate.pem
           if-no-files-found: warn
           retention-days: 90
 
