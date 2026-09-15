@@ -69,16 +69,21 @@ jobs:
 
       - name: Prepare Release Signing Keystore
         id: prepare-keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS_SECRET: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS_SECRET: ${{ secrets.KEY_ALIAS }}
+          KEY_PASS_SECRET: ${{ secrets.KEY_PASSWORD }}
         run: |
           mkdir -p android/app/keystore
           KEYSTORE_PATH="android/app/keystore/arohi-release.jks"
           
-          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+          if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Using production keystore from GitHub Secrets..."
-            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_PATH"
-            STORE_PASS="${{ secrets.KEYSTORE_PASSWORD || 'arohiai2026' }}"
-            KEY_ALIAS="${{ secrets.KEY_ALIAS || 'arohi-upload-key' }}"
-            KEY_PASS="${{ secrets.KEY_PASSWORD || 'arohiai2026' }}"
+            echo "$KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 -di > "$KEYSTORE_PATH"
+            STORE_PASS="${KEYSTORE_PASS_SECRET:-arohiai2026}"
+            KEY_ALIAS="${KEY_ALIAS_SECRET:-arohi-upload-key}"
+            KEY_PASS="${KEY_PASS_SECRET:-arohiai2026}"
           else
             echo "Generating valid release upload keystore..."
             STORE_PASS="arohiai2026"
