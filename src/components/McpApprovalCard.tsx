@@ -154,8 +154,10 @@ export default function McpApprovalCard({ payload, onApprove, onReject, isDarkMo
     try {
       await openRazorpayCheckout({
         amountInRupees: totalPayable || 100,
+        price: totalPayable || 100,
         currency: 'INR',
         planName: payload.summary?.title || `${providerDisplay} Order`,
+        businessName: 'Arohi AI',
         userEmail: 'user@arohiai.com',
         userName: 'Arohi AI User',
         onSuccess: () => {

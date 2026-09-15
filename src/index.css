@@ -41,6 +41,13 @@ html.light, html.light body, body.light, html:not(.dark), html:not(.dark) body {
   --atelier-brass-light: #f5eed6;
 }
 
+/* Ensure Razorpay modal appears above all dialogs and renders in clean light mode */
+.razorpay-container {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  color-scheme: light !important;
+}
+
 .font-marcellus {
   font-family: 'Marcellus', serif;
 }

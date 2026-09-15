@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { 
   X, Check, Sparkles, Phone, ShieldCheck, ArrowRight, 
   Bot, Award, ChevronRight, Zap, RefreshCw, FileText, Globe,
-  Building2, Users, Flame, CreditCard
+  Building2, Users, Flame, CreditCard, GraduationCap
 } from 'lucide-react';
 import { 
   PRICING_TIERS, 
   INTERNATIONAL_PRICING_TIERS, 
   AROHI_ONE_TIERS, 
   AROHI_CALLING_AGENT_TIERS,
+  AROHI_EXAM_PASSES,
   PricingTier,
   ArohiOneTier,
-  ArohiVoiceAgentTier
+  ArohiVoiceAgentTier,
+  ArohiExamPass
 } from '../data/pricingData';
 import { openRazorpayCheckout } from '../lib/razorpay';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +26,7 @@ interface ArohiUpgradeModalProps {
   isDarkMode?: boolean;
 }
 
-type ProductCategory = 'consumer' | 'business_os' | 'voice_fleet';
+type ProductCategory = 'consumer' | 'business_os' | 'voice_fleet' | 'exams';
 
 export default function ArohiUpgradeModal({
   isOpen,
@@ -44,6 +46,7 @@ export default function ArohiUpgradeModal({
   const [selectedConsumerIdx, setSelectedConsumerIdx] = useState(0); // Starter
   const [selectedBusinessIdx, setSelectedBusinessIdx] = useState(1); // Growth OS
   const [selectedVoiceIdx, setSelectedVoiceIdx] = useState(1); // Voice Pro
+  const [selectedExamsIdx, setSelectedExamsIdx] = useState(1); // Gold Pass (Most Popular)
 
   if (!isOpen) return null;
 
@@ -54,6 +57,7 @@ export default function ArohiUpgradeModal({
   const currentConsumer = consumerTiers[selectedConsumerIdx] || consumerTiers[0];
   const currentBusiness = AROHI_ONE_TIERS[selectedBusinessIdx] || AROHI_ONE_TIERS[0];
   const currentVoice = AROHI_CALLING_AGENT_TIERS[selectedVoiceIdx] || AROHI_CALLING_AGENT_TIERS[0];
+  const currentExam = AROHI_EXAM_PASSES[selectedExamsIdx] || AROHI_EXAM_PASSES[0];
 
   // Calculate pricing based on category and billing cycle
   let planTitle = '';
@@ -76,15 +80,27 @@ export default function ArohiUpgradeModal({
     annualPrice = currency === 'USD' ? currentBusiness.annualPriceUSD : currentBusiness.annualPriceINR;
     originalAnnualPrice = monthlyPrice * 12;
     annualMonthlyRate = Math.round(annualPrice / 12);
-  } else {
+  } else if (productCategory === 'voice_fleet') {
     planTitle = `Arohi ${currentVoice.name}`;
     monthlyPrice = currency === 'USD' ? currentVoice.priceUSD : currentVoice.priceINR;
     annualPrice = currency === 'USD' ? currentVoice.annualPriceUSD : currentVoice.annualPriceINR;
     originalAnnualPrice = monthlyPrice * 12;
     annualMonthlyRate = Math.round(annualPrice / 12);
+  } else {
+    // Exams category: fixed one-time CBT mock test pass
+    planTitle = currentExam.name;
+    const examPrice = currency === 'USD' ? currentExam.priceUSD : currentExam.priceINR;
+    const origPrice = currency === 'USD' ? currentExam.priceUSD * 4 : currentExam.originalPriceINR;
+    monthlyPrice = examPrice;
+    annualPrice = examPrice;
+    originalAnnualPrice = origPrice;
+    annualMonthlyRate = examPrice;
+    savingsText = `${Math.round((1 - examPrice / origPrice) * 100)}% off`;
   }
 
-  const finalCheckoutPrice = billingCycle === 'annually' ? annualPrice : monthlyPrice;
+  const finalCheckoutPrice = productCategory === 'exams' 
+    ? monthlyPrice 
+    : (billingCycle === 'annually' ? annualPrice : monthlyPrice);
 
   const handleLaunchCheckout = async () => {
     if (!agreedToTerms) {
@@ -94,20 +110,34 @@ export default function ArohiUpgradeModal({
 
     setIsProcessing(true);
     try {
+      const checkoutPlanName = productCategory === 'exams'
+        ? `${planTitle} (${currentExam.validityDays} Days Validity)`
+        : `${planTitle} (${billingCycle === 'annually' ? 'Annual' : 'Monthly'})`;
+
+      const checkoutBusinessName = productCategory === 'exams'
+        ? 'Arohi Exams'
+        : (productCategory === 'business_os' 
+            ? 'Arohi One Business OS' 
+            : (productCategory === 'voice_fleet' ? 'Arohi AI Voice Fleet' : 'Arohi AI'));
+
+      // Close modal to yield full screen space to the payment gateway
+      onClose();
+
       await openRazorpayCheckout({
         price: finalCheckoutPrice,
         currency: currency,
-        planName: `${planTitle} (${billingCycle === 'annually' ? 'Annual' : 'Monthly'})`,
+        planName: checkoutPlanName,
+        businessName: checkoutBusinessName,
         userEmail: user?.email || '',
         userName: user?.displayName || '',
         onSuccess: (res) => {
-          setIsProcessing(false);
-          onClose();
           alert(`🎉 Subscription to ${planTitle} activated! Payment ID: ${res.razorpay_payment_id}`);
         },
         onError: (err) => {
-          setIsProcessing(false);
           console.warn('Checkout error:', err);
+          if (err?.message && !err.message.includes('cancel')) {
+            alert(`Checkout Notice: ${err.message}`);
+          }
         },
         onDismiss: () => {
           setIsProcessing(false);
@@ -116,6 +146,8 @@ export default function ArohiUpgradeModal({
     } catch (err: any) {
       setIsProcessing(false);
       console.warn('Checkout launch error:', err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -195,23 +227,23 @@ export default function ArohiUpgradeModal({
 
         {/* Product Category Selector Pill Bar */}
         <div className="px-5 pb-2">
-          <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 text-[11px] font-semibold">
+          <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 text-[11px] font-semibold">
             <button
               type="button"
               onClick={() => setProductCategory('consumer')}
-              className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-1.5 px-1.5 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1 ${
                 productCategory === 'consumer'
                   ? 'bg-white/20 text-white font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-              <span className="truncate">Personal &amp; Pro</span>
+              <span className="truncate">Personal</span>
             </button>
             <button
               type="button"
               onClick={() => setProductCategory('business_os')}
-              className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-1.5 px-1.5 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1 ${
                 productCategory === 'business_os'
                   ? 'bg-white/20 text-white font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
@@ -223,7 +255,7 @@ export default function ArohiUpgradeModal({
             <button
               type="button"
               onClick={() => setProductCategory('voice_fleet')}
-              className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-1.5 px-1.5 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1 ${
                 productCategory === 'voice_fleet'
                   ? 'bg-white/20 text-white font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
@@ -231,6 +263,18 @@ export default function ArohiUpgradeModal({
             >
               <Phone className="w-3 h-3 text-emerald-400 shrink-0" />
               <span className="truncate">Voice Calling</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProductCategory('exams')}
+              className={`py-1.5 px-1.5 rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1 ${
+                productCategory === 'exams'
+                  ? 'bg-white/20 text-white font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <GraduationCap className="w-3 h-3 text-purple-400 shrink-0" />
+              <span className="truncate">Arohi Exams</span>
             </button>
           </div>
         </div>
@@ -291,6 +335,26 @@ export default function ArohiUpgradeModal({
                 </button>
               );
             })}
+
+            {productCategory === 'exams' && AROHI_EXAM_PASSES.map((pass, idx) => {
+              const isSelected = selectedExamsIdx === idx;
+              const passPrice = currency === 'USD' ? pass.priceUSD : pass.priceINR;
+              return (
+                <button
+                  key={pass.id}
+                  type="button"
+                  onClick={() => setSelectedExamsIdx(idx)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-purple-600/30 text-white font-bold border border-purple-400/40 shadow-xs'
+                      : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span>{pass.name.replace('Arohi Exams™ ', '')}</span>
+                  <span className="text-[10px] opacity-75">({sym}{passPrice})</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -302,24 +366,40 @@ export default function ArohiUpgradeModal({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-2xl font-serif text-white font-medium">
-                    {productCategory === 'consumer' ? currentConsumer.name : (productCategory === 'business_os' ? currentBusiness.name : currentVoice.name)}
+                    {productCategory === 'consumer' 
+                      ? currentConsumer.name 
+                      : (productCategory === 'business_os' 
+                          ? currentBusiness.name 
+                          : (productCategory === 'voice_fleet' 
+                              ? currentVoice.name 
+                              : currentExam.name.replace('Arohi Exams™ ', '')))}
                   </h3>
-                  {((productCategory === 'business_os' && currentBusiness.badge) || (productCategory === 'voice_fleet' && currentVoice.badge)) && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
-                      {productCategory === 'business_os' ? currentBusiness.badge : currentVoice.badge}
+                  {((productCategory === 'business_os' && currentBusiness.badge) || 
+                    (productCategory === 'voice_fleet' && currentVoice.badge) ||
+                    (productCategory === 'exams' && currentExam.badge)) && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                      productCategory === 'exams'
+                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    }`}>
+                      {productCategory === 'business_os' 
+                        ? currentBusiness.badge 
+                        : (productCategory === 'voice_fleet' ? currentVoice.badge : currentExam.badge)}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {productCategory === 'consumer' 
                     ? `${currentConsumer.aiCallsText} • ${currentConsumer.aiCreditsText}`
-                    : (productCategory === 'business_os' ? currentBusiness.tagline : currentVoice.description)}
+                    : (productCategory === 'business_os' 
+                        ? currentBusiness.tagline 
+                        : (productCategory === 'voice_fleet' ? currentVoice.description : currentExam.description))}
                 </p>
               </div>
 
               {/* Symphony Clef / Note icon art */}
               <div className="opacity-40 text-right font-serif text-lg tracking-widest text-slate-300 select-none">
-                ♩ ♫ ♬
+                {productCategory === 'exams' ? '🎯 📝 🏆' : '♩ ♫ ♬'}
               </div>
             </div>
 
@@ -407,59 +487,120 @@ export default function ArohiUpgradeModal({
                   </div>
                 </>
               )}
+
+              {productCategory === 'exams' && (
+                <>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                    <span className="font-semibold text-slate-100">{currentExam.totalTests} Full-Length CBT Tests ({currentExam.totalQuestions.toLocaleString()} Questions total)</span>
+                  </div>
+                  <div className="flex items-start gap-2 pl-4 text-slate-300 text-[11.5px]">
+                    <span className="text-slate-500">↳</span>
+                    <span>{currentExam.validityDays} Days Complete Unlimited Portal Access</span>
+                  </div>
+                  <div className="flex items-start gap-2 pl-4 text-slate-300 text-[11.5px]">
+                    <span className="text-slate-500">↳</span>
+                    <span>Dynamic Question &amp; Option Shuffle on every attempt</span>
+                  </div>
+                  <div className="flex items-start gap-2 pl-4 text-slate-300 text-[11.5px]">
+                    <span className="text-slate-500">↳</span>
+                    <span>Official NTA / TCS-iON Style CBT Engine with Question Palette</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                    <span>Instant Scorecard, All-India Rank (AIR) &amp; Percentile</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                    <span>Official Watermarked Digital Marksheet &amp; PDF Export</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                    <span>School (Class 1-10) + Central &amp; State Competitive Exams</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Side-by-Side Billing Selection Cards (Monthly vs Annually) */}
+        {/* Side-by-Side Billing Selection Cards (Monthly vs Annually OR Exam Pass Card) */}
         <div className="px-5 pt-2 pb-3">
-          <div className="grid grid-cols-2 gap-3">
-            {/* Monthly Card */}
-            <button
-              type="button"
-              onClick={() => setBillingCycle('monthly')}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                billingCycle === 'monthly'
-                  ? 'bg-white/10 border-white/40 shadow-lg ring-1 ring-white/30'
-                  : 'bg-[#1a1c22]/70 border-white/5 hover:border-white/20'
-              }`}
-            >
-              <div className="text-xs text-slate-400 font-medium">Monthly</div>
-              <div className="text-2xl font-bold text-white mt-1">
-                {sym}{monthlyPrice.toLocaleString()}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Billed monthly</div>
-            </button>
-
-            {/* Annually Card */}
-            <button
-              type="button"
-              onClick={() => setBillingCycle('annually')}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative ${
-                billingCycle === 'annually'
-                  ? 'bg-white/10 border-white/40 shadow-lg ring-1 ring-white/30'
-                  : 'bg-[#1a1c22]/70 border-white/5 hover:border-white/20'
-              }`}
-            >
+          {productCategory === 'exams' ? (
+            <div className="p-4 rounded-2xl border bg-[#1a1c22]/90 border-purple-500/30 text-left relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium">Annually</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-500/30 text-blue-300">
+                <span className="text-xs text-purple-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-amber-400" />
+                  {currentExam.badge}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {savingsText}
                 </span>
               </div>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-bold text-white">
-                  {sym}{annualPrice.toLocaleString()}
+              <div className="flex items-baseline gap-2 mt-1.5">
+                <span className="text-3xl font-bold text-white">
+                  {sym}{(currency === 'USD' ? currentExam.priceUSD : currentExam.priceINR).toLocaleString()}
                 </span>
-                <span className="text-xs text-slate-500 line-through">
-                  {sym}{originalAnnualPrice.toLocaleString()}
+                <span className="text-sm text-slate-500 line-through">
+                  {sym}{(currency === 'USD' ? currentExam.priceUSD * 4 : currentExam.originalPriceINR).toLocaleString()}
+                </span>
+                <span className="text-xs text-slate-400 font-medium ml-auto">
+                  One-time pass • {currentExam.validityDays} Days
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                ~{sym}{annualMonthlyRate.toLocaleString()}/mo • 2 Months Free
+              <div className="text-[11px] text-slate-400 mt-1">
+                Instant Razorpay activation • Includes all {currentExam.totalTests} CBT mock tests &amp; official marksheet export
               </div>
-            </button>
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {/* Monthly Card */}
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  billingCycle === 'monthly'
+                    ? 'bg-white/10 border-white/40 shadow-lg ring-1 ring-white/30'
+                    : 'bg-[#1a1c22]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div className="text-xs text-slate-400 font-medium">Monthly</div>
+                <div className="text-2xl font-bold text-white mt-1">
+                  {sym}{monthlyPrice.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Billed monthly</div>
+              </button>
+
+              {/* Annually Card */}
+              <button
+                type="button"
+                onClick={() => setBillingCycle('annually')}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative ${
+                  billingCycle === 'annually'
+                    ? 'bg-white/10 border-white/40 shadow-lg ring-1 ring-white/30'
+                    : 'bg-[#1a1c22]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400 font-medium">Annually</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-500/30 text-blue-300">
+                    {savingsText}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="text-2xl font-bold text-white">
+                    {sym}{annualPrice.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-slate-500 line-through">
+                    {sym}{originalAnnualPrice.toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  ~{sym}{annualMonthlyRate.toLocaleString()}/mo • 2 Months Free
+                </div>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Action Button & Disclaimer */}
@@ -477,7 +618,11 @@ export default function ArohiUpgradeModal({
               </>
             ) : (
               <>
-                <span>Upgrade to {planTitle}</span>
+                <span>
+                  {productCategory === 'exams' 
+                    ? `Activate ${currentExam.name.replace('Arohi Exams™ ', '')} (${sym}${finalCheckoutPrice})` 
+                    : `Upgrade to ${planTitle}`}
+                </span>
                 <ArrowRight className="w-4 h-4 text-slate-900" />
               </>
             )}

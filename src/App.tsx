@@ -61,7 +61,7 @@ import SeoHubModal from './components/SeoHubModal';
 import GlobalSEODirectory from './components/GlobalSEODirectory';
 import GeoLocationBanner from './components/GeoLocationBanner';
 import BackgroundScrollEffects from './components/BackgroundScrollEffects';
-import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PATH_DETAILS, getTokenLimitForPrice, detectUserCurrency, getPricingTiers } from './data/pricingData';
+import { PRICING_TIERS, INTERNATIONAL_PRICING_TIERS, PATH_DETAILS, getTokenLimitForPrice, detectUserCurrency, getPricingTiers, parseSafePrice } from './data/pricingData';
 import { computeSubscriptionState, isValidCouponCode, persistSubscriptionActivation, isLifetimeVipEmail, TWO_DAYS_MS, THIRTY_DAYS_MS } from './utils/subscriptionEngine';
 import TokenWarningToastContainer from './components/TokenWarningToastContainer';
 import { openRazorpayCheckout } from './lib/razorpay';
@@ -928,7 +928,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const [checkoutPath, setCheckoutPath] = useState<{ id: string; title: string; price: string } | null>(null);
+  const [checkoutPath, setCheckoutPath] = useState<{ id: string; title: string; price: string; numericPrice?: number } | null>(null);
   const [customerEmailInput, setCustomerEmailInput] = useState<string>('');
   const [selectedPaymentGateway, setSelectedPaymentGateway] = useState<'upi' | 'googleplay'>('upi');
   const [isProcessingPlayStore, setIsProcessingPlayStore] = useState<boolean>(false);
@@ -1002,7 +1002,8 @@ export default function App() {
       setCheckoutPath({
         id: 'path1',
         title: title,
-        price: priceText
+        price: priceText,
+        numericPrice: chosenTier.price
       });
     }
   };
@@ -1032,7 +1033,8 @@ export default function App() {
       setCheckoutPath({
         id: intent.pathId || 'path1',
         title: title,
-        price: priceText
+        price: priceText,
+        numericPrice: intent.price || chosenTier.price
       });
     }
   }, [user, pendingUpgradeAfterAuth, currency]);
@@ -2131,27 +2133,32 @@ export default function App() {
             onSubscribe={handleSubscribe}
             onNavigateTab={(tab) => setActiveTab(tab)}
             defaultProductCategory={pricingCategory}
+            userEmail={user?.email || customerEmailInput || ''}
+            userName={user?.displayName || ''}
             onOpenCheckout={(path, detail) => {
               setPendingSubscriptionDetail(detail);
+              const resolvedNumericPrice = typeof path.numericPrice === 'number' && path.numericPrice > 0
+                ? path.numericPrice
+                : (typeof detail?.price === 'number' && detail.price > 0 ? detail.price : parseSafePrice(path.price));
+              
               if (!user) {
-                const numericPrice = Number(path.price.replace(/[^0-9]/g, '')) || 399;
                 const intent = {
                   pathId: path.id,
                   planIndex: 0,
                   tierName: path.title,
-                  price: numericPrice,
+                  price: resolvedNumericPrice,
                   autoLaunchCheckout: true
                 };
                 setPendingUpgradeAfterAuth(intent);
                 try {
                   sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
                 } catch (e) {}
-                setAuthInitialMode('signup');
-                setAuthUpgradePrompt(`🎁 Sign in or create an account to activate your ${path.title} (${path.price}) & complete payment!`);
-                setIsAuthModalOpen(true);
-              } else {
-                setCheckoutPath(path);
               }
+
+              setCheckoutPath({
+                ...path,
+                numericPrice: resolvedNumericPrice
+              });
             }}
             onOpenAuth={() => setIsAuthModalOpen(true)}
           />
@@ -3692,14 +3699,17 @@ export default function App() {
                   setCheckoutPath({
                     id: 'path1',
                     title: title,
-                    price: priceText
+                    price: priceText,
+                    numericPrice: finalPayable
                   });
                   setIsProcessingRazorpay(true);
                   try {
                     await openRazorpayCheckout({
                       amountInRupees: finalPayable,
+                      price: finalPayable,
                       currency: currency,
                       planName: title,
+                      businessName: 'Arohi AI',
                       userEmail: dynamicEmail,
                       userName: user?.displayName || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
@@ -3759,7 +3769,7 @@ export default function App() {
                     <span>Launching Razorpay...</span>
                   </>
                 ) : (
-                  <span>💳 Upgrade to {PRICING_TIERS[selectedModalPlan]?.name || 'Starter Plan'} (₹{PRICING_TIERS[selectedModalPlan]?.price || 399}/mo)</span>
+                  <span>💳 Upgrade to {getPricingTiers(currency)[selectedModalPlan]?.name || 'Starter Plan'} ({currency === 'USD' ? '$' : '₹'}{getPricingTiers(currency)[selectedModalPlan]?.price || 399}/mo)</span>
                 )}
               </button>
 
@@ -4483,7 +4493,16 @@ export default function App() {
                 disabled={isProcessingRazorpay}
                 onClick={async () => {
                   const effectiveEmail = (customerEmailInput.trim() || user?.email || '').trim();
-                  const numericPrice = Number(checkoutPath.price.replace(/[^0-9]/g, '')) || 399;
+                  const numericPrice = typeof checkoutPath.numericPrice === 'number' && checkoutPath.numericPrice > 0
+                    ? checkoutPath.numericPrice
+                    : (typeof pendingSubscriptionDetail?.price === 'number' && pendingSubscriptionDetail.price > 0
+                        ? pendingSubscriptionDetail.price
+                        : parseSafePrice(checkoutPath.price));
+
+                  if (!effectiveEmail) {
+                    alert('Please enter your billing email address below to receive your invoice and proceed with Razorpay checkout.');
+                    return;
+                  }
 
                   if (!user) {
                     const intent = {
@@ -4491,28 +4510,32 @@ export default function App() {
                       planIndex: selectedModalPlan,
                       tierName: checkoutPath.title,
                       price: numericPrice,
-                      autoLaunchCheckout: true
+                      userEmail: effectiveEmail,
+                      autoLaunchCheckout: false
                     };
                     setPendingUpgradeAfterAuth(intent);
                     try {
                       sessionStorage.setItem('arohi_pending_upgrade', JSON.stringify(intent));
+                      localStorage.setItem('arohi_last_checkout_email', effectiveEmail);
                     } catch (e) {}
-                    setAuthInitialMode('signup');
-                    setAuthUpgradePrompt(`🔐 Please sign in or create an account to link and complete your ${checkoutPath.title} payment (${checkoutPath.price}).`);
-                    setIsAuthModalOpen(true);
-                    return;
-                  }
-
-                  if (!effectiveEmail) {
-                    alert('Please enter your email address to proceed with Razorpay checkout.');
-                    return;
                   }
                   setIsProcessingRazorpay(true);
                   try {
+                    const lowerTitle = checkoutPath.title.toLowerCase();
+                    const checkoutBusinessName = lowerTitle.includes('exam')
+                      ? 'Arohi Exams'
+                      : (lowerTitle.includes('business') || lowerTitle.includes('growth os') || lowerTitle.includes('starter os') || lowerTitle.includes('scale os') || lowerTitle.includes('enterprise os') || lowerTitle.includes('arohi one')
+                          ? 'Arohi One Business OS'
+                          : (lowerTitle.includes('voice') || lowerTitle.includes('calling') || lowerTitle.includes('fleet') || lowerTitle.includes('agent')
+                              ? 'Arohi AI Voice Fleet'
+                              : 'Arohi AI'));
+
                     await openRazorpayCheckout({
                       amountInRupees: numericPrice,
+                      price: numericPrice,
                       currency: currency,
                       planName: checkoutPath.title,
+                      businessName: checkoutBusinessName,
                       userEmail: effectiveEmail,
                       userName: user?.displayName || effectiveEmail.split('@')[0] || 'Arohi AI Premium Member',
                       onSuccess: (res) => {
@@ -4557,7 +4580,7 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <span>💳 Pay {checkoutPath.price} via Razorpay Checkout</span>
+                    <span>💳 Pay {currency === 'USD' ? '$' : '₹'}{(typeof checkoutPath.numericPrice === 'number' && checkoutPath.numericPrice > 0 ? checkoutPath.numericPrice : (typeof pendingSubscriptionDetail?.price === 'number' && pendingSubscriptionDetail.price > 0 ? pendingSubscriptionDetail.price : parseSafePrice(checkoutPath.price))).toLocaleString('en-IN')} via Razorpay Checkout</span>
                   </>
                 )}
               </button>

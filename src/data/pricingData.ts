@@ -921,4 +921,47 @@ export const AROHI_EXAM_PASSES: ArohiExamPass[] = [
   }
 ];
 
+/**
+ * Safely parses a numeric price from a price string, number, or object.
+ * Prevents string concatenation bugs where secondary numbers (e.g., "(365 Days Validity)")
+ * get merged into astronomical amounts (e.g. ₹2,99,365 instead of ₹299).
+ */
+export function parseSafePrice(priceInput: string | number | undefined | null): number {
+  if (typeof priceInput === 'number') {
+    return isNaN(priceInput) || priceInput <= 0 ? 399 : priceInput;
+  }
+  if (!priceInput || typeof priceInput !== 'string') {
+    return 399;
+  }
+
+  // 1. If string contains parenthesis, take only the part before '('
+  // Example: "₹299 (365 Days Validity)" -> "₹299"
+  // Example: "₹199 (90 Days Validity)" -> "₹199"
+  // Example: "₹99 (30 Days Validity)" -> "₹99"
+  const beforeParenthesis = priceInput.split('(')[0].trim();
+
+  // 2. Also strip any slashes like "/mo", "/year", "/Month"
+  const beforeSlash = beforeParenthesis.split('/')[0].trim();
+
+  // 3. Match the first currency or digits sequence
+  // Matches e.g. "₹299", "₹ 14,999", "$49", "1,49,990", "99"
+  const match = beforeSlash.match(/(?:[₹$]|INR|USD)?\s*([0-9]{1,3}(?:,[0-9]{2,3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)/i);
+  if (match && match[1]) {
+    const rawNumberStr = match[1].replace(/,/g, '');
+    const val = parseFloat(rawNumberStr);
+    if (!isNaN(val) && val > 0) {
+      return val;
+    }
+  }
+
+  // Fallback: match any first numeric sequence in the string
+  const fallbackMatch = priceInput.match(/([0-9]+(?:\.[0-9]+)?)/);
+  if (fallbackMatch && fallbackMatch[1]) {
+    const val = parseFloat(fallbackMatch[1]);
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  return 399;
+}
+
 

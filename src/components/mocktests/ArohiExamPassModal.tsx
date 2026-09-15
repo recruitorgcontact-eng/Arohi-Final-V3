@@ -175,6 +175,7 @@ export default function ArohiExamPassModal({
         price: selectedPass.price,
         amountInRupees: selectedPass.price,
         planName: selectedPass.name,
+        businessName: 'Arohi Exams',
         userEmail: studentEmail || 'student@arohiai.com',
         userName: studentName,
         userPhone: studentPhone,

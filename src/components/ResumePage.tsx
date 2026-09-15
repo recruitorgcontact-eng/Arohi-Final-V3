@@ -281,7 +281,9 @@ Your resume lists solid software experience, particularly with **React**, **Node
     try {
       await openRazorpayCheckout({
         amountInRupees: 99,
+        price: 99,
         planName: 'Arohi Premium Resume Builder Unlock',
+        businessName: 'Arohi AI',
         userEmail: user?.email || personal.email || 'customer@arohiai.com',
         userName: personal.name || user?.displayName || 'Arohi AI User',
         userPhone: personal.phone || '',

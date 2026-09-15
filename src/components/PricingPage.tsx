@@ -26,9 +26,11 @@ interface PricingPageProps {
   subscriptionDetails?: Record<string, { tierName: string; price: number; margin: number }>;
   onSubscribe?: (pathId: string, tierName?: string, priceOrPaymentMethod?: any) => void;
   onNavigateTab?: (tab: string) => void;
-  onOpenCheckout?: (path: { id: string; title: string; price: string }, detail: { tierName: string; price: number; margin: number; currency?: string }) => void;
+  onOpenCheckout?: (path: { id: string; title: string; price: string; numericPrice?: number }, detail: { tierName: string; price: number; margin: number; currency?: string }) => void;
   onOpenAuth?: () => void;
   defaultProductCategory?: 'arohi_one' | 'calling_agents' | 'individual' | 'exams';
+  userEmail?: string;
+  userName?: string;
 }
 
 export default function PricingPage({
@@ -41,7 +43,9 @@ export default function PricingPage({
   onNavigateTab,
   onOpenCheckout,
   onOpenAuth,
-  defaultProductCategory = 'arohi_one'
+  defaultProductCategory = 'arohi_one',
+  userEmail,
+  userName
 }: PricingPageProps) {
   const [internalCurrency, setInternalCurrency] = useState<'INR' | 'USD'>(() => externalCurrency || detectUserCurrency());
   const activeCurrency = externalCurrency || internalCurrency;
@@ -188,7 +192,7 @@ export default function PricingPage({
     });
   };
 
-  // Handler: Direct Razorpay Checkout for Arohi One, Calling Agents, or Individual plans
+  // Handler: Direct Official Razorpay Checkout for Arohi One, Calling Agents, or Individual plans
   const handlePayViaRazorpay = (params: {
     id: string;
     name: string;
@@ -196,46 +200,37 @@ export default function PricingPage({
     billingText: string;
     margin?: number;
   }) => {
-    const formattedPrice = `${symbol}${params.price.toLocaleString('en-IN')}`;
     const fullPlanTitle = `Arohi AI ${params.name} (${billingCycle === 'annual' ? 'Annual' : 'Monthly'})`;
+    const lowerName = params.name.toLowerCase();
+    const isBusiness = lowerName.includes('growth') || lowerName.includes('starter') || lowerName.includes('scale') || lowerName.includes('enterprise') || lowerName.includes('os') || lowerName.includes('arohi one');
+    const isVoice = lowerName.includes('voice') || lowerName.includes('fleet') || lowerName.includes('calling') || lowerName.includes('agent');
+    const isExam = lowerName.includes('exam') || lowerName.includes('pass') || lowerName.includes('cbt') || lowerName.includes('test');
+    const bName = isBusiness ? 'Arohi One Business OS' : (isVoice ? 'Arohi AI Voice Fleet' : (isExam ? 'Arohi Exams' : 'Arohi AI'));
 
-    if (onOpenCheckout) {
-      onOpenCheckout(
-        {
-          id: params.id,
-          title: fullPlanTitle,
-          price: `${formattedPrice} ${params.billingText}`
-        },
-        {
-          tierName: params.name,
-          price: params.price,
-          margin: params.margin ?? Math.round(params.price * 0.4),
-          currency: activeCurrency
+    // Directly open the official Razorpay checkout modal
+    openRazorpayCheckout({
+      amountInRupees: params.price,
+      price: params.price,
+      currency: activeCurrency,
+      planName: fullPlanTitle,
+      businessName: bName,
+      userEmail: userEmail || 'customer@arohiai.com',
+      userName: userName || 'Arohi AI Subscriber',
+      onSuccess: (res) => {
+        if (onSubscribe) {
+          onSubscribe(params.id, fullPlanTitle, 'Razorpay Standard Checkout');
         }
-      );
-    } else {
-      // Standalone direct Razorpay trigger
-      openRazorpayCheckout({
-        amountInRupees: params.price,
-        currency: activeCurrency,
-        planName: fullPlanTitle,
-        userEmail: 'customer@arohiai.com',
-        userName: 'Arohi AI Subscriber',
-        onSuccess: (res) => {
-          if (onSubscribe) {
-            onSubscribe(params.id, fullPlanTitle, 'Razorpay Standard Checkout');
-          }
-          alert(`🎉 Payment Confirmed! Your ${fullPlanTitle} subscription is now active.`);
-        },
-        onError: (err) => {
-          alert(`Payment Notice: ${err.message || 'Payment could not be completed.'}`);
+        alert(`🎉 Payment Confirmed! Your ${fullPlanTitle} subscription is now active.`);
+      },
+      onError: (err) => {
+        if (err?.description && !err.description.includes('cancelled')) {
+          alert(`Payment Notice: ${err.description}`);
         }
-      });
-    }
+      }
+    });
   };
 
   const handlePlanSelect = (tier: PricingTier) => {
-    const priceFormatted = `${activeCurrency === 'USD' ? '$' : '₹'}${tier.price}/Month`;
     handlePayViaRazorpay({
       id: 'path1',
       name: tier.name,
@@ -247,8 +242,6 @@ export default function PricingPage({
 
   const handleBuyExamPass = (pass: ArohiExamPass) => {
     const finalPrice = activeCurrency === 'USD' ? pass.priceUSD : pass.priceINR;
-    const formattedPrice = `${symbol}${finalPrice}`;
-    
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + pass.validityDays);
     const passObj = {
@@ -259,48 +252,34 @@ export default function PricingPage({
       activatedAt: new Date().toISOString(),
       expiresAt: expiryDate.toISOString(),
       validityDays: pass.validityDays,
-      paymentMethod: 'Razorpay UPI/Card',
+      paymentMethod: 'Razorpay Standard Checkout',
       status: 'active'
     };
     
-    if (onOpenCheckout) {
-      onOpenCheckout(
-        {
-          id: pass.id,
-          title: pass.name,
-          price: `${formattedPrice} (${pass.validityDays} Days Validity)`
-        },
-        {
-          tierName: pass.name,
-          price: finalPrice,
-          margin: Math.round(finalPrice * 0.5),
-          currency: activeCurrency
+    // Directly open the official Razorpay checkout modal for Exam Pass
+    openRazorpayCheckout({
+      amountInRupees: finalPrice,
+      price: finalPrice,
+      currency: activeCurrency,
+      planName: pass.name,
+      businessName: 'Arohi Exams',
+      userEmail: userEmail || 'student@arohiai.com',
+      userName: userName || 'Arohi Exam Aspirant',
+      onSuccess: () => {
+        try {
+          localStorage.setItem('arohi_active_exam_pass', JSON.stringify(passObj));
+        } catch (e) {}
+        if (onSubscribe) {
+          onSubscribe(pass.id, pass.name, 'Razorpay Pass Checkout');
         }
-      );
-      try {
-        localStorage.setItem('arohi_active_exam_pass', JSON.stringify(passObj));
-      } catch (e) {}
-    } else {
-      openRazorpayCheckout({
-        amountInRupees: finalPrice,
-        currency: activeCurrency,
-        planName: pass.name,
-        userEmail: 'student@arohiai.com',
-        userName: 'Arohi Exam Aspirant',
-        onSuccess: () => {
-          try {
-            localStorage.setItem('arohi_active_exam_pass', JSON.stringify(passObj));
-          } catch (e) {}
-          if (onSubscribe) {
-            onSubscribe(pass.id, pass.name, 'Razorpay Pass Checkout');
-          }
-          alert(`🎉 Exam Pass Activated! You now have ${pass.totalTests} Full CBT Mock Tests unlocked for ${pass.validityDays} days.`);
-        },
-        onError: (err) => {
-          alert(`Payment Notice: ${err.message || 'Payment could not be completed.'}`);
+        alert(`🎉 Exam Pass Activated! You now have ${pass.totalTests} Full CBT Mock Tests unlocked for ${pass.validityDays} days.`);
+      },
+      onError: (err) => {
+        if (err?.description && !err.description.includes('cancelled')) {
+          alert(`Payment Notice: ${err.description || 'Payment could not be completed.'}`);
         }
-      });
-    }
+      }
+    });
   };
 
   return (
