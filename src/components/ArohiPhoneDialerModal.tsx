@@ -299,8 +299,17 @@ export default function ArohiPhoneDialerModal({
 
   // Trigger outbound call
   const handleInitiateCall = async (mode: 'real_phone' | 'simulator') => {
-    const fullNumber = `${countryCode}${phoneNumber.replace(/\s+/g, '')}`;
-    if (!phoneNumber || phoneNumber.trim().length < 5) {
+    let cleanNum = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    if (cleanNum.startsWith('+91')) {
+      cleanNum = cleanNum.slice(3);
+    } else if (cleanNum.startsWith('91') && cleanNum.length === 12) {
+      cleanNum = cleanNum.slice(2);
+    } else if (cleanNum.startsWith('0') && cleanNum.length === 11) {
+      cleanNum = cleanNum.slice(1);
+    }
+
+    const fullNumber = `${countryCode}${cleanNum}`;
+    if (!cleanNum || cleanNum.length < 5) {
       alert('Please enter a valid telephone number.');
       return;
     }
