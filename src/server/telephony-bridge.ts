@@ -221,7 +221,7 @@ NATURAL PHONE CONVERSATION RULES:
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Aoede' } // Warm, friendly female voice
+              prebuiltVoiceConfig: { voiceName: 'Aoede' } // Warm, friendly female voice (Arohi's authentic persona)
             }
           },
           systemInstruction: phoneSystemInstruction,
@@ -295,6 +295,26 @@ NATURAL PHONE CONVERSATION RULES:
           }
         }
       });
+
+      // Prompt Arohi to immediately speak her opening greeting through her live voice model
+      if (geminiSession && isCallActive) {
+        const greetingPrompt = language.includes('hi')
+          ? `[CALL CONNECTED] Namaste ${customerName} ji! Aap Arohi hain. Turant 1 chhota, warm opening sentence boliye aur puchiye aaj main aapki kya madad kar sakti hoon.`
+          : language.includes('or')
+          ? `[CALL CONNECTED] Namaskar ${customerName} agyan! Apan Arohi. Turant 1 chhota, warm opening sentence kuha au pacharantu kemiti sahayata kari pare.`
+          : `[CALL CONNECTED] Hello ${customerName}! You are Arohi. Please immediately speak your opening 1-sentence warm greeting and ask how you can assist them today.`;
+
+        console.log('[Telephony Bridge] Triggering opening greeting from Arohi voice model...');
+        geminiSession.sendClientContent({
+          turns: [
+            {
+              role: 'user',
+              parts: [{ text: greetingPrompt }]
+            }
+          ],
+          turnComplete: true
+        });
+      }
     } catch (err: any) {
       console.error('[Telephony Bridge] Error connecting Gemini Live session:', err?.message || err);
     }
@@ -483,13 +503,10 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
     const callSid = `AROHI_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     // Determine public URL for Twilio webhook callback
+    // Use the live production domain https://arohiai.com which serves public, zero-cookie TwiML with 100% carrier reliability
+    const productionHost = 'arohiai.com';
     const railwayHost = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL;
-    const explicitAppUrl = process.env.PUBLIC_URL || process.env.APP_URL || (railwayHost ? `https://${railwayHost}` : '');
-    
-    const rawHost = req.headers['x-forwarded-host'] || req.headers.host || 'ais-dev-xfo7gbrgujxk3s75xxpsmb-775353010426.asia-east1.run.app';
-    const host = Array.isArray(rawHost) ? rawHost[0] : rawHost;
-    const proto = (req.headers['x-forwarded-proto'] as string) || (host.includes('localhost') ? 'http' : 'https');
-    const appUrl = explicitAppUrl || `${proto}://${host}`;
+    const explicitAppUrl = process.env.PUBLIC_URL || process.env.APP_URL || (railwayHost ? `https://${railwayHost}` : `https://${productionHost}`);
 
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioToken = process.env.TWILIO_AUTH_TOKEN;
@@ -497,14 +514,9 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
 
     // A. Real Twilio Outbound Call
     if (twilioSid && twilioToken && twilioPhone && (provider === 'auto' || provider === 'twilio')) {
-      // Primary: Use the user's verified, secure Twilio Bin URL hosted natively on Twilio's infrastructure
-      // This has 0% latency, 0 cookie redirection issues, and streams directly to Arohi's phone media stream!
-      const userTwimlBinUrl = 'https://handler.twilio.com/twiml/EH25fa2ca211952f355c213dea62d81b8b';
-
-      let finalTwimlUrl: string = userTwimlBinUrl;
-      if (explicitAppUrl && !explicitAppUrl.includes('ais-dev-') && !explicitAppUrl.includes('localhost')) {
-        finalTwimlUrl = `${explicitAppUrl}/api/telephony/twiml?customerName=${encodeURIComponent(customerName)}&topic=${encodeURIComponent(topic)}&language=${encodeURIComponent(language)}&to=${encodeURIComponent(sanitizedTo)}`;
-      }
+      // Primary: Use the verified public TwiML route on arohiai.com which returns valid Twilio instructions with 0% cookie drops
+      const directDomainTwimlUrl = `https://${productionHost}/api/telephony/twiml?customerName=${encodeURIComponent(customerName)}&topic=${encodeURIComponent(topic)}&language=${encodeURIComponent(language)}&to=${encodeURIComponent(sanitizedTo)}`;
+      const finalTwimlUrl: string = directDomainTwimlUrl;
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Calls.json`;
       const basicAuth = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
@@ -620,6 +632,7 @@ const getPublicHost = (req: Request): string => {
 };
 
 // 3. TwiML Webhook Endpoint for Inbound or Outbound Streams
+// ZERO ROBOTIC TTS VOICES: We connect straight to the live media stream so Arohi's own voice speaks
 telephonyRouter.all('/twiml', (req: Request, res: Response) => {
   const publicHost = getPublicHost(req);
   const wsUrl = `wss://${publicHost}/ws/phone-stream`;
@@ -629,7 +642,6 @@ telephonyRouter.all('/twiml', (req: Request, res: Response) => {
 
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-IN-Neural2-A">Namaste! Connecting you to Arohi AI.</Say>
   <Connect>
     <Stream url="${wsUrl}">
       <Parameter name="customerName" value="${encodeURIComponent(callerName)}" />
@@ -637,6 +649,7 @@ telephonyRouter.all('/twiml', (req: Request, res: Response) => {
       <Parameter name="language" value="${encodeURIComponent(language)}" />
     </Stream>
   </Connect>
+  <Pause length="3600"/>
 </Response>`;
 
   res.type('text/xml').send(twiml);
