@@ -225,10 +225,10 @@ export default function App() {
     setStorageItem('arohi_country', country);
   };
 
-  // Global Theme State (Dark / Light Mode)
+  // Global Theme State: Primarily bright (clean, high-contrast light mode) by default, with dark mode toggle
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('arohi_theme_mode');
-    return saved ? saved === 'dark' : true;
+    return saved ? saved === 'dark' : false;
   });
 
   const toggleTheme = () => {

@@ -26,7 +26,9 @@ import {
   FileText,
   RefreshCw,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -143,6 +145,28 @@ export default function ArohiPhoneDialerModal({
   const [selectedTopic, setSelectedTopic] = useState(defaultTopic);
   const [customTopicPrompt, setCustomTopicPrompt] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState(defaultLanguage);
+
+  // Visual Theme: Primarily bright (clean, high-contrast light mode) by default, with dark mode toggle
+  const [themeMode, setThemeMode] = useState<'bright' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('arohi_dialer_theme');
+      return saved === 'dark' ? 'dark' : 'bright';
+    } catch {
+      return 'bright';
+    }
+  });
+
+  const toggleTheme = () => {
+    setThemeMode(prev => {
+      const next = prev === 'bright' ? 'dark' : 'bright';
+      try {
+        localStorage.setItem('arohi_dialer_theme', next);
+      } catch {}
+      return next;
+    });
+  };
+
+  const isBright = themeMode === 'bright';
 
   // Telephony backend status
   const [telephonyStatus, setTelephonyStatus] = useState<any>(null);
@@ -605,39 +629,91 @@ export default function ArohiPhoneDialerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg bg-[#0b0c16] border border-white/10 rounded-3xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[92vh]">
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 transition-colors duration-200 ${
+      isBright ? 'bg-slate-900/50 backdrop-blur-sm' : 'bg-black/80 backdrop-blur-md'
+    }`}>
+      <div className={`relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition-colors duration-200 ${
+        isBright
+          ? 'bg-white border border-slate-200 text-slate-900 ring-1 ring-slate-900/5'
+          : 'bg-[#0f172a] border border-slate-700 text-white'
+      }`}>
         
         {/* TOP BAR */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+        <div className={`flex items-center justify-between px-6 py-4 border-b transition-colors ${
+          isBright
+            ? 'border-slate-200 bg-slate-50/90 text-slate-900'
+            : 'border-slate-800 bg-slate-900/90 text-white'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
+              isBright
+                ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-xs'
+                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+            }`}>
               <PhoneCall className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold tracking-tight text-white flex items-center gap-2">
+              <h2 className={`text-base font-bold tracking-tight flex items-center gap-2 ${
+                isBright ? 'text-slate-900' : 'text-white'
+              }`}>
                 Arohi Phone Calling
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                  isBright
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}>
                   GSM / VoLTE Live
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className={`text-xs font-medium ${isBright ? 'text-slate-500' : 'text-slate-400'}`}>
                 Direct speech-to-speech calling to any mobile number
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Theme Toggle Button: Bright vs Dark */}
+            <button
+              onClick={toggleTheme}
+              title={isBright ? "Switch to Dark Mode" : "Switch to Bright Mode"}
+              aria-label="Toggle Bright / Dark UI"
+              className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                isBright
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                  : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-amber-300'
+              }`}
+            >
+              {isBright ? (
+                <>
+                  <Moon className="w-4 h-4 text-slate-700" />
+                  <span className="hidden sm:inline text-[11px]">Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+                  <span className="hidden sm:inline text-[11px]">Bright</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => setShowConfigGuide(!showConfigGuide)}
               title="Telephony Credentials & Setup"
-              className={`p-2 rounded-xl transition-colors ${showConfigGuide ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-white/10 text-slate-400'}`}
+              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                showConfigGuide
+                  ? (isBright ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300')
+                  : (isBright ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-600' : 'hover:bg-slate-800 border-transparent text-slate-400')
+              }`}
             >
               <Settings className="w-4 h-4" />
             </button>
             <button
               onClick={() => { endCall(); onClose(); }}
-              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                isBright
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-600 hover:text-slate-900'
+                  : 'hover:bg-slate-800 border-transparent text-slate-400 hover:text-white'
+              }`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -645,7 +721,9 @@ export default function ArohiPhoneDialerModal({
         </div>
 
         {/* BODY CONTENT */}
-        <div className="p-5 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <div className={`p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar transition-colors ${
+          isBright ? 'bg-white' : 'bg-[#0f172a]'
+        }`}>
 
           {/* CREDENTIALS GUIDANCE BANNER */}
           {showConfigGuide && (
@@ -653,25 +731,35 @@ export default function ArohiPhoneDialerModal({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/30 text-xs space-y-2.5"
+              className={`p-4 rounded-2xl border text-xs space-y-2.5 transition-colors ${
+                isBright
+                  ? 'bg-indigo-50/70 border-indigo-200 text-slate-800'
+                  : 'bg-indigo-950/40 border-indigo-500/30 text-slate-300'
+              }`}
             >
-              <div className="flex items-center justify-between text-indigo-300 font-medium">
-                <span className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between font-bold">
+                <span className={`flex items-center gap-1.5 ${isBright ? 'text-indigo-900' : 'text-indigo-300'}`}>
                   <ShieldCheck className="w-4 h-4" /> Telephony Carrier Integration
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${
+                  isBright
+                    ? 'bg-indigo-100 border-indigo-300 text-indigo-800'
+                    : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                }`}>
                   Twilio & Exotel Bridge
                 </span>
               </div>
-              <p className="text-slate-300 leading-relaxed">
-                Arohi AI connects to telecom carriers via standard WebSockets (<code className="text-emerald-300">/ws/phone-stream</code>). Audio is transcoded between <strong>8kHz G.711 μ-law</strong> and <strong>Gemini Multimodal Live API (16kHz / 24kHz)</strong>.
+              <p className={`leading-relaxed ${isBright ? 'text-slate-700' : 'text-slate-300'}`}>
+                Arohi AI connects to telecom carriers via standard WebSockets (<code className={`font-semibold ${isBright ? 'text-emerald-700' : 'text-emerald-300'}`}>/ws/phone-stream</code>). Audio is transcoded between <strong>8kHz G.711 μ-law</strong> and Arohi's real-time multimodal audio engine.
               </p>
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-slate-300 space-y-1">
+              <div className={`p-2.5 rounded-xl border font-mono text-[11px] space-y-1 ${
+                isBright ? 'bg-white border-indigo-200 text-indigo-950 font-semibold shadow-xs' : 'bg-black/40 border-white/5 text-slate-300'
+              }`}>
                 <div>TWILIO_ACCOUNT_SID=your_account_sid</div>
                 <div>TWILIO_AUTH_TOKEN=your_auth_token</div>
                 <div>TWILIO_PHONE_NUMBER=+1xxxxxxxxxx</div>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className={`text-[11px] ${isBright ? 'text-slate-600' : 'text-slate-400'}`}>
                 Don't have Twilio credentials yet? You can still test phone calls immediately using the <strong>Live Phone Simulator</strong> below!
               </p>
             </motion.div>
@@ -682,17 +770,23 @@ export default function ArohiPhoneDialerModal({
             <div className="space-y-4">
               {/* Phone Number Input */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                  isBright ? 'text-slate-800' : 'text-slate-200'
+                }`}>
                   Recipient Telephone Number
                 </label>
                 <div className="flex gap-2">
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    className="px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none transition-all cursor-pointer ${
+                      isBright
+                        ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                        : 'bg-slate-800 border border-slate-700 text-white focus:border-emerald-500'
+                    }`}
                   >
                     {COUNTRY_CODES.map((c) => (
-                      <option key={c.code} value={c.code} className="bg-slate-900 text-white">
+                      <option key={c.code} value={c.code} className={isBright ? "bg-white text-slate-900 font-medium" : "bg-slate-900 text-white font-medium"}>
                         {c.flag} {c.code} ({c.country})
                       </option>
                     ))}
@@ -703,22 +797,34 @@ export default function ArohiPhoneDialerModal({
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Enter 10-digit phone number"
-                      className="w-full px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 font-mono tracking-wider"
+                      className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold focus:outline-none transition-all font-mono tracking-wider ${
+                        isBright
+                          ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                          : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
+                      }`}
                     />
                   </div>
                 </div>
 
                 {/* Verified Numbers Badge */}
                 {telephonyStatus?.providers?.twilio?.verifiedNumbers?.length > 0 && (
-                  <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
+                  <div className={`mt-2.5 p-3 rounded-xl flex items-center justify-between border transition-colors ${
+                    isBright
+                      ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950 shadow-xs'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                  }`}>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                       <div>
-                        <div className="text-[11px] font-semibold text-emerald-300 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          Twilio Verified Recipient
+                        <div className={`text-xs font-bold flex items-center gap-1 ${
+                          isBright ? 'text-emerald-900' : 'text-emerald-300'
+                        }`}>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          Twilio Verified Recipient Number
                         </div>
-                        <div className="text-[10px] text-slate-300 font-mono">
+                        <div className={`text-[11px] font-mono font-bold ${
+                          isBright ? 'text-emerald-800' : 'text-slate-300'
+                        }`}>
                           {telephonyStatus.providers.twilio.verifiedNumbers[0]}
                         </div>
                       </div>
@@ -734,7 +840,11 @@ export default function ArohiPhoneDialerModal({
                           setPhoneNumber(verified.trim());
                         }
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-medium border border-emerald-500/30 transition-colors"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                        isBright
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                      }`}
                     >
                       Fill This Number
                     </button>
@@ -744,7 +854,9 @@ export default function ArohiPhoneDialerModal({
 
               {/* Recipient Name */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                  isBright ? 'text-slate-800' : 'text-slate-200'
+                }`}>
                   Recipient Name (Caller Identity)
                 </label>
                 <input
@@ -752,23 +864,35 @@ export default function ArohiPhoneDialerModal({
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold focus:outline-none transition-all ${
+                    isBright
+                      ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                      : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
+                  }`}
                 />
               </div>
 
               {/* Spoken Language */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center justify-between">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between ${
+                  isBright ? 'text-slate-800' : 'text-slate-200'
+                }`}>
                   <span>Spoken Conversation Language</span>
-                  <span className="text-[11px] text-emerald-400">150+ Multilingual</span>
+                  <span className={`text-[11px] font-bold ${isBright ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                    150+ Multilingual
+                  </span>
                 </label>
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none transition-all cursor-pointer ${
+                    isBright
+                      ? 'bg-white border border-slate-300 text-slate-900 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                      : 'bg-slate-800 border border-slate-700 text-white focus:border-emerald-500'
+                  }`}
                 >
                   {LANGUAGES.map((lang) => (
-                    <option key={lang.code} value={lang.code} className="bg-slate-900 text-white">
+                    <option key={lang.code} value={lang.code} className={isBright ? "bg-white text-slate-900 font-medium" : "bg-slate-900 text-white font-medium"}>
                       {lang.name} — "{lang.greeting}"
                     </option>
                   ))}
@@ -777,26 +901,42 @@ export default function ArohiPhoneDialerModal({
 
               {/* Call Topic / Persona */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                  isBright ? 'text-slate-800' : 'text-slate-200'
+                }`}>
                   Call Objective & Persona
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {TOPIC_PRESETS.map((t) => (
                     <button
                       key={t.id}
                       type="button"
                       onClick={() => setSelectedTopic(t.id)}
-                      className={`text-left p-3 rounded-2xl border transition-all text-xs flex flex-col justify-between ${
+                      className={`text-left p-3.5 rounded-2xl border transition-all text-xs flex flex-col justify-between cursor-pointer ${
                         selectedTopic === t.id
-                          ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-lg shadow-emerald-950/30'
-                          : 'bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
+                          ? isBright
+                            ? 'bg-emerald-50 border-2 border-emerald-600 text-emerald-950 shadow-sm ring-1 ring-emerald-500/20'
+                            : 'bg-emerald-500/20 border-2 border-emerald-400 text-white shadow-lg shadow-emerald-950/40'
+                          : isBright
+                            ? 'bg-slate-50/80 hover:bg-slate-100 border border-slate-200 text-slate-800 hover:border-slate-300 shadow-xs'
+                            : 'bg-slate-800/60 border border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      <span className="font-semibold text-white mb-1 flex items-center gap-1.5">
-                        {selectedTopic === t.id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                      <span className={`font-bold mb-1 flex items-center gap-1.5 ${
+                        selectedTopic === t.id
+                          ? (isBright ? 'text-emerald-950' : 'text-emerald-300')
+                          : (isBright ? 'text-slate-900' : 'text-white')
+                      }`}>
+                        {selectedTopic === t.id && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        )}
                         {t.title}
                       </span>
-                      <span className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                      <span className={`text-[11px] line-clamp-2 leading-relaxed ${
+                        selectedTopic === t.id
+                          ? (isBright ? 'text-emerald-800 font-medium' : 'text-emerald-200')
+                          : (isBright ? 'text-slate-600' : 'text-slate-400')
+                      }`}>
                         {t.description}
                       </span>
                     </button>
@@ -809,7 +949,11 @@ export default function ArohiPhoneDialerModal({
                       value={customTopicPrompt}
                       onChange={(e) => setCustomTopicPrompt(e.target.value)}
                       placeholder="Describe what Arohi should talk about during this phone call..."
-                      className="w-full p-3 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 h-20"
+                      className={`w-full p-3.5 rounded-xl text-xs font-medium focus:outline-none transition-all h-20 ${
+                        isBright
+                          ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                          : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
+                      }`}
                     />
                   </div>
                 )}
@@ -820,7 +964,7 @@ export default function ArohiPhoneDialerModal({
                 <button
                   type="button"
                   onClick={() => handleInitiateCall('real_phone')}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition-all active:scale-[0.98]"
+                  className="flex-1 py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4" />
                   <span>Call Real Phone (GSM/VoLTE)</span>
@@ -829,9 +973,13 @@ export default function ArohiPhoneDialerModal({
                 <button
                   type="button"
                   onClick={() => handleInitiateCall('simulator')}
-                  className="py-3 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-slate-200 font-medium text-xs flex items-center justify-center gap-2 transition-all"
+                  className={`py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    isBright
+                      ? 'bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 shadow-xs'
+                      : 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200'
+                  }`}
                 >
-                  <Zap className="w-4 h-4 text-amber-400" />
+                  <Zap className="w-4 h-4 text-amber-500" />
                   <span>Test in Browser Simulator</span>
                 </button>
               </div>
@@ -853,36 +1001,38 @@ export default function ArohiPhoneDialerModal({
                 
                 <div className={`relative w-28 h-28 rounded-full border-2 flex items-center justify-center transition-all ${
                   speakerStatus === 'arohi_speaking'
-                    ? 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_30px_rgba(217,70,239,0.4)]'
+                    ? (isBright ? 'border-fuchsia-500 bg-fuchsia-100 shadow-[0_0_30px_rgba(217,70,239,0.3)]' : 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_30px_rgba(217,70,239,0.4)]')
                     : speakerStatus === 'listening'
-                    ? 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_30px_rgba(16,185,129,0.4)]'
-                    : 'border-white/20 bg-slate-900'
+                    ? (isBright ? 'border-emerald-500 bg-emerald-100 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_30px_rgba(16,185,129,0.4)]')
+                    : (isBright ? 'border-slate-300 bg-slate-100 shadow-md' : 'border-white/20 bg-slate-900')
                 }`}>
                   <Phone className={`w-10 h-10 ${
-                    callState === 'connected' ? 'text-emerald-400' : 'text-slate-300'
+                    callState === 'connected'
+                      ? (isBright ? 'text-emerald-600' : 'text-emerald-400')
+                      : (isBright ? 'text-slate-600' : 'text-slate-300')
                   }`} />
                 </div>
               </div>
 
               {/* CALL STATUS & RECIPIENT */}
               <div className="text-center space-y-1">
-                <h3 className="text-lg font-bold text-white tracking-tight">
+                <h3 className={`text-xl font-bold tracking-tight ${isBright ? 'text-slate-900' : 'text-white'}`}>
                   {customerName || 'Telephone Caller'}
                 </h3>
-                <p className="text-xs font-mono text-slate-400">
+                <p className={`text-xs font-mono font-bold ${isBright ? 'text-slate-600' : 'text-slate-400'}`}>
                   {countryCode} {phoneNumber}
                 </p>
 
                 <div className="pt-2 flex items-center justify-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
+                  <span className={`w-2.5 h-2.5 rounded-full ${
                     callState === 'connected'
-                      ? 'bg-emerald-400 animate-pulse'
+                      ? 'bg-emerald-500 animate-pulse'
                       : callState === 'ringing'
-                      ? 'bg-amber-400 animate-bounce'
+                      ? 'bg-amber-500 animate-bounce'
                       : 'bg-rose-500'
                   }`} />
-                  <span className="text-xs font-medium text-slate-300">
-                    {callState === 'calling' && 'Connecting to carrier network...'}
+                  <span className={`text-xs font-bold ${isBright ? 'text-slate-700' : 'text-slate-300'}`}>
+                    {callState === 'calling' && 'Connecting to telecom carrier network...'}
                     {callState === 'ringing' && 'Ringing telephone handset...'}
                     {callState === 'connected' && (
                       speakerStatus === 'arohi_speaking'
@@ -894,19 +1044,27 @@ export default function ArohiPhoneDialerModal({
                 </div>
 
                 {activeCallMode === 'real_phone' && (callState === 'calling' || callState === 'ringing' || callState === 'connected') && (
-                  <div className="mt-3 mx-auto max-w-sm p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
-                    <div className="text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1.5">
-                      <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                  <div className={`mt-3 mx-auto max-w-sm p-3.5 rounded-2xl border text-center space-y-1 ${
+                    isBright
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-xs'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                  }`}>
+                    <div className={`text-xs font-bold flex items-center justify-center gap-1.5 ${
+                      isBright ? 'text-emerald-900' : 'text-emerald-300'
+                    }`}>
+                      <Radio className="w-4 h-4 text-emerald-600 animate-pulse" />
                       Live Cellular/VoLTE Call Placed
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-snug">
-                      Your phone <strong className="text-white font-mono">{countryCode} {phoneNumber}</strong> is ringing! Answer on your mobile handset to speak directly with Arohi.
+                    <p className={`text-xs leading-snug ${isBright ? 'text-slate-700' : 'text-slate-300'}`}>
+                      Your phone <strong className={`font-mono font-bold ${isBright ? 'text-emerald-950' : 'text-white'}`}>{countryCode} {phoneNumber}</strong> is ringing! Answer on your mobile handset to speak directly with Arohi.
                     </p>
                   </div>
                 )}
 
                 {callState === 'connected' && (
-                  <div className="text-sm font-mono font-semibold text-emerald-400 pt-1">
+                  <div className={`text-base font-mono font-bold pt-1 ${
+                    isBright ? 'text-emerald-700' : 'text-emerald-400'
+                  }`}>
                     {formatDuration(callDuration)}
                   </div>
                 )}
@@ -914,8 +1072,12 @@ export default function ArohiPhoneDialerModal({
 
               {/* IN-CALL DIALPAD TOGGLE & BUTTONS */}
               {showKeypad && callState === 'connected' && (
-                <div className="w-full max-w-xs p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-                  <div className="text-center text-sm font-mono h-6 text-emerald-300 tracking-widest mb-2">
+                <div className={`w-full max-w-xs p-3 rounded-2xl border ${
+                  isBright ? 'bg-slate-50 border-slate-200 shadow-sm' : 'bg-white/[0.04] border-white/10'
+                }`}>
+                  <div className={`text-center text-sm font-mono h-6 tracking-widest mb-2 font-bold ${
+                    isBright ? 'text-emerald-700' : 'text-emerald-300'
+                  }`}>
                     {dialedDigits || 'Press digits for IVR'}
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -926,10 +1088,14 @@ export default function ArohiPhoneDialerModal({
                           setDialedDigits(prev => prev + btn.digit);
                           playDtmfTone(btn.digit);
                         }}
-                        className="py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] text-white font-mono font-medium text-base flex flex-col items-center justify-center active:scale-95 transition-all"
+                        className={`py-2.5 rounded-xl font-mono font-bold text-base flex flex-col items-center justify-center active:scale-95 transition-all cursor-pointer ${
+                          isBright
+                            ? 'bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 shadow-xs'
+                            : 'bg-white/[0.06] hover:bg-white/[0.14] text-white'
+                        }`}
                       >
                         <span>{btn.digit}</span>
-                        {btn.letters && <span className="text-[8px] text-slate-400 font-sans">{btn.letters}</span>}
+                        {btn.letters && <span className={`text-[8px] font-sans font-medium ${isBright ? 'text-slate-500' : 'text-slate-400'}`}>{btn.letters}</span>}
                       </button>
                     ))}
                   </div>
@@ -942,9 +1108,11 @@ export default function ArohiPhoneDialerModal({
                   {/* Mute Toggle */}
                   <button
                     onClick={() => setIsMuted(!isMuted)}
-                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
                       isMuted
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-400'
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-500'
+                        : isBright
+                        ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
                         : 'bg-white/[0.06] border-white/10 text-white hover:bg-white/15'
                     }`}
                     title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
@@ -955,9 +1123,11 @@ export default function ArohiPhoneDialerModal({
                   {/* Speaker Toggle */}
                   <button
                     onClick={() => setIsSpeakerOn(!isSpeakerOn)}
-                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
                       !isSpeakerOn
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-500'
+                        : isBright
+                        ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
                         : 'bg-white/[0.06] border-white/10 text-white hover:bg-white/15'
                     }`}
                     title={isSpeakerOn ? 'Turn off speaker' : 'Turn on speaker'}
@@ -968,9 +1138,11 @@ export default function ArohiPhoneDialerModal({
                   {/* Keypad Button */}
                   <button
                     onClick={() => setShowKeypad(!showKeypad)}
-                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
                       showKeypad
-                        ? 'bg-indigo-500/30 border-indigo-500 text-indigo-300'
+                        ? 'bg-indigo-500/30 border-indigo-500 text-indigo-500'
+                        : isBright
+                        ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
                         : 'bg-white/[0.06] border-white/10 text-white hover:bg-white/15'
                     }`}
                     title="Keypad for DTMF"
@@ -981,7 +1153,7 @@ export default function ArohiPhoneDialerModal({
                   {/* End Call Button */}
                   <button
                     onClick={endCall}
-                    className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-900/50 active:scale-95 transition-all"
+                    className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-lg shadow-rose-600/30 active:scale-95 transition-all cursor-pointer"
                     title="Hang Up"
                   >
                     <PhoneOff className="w-6 h-6" />
@@ -994,14 +1166,18 @@ export default function ArohiPhoneDialerModal({
                 <div className="flex gap-2.5">
                   <button
                     onClick={() => setCallState('idle')}
-                    className="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-2"
+                    className="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow-xs cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Call Another Number</span>
                   </button>
                   <button
                     onClick={onClose}
-                    className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs"
+                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold border cursor-pointer ${
+                      isBright
+                        ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                        : 'bg-white/10 hover:bg-white/15 border-transparent text-white'
+                    }`}
                   >
                     Close
                   </button>
@@ -1016,12 +1192,16 @@ export default function ArohiPhoneDialerModal({
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
                     placeholder="Type to Arohi during the call..."
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                    className={`flex-1 px-4 py-2.5 rounded-xl text-xs font-medium focus:outline-none transition-all ${
+                      isBright
+                        ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                        : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
+                    }`}
                   />
                   <button
                     type="submit"
                     disabled={!textInput.trim()}
-                    className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white"
+                    className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -1030,14 +1210,24 @@ export default function ArohiPhoneDialerModal({
 
               {/* TRANSCRIPT TURNS PREVIEW */}
               {turns.length > 0 && (
-                <div className="w-full p-3 rounded-2xl bg-white/[0.03] border border-white/10 max-h-36 overflow-y-auto text-xs space-y-2">
-                  <div className="text-[10px] uppercase font-mono text-slate-400">Live Call Transcripts</div>
+                <div className={`w-full p-3.5 rounded-2xl border max-h-36 overflow-y-auto text-xs space-y-2 ${
+                  isBright
+                    ? 'bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                    : 'bg-white/[0.03] border-white/10 text-slate-200'
+                }`}>
+                  <div className={`text-[10px] uppercase font-mono font-bold tracking-wider ${
+                    isBright ? 'text-slate-500' : 'text-slate-400'
+                  }`}>Live Call Transcripts</div>
                   {turns.map((t, idx) => (
                     <div key={idx} className="leading-relaxed">
-                      <span className={`font-semibold ${t.speaker === 'arohi' ? 'text-fuchsia-400' : 'text-emerald-400'}`}>
+                      <span className={`font-bold ${
+                        t.speaker === 'arohi'
+                          ? (isBright ? 'text-fuchsia-700' : 'text-fuchsia-400')
+                          : (isBright ? 'text-emerald-700' : 'text-emerald-400')
+                      }`}>
                         {t.speaker === 'arohi' ? 'Arohi: ' : 'You: '}
                       </span>
-                      <span className="text-slate-200">{t.text}</span>
+                      <span className={isBright ? 'text-slate-800 font-medium' : 'text-slate-200'}>{t.text}</span>
                     </div>
                   ))}
                 </div>
@@ -1049,9 +1239,13 @@ export default function ArohiPhoneDialerModal({
         </div>
 
         {/* FOOTER */}
-        <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className={`px-6 py-3.5 border-t flex items-center justify-between text-[11px] font-semibold transition-colors ${
+          isBright
+            ? 'border-slate-200 bg-slate-50/90 text-slate-600'
+            : 'border-slate-800 bg-slate-900/90 text-slate-400'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Multimodal Live API Bridge (WebSockets)</span>
           </div>
           <span>Arohi Sovereign Voice</span>

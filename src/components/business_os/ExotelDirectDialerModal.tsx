@@ -24,7 +24,9 @@ import {
   MicOff,
   HelpCircle,
   FileCheck,
-  Headphones
+  Headphones,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
 import { useBusinessOS } from './BusinessOSContext';
@@ -77,7 +79,8 @@ export default function ExotelDirectDialerModal({
   defaultObjective = '',
   onCallCompleted
 }: ExotelDirectDialerModalProps) {
-  const { showToast } = useBusinessOS();
+  const { showToast, theme, toggleTheme } = useBusinessOS();
+  const isBright = theme === 'light';
 
   // Call Setup State
   const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber);
@@ -531,8 +534,30 @@ export default function ExotelDirectDialerModal({
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
+              onClick={toggleTheme}
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                isBright
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700'
+              }`}
+              title={isBright ? 'Switch to Dark Theme' : 'Switch to Bright Theme'}
+            >
+              {isBright ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                  <span className="hidden sm:inline text-[11px] font-bold">Bright UI</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="hidden sm:inline text-[11px] font-bold">Dark UI</span>
+                </>
+              )}
+            </button>
+            <button
               onClick={() => setShowConfigModal(!showConfigModal)}
-              className="px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Settings2 className="w-3.5 h-3.5" />
               <span>Exotel Credentials</span>
@@ -542,7 +567,7 @@ export default function ExotelDirectDialerModal({
                 stopArohiVoice();
                 onClose();
               }}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer"
             >
               ✕
             </button>
@@ -569,7 +594,7 @@ export default function ExotelDirectDialerModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                     Exotel Account SID
                   </label>
                   <input
@@ -577,12 +602,12 @@ export default function ExotelDirectDialerModal({
                     value={exotelSid}
                     onChange={(e) => setExotelSid(e.target.value)}
                     placeholder={carrierConfig?.maskedSid || 'e.g. arohiai921'}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 font-mono text-xs"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                     API Key
                   </label>
                   <input
@@ -590,12 +615,12 @@ export default function ExotelDirectDialerModal({
                     value={exotelApiKey}
                     onChange={(e) => setExotelApiKey(e.target.value)}
                     placeholder="Enter Exotel API Key"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 font-mono text-xs"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                     API Token
                   </label>
                   <input
@@ -603,12 +628,12 @@ export default function ExotelDirectDialerModal({
                     value={exotelApiToken}
                     onChange={(e) => setExotelApiToken(e.target.value)}
                     placeholder="Enter Exotel API Token"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 font-mono text-xs"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                     Virtual Caller ID (DID)
                   </label>
                   <input
@@ -616,7 +641,7 @@ export default function ExotelDirectDialerModal({
                     value={exotelCallerId}
                     onChange={(e) => setExotelCallerId(e.target.value)}
                     placeholder="08047129901"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 font-mono text-xs"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
@@ -771,7 +796,7 @@ export default function ExotelDirectDialerModal({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-bold font-mono text-zinc-600 dark:text-zinc-300">
+                    <div className="px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-bold font-mono text-zinc-800 dark:text-zinc-200 shadow-xs">
                       +91 🇮🇳
                     </div>
                     <input
@@ -779,13 +804,13 @@ export default function ExotelDirectDialerModal({
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="9876543210 or 8047129901"
-                      className="flex-1 px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-sm font-mono font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-sm font-mono font-bold text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/30 shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={handleCheckDnd}
                       disabled={isCheckingDnd}
-                      className="px-3 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-3 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                       <span>{isCheckingDnd ? 'Checking...' : 'Check DND'}</span>
@@ -805,7 +830,7 @@ export default function ExotelDirectDialerModal({
 
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                      <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                         Consumer / Client Name
                       </label>
                       <input
@@ -813,17 +838,17 @@ export default function ExotelDirectDialerModal({
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Rahul Sharma"
-                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-purple-600 shadow-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                      <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                         Spoken Language / Dialect
                       </label>
                       <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-semibold"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-xs font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-purple-600 shadow-xs"
                       >
                         <option value="Hinglish (Hindi + English)">Hinglish (Hindi + English)</option>
                         <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
@@ -862,7 +887,7 @@ export default function ExotelDirectDialerModal({
                         className={`p-2.5 rounded-xl text-left border text-xs transition-all cursor-pointer ${
                           agentName === p.name
                             ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-500 text-purple-900 dark:text-purple-200 shadow-xs'
-                            : 'bg-white dark:bg-zinc-800 border-black/5 dark:border-white/5 text-zinc-700 dark:text-zinc-300 hover:border-purple-300'
+                            : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 hover:border-purple-300'
                         }`}
                       >
                         <div className="font-bold text-[11px] truncate">{p.name}</div>
@@ -884,7 +909,7 @@ export default function ExotelDirectDialerModal({
                       <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                       <span>Call Objective (Talk About Anything)</span>
                     </label>
-                    <span className="text-[10px] text-zinc-400">Autonomous Reasoning Enabled</span>
+                    <span className="text-[10px] font-medium text-purple-600 dark:text-purple-400">Autonomous Reasoning Enabled</span>
                   </div>
 
                   <textarea
@@ -892,7 +917,7 @@ export default function ExotelDirectDialerModal({
                     value={objective}
                     onChange={(e) => setObjective(e.target.value)}
                     placeholder="Enter what the voice AI should discuss with the customer..."
-                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 leading-relaxed font-sans"
+                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/30 leading-relaxed font-sans shadow-xs"
                   />
 
                   {/* Preset Topic Chips */}
