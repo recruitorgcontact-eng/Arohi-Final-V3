@@ -11,6 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { WebSocketServer, WebSocket } from 'ws';
 import { setupLiveWebSocketServer } from './src/server/live-ws.ts';
+import { telephonyRouter } from './src/server/telephony-bridge.ts';
 
 dotenv.config();
 
@@ -513,6 +514,14 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Standard Health Check Endpoints
+app.get(['/api/health', '/health', '/api/ping'], (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
+// Telephony Media Stream & Outbound Calling API Bridge
+app.use('/api/telephony', telephonyRouter);
 
 // Lazy initializer helper for GoogleGenAI to handle dynamic API key configuration cleanly
 let globalAiClient: GoogleGenAI | null = null;

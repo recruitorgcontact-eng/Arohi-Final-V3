@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Send, Bot, User, Sparkles, Plus, RefreshCw, Trash2, Mic, Paperclip, CheckCircle, 
-  ArrowRight, Lightbulb, MapPin, Briefcase, Landmark, Award, Minus, X, Globe, Phone, 
+  ArrowRight, Lightbulb, MapPin, Briefcase, Landmark, Award, Minus, X, Globe, Phone, PhoneCall, 
   History, Download, FileText, FileSpreadsheet, Presentation, ThumbsUp, ThumbsDown, Copy, MoreHorizontal, 
   Search, Image as ImageIcon, Video, Library, BookOpen, Settings, Volume2, VolumeX, Menu, 
   Camera, Shield, Check, Share2, Edit3, MessageCircle, SlidersHorizontal, ChevronRight, Zap, Mail, ExternalLink,
@@ -4310,6 +4310,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
               <span className={`text-[11px] font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-800'} hidden sm:inline`}>Voice</span>
             </button>
 
+
             {/* Camera Button - Hidden on mobile, accessible via More Options */}
             <button
               onClick={() => handleSendMessage("Activate live video camera stream analysis")}
@@ -5209,6 +5210,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
         </div>,
         document.body
       )}
+
 
       {/* CALL SUMMARY DETAIL MODAL */}
       {selectedCallDetail && (

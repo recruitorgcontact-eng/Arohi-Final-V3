@@ -40,6 +40,7 @@ import VoicePromptStudioView from './VoicePromptStudioView';
 import InteractionInspectorModal from './InteractionInspectorModal';
 import DualModeVoiceTestModal from './DualModeVoiceTestModal';
 import ExotelDirectDialerModal from './ExotelDirectDialerModal';
+import ArohiPhoneDialerModal from '../ArohiPhoneDialerModal';
 import BusinessVoiceAgentDashboard from './BusinessVoiceAgentDashboard';
 import {
   ENTERPRISE_VOICE_TEMPLATES,
@@ -84,6 +85,7 @@ export default function ArohiCallView() {
   const [selectedInteraction, setSelectedInteraction] = useState<CallInteractionRecord | null>(SAMPLE_CALL_INTERACTIONS[0]);
   const [isDualModeModalOpen, setIsDualModeModalOpen] = useState(false);
   const [showExotelDialer, setShowExotelDialer] = useState(false);
+  const [showPhoneDialer, setShowPhoneDialer] = useState(false);
 
   // Modals state
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
@@ -155,6 +157,15 @@ export default function ArohiCallView() {
 
         {/* Top Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          <button
+            onClick={() => setShowPhoneDialer(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="Dial any mobile or landline phone number directly via VoLTE / GSM Carrier"
+          >
+            <PhoneOutgoing className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
+            <span>Dial Any Phone Number (VoLTE)</span>
+          </button>
+
           <button
             onClick={() => setShowExotelDialer(true)}
             className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
@@ -322,7 +333,7 @@ export default function ArohiCallView() {
       {/* TAB: BUSINESS VOICE AGENT LIVE DASHBOARD */}
       {activeTab === 'voice-dashboard' && (
         <BusinessVoiceAgentDashboard
-          onOpenDialer={() => setShowExotelDialer(true)}
+          onOpenDialer={() => setShowPhoneDialer(true)}
           onOpenSimulator={() => handleOpenSimulator(activeAgent)}
         />
       )}
@@ -1009,6 +1020,14 @@ export default function ArohiCallView() {
         <ExotelDirectDialerModal
           isOpen={showExotelDialer}
           onClose={() => setShowExotelDialer(false)}
+        />
+      )}
+
+      {/* AROHI REAL PHONE DIALER (GSM / VoLTE CARRIER) */}
+      {showPhoneDialer && (
+        <ArohiPhoneDialerModal
+          isOpen={showPhoneDialer}
+          onClose={() => setShowPhoneDialer(false)}
         />
       )}
 

@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Modality } from '@google/genai';
+import { phoneWss, initTelephonyBridgeOptions } from './telephony-bridge.ts';
 
 export interface LiveWsOptions {
   getAiClient: (apiVersion?: 'v1alpha' | 'v1beta') => any;
@@ -17,6 +18,13 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
     getArohiFallbackResponse,
     logWsEvent,
   } = options;
+
+  // Initialize telephony media stream bridge for phone calling
+  initTelephonyBridgeOptions({
+    getAiClient,
+    AROHI_SYSTEM_INSTRUCTION,
+    logWsEvent,
+  });
 
   // Setup WebSocket server for Gemini Live Audio Bidirectional Streaming
   const wss = new WebSocketServer({ noServer: true });
@@ -563,13 +571,29 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                            pathname.endsWith('/api/live-ws') ||
                            pathname.endsWith('/api/live-ws/');
 
+      const isPhoneWsPath = pathname === '/ws/phone-stream' ||
+                            pathname === '/ws/phone-stream/' ||
+                            pathname.endsWith('/ws/phone-stream') ||
+                            pathname === '/telephony/stream' ||
+                            pathname.endsWith('/telephony/stream') ||
+                            pathname === '/api/phone-call/stream' ||
+                            pathname.endsWith('/api/phone-call/stream');
+
       if (isLiveWsPath) {
-        logWsEvent('upgrade_matched', { pathname });
+        logWsEvent('upgrade_matched_live', { pathname });
         wss.handleUpgrade(request, socket, head, (ws) => {
           ws.on('error', (wsErr: any) => {
             console.warn('Client WebSocket error after upgrade:', wsErr?.message || wsErr);
           });
           wss.emit('connection', ws, request);
+        });
+      } else if (isPhoneWsPath) {
+        logWsEvent('upgrade_matched_phone', { pathname });
+        phoneWss.handleUpgrade(request, socket, head, (ws) => {
+          ws.on('error', (wsErr: any) => {
+            console.warn('Phone WebSocket error after upgrade:', wsErr?.message || wsErr);
+          });
+          phoneWss.emit('connection', ws, request);
         });
       } else {
         logWsEvent('upgrade_unmatched', { pathname });

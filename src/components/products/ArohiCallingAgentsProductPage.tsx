@@ -24,6 +24,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
+import ArohiPhoneDialerModal from '../ArohiPhoneDialerModal';
 
 interface ArohiCallingAgentsProductPageProps {
   onLaunchLiveDashboard: () => void;
@@ -42,6 +43,8 @@ export default function ArohiCallingAgentsProductPage({
   const [audioLoading, setAudioLoading] = useState(false);
   const [activeVoiceLanguage, setActiveVoiceLanguage] = useState('Hindi');
   const [selectedAgentIndex, setSelectedAgentIndex] = useState(0);
+  const [showPhoneDialer, setShowPhoneDialer] = useState(false);
+  const [dialerDefaultTopic, setDialerDefaultTopic] = useState('Customer Advisory & Lead Qualification');
 
   const badges = [
     'Natural Conversations',
@@ -184,6 +187,16 @@ export default function ArohiCallingAgentsProductPage({
         {/* CTAs */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
+            onClick={() => {
+              setDialerDefaultTopic(agentProfiles[selectedAgentIndex]?.title || 'Customer Advisory & Lead Qualification');
+              setShowPhoneDialer(true);
+            }}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-teal-500/25 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <PhoneCall className="w-4 h-4 text-emerald-200" />
+            <span>Dial Any Phone Number (GSM / VoLTE)</span>
+          </button>
+          <button
             onClick={() => onNavigatePricing ? onNavigatePricing('calling_agents') : onNavigateTab('pricing')}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
           >
@@ -311,12 +324,25 @@ export default function ArohiCallingAgentsProductPage({
                 {isPlayingAudio ? '● Arohi Voice Live Preview' : 'Authentic human-like voice with natural regional inflection'}
               </span>
             </div>
-            <button
-              onClick={onLaunchLiveDashboard}
-              className="text-xs font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 cursor-pointer"
-            >
-              Open Dialing Studio →
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setDialerDefaultTopic(agentProfiles[selectedAgentIndex]?.title || 'Customer Advisory & Lead Qualification');
+                  setShowPhoneDialer(true);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                title="Dial this persona to your real phone number"
+              >
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>Dial to Mobile</span>
+              </button>
+              <button
+                onClick={onLaunchLiveDashboard}
+                className="text-xs font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 cursor-pointer"
+              >
+                Open Dialing Studio →
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -468,6 +494,16 @@ export default function ArohiCallingAgentsProductPage({
           </div>
         </div>
       </section>
+
+      {/* AROHI REAL PHONE DIALER MODAL */}
+      {showPhoneDialer && (
+        <ArohiPhoneDialerModal
+          isOpen={showPhoneDialer}
+          onClose={() => setShowPhoneDialer(false)}
+          defaultLanguage={activeVoiceLanguage}
+          defaultTopic={dialerDefaultTopic}
+        />
+      )}
     </div>
   );
 }
