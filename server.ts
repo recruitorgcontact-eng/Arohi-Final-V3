@@ -14371,6 +14371,39 @@ async function startServer() {
     }
   });
 
+  app.get(['/manifest-exams.json', '/manifest-exams'], (req, res) => {
+    const p = path.join(process.cwd(), 'public', 'manifest-exams.json');
+    if (fs.existsSync(p)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(p);
+    } else {
+      res.status(404).send('manifest-exams.json not found');
+    }
+  });
+
+  app.get(['/manifest-business.json', '/manifest-business'], (req, res) => {
+    const p = path.join(process.cwd(), 'public', 'manifest-business.json');
+    if (fs.existsSync(p)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(p);
+    } else {
+      res.status(404).send('manifest-business.json not found');
+    }
+  });
+
+  app.get(['/manifest-calling.json', '/manifest-calling'], (req, res) => {
+    const p = path.join(process.cwd(), 'public', 'manifest-calling.json');
+    if (fs.existsSync(p)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(p);
+    } else {
+      res.status(404).send('manifest-calling.json not found');
+    }
+  });
+
   app.get('/sw.js', (req, res) => {
     const swPath = path.join(process.cwd(), 'public', 'sw.js');
     if (fs.existsSync(swPath)) {

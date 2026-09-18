@@ -1,0 +1,44 @@
+{
+  "id": "/business-os",
+  "name": "Arohi ONE Business OS - MSME Invoicing, GST & DPR",
+  "short_name": "Business OS",
+  "description": "All-in-one sovereign business operating system for Indian MSMEs and startups: GST invoicing, bank-ready DPR project reports, customer CRM, ledger, and automated accounting.",
+  "start_url": "/business-os?app=business&standalone=true",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "dir": "ltr",
+  "lang": "en-IN",
+  "categories": ["business", "productivity", "finance"],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "icons": [
+    {
+      "src": "/arohi.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/arohi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

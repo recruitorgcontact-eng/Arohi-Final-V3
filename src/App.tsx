@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Header from './components/Header';
@@ -71,7 +71,7 @@ import ArohiConnectModal from './components/connectors/ArohiConnectModal';
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
 import { Posting, Application, CategoryType } from './types';
-import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2, Mail, Menu, Sun, Moon, Maximize2 } from 'lucide-react';
+import { Award, Crown, CheckCircle, Landmark, Bell, ArrowUpRight, ShieldCheck, Sparkles, Bot, GraduationCap, Briefcase, ChevronRight, Mic, MicOff, ArrowLeft, Home, Compass, Map, RotateCcw, Star, Users, MapPin, RefreshCw, Quote, Plus, MessageSquare, MessageCircle, Zap, Coins, User, Share2, Copy, X, Globe, Tag, AlertCircle, CheckCircle2, Mail, Menu, Sun, Moon, Maximize2, ExternalLink } from 'lucide-react';
 
 // Storage migration helper to seamlessly transition legacy 'recruit_*' keys to 'arohi_*'
 function getStorageItem(key: string): string | null {
@@ -327,6 +327,17 @@ export default function App() {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
     const search = window.location.search.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const appQuery = urlParams.get('app')?.toLowerCase();
+    if (appQuery === 'exams' || appQuery === 'mocktests') {
+      return 'mocktests';
+    }
+    if (appQuery === 'business' || appQuery === 'business-os' || appQuery === 'businessos') {
+      return 'business-os';
+    }
+    if (appQuery === 'calling' || appQuery === 'calling-agents' || appQuery === 'voice') {
+      return 'calling-agents';
+    }
     if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/') || hash === '#admin' || search.includes('admin')) {
       return 'admin';
     }
@@ -357,9 +368,37 @@ export default function App() {
   const [prevTab, setPrevTab] = useState('home');
   const currentTabRef = useRef('home');
 
+  const standaloneApp = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const p = new URLSearchParams(window.location.search);
+    const a = p.get('app')?.toLowerCase();
+    if (a === 'exams' || a === 'mocktests') return 'exams';
+    if (a === 'business' || a === 'business-os' || a === 'businessos') return 'business';
+    if (a === 'calling' || a === 'calling-agents' || a === 'voice') return 'calling';
+    return null;
+  }, []);
+
   // Dynamic Browser History & URL Router Synchronizer
   useEffect(() => {
     const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const appQuery = urlParams.get('app')?.toLowerCase();
+      if (appQuery === 'exams' || appQuery === 'mocktests') {
+        setActiveTab('mocktests');
+        setHasEntered(true);
+        return;
+      }
+      if (appQuery === 'business' || appQuery === 'business-os' || appQuery === 'businessos') {
+        setActiveTab('business-os');
+        setHasEntered(true);
+        return;
+      }
+      if (appQuery === 'calling' || appQuery === 'calling-agents' || appQuery === 'voice') {
+        setActiveTab('calling-agents');
+        setHasEntered(true);
+        return;
+      }
+
       const rawPath = window.location.pathname.toLowerCase();
       if (rawPath === '/admin' || rawPath === '/admin/' || rawPath.startsWith('/admin/')) {
         setActiveTab('admin');
@@ -4037,7 +4076,39 @@ export default function App() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            {activeTab !== 'home' && (
+            {standaloneApp ? (
+              <div className="flex items-center justify-between gap-3 mb-5 p-3 rounded-2xl bg-gradient-to-r from-slate-900/95 via-purple-950/80 to-slate-900/95 border border-purple-500/30 backdrop-blur-xl shadow-xl text-white select-none">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-base font-bold shadow-inner">
+                    {standaloneApp === 'exams' ? '📝' : standaloneApp === 'business' ? '💼' : '📞'}
+                  </div>
+                  <div>
+                    <h1 className="text-sm font-black tracking-tight flex items-center gap-1.5">
+                      {standaloneApp === 'exams' ? 'Arohi Exams' : standaloneApp === 'business' ? 'Arohi ONE Business OS' : 'Arohi Calling Agents'}
+                      <span className="text-[9px] uppercase px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+                        App
+                      </span>
+                    </h1>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {standaloneApp === 'exams' ? 'CBT Mock Tests & Exam Arena' : standaloneApp === 'business' ? 'MSME Invoicing, GST & DPR OS' : 'Enterprise Voice AI & Telephony'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://arohiai.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-bold text-purple-200 hover:text-white bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/30 px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 shadow-sm"
+                    title="Visit Arohi AI Sovereign Ecosystem"
+                  >
+                    <span>Ecosystem</span>
+                    <ExternalLink className="w-3 h-3 text-purple-300" />
+                  </a>
+                </div>
+              </div>
+            ) : activeTab !== 'home' ? (
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-2 sm:p-2.5 rounded-2xl bg-white/80 dark:bg-[#12131a]/80 border border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.03)] select-none animate-in fade-in duration-200">
                 {/* Left: Workspace Drawer Button + Breadcrumb */}
                 <div className="flex items-center gap-2 text-xs">
@@ -4138,7 +4209,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
             {renderActiveContent()}
           </motion.div>
         </AnimatePresence>
@@ -4828,7 +4899,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Persistent Global Bottom Navigation Bar on Mobile */}
-      {(!isChatOpen || isChatMinimized) && (
+      {(!isChatOpen || isChatMinimized) && !standaloneApp && (
         <BottomNavBar
           activeTab={activeTab}
           onTabChange={(tab) => {

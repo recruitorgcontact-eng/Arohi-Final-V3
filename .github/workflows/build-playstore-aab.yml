@@ -7,6 +7,16 @@ on:
       - master
   workflow_dispatch:
     inputs:
+      target_app:
+        description: 'App to build: "main" (Arohi AI), "exams" (Arohi Exams), "business" (Business OS), or "calling" (Calling Agents)'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - exams
+          - business
+          - calling
       version_code:
         description: 'Android Version Code (increment for each Play Store release, e.g. 4, 5, 6)'
         required: true
@@ -55,6 +65,10 @@ jobs:
 
       - name: Build Web Application
         run: npm run build
+
+      - name: Switch Android Target App
+        run: |
+          node scripts/switch-android-app.cjs "${{ github.event.inputs.target_app || 'main' }}"
 
       - name: Sync Capacitor Android Project
         run: |
@@ -175,7 +189,7 @@ jobs:
       - name: Upload Google Play Store Bundle (.aab)
         uses: actions/upload-artifact@v4
         with:
-          name: ArohiAI-Google-Play-Bundle-AAB
+          name: Arohi-${{ github.event.inputs.target_app || 'main' }}-Google-Play-Bundle-AAB
           path: android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 90
@@ -183,7 +197,7 @@ jobs:
       - name: Upload Universal Release APK (.apk)
         uses: actions/upload-artifact@v4
         with:
-          name: ArohiAI-Release-APK
+          name: Arohi-${{ github.event.inputs.target_app || 'main' }}-Release-APK
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
           retention-days: 90

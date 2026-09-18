@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Arohi AI - Ask me Anything!',
   webDir: 'dist',
   server: {
-    // Points directly to your live production website on Railway
     url: 'https://arohiai.com',
     cleartext: true,
     androidScheme: 'https'
