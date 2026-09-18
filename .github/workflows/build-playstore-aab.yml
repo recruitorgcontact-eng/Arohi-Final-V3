@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       version_code:
-        description: 'Android Version Code (increment for each Play Store release, e.g. 3, 4, 5)'
+        description: 'Android Version Code (increment for each Play Store release, e.g. 4, 5, 6)'
         required: true
-        default: '3'
+        default: '4'
       version_name:
-        description: 'Android Version Name (semantic version, e.g. 1.0.2)'
+        description: 'Android Version Name (semantic version, e.g. 1.0.3)'
         required: true
-        default: '1.0.2'
+        default: '1.0.3'
 
 jobs:
   build-playstore-aab:
@@ -118,8 +118,8 @@ jobs:
           echo "KEY_PASSWORD=$KEY_PASS" >> $GITHUB_ENV
 
           # Versioning variables
-          V_CODE="${{ github.event.inputs.version_code || '3' }}"
-          V_NAME="${{ github.event.inputs.version_name || '1.0.2' }}"
+          V_CODE="${{ github.event.inputs.version_code || '4' }}"
+          V_NAME="${{ github.event.inputs.version_name || '1.0.3' }}"
           echo "VERSION_CODE=$V_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$V_NAME" >> $GITHUB_ENV
 

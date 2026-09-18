@@ -1,11 +1,19 @@
 package com.arohiai.app;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
+import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
@@ -48,13 +56,79 @@ public class MainActivity extends BridgeActivity {
         if (this.bridge != null && this.bridge.getWebView() != null) {
             android.webkit.WebView webView = this.bridge.getWebView();
             webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
-            android.webkit.WebSettings settings = webView.getSettings();
-            settings.setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
+            WebSettings settings = webView.getSettings();
+            settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
             
-            this.bridge.getWebView().setWebChromeClient(new WebChromeClient() {
+            // Enable JavaScript and Modern Web Storage
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setSupportMultipleWindows(true);
+
+            // Strip '; wv' from User-Agent so Google OAuth doesn't flag it as an untrusted embedded WebView
+            String currentUa = settings.getUserAgentString();
+            if (currentUa != null && currentUa.contains("; wv")) {
+                settings.setUserAgentString(currentUa.replace("; wv", ""));
+            }
+
+            // Accept cookies and third-party cookies for Firebase OAuth tokens
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                cookieManager.setAcceptThirdPartyCookies(webView, true);
+            }
+
+            webView.setWebChromeClient(new WebChromeClient() {
                 @Override
                 public void onPermissionRequest(final PermissionRequest request) {
                     runOnUiThread(() -> request.grant(request.getResources()));
+                }
+
+                @Override
+                public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                    // Create an in-app popup dialog WebView for Google/Firebase OAuth flow
+                    WebView popupWebView = new WebView(MainActivity.this);
+                    WebSettings popupSettings = popupWebView.getSettings();
+                    popupSettings.setJavaScriptEnabled(true);
+                    popupSettings.setDomStorageEnabled(true);
+                    popupSettings.setDatabaseEnabled(true);
+                    popupSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+                    popupSettings.setSupportMultipleWindows(true);
+                    popupSettings.setUserAgentString(settings.getUserAgentString());
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        CookieManager.getInstance().setAcceptThirdPartyCookies(popupWebView, true);
+                    }
+
+                    final Dialog dialog = new Dialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_NoActionBar_Fullscreen);
+                    dialog.setContentView(popupWebView);
+                    if (dialog.getWindow() != null) {
+                        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                    }
+
+                    popupWebView.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public void onCloseWindow(WebView window) {
+                            if (dialog.isShowing()) {
+                                dialog.dismiss();
+                            }
+                        }
+                    });
+
+                    popupWebView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                            return false;
+                        }
+                    });
+
+                    dialog.show();
+
+                    WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                    transport.setWebView(popupWebView);
+                    resultMsg.sendToTarget();
+                    return true;
                 }
             });
         }
