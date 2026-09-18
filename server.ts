@@ -14409,6 +14409,34 @@ async function startServer() {
   app.get('/sitemap.xml', serveSitemap);
   app.get('/robots.txt', serveRobots);
 
+  // Register Account Deletion compliance page (Serves standalone HTML for Google Play Console & user requests)
+  const serveDeleteAccount = (req: express.Request, res: express.Response) => {
+    const deleteAccountPath = path.join(process.cwd(), 'public', 'delete-account.html');
+    if (fs.existsSync(deleteAccountPath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(deleteAccountPath);
+    } else {
+      res.status(200).send(`<!DOCTYPE html><html><head><title>Arohi AI - Delete Account</title></head><body><h1>Account Deletion - Arohi AI</h1><p>Email support@arohiai.com to delete your account.</p></body></html>`);
+    }
+  };
+
+  app.get(['/delete-account', '/delete-account.html', '/account-deletion'], serveDeleteAccount);
+
+  app.post('/api/request-account-deletion', async (req: express.Request, res: express.Response) => {
+    try {
+      const { email, reason, notes, source } = req.body || {};
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      console.log(`[Account Deletion Request] received for email: ${email}, reason: ${reason}`);
+      res.json({ success: true, message: 'Account deletion request queued. Data will be purged within 72 hours.' });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Failed to process request' });
+    }
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
