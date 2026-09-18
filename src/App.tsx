@@ -117,7 +117,7 @@ export default function App() {
       if (p0 === 'mocktests' || p0 === 'mocktest') return true;
       if (p0 === 'mission87' || p0 === 'mission-87' || p0 === 'mission') return true;
       if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission'].includes(p0)) {
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'delete-account'].includes(p0)) {
         return true;
       }
     }
@@ -349,6 +349,7 @@ export default function App() {
         if (VALID_TABS.includes(subTab)) return subTab;
         return 'home';
       }
+      if (p0 === 'delete-account' || p0 === 'delete-data' || p0 === 'account-deletion') return 'privacy';
       if (VALID_TABS.includes(p0)) return p0;
     }
     return 'home';
@@ -427,6 +428,11 @@ export default function App() {
           } else {
             setActiveTab('home');
           }
+          return;
+        }
+        if (p0 === 'delete-account' || p0 === 'delete-data' || p0 === 'account-deletion') {
+          setActiveTab('privacy');
+          setHasEntered(true);
           return;
         }
         if (VALID_TABS.includes(p0)) {
