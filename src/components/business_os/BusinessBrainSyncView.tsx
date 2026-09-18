@@ -35,6 +35,7 @@ import {
 import { useBusinessOS } from './BusinessOSContext';
 import { BusinessOSModule } from './types';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
+import ArohiIntakeDocumentPalette from './ArohiIntakeDocumentPalette';
 
 interface SyncRecord {
   id: string;
@@ -524,8 +525,12 @@ export default function BusinessBrainSyncView() {
       const totalTax = invoices.reduce((sum, inv) => sum + (inv.status === 'paid' ? inv.totalTax : 0), 0);
       answer = `### GST & Tax Position\n- **Registered GSTIN:** \`${companyProfile.gstin}\` (${companyProfile.state})\n- **Output GST Liability (Collected):** ₹${totalTax.toLocaleString()}\n- **Input Tax Credit (ITC Eligible on Expenses):** ₹${(metrics.totalExpenses * 0.18).toLocaleString()} (approx. 18% slab)\n- **Net GST Payable:** ₹${Math.max(0, totalTax - (metrics.totalExpenses * 0.18)).toLocaleString()}\n- Dynamic UPI QR codes are automatically appended to your PDF invoices.`;
     } else if (lower.includes('pipeline') || lower.includes('deal') || lower.includes('leads')) {
-      const winRate = deals.length > 0 ? Math.round((deals.filter(d => d.stage === 'closed_won').length / deals.length) * 100) : 68;
-      answer = `### Sales Pipeline Intelligence\n- **Total Pipeline Value:** ₹${(metrics.openDealsValue / 100000).toFixed(2)} Lakhs across ${deals.length} active deals.\n- **Uncontacted Hot Leads:** ${leads.filter(l => l.status === 'new').length} leads.\n- **Top Opportunity:** Tata Advanced Systems (₹12.5L, 75% Win Probability, Assigned to Ananya Sharma).\n- **Win Rate:** ${winRate}% over the current fiscal quarter.`;
+      const winRate = deals.length > 0 ? Math.round((deals.filter(d => d.stage === 'closed_won').length / deals.length) * 100) : 0;
+      const topDeal = [...deals].sort((a, b) => b.value - a.value)[0];
+      const topOppText = topDeal 
+        ? `${topDeal.customerName || topDeal.title} (₹${(topDeal.value / 100000).toFixed(1)}L, ${topDeal.probability}% Win Probability, Assigned to ${topDeal.assignedRep || 'Sales Lead'})`
+        : 'None currently open';
+      answer = `### Sales Pipeline Intelligence\n- **Total Pipeline Value:** ₹${(metrics.openDealsValue / 100000).toFixed(2)} Lakhs across ${deals.length} active deals.\n- **Uncontacted Hot Leads:** ${leads.filter(l => l.status === 'new').length} leads.\n- **Top Opportunity:** ${topOppText}.\n- **Win Rate:** ${winRate}% over the current fiscal quarter.`;
     } else if (lower.includes('overdue') || lower.includes('pending') || lower.includes('invoice')) {
       const pendingList = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
       answer = `### Outstanding Invoices\n- **Total Pending Amount:** ₹${metrics.pendingInvoiceAmount.toLocaleString()}\n- **Total Overdue Amount:** ₹${metrics.overdueInvoiceAmount.toLocaleString()}\n- **Pending Invoices:**\n${pendingList.map(inv => `  • **${inv.invoiceNumber}** — ${inv.customerName}: ₹${inv.grandTotal.toLocaleString()} (Due: ${inv.dueDate})`).join('\n')}\n\nYou can click below to trigger automated WhatsApp payment reminder links to these clients.`;
@@ -782,7 +787,10 @@ export default function BusinessBrainSyncView() {
             }`}
           >
             <UploadCloud className="w-3.5 h-3.5" />
-            <span>Document & Receipt Ingest</span>
+            <span>Document, GSTIN & Excel Ingest</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-black">
+              Excel + OCR
+            </span>
           </button>
 
           <button
@@ -970,6 +978,29 @@ export default function BusinessBrainSyncView() {
                 </div>
               </div>
 
+              {/* Document, GSTIN, Invoice & Excel Upload Palette inside Intake Agent */}
+              <div className="pt-2">
+                <ArohiIntakeDocumentPalette
+                  compact={false}
+                  onSyncSuccess={(synced) => {
+                    const syncRecord: SyncRecord = {
+                      id: `sync_${Date.now()}`,
+                      timestamp: 'Just now',
+                      source: 'document_upload',
+                      entityType: synced.entityType,
+                      title: synced.title,
+                      summary: synced.summary,
+                      amount: synced.amount,
+                      targetModule: synced.targetModule,
+                      status: 'synced'
+                    };
+                    setSyncHistory(prev => [syncRecord, ...prev]);
+                    setLastSyncedItem(syncRecord);
+                    speakArohiVoice(`Document and data verified! I have synchronized ${synced.title} into your ${synced.targetModule.toUpperCase()} module.`);
+                  }}
+                />
+              </div>
+
             </div>
           </div>
 
@@ -1038,14 +1069,14 @@ export default function BusinessBrainSyncView() {
 
                 <div 
                   onClick={() => {
-                    setManualVoiceInput('Client Tata Advanced Systems paid their pending invoice of 50000 rupees.');
+                    setManualVoiceInput('Client Apex Global Tech paid their pending invoice of 50000 rupees.');
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isDark ? 'bg-zinc-950 border-zinc-800 hover:border-purple-500/50' : 'bg-purple-50/50 border-purple-100 hover:border-purple-300'
                   }`}
                 >
                   <p className="font-bold text-purple-600 dark:text-purple-400 mb-0.5">💵 Invoice Payment Received</p>
-                  <p className="text-zinc-500 dark:text-zinc-400 italic">"Client Tata Advanced paid their pending invoice of 50000 rupees..."</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 italic">"Client Apex Global Tech paid their pending invoice of 50000 rupees..."</p>
                 </div>
 
                 <div 
@@ -1210,140 +1241,29 @@ export default function BusinessBrainSyncView() {
       )}
 
       {/* ========================================================== */}
-      {/* SUBTAB 3: DOCUMENT & RECEIPT SCANNER INGEST */}
+      {/* SUBTAB 3: DOCUMENT, GSTIN & EXCEL INTAKE ENGINE */}
       {/* ========================================================== */}
       {activeSubTab === 'document_sync' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Uploader Box */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className={`p-6 sm:p-8 rounded-2xl border transition-all ${
-              isDark ? 'bg-zinc-900/80 border-purple-900/40 text-white' : 'bg-white border-zinc-200 text-zinc-900 shadow-sm'
-            }`}>
-              
-              <div className="space-y-1 mb-6">
-                <h3 className="text-base font-bold">Document & Receipt Autonomous Scanner</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                  Upload visiting cards, expense receipts, vendor bills, or purchase orders. Arohi automatically extracts key fields (GSTIN, vendor, amount, contact info) and syncs directly into your Business OS account.
-                </p>
-              </div>
-
-              {/* Drag & Drop Visual Box */}
-              <div className={`p-8 rounded-2xl border-2 border-dashed text-center flex flex-col items-center justify-center transition-all ${
-                isDark 
-                  ? 'border-zinc-800 hover:border-purple-500/60 bg-zinc-950/40' 
-                  : 'border-zinc-300 hover:border-purple-400 bg-purple-50/20'
-              }`}>
-                <div className="w-14 h-14 rounded-2xl bg-purple-600/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
-                  <UploadCloud className="w-8 h-8" />
-                </div>
-                <h4 className="text-sm font-bold">Drag & Drop Documents or Invoices</h4>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
-                  Supports JPG, PNG, PDF, DOCX (Max 25MB)
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    onClick={() => handleLoadSampleDoc('card')}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 text-white hover:bg-purple-500 cursor-pointer transition-all flex items-center gap-1.5"
-                  >
-                    <CreditCard className="w-3.5 h-3.5" />
-                    <span>Test: Visiting Card</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleLoadSampleDoc('fuel')}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 cursor-pointer transition-all flex items-center gap-1.5"
-                  >
-                    <Receipt className="w-3.5 h-3.5" />
-                    <span>Test: Fuel Receipt</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleLoadSampleDoc('hotel')}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 cursor-pointer transition-all flex items-center gap-1.5"
-                  >
-                    <Building className="w-3.5 h-3.5" />
-                    <span>Test: Hotel Bill</span>
-                  </button>
-                </div>
-              </div>
-
-              {isScanningDoc && (
-                <div className="mt-4 p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center gap-3">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span className="text-xs font-bold">Arohi Multimodal OCR extracting entities & GSTIN...</span>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Right Side: Extraction Review & Commit */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className={`p-6 rounded-2xl border transition-all ${
-              isDark ? 'bg-zinc-900/80 border-zinc-800 text-white' : 'bg-white border-zinc-200 text-zinc-900 shadow-sm'
-            }`}>
-              
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                  Extracted Entity Preview
-                </h4>
-                {extractedDocData && (
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    {extractedDocData.confidence}
-                  </span>
-                )}
-              </div>
-
-              {extractedDocData ? (
-                <div className="space-y-4">
-                  <div className={`p-4 rounded-xl border text-xs space-y-2 ${
-                    isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'
-                  }`}>
-                    <p className="font-bold text-sm text-purple-600 dark:text-purple-400">
-                      {extractedDocData.company || extractedDocData.vendor}
-                    </p>
-
-                    {extractedDocData.name && (
-                      <p><span className="text-zinc-500">Contact:</span> {extractedDocData.name} ({extractedDocData.title})</p>
-                    )}
-                    {extractedDocData.phone && (
-                      <p><span className="text-zinc-500">Phone:</span> {extractedDocData.phone}</p>
-                    )}
-                    {extractedDocData.email && (
-                      <p><span className="text-zinc-500">Email:</span> {extractedDocData.email}</p>
-                    )}
-                    {extractedDocData.amount && (
-                      <p><span className="text-zinc-500">Amount / Budget:</span> ₹{extractedDocData.amount.toLocaleString()}</p>
-                    )}
-                    {extractedDocData.gstin && (
-                      <p><span className="text-zinc-500">GSTIN:</span> <code className="text-purple-400 font-mono">{extractedDocData.gstin}</code></p>
-                    )}
-                    {extractedDocData.category && (
-                      <p><span className="text-zinc-500">Expense Category:</span> {extractedDocData.category}</p>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={handleCommitParsedDocument}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Auto-Commit & Sync to Business OS</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="py-12 text-center text-zinc-400 text-xs space-y-2">
-                  <FileText className="w-8 h-8 mx-auto opacity-40" />
-                  <p>No document loaded yet.</p>
-                  <p className="text-[11px] text-zinc-500">Select one of the sample test buttons on the left to test instant extraction.</p>
-                </div>
-              )}
-
-            </div>
-          </div>
-
+        <div className="space-y-6">
+          <ArohiIntakeDocumentPalette
+            compact={false}
+            onSyncSuccess={(synced) => {
+              const syncRecord: SyncRecord = {
+                id: `sync_${Date.now()}`,
+                timestamp: 'Just now',
+                source: 'document_upload',
+                entityType: synced.entityType,
+                title: synced.title,
+                summary: synced.summary,
+                amount: synced.amount,
+                targetModule: synced.targetModule,
+                status: 'synced'
+              };
+              setSyncHistory(prev => [syncRecord, ...prev]);
+              setLastSyncedItem(syncRecord);
+              speakArohiVoice(`Document and data verified! I have synchronized ${synced.title} into your ${synced.targetModule.toUpperCase()} module.`);
+            }}
+          />
         </div>
       )}
 

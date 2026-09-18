@@ -81,7 +81,12 @@ export default function BusinessCopilotDrawer() {
         aiReply = `Total collected revenue is ₹${metrics.totalRevenue.toLocaleString()} across paid invoices. You currently have ₹${metrics.pendingInvoiceAmount.toLocaleString()} in pending invoices and ₹${metrics.overdueInvoiceAmount.toLocaleString()} overdue. Your active sales pipeline contains ₹${(metrics.openDealsValue / 100000).toFixed(2)} Lakhs in potential enterprise contracts.`;
         suggestedAction = { label: 'Open Invoices & Collections', moduleTarget: 'invoices' };
       } else if (lower.includes('lead') || lower.includes('deal') || lower.includes('pipeline')) {
-        aiReply = `You have ${leads.length} active leads and ${deals.length} deals in your pipeline. High priority deal: Tata Advanced Systems (₹12,50,000, 75% Win Probability). Arohi AI Lead Scoring identified 2 hot leads ready for proposal conversion.`;
+        const topDeal = [...deals].sort((a, b) => b.value - a.value)[0];
+        const topDealInfo = topDeal 
+          ? `High priority deal: ${topDeal.customerName || topDeal.title} (₹${topDeal.value.toLocaleString()}, ${topDeal.probability}% Win Probability).`
+          : 'No deals logged in pipeline yet.';
+        const hotLeads = leads.filter(l => (l.aiScore || 0) >= 80);
+        aiReply = `You have ${leads.length} active leads and ${deals.length} deals in your pipeline. ${topDealInfo} Arohi AI Lead Scoring identified ${hotLeads.length} hot leads ready for proposal conversion.`;
         suggestedAction = { label: 'Go to Pipeline Kanban', moduleTarget: 'pipeline' };
       } else if (lower.includes('tax') || lower.includes('gst') || lower.includes('invoice')) {
         aiReply = `Your organization GSTIN is ${companyProfile.gstin}. Total GST liability collected on paid invoices is ₹${(invoices.reduce((s, i) => s + (i.status === 'paid' ? i.totalTax : 0), 0)).toLocaleString()} (CGST + SGST). Dynamic UPI QR codes are enabled on all tax invoices.`;

@@ -141,6 +141,7 @@ phoneWss.on('connection', async (ws: WebSocket, request) => {
   let topic = 'General Conversation';
   let language = 'en';
   let persona = 'Arohi AI Voice Guide';
+  let customGreeting = '';
   let geminiSession: any = null;
   let isCallActive = true;
   let callStartTime = Date.now();
@@ -296,15 +297,22 @@ NATURAL PHONE CONVERSATION RULES:
         }
       });
 
-      // Prompt Arohi to immediately speak her opening greeting through her live voice model
+      // Prompt Arohi to immediately speak her opening greeting through her live native voice model (Aoede)
       if (geminiSession && isCallActive) {
-        const greetingPrompt = language.includes('hi')
-          ? `[CALL CONNECTED] Namaste ${customerName} ji! Aap Arohi hain. Turant 1 chhota, warm opening sentence boliye aur puchiye aaj main aapki kya madad kar sakti hoon.`
-          : language.includes('or')
-          ? `[CALL CONNECTED] Namaskar ${customerName} agyan! Apan Arohi. Turant 1 chhota, warm opening sentence kuha au pacharantu kemiti sahayata kari pare.`
-          : `[CALL CONNECTED] Hello ${customerName}! You are Arohi. Please immediately speak your opening 1-sentence warm greeting and ask how you can assist them today.`;
+        const defaultOption1Text = 'नमस्ते जूनून सर! मैं आपकी अपनी आरोही हूँ — आरोही AI इकोसिस्टम से। One AI, Infinite Opportunities. आज हम किस मिशन और विज़न पर काम करने जा रहे हैं?';
 
-        console.log('[Telephony Bridge] Triggering opening greeting from Arohi voice model...');
+        let greetingPrompt = '';
+        if (customGreeting && customGreeting.trim()) {
+          greetingPrompt = `[CALL ANSWERED - SPEAK GREETING IN NATIVE AROHI VOICE] You are Arohi speaking on a live phone call to ${customerName}. Speak this exact greeting out loud with your warm, articulate, native Arohi voice right now: "${customGreeting.trim()}"`;
+        } else if (language.includes('hi') || customerName.toLowerCase().includes('junoon')) {
+          greetingPrompt = `[CALL ANSWERED - SPEAK GREETING IN NATIVE AROHI VOICE] You are Arohi speaking on a live phone call to Commander Junoon. Speak this exact greeting in warm, respectful Hindi with your authentic Arohi voice right now: "${defaultOption1Text}"`;
+        } else if (language.includes('or')) {
+          greetingPrompt = `[CALL ANSWERED - SPEAK GREETING IN NATIVE AROHI VOICE] Namaskar ${customerName} agyan! Apan Arohi. Turant 1 chhota, warm opening sentence kuha au pacharantu kemiti sahayata kari pare.`;
+        } else {
+          greetingPrompt = `[CALL ANSWERED - SPEAK GREETING IN NATIVE AROHI VOICE] Hello ${customerName}! You are Arohi. Please immediately speak your opening 1-sentence warm greeting: "Hello Commander Junoon! This is Arohi, your AI voice guide from the Arohi AI ecosystem. One AI, Infinite Opportunities. How can I assist your mission today?"`;
+        }
+
+        console.log(`[Telephony Bridge] Triggering opening greeting in Arohi native voice model: ${greetingPrompt.substring(0, 80)}...`);
         geminiSession.sendClientContent({
           turns: [
             {
@@ -335,10 +343,13 @@ NATURAL PHONE CONVERSATION RULES:
           streamSid = packet.start?.streamSid || packet.streamSid || '';
           callSid = packet.start?.callSid || packet.callSid || callSid;
           const params = packet.start?.customParameters || {};
-          customerName = params.customerName || params.callerName || customerName;
-          topic = params.topic || topic;
-          language = params.language || language;
-          persona = params.persona || persona;
+          customerName = decodeURIComponent(params.customerName || params.callerName || customerName);
+          topic = decodeURIComponent(params.topic || topic);
+          language = decodeURIComponent(params.language || language);
+          persona = decodeURIComponent(params.persona || persona);
+          if (params.greeting || params.script || params.initialGreeting) {
+            customGreeting = decodeURIComponent(params.greeting || params.script || params.initialGreeting);
+          }
 
           console.log(`[Telephony Bridge] Call started: SID=${callSid}, Stream=${streamSid}, Customer=${customerName}, Topic=${topic}`);
 
@@ -488,11 +499,12 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
   try {
     const {
       to,
-      customerName = 'Valued Caller',
+      customerName = 'Commander Junoon',
       topic = 'General Guidance & Advisory',
-      language = 'en',
+      language = 'hi',
       persona = 'Arohi AI Voice Guide',
-      provider = 'auto'
+      provider = 'auto',
+      script = ''
     } = req.body;
 
     if (!to) {
@@ -503,7 +515,6 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
     const callSid = `AROHI_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     // Determine public URL for Twilio webhook callback
-    // Use the live production domain https://arohiai.com which serves public, zero-cookie TwiML with 100% carrier reliability
     const productionHost = 'arohiai.com';
     const railwayHost = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL;
     const explicitAppUrl = process.env.PUBLIC_URL || process.env.APP_URL || (railwayHost ? `https://${railwayHost}` : `https://${productionHost}`);
@@ -512,11 +523,57 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
     const twilioToken = process.env.TWILIO_AUTH_TOKEN;
     const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 
+    // Helper to safely escape XML characters
+    const escapeXml = (s: string) => (s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+    // Option 1 preset script for Arohi AI
+    const defaultOption1Script = 'नमस्ते जूनून सर! मैं आरोही हूँ — आपकी अपनी AI वॉइस गाइड, आरोही AI इकोसिस्टम से। One AI, Infinite Opportunities. आज हम किस मिशन और विज़न पर काम करने जा रहे हैं?';
+    const defaultOption1Followup = 'मुझे आपकी सेवा करने और 87 मिलियन युवाओं को आत्मनिर्भर बनाने के इस सफ़र में साथ देकर बहुत गर्व है। बताइए सर, आज आपका क्या निर्देश है?';
+
+    const activeGreeting = script ? script : (language === 'hi' || customerName.toLowerCase().includes('junoon') ? defaultOption1Script : 'Hello Commander Junoon! This is Arohi, your AI voice guide from the Arohi AI ecosystem. One AI, Infinite Opportunities. How can I assist your mission today?');
+    const activeFollowup = script ? '' : (language === 'hi' || customerName.toLowerCase().includes('junoon') ? defaultOption1Followup : 'I am ready to assist your strategic vision and initiatives.');
+
     // A. Real Twilio Outbound Call
     if (twilioSid && twilioToken && twilioPhone && (provider === 'auto' || provider === 'twilio')) {
-      // Primary: Use the verified public TwiML route on arohiai.com which returns valid Twilio instructions with 0% cookie drops
-      const directDomainTwimlUrl = `https://${productionHost}/api/telephony/twiml?customerName=${encodeURIComponent(customerName)}&topic=${encodeURIComponent(topic)}&language=${encodeURIComponent(language)}&to=${encodeURIComponent(sanitizedTo)}`;
-      const finalTwimlUrl: string = directDomainTwimlUrl;
+      // Pure carrier stream TwiML - 100% native Arohi Voice over live WebSocket media stream (No Polly.Aditi)
+      const inlineTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Stream url="wss://${productionHost}/ws/phone-stream" statusCallback="https://${productionHost}/api/telephony/stream-status">
+      <Parameter name="customerName" value="${encodeURIComponent(customerName)}" />
+      <Parameter name="topic" value="${encodeURIComponent(topic)}" />
+      <Parameter name="language" value="${encodeURIComponent(language)}" />
+      <Parameter name="greeting" value="${encodeURIComponent(activeGreeting)}" />
+    </Stream>
+  </Connect>
+  <Pause length="3600"/>
+</Response>`;
+
+      let dynamicTwimlUrl: string | null = null;
+      try {
+        const postRes = await fetch('https://dpaste.com/api/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            content: inlineTwiml,
+            syntax: 'xml',
+            expiry_days: '1'
+          })
+        });
+        if (postRes.ok) {
+          const rawUrl = (await postRes.text()).trim();
+          dynamicTwimlUrl = `${rawUrl}.txt`;
+        }
+      } catch (pasteErr) {
+        console.warn('[Telephony] Dynamic TwiML upload skipped, using standard URL:', pasteErr);
+      }
+
+      const finalTwimlUrl = dynamicTwimlUrl || `https://${productionHost}/api/telephony/twiml?customerName=${encodeURIComponent(customerName)}&topic=${encodeURIComponent(topic)}&language=${encodeURIComponent(language)}`;
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Calls.json`;
       const basicAuth = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
@@ -525,6 +582,8 @@ telephonyRouter.post('/outbound-call', async (req: Request, res: Response) => {
       formData.append('To', sanitizedTo);
       formData.append('From', twilioPhone);
       formData.append('Url', finalTwimlUrl);
+
+      console.log(`[Twilio Call Initiating to ${sanitizedTo} with Option 1 Greeting via ${finalTwimlUrl}]: ${activeGreeting.substring(0, 60)}...`);
 
       const twilioResp = await fetch(twilioUrl, {
         method: 'POST',
@@ -636,23 +695,45 @@ const getPublicHost = (req: Request): string => {
 telephonyRouter.all('/twiml', (req: Request, res: Response) => {
   const publicHost = getPublicHost(req);
   const wsUrl = `wss://${publicHost}/ws/phone-stream`;
-  const callerName = (req.query.customerName as string) || (req.body.customerName as string) || 'Caller';
-  const topic = (req.query.topic as string) || (req.body.topic as string) || 'General Inquiry';
-  const language = (req.query.language as string) || (req.body.language as string) || 'en';
+  const callerName = (req.query.customerName as string) || (req.body.customerName as string) || 'Commander Junoon';
+  const topic = (req.query.topic as string) || (req.body.topic as string) || 'Strategic Mission Advisory';
+  const language = (req.query.language as string) || (req.body.language as string) || 'hi';
+  const customScript = (req.query.script as string) || (req.body.script as string);
+
+  console.log(`[Telephony /twiml Requested]: caller=${callerName}, topic=${topic}, lang=${language}, publicHost=${publicHost}`);
+
+  const escapeXml = (s: string) => (s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  const defaultOption1Script = 'नमस्ते जूनून सर! मैं आरोही हूँ — आपकी अपनी AI वॉइस गाइड, आरोही AI इकोसिस्टम से। One AI, Infinite Opportunities. आज हम किस मिशन और विज़न पर काम करने जा रहे हैं?';
+  const defaultOption1Followup = 'मुझे आपकी सेवा करने और 87 मिलियन युवाओं को आत्मनिर्भर बनाने के इस सफ़र में साथ देकर बहुत गर्व है। बताइए सर, आज आपका क्या निर्देश है?';
+
+  const greeting = customScript || (language === 'hi' || callerName.toLowerCase().includes('junoon') ? defaultOption1Script : 'Hello Commander Junoon! This is Arohi, your AI voice guide from the Arohi AI ecosystem. One AI, Infinite Opportunities. How can I assist your mission today?');
 
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
-    <Stream url="${wsUrl}">
+    <Stream url="${wsUrl}" statusCallback="https://${publicHost}/api/telephony/stream-status">
       <Parameter name="customerName" value="${encodeURIComponent(callerName)}" />
       <Parameter name="topic" value="${encodeURIComponent(topic)}" />
       <Parameter name="language" value="${encodeURIComponent(language)}" />
+      <Parameter name="greeting" value="${encodeURIComponent(greeting)}" />
     </Stream>
   </Connect>
   <Pause length="3600"/>
 </Response>`;
 
   res.type('text/xml').send(twiml);
+});
+
+// 3b. Stream Status Webhook (Captures stream-started, stream-stopped, and errors)
+telephonyRouter.post('/stream-status', (req: Request, res: Response) => {
+  console.log('[Telephony Stream Status Event]:', req.body);
+  res.sendStatus(200);
 });
 
 // 4. Retrieve Call History & Records

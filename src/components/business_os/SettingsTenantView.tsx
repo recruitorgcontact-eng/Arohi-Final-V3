@@ -8,7 +8,9 @@ import {
   Globe,
   RotateCcw,
   CheckCircle2,
-  Lock
+  Lock,
+  Trash2,
+  QrCode
 } from 'lucide-react';
 import { useBusinessOS } from './BusinessOSContext';
 
@@ -20,6 +22,7 @@ export default function SettingsTenantView() {
     activeUserRole,
     setActiveUserRole,
     resetToSampleData,
+    clearToFreshWorkspace,
     showToast
   } = useBusinessOS();
 
@@ -34,6 +37,7 @@ export default function SettingsTenantView() {
   const [bankAccount, setBankAccount] = useState(companyProfile.bankAccount);
   const [bankIfsc, setBankIfsc] = useState(companyProfile.bankIfsc);
   const [bankName, setBankName] = useState(companyProfile.bankName);
+  const [upiId, setUpiId] = useState(companyProfile.upiId || 'arohiai@icici');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +52,8 @@ export default function SettingsTenantView() {
       state,
       bankAccount,
       bankIfsc,
-      bankName
+      bankName,
+      upiId
     });
     showToast('Company settings updated successfully.');
   };
@@ -72,13 +77,26 @@ export default function SettingsTenantView() {
           </div>
         </div>
 
-        <button
-          onClick={resetToSampleData}
-          className="px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shadow-xs active:scale-95"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset Sample Data</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => clearToFreshWorkspace()}
+            className="px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+            title="Wipe demo records and start with 0 data"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Start Fresh Workspace</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={resetToSampleData}
+            className="px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Sample Data</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -175,10 +193,10 @@ export default function SettingsTenantView() {
               </div>
             </div>
 
-            {/* Bank details */}
+            {/* Bank details & UPI QR Settlement */}
             <div className="pt-3 border-t border-black/[0.06] dark:border-white/[0.08] space-y-2.5">
-              <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Settlement Bank Account</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Settlement Bank & UPI VPA</span>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] text-zinc-500 font-bold">Bank Name</label>
                   <input
@@ -203,6 +221,16 @@ export default function SettingsTenantView() {
                     type="text"
                     value={bankIfsc}
                     onChange={(e) => setBankIfsc(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2 text-zinc-900 dark:text-white font-mono font-medium"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-500 font-bold">UPI ID / VPA (for QR)</label>
+                  <input
+                    type="text"
+                    value={upiId}
+                    placeholder="e.g. name@icici"
+                    onChange={(e) => setUpiId(e.target.value)}
                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2 text-zinc-900 dark:text-white font-mono font-medium"
                   />
                 </div>

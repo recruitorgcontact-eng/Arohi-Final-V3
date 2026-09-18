@@ -27,7 +27,10 @@ import {
   Clock,
   ChevronRight,
   Layers,
-  Bot
+  Bot,
+  Database,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { useBusinessOS } from './BusinessOSContext';
 import { BusinessOSModule } from './types';
@@ -42,15 +45,6 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-
-const REVENUE_DATA = [
-  { month: 'Sep', revenue: 420000, expenses: 280000, deals: 3 },
-  { month: 'Oct', revenue: 580000, expenses: 310000, deals: 5 },
-  { month: 'Nov', revenue: 720000, expenses: 360000, deals: 6 },
-  { month: 'Dec', revenue: 890000, expenses: 410000, deals: 7 },
-  { month: 'Jan', revenue: 1140000, expenses: 490000, deals: 9 },
-  { month: 'Feb', revenue: 1480000, expenses: 540000, deals: 12 },
-];
 
 interface BusinessToolItem {
   id: BusinessOSModule;
@@ -71,6 +65,7 @@ export default function DashboardOverview() {
     leads,
     deals,
     invoices,
+    expenses,
     tasks,
     calls,
     tickets,
@@ -78,6 +73,8 @@ export default function DashboardOverview() {
     setActiveModule,
     setQuickCreateType,
     setIsCopilotOpen,
+    clearToFreshWorkspace,
+    resetToSampleData,
     theme
   } = useBusinessOS();
 
@@ -291,10 +288,124 @@ export default function DashboardOverview() {
     return matchesCat && matchesSearch;
   });
 
+  // Dynamic calculation of open deals and top priorities
+  const openDeals = deals.filter(d => d.stage !== 'closed_won' && d.stage !== 'closed_lost');
+  const sortedDeals = [...openDeals].sort((a, b) => b.value - a.value);
+  const topDeals = sortedDeals.slice(0, 2);
+  const pendingInvoices = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
+  const hotLeads = leads.filter(l => (l.aiScore || 0) >= 80 || l.status === 'new');
+
+  // Detect if workspace currently has sample demo data loaded
+  const isSampleData = leads.some(l => l.company?.toLowerCase().includes('tata advanced')) ||
+    deals.some(d => d.customerName?.toLowerCase().includes('tata advanced')) ||
+    invoices.some(i => i.customerName?.toLowerCase().includes('tata advanced'));
+
+  // Dynamic Executive Brief Headline & Status derived 100% from live business state
+  let dynamicBriefStatus = 'Target on Track';
+  let dynamicBriefHeadline = '';
+
+  if (topDeals.length > 0) {
+    const dealNames = topDeals.map(d => d.customerName || d.title).join(' & ');
+    const totalTopVal = topDeals.reduce((sum, d) => sum + d.value, 0);
+    dynamicBriefStatus = `Pipeline: ₹${(metrics.openDealsValue / 100000).toFixed(1)}L Active`;
+    dynamicBriefHeadline = `${topDeals.length} High-Value Enterprise Deal${topDeals.length > 1 ? 's' : ''} (${dealNames} — ₹${(totalTopVal / 100000).toFixed(1)}L) awaiting final sign-off.`;
+  } else if (pendingInvoices.length > 0) {
+    dynamicBriefStatus = `${pendingInvoices.length} Invoices Pending`;
+    dynamicBriefHeadline = `₹${(metrics.pendingInvoiceAmount + metrics.overdueInvoiceAmount).toLocaleString()} awaiting collection across ${pendingInvoices.length} client invoices.`;
+  } else if (leads.length > 0) {
+    dynamicBriefStatus = `${leads.length} Leads in CRM`;
+    dynamicBriefHeadline = `${hotLeads.length} prioritized leads ready for outreach and pipeline conversion.`;
+  } else if (deals.length === 0 && leads.length === 0 && invoices.length === 0) {
+    dynamicBriefStatus = 'Clean Workspace';
+    dynamicBriefHeadline = 'Zero records logged. Use Document & Excel Intake, AI Voice, or Quick Create to import your real business data.';
+  } else {
+    dynamicBriefStatus = 'Operations Balanced';
+    dynamicBriefHeadline = `₹${metrics.totalRevenue.toLocaleString()} collected revenue. All business modules synchronized.`;
+  }
+
+  // Dynamic Revenue & Expense trend chart calculated from live invoices and expenses
+  const dynamicRevenueData = React.useMemo(() => {
+    const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+    
+    return months.map((m, idx) => {
+      const monthInvs = invoices.filter(inv => {
+        if (!inv.issueDate) return false;
+        const d = new Date(inv.issueDate);
+        return !isNaN(d.getTime()) && d.toLocaleDateString('en-US', { month: 'short' }) === m;
+      });
+      const monthExps = expenses.filter(exp => {
+        if (!exp.date) return false;
+        const d = new Date(exp.date);
+        return !isNaN(d.getTime()) && d.toLocaleDateString('en-US', { month: 'short' }) === m;
+      });
+
+      let rev = monthInvs.reduce((sum, i) => sum + i.grandTotal, 0);
+      let exp = monthExps.reduce((sum, e) => sum + e.amount, 0);
+
+      // In the latest month slot, anchor to real collected metrics if individual records don't have historical months
+      if (idx === months.length - 1) {
+        if (rev === 0 && metrics.totalRevenue > 0) rev = metrics.totalRevenue;
+        if (exp === 0 && metrics.totalExpenses > 0) exp = metrics.totalExpenses;
+      }
+
+      return {
+        month: m,
+        revenue: rev,
+        expenses: exp,
+        deals: openDeals.length
+      };
+    });
+  }, [invoices, expenses, metrics.totalRevenue, metrics.totalExpenses, openDeals.length]);
+
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
       
-      {/* 1. Compact Arohi AI Executive Strategy Capsule */}
+      {/* Interactive Data Mode Indicator: Switch between Sample Demo vs Blank Production Data */}
+      <div className={`px-3.5 py-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs transition-all shadow-xs ${
+        isSampleData 
+          ? 'bg-amber-500/10 border-amber-500/25 text-amber-900 dark:text-amber-300'
+          : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-900 dark:text-emerald-300'
+      }`}>
+        <div className="flex items-center gap-2">
+          <Database className="w-4 h-4 shrink-0 text-current" />
+          <div>
+            <span className="font-bold">
+              {isSampleData ? 'Sample Demo Dataset Loaded' : 'Clean Live Database Active'}
+            </span>
+            <span className="text-[11px] opacity-80 block sm:inline sm:ml-1.5">
+              {isSampleData 
+                ? '(Sample records for Tata Advanced, Deccan Aerospace, etc. Clear to start with your own real data)' 
+                : '(100% clean production environment. All metrics calculated from your real inputs)'}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {isSampleData ? (
+            <button
+              type="button"
+              onClick={() => clearToFreshWorkspace()}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Purge all sample enterprise records and start with 0 data"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear Sample Data & Start Blank</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => resetToSampleData()}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Load sample enterprise demo data for demonstration"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reload Sample Demo Data</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 1. Dynamic Arohi AI Executive Strategy Capsule (100% Live Computed) */}
       <div className="bg-gradient-to-r from-violet-50/90 via-indigo-50/50 to-white dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 border border-violet-100/90 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-4 text-zinc-900 dark:text-white shadow-xs relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
@@ -305,10 +416,12 @@ export default function DashboardOverview() {
               <span className="text-[9px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-white/10 text-violet-800 dark:text-white/90 border border-violet-200/60 dark:border-white/15 px-2 py-0.2 rounded-full">
                 AROHI EXECUTIVE BRIEF
               </span>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Q4 Target on Track</span>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                {dynamicBriefStatus}
+              </span>
             </div>
             <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 mt-0.5">
-              2 High-Value Enterprise Deals (Tata Advanced & Deccan Aerospace) awaiting final sign-off.
+              {dynamicBriefHeadline}
             </p>
           </div>
         </div>
@@ -331,10 +444,10 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* 2. Compact 4-Metric KPI Strip */}
+      {/* 2. Dynamic 4-Metric KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         
-        {/* Metric 1 */}
+        {/* Metric 1: Collected Revenue */}
         <div 
           onClick={() => setActiveModule('finance')}
           className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-3 cursor-pointer hover:border-emerald-500/40 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
@@ -348,13 +461,19 @@ export default function DashboardOverview() {
           <div className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight mt-1">
             ₹{metrics.totalRevenue.toLocaleString()}
           </div>
-          <div className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5 mt-0.5">
-            <TrendingUp className="w-2.5 h-2.5" />
-            <span>+28.4% MRR</span>
-          </div>
+          {metrics.totalRevenue > 0 ? (
+            <div className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5 mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5" />
+              <span>{invoices.filter(i => i.status === 'paid').length} Paid Invoices • ₹{(metrics.monthlyRecurringRevenue / 1000).toFixed(0)}k MRR</span>
+            </div>
+          ) : (
+            <div className="text-[9.5px] text-zinc-400 font-medium mt-0.5">
+              ₹0 Collected • Ready for Billing
+            </div>
+          )}
         </div>
 
-        {/* Metric 2 */}
+        {/* Metric 2: Active Deals */}
         <div 
           onClick={() => setActiveModule('pipeline')}
           className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-3 cursor-pointer hover:border-indigo-500/40 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
@@ -369,11 +488,11 @@ export default function DashboardOverview() {
             ₹{metrics.openDealsValue.toLocaleString()}
           </div>
           <div className="text-[9.5px] text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5">
-            {deals.length} Active in Funnel
+            {openDeals.length} Active in Funnel {deals.filter(d => d.stage === 'closed_won').length > 0 ? `• ${deals.filter(d => d.stage === 'closed_won').length} Won` : ''}
           </div>
         </div>
 
-        {/* Metric 3 */}
+        {/* Metric 3: Receivables */}
         <div 
           onClick={() => setActiveModule('invoices')}
           className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-3 cursor-pointer hover:border-amber-500/40 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
@@ -387,12 +506,12 @@ export default function DashboardOverview() {
           <div className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 tracking-tight mt-1">
             ₹{(metrics.pendingInvoiceAmount + metrics.overdueInvoiceAmount).toLocaleString()}
           </div>
-          <div className="text-[9.5px] text-rose-600 dark:text-rose-400 font-semibold mt-0.5">
-            ₹{metrics.overdueInvoiceAmount.toLocaleString()} Overdue
+          <div className={`text-[9.5px] font-semibold mt-0.5 ${metrics.overdueInvoiceAmount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
+            {metrics.overdueInvoiceAmount > 0 ? `₹${metrics.overdueInvoiceAmount.toLocaleString()} Overdue` : `${pendingInvoices.length} Pending Clearance`}
           </div>
         </div>
 
-        {/* Metric 4 */}
+        {/* Metric 4: AI Voice & Team */}
         <div 
           onClick={() => setActiveModule('telephony')}
           className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-3 cursor-pointer hover:border-violet-500/40 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
@@ -407,7 +526,7 @@ export default function DashboardOverview() {
             {calls.length} Calls • {metrics.activeEmployeesCount} Staff
           </div>
           <div className="text-[9.5px] text-purple-600 dark:text-purple-400 font-semibold mt-0.5">
-            AI Telephony Active
+            {calls.length > 0 ? `${calls.filter(c => c.status === 'completed').length} Completed Calls` : 'AI Telephony Ready'}
           </div>
         </div>
 
@@ -538,7 +657,7 @@ export default function DashboardOverview() {
 
           <div className="h-44 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={REVENUE_DATA} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <AreaChart data={dynamicRevenueData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="revGradApple" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>

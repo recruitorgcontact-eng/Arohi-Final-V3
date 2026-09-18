@@ -79,7 +79,7 @@ export default function ExotelDirectDialerModal({
   defaultObjective = '',
   onCallCompleted
 }: ExotelDirectDialerModalProps) {
-  const { showToast, theme, toggleTheme } = useBusinessOS();
+  const { showToast, theme, toggleTheme, companyProfile } = useBusinessOS();
   const isBright = theme === 'light';
 
   // Call Setup State
@@ -102,7 +102,7 @@ export default function ExotelDirectDialerModal({
   const [exotelSid, setExotelSid] = useState('');
   const [exotelApiKey, setExotelApiKey] = useState('');
   const [exotelApiToken, setExotelApiToken] = useState('');
-  const [exotelCallerId, setExotelCallerId] = useState('08047282633');
+  const [exotelCallerId, setExotelCallerId] = useState(companyProfile?.phone ? companyProfile.phone.replace(/[^\d+]/g, '') : '');
   const [exotelSubdomain, setExotelSubdomain] = useState('api.exotel.com');
   const [carrierConfig, setCarrierConfig] = useState<any>(null);
 
@@ -134,12 +134,16 @@ export default function ExotelDirectDialerModal({
         .then((data) => {
           if (data.success) {
             setCarrierConfig(data);
-            if (data.callerId) setExotelCallerId(data.callerId);
+            if (data.callerId) {
+              setExotelCallerId(data.callerId);
+            } else if (companyProfile?.phone) {
+              setExotelCallerId(companyProfile.phone.replace(/[^\d+]/g, ''));
+            }
           }
         })
         .catch((err) => console.warn('Failed to load Exotel config:', err));
     }
-  }, [isOpen]);
+  }, [isOpen, companyProfile?.phone]);
 
   // Duration Timer
   useEffect(() => {

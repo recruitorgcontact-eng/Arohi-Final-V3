@@ -184,6 +184,10 @@ export default function ArohiPhoneDialerModal({
   const [textInput, setTextInput] = useState('');
   const [copiedTranscript, setCopiedTranscript] = useState(false);
 
+  // Preset Spoken Script State for Arohi on Call
+  const [selectedScriptType, setSelectedScriptType] = useState<'option1' | 'option2' | 'custom'>('option1');
+  const [customScriptText, setCustomScriptText] = useState('');
+
   // Active call audio and transcripts
   const [activeCallMode, setActiveCallMode] = useState<'real_phone' | 'simulator'>('real_phone');
   const [speakerStatus, setSpeakerStatus] = useState<'arohi_speaking' | 'listening' | 'idle'>('idle');
@@ -346,6 +350,10 @@ export default function ArohiPhoneDialerModal({
     const activeTopicObj = TOPIC_PRESETS.find(t => t.id === selectedTopic);
     const topicText = selectedTopic === 'custom' ? customTopicPrompt : activeTopicObj?.title;
 
+    const option1Script = 'नमस्ते जूनून सर! मैं आरोही हूँ — आपकी अपनी AI वॉइस गाइड, आरोही AI इकोसिस्टम से। One AI, Infinite Opportunities. आज हम किस मिशन और विज़न पर काम करने जा रहे हैं?';
+    const option2Script = 'Hello Commander Junoon! This is Arohi, your AI voice guide from the Arohi AI ecosystem. Conceived and developed under your vision for a self-reliant India. One AI, Infinite Opportunities. How can I assist your mission today?';
+    const scriptToSend = selectedScriptType === 'option1' ? option1Script : selectedScriptType === 'option2' ? option2Script : customScriptText;
+
     try {
       const res = await fetch('/api/telephony/outbound-call', {
         method: 'POST',
@@ -356,13 +364,25 @@ export default function ArohiPhoneDialerModal({
           topic: topicText,
           language: selectedLanguage,
           persona: 'Arohi Voice Agent',
-          provider: mode === 'real_phone' ? 'auto' : 'simulator'
+          provider: mode === 'real_phone' ? 'auto' : 'simulator',
+          script: scriptToSend
         })
       });
 
       const data = await res.json();
       if (data.success) {
         setCallSid(data.callSid);
+
+        if (mode === 'real_phone' && data.isSimulated) {
+          // If server fell back to simulation mode because carrier credentials were not active
+          setActiveCallMode('simulator');
+          setCallState('connected');
+          setTimeout(() => {
+            connectLivePhoneStream(data.callSid, fullNumber, topicText);
+          }, 600);
+          return;
+        }
+
         setCallState('ringing');
         playRingtone();
 
@@ -850,6 +870,22 @@ export default function ArohiPhoneDialerModal({
                     </button>
                   </div>
                 )}
+
+                {/* Twilio Trial Account Guidance */}
+                {telephonyStatus?.providers?.twilio?.isTrialAccount && (
+                  <div className={`mt-2 p-3 rounded-xl border text-xs ${
+                    isBright
+                      ? 'bg-amber-50/80 border-amber-300/80 text-amber-950'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                  }`}>
+                    <div className="font-bold flex items-center gap-1.5 mb-1 text-amber-800 dark:text-amber-300">
+                      <span>ℹ️</span> Twilio Trial Mode Notice
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+                      Calls from a Twilio Trial account begin with Twilio's standard trial notice (<em className="font-medium">"You have a trial account... press any key to execute your code"</em>). After pressing 1 on your phone dialpad, the call transitions to the Arohi live stream. Upgrading your Twilio account to a paid account ($10-$20 credit) permanently removes this disclaimer so Arohi greets you immediately upon answering!
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Recipient Name */}
@@ -952,6 +988,115 @@ export default function ArohiPhoneDialerModal({
                       className={`w-full p-3.5 rounded-xl text-xs font-medium focus:outline-none transition-all h-20 ${
                         isBright
                           ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 shadow-xs'
+                          : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
+                      }`}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* PRESET ON-CALL SPOKEN SCRIPT */}
+              <div className={`p-4 rounded-2xl border transition-all ${
+                isBright ? 'bg-slate-50/90 border-slate-200' : 'bg-slate-800/40 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <label className={`text-xs font-bold uppercase tracking-wider ${
+                    isBright ? 'text-slate-800' : 'text-slate-200'
+                  }`}>
+                    Arohi On-Call Greeting Script
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    Arohi Native Voice
+                  </span>
+                </div>
+
+                {/* Option Tabs */}
+                <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-900/60 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScriptType('option1')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedScriptType === 'option1'
+                        ? isBright
+                          ? 'bg-white text-emerald-950 shadow-xs border border-slate-200/80'
+                          : 'bg-emerald-600 text-white shadow-xs'
+                        : isBright
+                          ? 'text-slate-700 hover:text-slate-900'
+                          : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🇮🇳 Option 1 (Hindi)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScriptType('option2')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedScriptType === 'option2'
+                        ? isBright
+                          ? 'bg-white text-emerald-950 shadow-xs border border-slate-200/80'
+                          : 'bg-emerald-600 text-white shadow-xs'
+                        : isBright
+                          ? 'text-slate-700 hover:text-slate-900'
+                          : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🌐 Option 2 (English)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScriptType('custom')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedScriptType === 'custom'
+                        ? isBright
+                          ? 'bg-white text-emerald-950 shadow-xs border border-slate-200/80'
+                          : 'bg-emerald-600 text-white shadow-xs'
+                        : isBright
+                          ? 'text-slate-700 hover:text-slate-900'
+                          : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    ✏️ Custom
+                  </button>
+                </div>
+
+                {/* Spoken Text Display / Input */}
+                {selectedScriptType === 'option1' && (
+                  <div className={`p-3 rounded-xl border text-xs leading-relaxed font-medium ${
+                    isBright ? 'bg-white border-emerald-200 text-slate-900' : 'bg-slate-900/80 border-emerald-900/50 text-slate-200'
+                  }`}>
+                    <p className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] mb-1">
+                      🗣️ Arohi will say over phone:
+                    </p>
+                    <p className="italic">
+                      "नमस्ते जूनून सर! मैं आरोही हूँ — आपकी अपनी AI वॉइस गाइड, आरोही AI इकोसिस्टम से। One AI, Infinite Opportunities. आज हम किस मिशन और विज़न पर काम करने जा रहे हैं?"
+                    </p>
+                  </div>
+                )}
+
+                {selectedScriptType === 'option2' && (
+                  <div className={`p-3 rounded-xl border text-xs leading-relaxed font-medium ${
+                    isBright ? 'bg-white border-emerald-200 text-slate-900' : 'bg-slate-900/80 border-emerald-900/50 text-slate-200'
+                  }`}>
+                    <p className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] mb-1">
+                      🗣️ Arohi will say over phone:
+                    </p>
+                    <p className="italic">
+                      "Hello Commander Junoon! This is Arohi, your AI voice guide from the Arohi AI ecosystem. Conceived and developed under your vision for a self-reliant India. One AI, Infinite Opportunities. How can I assist your mission today?"
+                    </p>
+                  </div>
+                )}
+
+                {selectedScriptType === 'custom' && (
+                  <div>
+                    <textarea
+                      value={customScriptText}
+                      onChange={(e) => setCustomScriptText(e.target.value)}
+                      placeholder="Type the exact sentences you want Arohi to speak when you answer the phone..."
+                      className={`w-full p-3 rounded-xl text-xs font-medium focus:outline-none transition-all h-20 ${
+                        isBright
+                          ? 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600'
                           : 'bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500'
                       }`}
                     />

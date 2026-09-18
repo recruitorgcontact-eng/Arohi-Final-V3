@@ -24,7 +24,8 @@ export default function QuickCreateModal() {
     addExpense,
     addTask,
     showToast,
-    theme
+    theme,
+    companyProfile
   } = useBusinessOS();
 
   // Form states
@@ -118,7 +119,7 @@ export default function QuickCreateModal() {
         amountPaid: 0,
         status: 'pending',
         notes: 'Terms: Payment due within 15 days from issue date.',
-        upiQrString: `upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=${numVal + tax}&cu=INR`
+        upiQrString: `upi://pay?pa=${encodeURIComponent(companyProfile?.upiId || 'arohiai@icici')}&pn=${encodeURIComponent(companyProfile?.name || 'ArohiTechnologies')}&am=${numVal + tax}&cu=INR`
       });
     } else if (quickCreateType === 'quote') {
       const numVal = Number(amount) || 250000;
@@ -164,7 +165,7 @@ export default function QuickCreateModal() {
         taxDeductible: true,
         gstClaimable: true,
         isGstClaimable: true,
-        gstin: '21AABCN9876E1Z5'
+        gstin: companyProfile?.gstin || '21AABCA9988E1Z5'
       });
     } else if (quickCreateType === 'task') {
       addTask({
@@ -228,7 +229,7 @@ export default function QuickCreateModal() {
               <input
                 type="text"
                 required
-                placeholder="e.g. Tata Advanced Systems, Infosys, Reliance"
+                placeholder="e.g. Acme Industries, Nova Enterprises, Zenith Corp"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 className="w-full bg-[#F5F5F7] dark:bg-[#18181b] border border-black/[0.06] dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 transition-colors"

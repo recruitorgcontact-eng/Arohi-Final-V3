@@ -17,6 +17,27 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
     title: "Arohi AI: ONE AI. INFINITE OPPORTUNITIES. | Sovereign AI Ecosystem in 150+ Languages (arohiai.com)",
     desc: "Arohi AI — ONE AI. INFINITE OPPORTUNITIES. Built by Bharat, Built for Bharat. Live multilingual voice AI & LLM cum LMM solving 100+ real-life problems across exams, business, careers, and welfare in 150+ languages."
   },
+  // Flagship Product Suites & Ecosystem Hubs
+  assistant: {
+    title: "Arohi Assistant - Next-Gen Conversational LLM & Multimodal LMM Copilot | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Experience Arohi Assistant: India's sovereign conversational LLM cum LMM. Real-time multilingual voice chat, live web search grounding, visual document analysis, and deep reasoning across 150+ languages."
+  },
+  'arohi-assistant': {
+    title: "Arohi Assistant - Next-Gen Conversational LLM & Multimodal LMM Copilot | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Experience Arohi Assistant: India's sovereign conversational LLM cum LMM. Real-time multilingual voice chat, live web search grounding, visual document analysis, and deep reasoning across 150+ languages."
+  },
+  'calling-agents': {
+    title: "Arohi Calling Agents - Autonomous Enterprise Telephony & Voice AI | Arohi AI (arohiai.com)",
+    desc: "Deploy human-like autonomous outbound & inbound voice calling bots in 150+ regional languages. Ultra-low latency, CRM synchronization, lead qualification, and customer support."
+  },
+  calling: {
+    title: "Arohi Calling Agents - Autonomous Enterprise Telephony & Voice AI | Arohi AI (arohiai.com)",
+    desc: "Deploy human-like autonomous outbound & inbound voice calling bots in 150+ regional languages. Ultra-low latency, CRM synchronization, lead qualification, and customer support."
+  },
+  exams: {
+    title: "Arohi Exams - National CBT Mock Test Series & 1v1 Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Practice real-time CBT mock tests for NEET, JEE Main, UPSC, SSC CGL, Banking, CBSE & CHSE Odisha with instant All-India rank, OMR grading, and 1v1 gaming arena battles powered by Arohi AI."
+  },
   mocktests: {
     title: "Arohi Exams - National CBT Mock Test Series & Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
     desc: "Practice real-time CBT mock tests for NEET, JEE Main, UPSC, SSC CGL, Banking, CBSE & CHSE Odisha with instant All-India rank, OMR grading, and 1v1 gaming arena battles powered by Arohi AI."
@@ -24,6 +45,22 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   mocktest: {
     title: "Arohi Exams - National CBT Mock Test Series & Gaming Arena | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
     desc: "Practice real-time CBT mock tests for NEET, JEE Main, UPSC, SSC CGL, Banking, CBSE & CHSE Odisha with instant All-India rank, OMR grading, and 1v1 gaming arena battles powered by Arohi AI."
+  },
+  institutions: {
+    title: "Arohi for Institutions & Universities - AI Campus & Placement OS | Arohi AI (arohiai.com)",
+    desc: "Empower your university, college, or school with AI-driven student employability intelligence, automated mock interview labs, smart curriculum mapping, and campus placement tracking."
+  },
+  govt: {
+    title: "Arohi for Government & Public Administration - Sovereign Public AI Infrastructure | Arohi AI",
+    desc: "Equipping state departments and district administrations with citizen grievance redressal, multilingual scheme navigation, and sovereign AI public service automation."
+  },
+  opportunities: {
+    title: "Arohi Opportunities Engine - Central & State Welfare Schemes, Subsidies, Jobs & Grants | Arohi AI",
+    desc: "Search, verify eligibility, and apply for 2,500+ Central and State welfare schemes, PMEGP/Mudra loans, Divyangjan UDID benefits, and freshers vacancies with step-by-step AI guidance."
+  },
+  'arohi-one-product': {
+    title: "Arohi ONE Business OS - All-in-One MSME Operating System & ERP | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
   },
   'business-os': {
     title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
@@ -40,6 +77,42 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   one: {
     title: "Arohi ONE Business OS - All-in-One MSME Operating System | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
     desc: "Streamline your enterprise with automated GST invoicing, CRM lead pipeline, cashflow radar, inventory stock alerts, legal contracts, and bank-ready MSME DPR reports inside Arohi AI."
+  },
+  'mission-87': {
+    title: "Mission 87: National Youth Economic Activation Movement | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "National sovereign movement activating India's 87 Million NEET youth across 700+ districts into self-reliant economic creators. Five sovereign earning ladders to earn ₹5,000 to ₹1,00,000+ monthly."
+  },
+  mission87: {
+    title: "Mission 87: National Youth Economic Activation Movement | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "National sovereign movement activating India's 87 Million NEET youth across 700+ districts into self-reliant economic creators. Five sovereign earning ladders to earn ₹5,000 to ₹1,00,000+ monthly."
+  },
+  mission: {
+    title: "Mission 87: National Youth Economic Activation Movement | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
+    desc: "National sovereign movement activating India's 87 Million NEET youth across 700+ districts into self-reliant economic creators. Five sovereign earning ladders to earn ₹5,000 to ₹1,00,000+ monthly."
+  },
+  partner: {
+    title: "Arohi AI Partner & Franchise Network - District Dealerships & Campus Ambassadors | Arohi AI",
+    desc: "Join India's fastest-growing sovereign AI network. Become an authorized district franchise partner, institution dealer, or campus brand ambassador with recurring revenue sharing."
+  },
+  partners: {
+    title: "Arohi AI Partner & Franchise Network - District Dealerships & Campus Ambassadors | Arohi AI",
+    desc: "Join India's fastest-growing sovereign AI network. Become an authorized district franchise partner, institution dealer, or campus brand ambassador with recurring revenue sharing."
+  },
+  franchise: {
+    title: "Arohi AI Partner & Franchise Network - District Dealerships & Campus Ambassadors | Arohi AI",
+    desc: "Join India's fastest-growing sovereign AI network. Become an authorized district franchise partner, institution dealer, or campus brand ambassador with recurring revenue sharing."
+  },
+  employer: {
+    title: "Arohi AI Recruiter & Employer Portal - AI Talent Match & Verified Candidate Sourcing | Arohi AI",
+    desc: "Post job openings, screen candidates with ATS benchmarks, review AI interview performance scores, and hire top verified talent across India with Arohi AI."
+  },
+  tools: {
+    title: "Arohi AI Tools Hub - 30+ Free Instant Productivity & Career AI Utilities | Arohi AI",
+    desc: "Explore 30+ free AI tools: ATS resume score checker, multilingual voice translator, GST calculator, business idea generator, cover letter writer, and prompt enhancer."
+  },
+  directory: {
+    title: "Global Problem & Solutions Directory - 100+ Everyday Challenges Solved | Arohi AI",
+    desc: "Browse curated AI solutions for 100+ real-world challenges faced by students, farmers, job seekers, entrepreneurs, PwD, and professionals in 150+ languages."
   },
   solutions: {
     title: "Universal Solutions Hub - 100+ Everyday Problems Solved | Arohi AI: ONE AI. INFINITE OPPORTUNITIES.",
@@ -100,6 +173,26 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   blogs: {
     title: "100+ Multilingual Knowledge Blogs on AI, Sarkari Jobs, MSME Loans & Exams | Arohi AI",
     desc: "Explore trending guides on government schemes, resume hacks, competitive exam tricks, and business subsidies in 150+ languages."
+  },
+  privacy: {
+    title: "Privacy Policy & Data Security Commitment | Arohi AI (arohiai.com)",
+    desc: "Official privacy policy and data governance practices of Arohi AI. Enterprise-grade encryption, DPDP Act compliance, and zero personal data selling."
+  },
+  terms: {
+    title: "Terms of Service & User Agreement | Arohi AI (arohiai.com)",
+    desc: "Official terms of service governing the usage of Arohi AI platforms, API, mobile apps, and subscription services."
+  },
+  refunds: {
+    title: "Refund, Cancellation & Billing Policy | Arohi AI (arohiai.com)",
+    desc: "Transparent and fair billing, subscription cancellation, and refund policies for all Arohi AI plans and voice credits."
+  },
+  contact: {
+    title: "Contact Us & Support Helpdesk | Arohi AI (arohiai.com)",
+    desc: "Connect with the Arohi AI support team for enterprise sales inquiries, franchise partnerships, or technical support."
+  },
+  faqs: {
+    title: "Frequently Asked Questions & Support Center | Arohi AI (arohiai.com)",
+    desc: "Find quick answers to common questions about Arohi AI, subscription pricing, Mission 87, exams, voice calling, and multilingual capabilities."
   }
 };
 
@@ -300,7 +393,66 @@ export default function SEOHead({
       }
     ];
 
-    if (activeTab === 'mocktests' || activeTab === 'mocktest') {
+    if (activeTab === 'assistant' || activeTab === 'arohi-assistant') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Arohi Assistant",
+        "description": "Next-Gen Conversational LLM cum LMM AI Copilot with real-time multilingual voice chat, visual document analysis, live search grounding, and deep reasoning in 150+ languages.",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web, Android, iOS"
+      });
+    }
+
+    if (activeTab === 'calling-agents' || activeTab === 'calling') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Arohi Calling Agents",
+        "description": "Autonomous enterprise telephony and conversational voice AI bots handling inbound customer support, outbound qualification calls, and automated appointment scheduling in 150+ languages.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, Cloud Telephony API"
+      });
+    }
+
+    if (activeTab === 'institutions' || activeTab === 'govt') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "GovernmentService",
+        "name": "Arohi AI for Institutions & Public Administration",
+        "serviceType": "Public AI Infrastructure & Campus Placement OS",
+        "provider": {
+          "@type": "Organization",
+          "name": "Arohi AI Bharat"
+        }
+      });
+    }
+
+    if (activeTab === 'opportunities') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "GovernmentService",
+        "name": "Arohi Opportunities Engine",
+        "serviceType": "Welfare Schemes, Subsidies & Employment Portal",
+        "description": "Eligibility verification and application roadmaps for 2,500+ Central and State welfare schemes, PMEGP subsidies, and Divyangjan UDID assistance."
+      });
+    }
+
+    if (activeTab === 'mission-87' || activeTab === 'mission87' || activeTab === 'mission') {
+      schemaGraph.push({
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalProgram",
+        "name": "Mission 87: National Youth Economic Activation Movement",
+        "description": "A sovereign national initiative by Arohi AI empowering India's 87 Million NEET youth across 700+ districts with AI agency skills, micro-manufacturing blueprints, and sovereign earning ladders to earn ₹5,000–₹1,00,000+/month.",
+        "provider": {
+          "@type": "Organization",
+          "name": "Arohi AI Bharat",
+          "url": "https://arohiai.com"
+        }
+      });
+    }
+
+    if (activeTab === 'mocktests' || activeTab === 'mocktest' || activeTab === 'exams') {
       schemaGraph.push({
         "@context": "https://schema.org",
         "@type": "EducationalApplication",
@@ -315,7 +467,7 @@ export default function SEOHead({
       });
     }
 
-    if (activeTab === 'business-os' || activeTab === 'businessos' || activeTab === 'arohione' || activeTab === 'one') {
+    if (activeTab === 'business-os' || activeTab === 'businessos' || activeTab === 'arohione' || activeTab === 'one' || activeTab === 'arohi-one-product') {
       schemaGraph.push({
         "@context": "https://schema.org",
         "@type": "BusinessAudience",

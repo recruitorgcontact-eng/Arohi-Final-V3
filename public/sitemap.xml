@@ -31,6 +31,202 @@
   </url>
 
   <!-- ============================================================ -->
+  <!-- Flagship: Arohi Assistant (Conversational LLM & Multimodal AI) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/assistant</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.99</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/assistant?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/assistant?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/assistant?lang=or" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://arohiai.com/assistant?lang=bn" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://arohiai.com/assistant?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://arohiai.com/assistant?lang=te" />
+    <xhtml:link rel="alternate" hreflang="mr" href="https://arohiai.com/assistant?lang=mr" />
+    <xhtml:link rel="alternate" hreflang="kn" href="https://arohiai.com/assistant?lang=kn" />
+    <xhtml:link rel="alternate" hreflang="ml" href="https://arohiai.com/assistant?lang=ml" />
+    <xhtml:link rel="alternate" hreflang="gu" href="https://arohiai.com/assistant?lang=gu" />
+    <xhtml:link rel="alternate" hreflang="pa" href="https://arohiai.com/assistant?lang=pa" />
+    <xhtml:link rel="alternate" hreflang="ur" href="https://arohiai.com/assistant?lang=ur" />
+    <xhtml:link rel="alternate" hreflang="as" href="https://arohiai.com/assistant?lang=as" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/assistant" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi Calling Agents (Autonomous Voice Telephony AI) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/calling-agents</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.99</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/calling-agents?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/calling-agents?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/calling-agents?lang=or" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://arohiai.com/calling-agents?lang=bn" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://arohiai.com/calling-agents?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://arohiai.com/calling-agents?lang=te" />
+    <xhtml:link rel="alternate" hreflang="mr" href="https://arohiai.com/calling-agents?lang=mr" />
+    <xhtml:link rel="alternate" hreflang="kn" href="https://arohiai.com/calling-agents?lang=kn" />
+    <xhtml:link rel="alternate" hreflang="ml" href="https://arohiai.com/calling-agents?lang=ml" />
+    <xhtml:link rel="alternate" hreflang="gu" href="https://arohiai.com/calling-agents?lang=gu" />
+    <xhtml:link rel="alternate" hreflang="pa" href="https://arohiai.com/calling-agents?lang=pa" />
+    <xhtml:link rel="alternate" hreflang="ur" href="https://arohiai.com/calling-agents?lang=ur" />
+    <xhtml:link rel="alternate" hreflang="as" href="https://arohiai.com/calling-agents?lang=as" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/calling-agents" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi Exams Suite (National CBT Mock Tests & Arena) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/exams</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/exams?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/exams?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/exams?lang=or" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/exams" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi for Institutions & Government -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/institutions</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/institutions?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/institutions?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/institutions?lang=or" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/institutions" />
+  </url>
+  <url>
+    <loc>https://arohiai.com/govt</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/govt?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/govt?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/govt" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi Opportunities Engine (Schemes, Subsidies, Jobs) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/opportunities</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/opportunities?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/opportunities?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/opportunities?lang=or" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://arohiai.com/opportunities?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://arohiai.com/opportunities?lang=te" />
+    <xhtml:link rel="alternate" hreflang="mr" href="https://arohiai.com/opportunities?lang=mr" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/opportunities" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi ONE Enterprise ERP Suite -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/arohi-one-product</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/arohi-one-product" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/arohi-one-product" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Partner & Franchise Network -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/partners</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/partners" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/partners" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Employer & Recruiter Portal -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/employer</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/employer" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/employer" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Arohi AI Tools Hub (30+ Micro Utilities) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/tools</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.96</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/tools" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/tools" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Flagship: Universal Problem & Solutions Directory -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/directory</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/directory" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/directory" />
+  </url>
+
+  <!-- ============================================================ -->
+  <!-- Trust & Policy Center -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/privacy</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/terms</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/refunds</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/contact</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://arohiai.com/faqs</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- ============================================================ -->
   <!-- Flagship 2: Mission 87 — National Economic Activation Portal -->
   <!-- ============================================================ -->
   <url>
@@ -538,5 +734,19 @@
   <url><loc>https://arohiai.com/?seo_region=bihar</loc><lastmod>2026-08-27</lastmod><priority>0.86</priority></url>
   <url><loc>https://arohiai.com/?seo_region=assam</loc><lastmod>2026-08-27</lastmod><priority>0.86</priority></url>
   <url><loc>https://arohiai.com/?seo_region=rajasthan</loc><lastmod>2026-08-27</lastmod><priority>0.86</priority></url>
+
+  <!-- ============================================================ -->
+  <!-- Suite: Blender 3D AI Studio (AI 3D CAD & Mesh Pipeline) -->
+  <!-- ============================================================ -->
+  <url>
+    <loc>https://arohiai.com/blender-3d</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://arohiai.com/blender-3d?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://arohiai.com/blender-3d?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://arohiai.com/blender-3d?lang=or" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://arohiai.com/blender-3d" />
+  </url>
 
 </urlset>

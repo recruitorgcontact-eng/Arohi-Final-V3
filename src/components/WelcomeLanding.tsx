@@ -61,6 +61,7 @@ import { LANGUAGES_LIST } from './Header';
 import { useAuth } from '../context/AuthContext';
 import ArohiAvatar from './ArohiAvatar';
 import { buildPersonalizedMotivationalLines, shuffleHeadlines } from '../data/motivationalHeadlines';
+import MotivationalTagBadge from './MotivationalTagBadge';
 import ArohiVoiceCall from './ArohiVoiceCall';
 import HeaderNotifications from './HeaderNotifications';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
@@ -1045,11 +1046,8 @@ export default function WelcomeLanding({
           onMouseEnter={() => setIsHeadlineHovered(true)}
           onMouseLeave={() => setIsHeadlineHovered(false)}
         >
-          {/* Subtle Atelier Tag */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[11px] font-semibold tracking-[0.2em] uppercase mb-3 transition-all">
-            <Sparkles className="w-3 h-3 text-blue-500" />
-            <span>{motivationalLines[headlineIndex]?.tag || "A MORE HUMAN TOMORROW"}</span>
-          </div>
+          {/* Dynamic Context-Aware Semantic Tag Badge with Matched Icon */}
+          <MotivationalTagBadge tag={motivationalLines[headlineIndex]?.tag || "A MORE HUMAN TOMORROW"} />
 
           {/* Super-Premium Newsreader Editorial Headline (No lines or clutter underneath) */}
           <div className="min-h-[76px] sm:min-h-[96px] flex items-center justify-center overflow-hidden">

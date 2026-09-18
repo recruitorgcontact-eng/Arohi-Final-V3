@@ -124,7 +124,30 @@ export default function CrmLeadsView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] font-medium text-zinc-700 dark:text-zinc-300">
-              {filteredLeads.map((lead) => {
+              {filteredLeads.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">No CRM Leads Found</p>
+                      <p className="text-[11px] text-zinc-400 max-w-sm">
+                        Your production CRM database is clean. Add your first lead manually or extract customer details automatically from GST invoices and Excel files.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setQuickCreateType('lead')}
+                        className="mt-2 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add First Lead</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredLeads.map((lead) => {
                 const conf = STATUS_CONFIG[lead.status] || STATUS_CONFIG.new;
                 return (
                   <tr key={lead.id} className="hover:bg-zinc-50 dark:hover:bg-[#18181b]/50 transition-colors">
@@ -207,7 +230,7 @@ export default function CrmLeadsView() {
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

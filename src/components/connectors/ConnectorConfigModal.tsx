@@ -221,20 +221,26 @@ export default function ConnectorConfigModal({
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-xs text-white">Instant 1-Click OAuth 2.0</h4>
+                    <h4 className="font-semibold text-xs text-white">
+                      {connector.id === 'gmail' ? 'Gmail 1-Click Account Connection' : 'Instant 1-Click OAuth 2.0'}
+                    </h4>
                     <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Authorizes Arohi AI with granular read/write permissions directly via official single sign-on. No API keys to copy.
+                      {connector.id === 'gmail'
+                        ? 'Authorizes Arohi AI to draft and dispatch emails with PDF/PPT attachments directly from your connected Gmail or Google Workspace address.'
+                        : 'Authorizes Arohi AI with granular read/write permissions directly via official single sign-on. No API keys to copy.'}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <label className="text-[11px] font-medium text-slate-400 block mb-1">Connected Account</label>
+                  <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                    {connector.id === 'gmail' ? 'Your Gmail Address' : 'Connected Account'}
+                  </label>
                   <input
                     type="email"
                     value={oauthAccount}
                     onChange={(e) => setOauthAccount(e.target.value)}
-                    placeholder="account@company.com"
+                    placeholder={connector.id === 'gmail' ? 'yourname@gmail.com' : 'account@company.com'}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950/60 border border-slate-800 focus:border-indigo-500 focus:outline-none text-slate-200"
                   />
                 </div>
@@ -264,9 +270,19 @@ export default function ConnectorConfigModal({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-amber-400" /> Enter API Key / Secret Token
+                    <Key className="w-3.5 h-3.5 text-amber-400" />
+                    {connector.id === 'gmail' ? 'Google App Password (16-char)' : 'Enter API Key / Secret Token'}
                   </label>
-                  {connector.docUrl && (
+                  {connector.id === 'gmail' ? (
+                    <a
+                      href="https://myaccount.google.com/apppasswords"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    >
+                      Generate App Password <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  ) : connector.docUrl && (
                     <a
                       href={connector.docUrl}
                       target="_blank"
@@ -283,7 +299,7 @@ export default function ConnectorConfigModal({
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Paste secret API key (e.g. sk_live_... or token)"
+                    placeholder={connector.id === 'gmail' ? 'xxxx xxxx xxxx xxxx (16-character App Password)' : 'Paste secret API key (e.g. sk_live_... or token)'}
                     className="w-full px-3 py-2 pr-10 text-xs rounded-lg bg-slate-950/60 border border-slate-800 focus:border-indigo-500 focus:outline-none text-slate-200 font-mono"
                   />
                   <button
@@ -294,9 +310,15 @@ export default function ConnectorConfigModal({
                     {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-emerald-500" /> Stored with client-side zero-knowledge AES vault encryption.
-                </p>
+                {connector.id === 'gmail' ? (
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Generated inside <span className="text-slate-200 font-medium">Google Account &gt; Security &gt; 2-Step Verification &gt; App passwords</span> for direct SMTP dispatch.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-emerald-500" /> Stored with client-side zero-knowledge AES vault encryption.
+                  </p>
+                )}
               </div>
             )}
 

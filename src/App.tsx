@@ -48,6 +48,7 @@ import MockTestsHub from './components/mocktests/MockTestsHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
 import PartnerPortal from './components/PartnerPortal';
+import Blender3DStudio from './components/blender3d/Blender3DStudio';
 import ArohiAssistantProductPage from './components/products/ArohiAssistantProductPage';
 import ArohiCallingAgentsProductPage from './components/products/ArohiCallingAgentsProductPage';
 import ArohiExamsProductPage from './components/products/ArohiExamsProductPage';
@@ -145,7 +146,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2496,6 +2497,16 @@ export default function App() {
                 setTimeout(() => setCopiedLink(false), 3000);
               }
             }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      }
+      case 'blender-3d':
+      case '3d':
+      case 'blender': {
+        return (
+          <Blender3DStudio
+            onBackToHome={() => setActiveTab('home')}
             isDarkMode={isDarkMode}
           />
         );

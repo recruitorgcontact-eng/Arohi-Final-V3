@@ -179,6 +179,7 @@ interface BusinessOSContextType {
   toastMessage: string | null;
   showToast: (msg: string) => void;
   resetToSampleData: () => void;
+  clearToFreshWorkspace: () => void;
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
@@ -186,7 +187,8 @@ interface BusinessOSContextType {
 
 const BusinessOSContext = createContext<BusinessOSContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'arohi_one_business_os_state_v1';
+const STORAGE_KEY = 'arohi_one_business_os_state_v2';
+const DATA_MODE_KEY = 'arohi_one_business_os_mode';
 
 export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, userData, updateBusinessOsData } = useAuth();
@@ -246,20 +248,40 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   // Load from local storage or fallback to defaults with deep merge safety
-  const safeLoad = <T,>(keySuffix: string, fallback: T): T => {
+  // PERMANENT CLEAN DATA ARCHITECTURE:
+  // Transactional collections default to 100% EMPTY arrays for real business use.
+  // Sample demo records (Tata Advanced, etc.) are ONLY loaded if the user explicitly activates sample demo mode.
+  const safeLoad = <T,>(keySuffix: string, sampleFallback: T): T => {
     try {
+      const mode = localStorage.getItem(DATA_MODE_KEY);
+      const isSample = mode === 'sample';
       const saved = localStorage.getItem(`${STORAGE_KEY}_${keySuffix}`);
-      if (!saved) return fallback;
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(fallback)) {
-        return (Array.isArray(parsed) ? parsed : fallback) as unknown as T;
+
+      if (saved) {
+        // If saved data has legacy Tata Advanced Systems and mode is not explicitly 'sample', purge it permanently!
+        if (saved.includes('Tata Advanced Systems') && !isSample) {
+          localStorage.removeItem(`${STORAGE_KEY}_${keySuffix}`);
+          return (Array.isArray(sampleFallback) ? [] : sampleFallback) as unknown as T;
+        }
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(sampleFallback)) {
+          return (Array.isArray(parsed) ? parsed : []) as unknown as T;
+        }
+        if (typeof sampleFallback === 'object' && sampleFallback !== null) {
+          return { ...sampleFallback, ...parsed };
+        }
+        return parsed ?? sampleFallback;
       }
-      if (typeof fallback === 'object' && fallback !== null) {
-        return { ...fallback, ...parsed };
+
+      // If nothing saved in localStorage:
+      // If user explicitly chose sample mode, load sampleFallback.
+      // Otherwise, return 100% clean blank array for production!
+      if (isSample) {
+        return sampleFallback;
       }
-      return parsed ?? fallback;
+      return (Array.isArray(sampleFallback) ? [] : sampleFallback) as unknown as T;
     } catch {
-      return fallback;
+      return (Array.isArray(sampleFallback) ? [] : sampleFallback) as unknown as T;
     }
   };
 
@@ -285,6 +307,22 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [documents, setDocuments] = useState<DocumentVaultItem[]>(() => safeLoad('documents', INITIAL_DOCUMENTS));
   const [automations, setAutomations] = useState<AutomationRule[]>(() => safeLoad('automations', INITIAL_AUTOMATIONS));
   const [roles] = useState<RolePermission[]>(INITIAL_ROLES);
+
+  // Proactive cleanup: purge any legacy v1 mock keys from localStorage on mount
+  useEffect(() => {
+    try {
+      const mode = localStorage.getItem(DATA_MODE_KEY);
+      if (mode !== 'sample') {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('arohi_one_business_os_state_v1')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Sync to local storage & resilient cloud Firestore
   useEffect(() => {
@@ -494,7 +532,7 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       amountPaid: 0,
       status: 'pending',
       notes: `Generated automatically from Quote ${quote.quoteNumber}`,
-      upiQrString: `upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=${quote.grandTotal}&cu=INR`
+      upiQrString: `upi://pay?pa=${encodeURIComponent(companyProfile.upiId || 'arohiai@icici')}&pn=${encodeURIComponent(companyProfile.name || 'ArohiTechnologies')}&am=${quote.grandTotal}&cu=INR`
     };
 
     setInvoices(prev => [newInvoice, ...prev]);
@@ -795,8 +833,13 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     showToast('Workflow automation status toggled');
   };
 
-  // Reset to clean sample data
+  // Explicitly Load Sample Demo Data (On Demand)
   const resetToSampleData = () => {
+    try {
+      localStorage.setItem(DATA_MODE_KEY, 'sample');
+    } catch {
+      // ignore
+    }
     setCompanyProfile(INITIAL_COMPANY_PROFILE);
     setLeads(INITIAL_LEADS);
     setCustomers(INITIAL_CUSTOMERS);
@@ -816,8 +859,78 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setTickets(INITIAL_SUPPORT_TICKETS);
     setDocuments(INITIAL_DOCUMENTS);
     setAutomations(INITIAL_AUTOMATIONS);
-    localStorage.clear();
-    showToast('Business OS sample enterprise database reset successfully');
+    showToast('Loaded sample enterprise demo dataset (Tata Advanced, Deccan, etc.).');
+  };
+
+  // Permanently Clear Workspace to Clean Blank Production Slate
+  const clearToFreshWorkspace = () => {
+    try {
+      localStorage.setItem(DATA_MODE_KEY, 'clean');
+      // Purge all legacy and current Business OS keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('arohi_one_business_os_state')) {
+          localStorage.removeItem(key);
+        }
+      });
+      // Store explicit empty arrays so that any page reloads stay 100% clean
+      const collections = [
+        'leads', 'customers', 'deals', 'quotes', 'invoices',
+        'expenses', 'vendors', 'purchase_orders', 'inventory',
+        'employees', 'payroll', 'projects', 'tasks', 'campaigns',
+        'calls', 'tickets', 'documents'
+      ];
+      collections.forEach(col => {
+        localStorage.setItem(`${STORAGE_KEY}_${col}`, '[]');
+      });
+    } catch (e) {
+      console.warn('Storage purge warning:', e);
+    }
+
+    setLeads([]);
+    setCustomers([]);
+    setDeals([]);
+    setQuotations([]);
+    setInvoices([]);
+    setExpenses([]);
+    setVendors([]);
+    setPurchaseOrders([]);
+    setInventory([]);
+    setEmployees([]);
+    setPayroll([]);
+    setProjects([]);
+    setTasks([]);
+    setCampaigns([]);
+    setCalls([]);
+    setTickets([]);
+    setDocuments([]);
+
+    // Cloud Firestore Sync (if user is authenticated)
+    if (user?.uid) {
+      updateBusinessOsData({
+        leads: [],
+        customers: [],
+        deals: [],
+        quotations: [],
+        invoices: [],
+        expenses: [],
+        vendors: [],
+        purchaseOrders: [],
+        inventory: [],
+        employees: [],
+        payroll: [],
+        projects: [],
+        tasks: [],
+        campaigns: [],
+        calls: [],
+        tickets: [],
+        documents: [],
+        lastSyncedAt: new Date().toISOString()
+      }).catch((err) => {
+        console.warn('Cloud sync clear error:', err);
+      });
+    }
+
+    showToast('Workspace Cleaned: 100% of demo data wiped. Clean production database active.');
   };
 
   // Calculate live global metrics
@@ -826,8 +939,8 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const overdueInvoiceAmount = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + i.grandTotal, 0);
   const openDealsValue = deals.filter(d => d.stage !== 'closed_won' && d.stage !== 'closed_lost').reduce((sum, d) => sum + d.value, 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const monthlyRecurringRevenue = Math.round(totalRevenue / 3) || 890000;
-  const cashBalance = 4250000 + totalRevenue - totalExpenses;
+  const monthlyRecurringRevenue = Math.round(totalRevenue / 3);
+  const cashBalance = Math.max(0, totalRevenue - totalExpenses);
   const lowStockItemsCount = inventory.filter(i => i.status === 'low_stock' || i.status === 'out_of_stock').length;
   const openTicketsCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
 
@@ -926,6 +1039,7 @@ export const BusinessOSProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         toastMessage,
         showToast,
         resetToSampleData,
+        clearToFreshWorkspace,
         theme,
         setTheme: handleSetTheme,
         toggleTheme

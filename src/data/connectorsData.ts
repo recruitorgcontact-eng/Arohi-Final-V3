@@ -108,6 +108,46 @@ export const ALL_CONNECTORS: ConnectorDefinition[] = [
     mockLatencyMs: 45
   },
   {
+    id: 'gmail',
+    name: 'Gmail',
+    tagline: 'Draft emails, send documents & dispatch PDF/PPT attachments',
+    description: 'Direct Google Workspace & Gmail email integration. Compose professional messages, dispatch generated PDF quotes, PowerPoint decks, invoices, and summaries directly from your inbox.',
+    category: 'productivity',
+    supportedProtocols: ['oauth', 'api_key', 'webhook'],
+    defaultProtocol: 'oauth',
+    logoText: '✉️',
+    accentColor: 'text-red-400',
+    bgTint: 'bg-red-500/10',
+    borderColor: 'border-red-500/30',
+    badge: '1-Click Ready',
+    isPopular: true,
+    docUrl: 'https://developers.google.com/gmail/api',
+    actions: [
+      {
+        id: 'send_email',
+        name: 'Send Email with Attachments',
+        description: 'Dispatch an email directly to any recipient with optional PDF, PPTX or DOCX documents',
+        type: 'write',
+        samplePrompt: 'Send an email via Gmail to client@enterprise.in with the subject "Project Proposal" and attach the PDF deck.'
+      },
+      {
+        id: 'create_draft',
+        name: 'Create Gmail Draft',
+        description: 'Draft a message into your Gmail Drafts folder ready for your final 1-click review',
+        type: 'write',
+        samplePrompt: 'Draft an email in my Gmail to hr@tcs.com with my tailored cover letter for the Senior AI Engineer role.'
+      },
+      {
+        id: 'search_emails',
+        name: 'Search & Summarize Inbox',
+        description: 'Find messages by sender, subject, date, or keywords and summarize their contents',
+        type: 'read',
+        samplePrompt: 'Search my Gmail for recent emails from "CA Rajesh" and summarize any pending tax audit items.'
+      }
+    ],
+    mockLatencyMs: 60
+  },
+  {
     id: 'microsoft_excel',
     name: 'Microsoft Excel 365',
     tagline: 'Enterprise workbook sync via Microsoft Graph API',

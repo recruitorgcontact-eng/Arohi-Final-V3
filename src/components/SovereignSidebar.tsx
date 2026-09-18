@@ -23,7 +23,8 @@ import {
   Crown,
   HeartHandshake,
   CreditCard,
-  Zap
+  Zap,
+  Box
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -133,6 +134,14 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       icon: HeartHandshake,
       badge: '15% Comm.',
       description: 'AECN Centers & Sovereign Growth'
+    },
+    {
+      id: 'blender-3d',
+      label: 'Blender 3D AI Studio',
+      icon: Box,
+      badge: 'CAD / 3D',
+      badgeGold: true,
+      description: 'AI 3D Mesh & .blend Export'
     },
     {
       id: 'pricing',

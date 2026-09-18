@@ -15,7 +15,7 @@ import { useBusinessOS } from './BusinessOSContext';
 import { Quotation } from './types';
 
 export default function QuotationsView() {
-  const { quotations = [], convertQuoteToInvoice, deleteQuotation, setQuickCreateType, showToast } = useBusinessOS();
+  const { quotations = [], convertQuoteToInvoice, deleteQuotation, setQuickCreateType, showToast, companyProfile } = useBusinessOS();
   const safeQuotations = quotations || [];
   const [selectedQuote, setSelectedQuote] = useState<Quotation | null>(null);
 
@@ -172,9 +172,9 @@ export default function QuotationsView() {
             <div className="bg-zinc-50/80 dark:bg-zinc-900/80 p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] space-y-4 text-xs">
               <div className="flex justify-between items-start border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
                 <div>
-                  <h4 className="font-bold text-sm text-zinc-900 dark:text-white">Nexus Dynamics Pvt Ltd</h4>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-[11px]">Infocity Technology Corridor, Patia, Bhubaneswar, Odisha</p>
-                  <p className="text-zinc-400 font-mono text-[10px]">GSTIN: 21AABCN9876E1Z5</p>
+                  <h4 className="font-bold text-sm text-zinc-900 dark:text-white">{companyProfile?.name || 'Arohi Technologies India Pvt Ltd'}</h4>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-[11px]">{companyProfile?.address ? `${companyProfile.address}, ${companyProfile.city}, ${companyProfile.state}` : 'Infocity Technology Corridor, Patia, Bhubaneswar, Odisha'}</p>
+                  <p className="text-zinc-400 font-mono text-[10px]">GSTIN: {companyProfile?.gstin || '21AABCA9988E1Z5'}</p>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-xs text-purple-600 dark:text-purple-400">{selectedQuote.quoteNumber}</div>

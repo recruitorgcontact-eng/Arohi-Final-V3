@@ -46,6 +46,7 @@ export interface CompanyProfile {
   bankAccount?: string;
   bankIfsc?: string;
   bankName?: string;
+  upiId?: string;
 }
 
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'proposal_sent' | 'negotiation' | 'won' | 'lost';

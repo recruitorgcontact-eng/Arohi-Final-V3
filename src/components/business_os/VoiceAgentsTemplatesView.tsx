@@ -174,12 +174,10 @@ export default function VoiceAgentsTemplatesView({
   // Delete custom template
   const handleDeleteTemplate = (templateId: string, templateTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`Are you sure you want to delete custom agent "${templateTitle}"?`)) {
-      deleteCustomTemplate(templateId);
-      reloadTemplates();
-      setDeploySuccessMessage(`Deleted custom agent "${templateTitle}".`);
-      setTimeout(() => setDeploySuccessMessage(null), 3000);
-    }
+    deleteCustomTemplate(templateId);
+    reloadTemplates();
+    setDeploySuccessMessage(`Deleted custom agent "${templateTitle}".`);
+    setTimeout(() => setDeploySuccessMessage(null), 3000);
   };
 
   // Quick deploy to Inbound Agents

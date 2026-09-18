@@ -24,24 +24,28 @@ import {
 
 export const INITIAL_COMPANY_PROFILE: CompanyProfile = {
   id: 'comp_arohi_101',
-  name: 'Nexus Dynamics Pvt Ltd',
-  legalName: 'Nexus Dynamics Technologies India Private Limited',
-  tagline: 'Enterprise Cloud & Intelligent Automation Systems',
-  gstin: '21AABCN9876E1Z5',
-  pan: 'AABCN9876E',
+  name: 'Arohi Technologies India Pvt Ltd',
+  legalName: 'Arohi Technologies Private Limited',
+  tagline: 'Enterprise Sovereign AI & Intelligent Business Operating Systems',
+  gstin: '21AABCA9988E1Z5',
+  pan: 'AABCA9988E',
   currency: 'INR',
   currencySymbol: '₹',
-  email: 'admin@nexusdynamics.in',
+  email: 'support@arohiai.com',
   phone: '+91 80 4123 9900',
-  website: 'https://nexusdynamics.in',
+  website: 'https://arohiai.com',
   address: 'Plot 42, Infocity Technology Corridor, Patia',
   city: 'Bhubaneswar',
   state: 'Odisha',
   pincode: '751024',
   country: 'India',
   fiscalYear: 'FY 2024 - 2025',
-  industry: 'Enterprise Software & IT Services',
-  employeeCount: 48
+  industry: 'Enterprise Software & Sovereign AI Systems',
+  employeeCount: 48,
+  bankName: 'HDFC Bank',
+  bankAccount: '50200084920192',
+  bankIfsc: 'HDFC0001234',
+  upiId: 'arohiai@icici'
 };
 
 export const INITIAL_LEADS: Lead[] = [
@@ -437,7 +441,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     paymentMethod: 'NEFT/RTGS',
     paymentDate: '2025-02-19',
     notes: 'Payment received via HDFC Bank Ref: HDFCR5202502198821.',
-    upiQrString: 'upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=890000&cu=INR'
+    upiQrString: 'upi://pay?pa=arohiai@icici&pn=ArohiTechnologies&am=890000&cu=INR'
   },
   {
     id: 'inv_02',
@@ -467,7 +471,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     amountPaid: 0,
     status: 'overdue',
     notes: 'Payment reminder sent via Automated WhatsApp + Email on Feb 22.',
-    upiQrString: 'upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=325000&cu=INR'
+    upiQrString: 'upi://pay?pa=arohiai@icici&pn=ArohiTechnologies&am=325000&cu=INR'
   },
   {
     id: 'inv_03',
@@ -497,7 +501,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     amountPaid: 0,
     status: 'pending',
     notes: 'Invoice dispatched electronically. Due in 11 days.',
-    upiQrString: 'upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=480000&cu=INR'
+    upiQrString: 'upi://pay?pa=arohiai@icici&pn=ArohiTechnologies&am=480000&cu=INR'
   },
   {
     id: 'inv_04',
@@ -527,7 +531,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     amountPaid: 0,
     status: 'pending',
     notes: 'Intra-state GST (9% CGST + 9% SGST).',
-    upiQrString: 'upi://pay?pa=nexusdynamics@hdfcbank&pn=NexusDynamics&am=120000&cu=INR'
+    upiQrString: 'upi://pay?pa=arohiai@icici&pn=ArohiTechnologies&am=120000&cu=INR'
   }
 ];
 
