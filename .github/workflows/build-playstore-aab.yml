@@ -53,12 +53,12 @@ jobs:
           gradle-version: '8.12'
           validate-wrappers: false
 
-      - name: Setup Android SDK Environment (API 36)
+      - name: Setup Android SDK Environment (API 34 & 35)
         run: |
           mkdir -p android
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" "platforms;android-35" || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platforms;android-35" || true
 
       - name: Install Node Dependencies
         run: npm install
@@ -175,28 +175,54 @@ jobs:
         run: |
           AAB_FILE=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
           if [ -n "$AAB_FILE" ]; then
-            echo "Signing $AAB_FILE with jarsigner..."
+            echo "Verifying / signing AAB $AAB_FILE..."
             jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
               -keystore android/app/keystore/arohi-release.jks \
               -storepass "$KEYSTORE_PASSWORD" \
               -keypass "$KEY_PASSWORD" \
               "$AAB_FILE" "$KEY_ALIAS" || true
             
-            echo "Verifying AAB signature..."
             jarsigner -verify -verbose -certs "$AAB_FILE" | grep "jar verified" || true
           fi
 
           APK_FILE=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -n "$APK_FILE" ]; then
-            echo "Signing $APK_FILE with jarsigner..."
-            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-              -keystore android/app/keystore/arohi-release.jks \
-              -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_PASSWORD" \
-              "$APK_FILE" "$KEY_ALIAS" || true
+            echo "Processing APK: $APK_FILE"
+            # Locate Android build-tools apksigner and zipalign
+            BUILD_TOOLS_DIR=$(find $ANDROID_HOME/build-tools -mindepth 1 -maxdepth 1 | sort -V | tail -n 1)
+            echo "Using Android Build Tools in: $BUILD_TOOLS_DIR"
             
-            echo "Verifying APK signature..."
-            jarsigner -verify -verbose -certs "$APK_FILE" | grep "jar verified" || true
+            # Align APK if unaligned
+            if [ -x "$BUILD_TOOLS_DIR/zipalign" ]; then
+              $BUILD_TOOLS_DIR/zipalign -v -p 4 "$APK_FILE" "${APK_FILE}.aligned" || true
+              if [ -f "${APK_FILE}.aligned" ]; then
+                mv "${APK_FILE}.aligned" "$APK_FILE"
+                echo "✓ APK zipaligned"
+              fi
+            fi
+
+            # Sign with apksigner (V1, V2, and V3 signature schemes)
+            if [ -x "$BUILD_TOOLS_DIR/apksigner" ]; then
+              $BUILD_TOOLS_DIR/apksigner sign \
+                --ks android/app/keystore/arohi-release.jks \
+                --ks-pass "pass:$KEYSTORE_PASSWORD" \
+                --ks-key-alias "$KEY_ALIAS" \
+                --key-pass "pass:$KEY_PASSWORD" \
+                --v1-signing-enabled true \
+                --v2-signing-enabled true \
+                --v3-signing-enabled true \
+                "$APK_FILE" || true
+              
+              echo "Verifying APK with apksigner:"
+              $BUILD_TOOLS_DIR/apksigner verify -v "$APK_FILE" || true
+            else
+              echo "apksigner not found, falling back to jarsigner..."
+              jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+                -keystore android/app/keystore/arohi-release.jks \
+                -storepass "$KEYSTORE_PASSWORD" \
+                -keypass "$KEY_PASSWORD" \
+                "$APK_FILE" "$KEY_ALIAS" || true
+            fi
           fi
 
       - name: Upload Google Play Store Bundle (.aab)
