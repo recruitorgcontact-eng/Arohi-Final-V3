@@ -104,4 +104,28 @@ if (fs.existsSync(stringsPath)) {
   console.log('✓ Updated android/app/src/main/res/values/strings.xml');
 }
 
+// 4. Update android/app/src/main/res/values/colors.xml
+const colorsPath = path.resolve('android/app/src/main/res/values/colors.xml');
+const colorsContent = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">${config.themeColor || '#7c3aed'}</color>
+    <color name="colorPrimaryDark">${config.splashColor || '#0f172a'}</color>
+    <color name="colorAccent">#38bdf8</color>
+</resources>
+`;
+fs.writeFileSync(colorsPath, colorsContent, 'utf8');
+console.log('✓ Updated android/app/src/main/res/values/colors.xml');
+
+// 5. Ensure AndroidManifest.xml references the explicit activity class
+const manifestPath = path.resolve('android/app/src/main/AndroidManifest.xml');
+if (fs.existsSync(manifestPath)) {
+  let manifestContent = fs.readFileSync(manifestPath, 'utf8');
+  manifestContent = manifestContent.replace(
+    /android:name="(\.MainActivity|com\.arohiai\.[a-zA-Z0-9_.]*MainActivity)"/g,
+    'android:name="com.arohiai.app.MainActivity"'
+  );
+  fs.writeFileSync(manifestPath, manifestContent, 'utf8');
+  console.log('✓ Verified android:name="com.arohiai.app.MainActivity" in AndroidManifest.xml');
+}
+
 console.log(`\n✓ Android Project successfully configured for "${config.name}" (${config.id})!\n`);

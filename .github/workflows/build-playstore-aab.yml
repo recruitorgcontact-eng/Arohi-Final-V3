@@ -171,7 +171,7 @@ jobs:
             fi
           done
 
-      - name: Verify and Sign AAB if needed
+      - name: Verify and Sign AAB and APK if needed
         run: |
           AAB_FILE=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
           if [ -n "$AAB_FILE" ]; then
@@ -182,8 +182,21 @@ jobs:
               -keypass "$KEY_PASSWORD" \
               "$AAB_FILE" "$KEY_ALIAS" || true
             
-            echo "Verifying signature..."
+            echo "Verifying AAB signature..."
             jarsigner -verify -verbose -certs "$AAB_FILE" | grep "jar verified" || true
+          fi
+
+          APK_FILE=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            echo "Signing $APK_FILE with jarsigner..."
+            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+              -keystore android/app/keystore/arohi-release.jks \
+              -storepass "$KEYSTORE_PASSWORD" \
+              -keypass "$KEY_PASSWORD" \
+              "$APK_FILE" "$KEY_ALIAS" || true
+            
+            echo "Verifying APK signature..."
+            jarsigner -verify -verbose -certs "$APK_FILE" | grep "jar verified" || true
           fi
 
       - name: Upload Google Play Store Bundle (.aab)
