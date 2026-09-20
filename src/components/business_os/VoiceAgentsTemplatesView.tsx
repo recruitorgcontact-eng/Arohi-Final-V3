@@ -37,6 +37,8 @@ import {
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
 import { useBusinessOS } from './BusinessOSContext';
 import { VoiceProfileId } from './types';
+import CreateCallingAgentWizardModal from '../calling_agents/CreateCallingAgentWizardModal';
+import { CustomCallingAgentConfig } from '../../data/indianVoiceAgentsCatalog';
 
 interface VoiceAgentsTemplatesViewProps {
   onSelectTemplate: (template: VoiceAgentTemplate) => void;
@@ -60,11 +62,69 @@ export default function VoiceAgentsTemplatesView({
   // Audition State
   const [auditioningTemplateId, setAuditioningTemplateId] = useState<string | null>(null);
   const [deploySuccessMessage, setDeploySuccessMessage] = useState<string | null>(null);
+  const [showWizardModal, setShowWizardModal] = useState<boolean>(false);
 
   // Reload templates from storage + defaults
   const reloadTemplates = () => {
     const list = getAllVoiceTemplates();
     setTemplates(list);
+  };
+
+  const handleWizardAgentCreated = (agent: CustomCallingAgentConfig) => {
+    // Map voice profile to InboundVoiceAgent voiceProfile
+    let mappedVoice: VoiceProfileId = 'Arohi-Warm-Female';
+    if (agent.voiceProfile === 'Fenrir') mappedVoice = 'Arohi-Executive-Male';
+    else if (agent.voiceProfile === 'Aoede') mappedVoice = 'Arohi-Empathetic-Female';
+    else if (agent.voiceProfile === 'Puck') mappedVoice = 'Arohi-Energetic-Male';
+
+    // Map department
+    let department: 'Reception & Front Desk' | 'Sales & Qualification' | 'Appointments & Booking' | 'Customer Support' | 'VIP Concierge' = 'Reception & Front Desk';
+    if (agent.industryId === 'real_estate' || agent.industryId === 'b2b_services') {
+      department = 'Sales & Qualification';
+    } else if (agent.industryId === 'healthcare') {
+      department = 'Appointments & Booking';
+    } else if (agent.industryId === 'civic_pwd') {
+      department = 'VIP Concierge';
+    } else if (agent.industryId === 'retail_ecommerce') {
+      department = 'Customer Support';
+    }
+
+    // Map operating hours to allowed union
+    let mappedHours: '24/7 Always Active' | 'Business Hours (9 AM - 7 PM)' | 'After Hours & Weekends' = '24/7 Always Active';
+    if (agent.operatingHours === 'Business Hours (9 AM - 7 PM)') {
+      mappedHours = 'Business Hours (9 AM - 7 PM)';
+    } else if (agent.operatingHours === 'After Hours & Weekends') {
+      mappedHours = 'After Hours & Weekends';
+    }
+
+    // Also deploy as an active InboundAgent into BusinessOS
+    addInboundAgent({
+      name: agent.name,
+      role: agent.roleTitle || 'AI Calling Specialist',
+      department,
+      language: agent.primaryLanguage,
+      voiceProfile: mappedVoice,
+      pitch: 1.0,
+      speechRate: 1.0,
+      greetingMessage: agent.greetingText,
+      businessName: agent.companyName,
+      knowledgeBase: `${agent.industryName} - ${agent.roleTitle}\n\nCall Goal:\n${agent.primaryObjective}\n\nKey Questions:\n${agent.questionsToAsk.join('\n')}\n\nGuardrails:\n${agent.guardrails.join('\n')}`,
+      autoActions: {
+        createCrmLead: true,
+        sendWhatsAppNotification: true,
+        bookCalendarAppointment: true,
+        forwardToHumanOnUrgent: true
+      },
+      forwardingPhoneNumber: agent.transferPhoneNumber || '+91 93379 52401',
+      assignedPhoneNumber: '+91 80 4736 2901',
+      operatingHours: mappedHours,
+      backgroundSound: (agent.backgroundSound === 'office' || agent.backgroundSound === 'call_center' || agent.backgroundSound === 'none') ? agent.backgroundSound : 'office',
+      switchLanguageDuringCall: true,
+      isActive: true
+    });
+
+    reloadTemplates();
+    setDeploySuccessMessage(`🎉 Successfully created "${agent.name}" with Indian Avatar and deployed to active Inbound Agents!`);
   };
 
   const getVoiceDisplayShort = (voiceId?: string) => {
@@ -307,6 +367,16 @@ export default function VoiceAgentsTemplatesView({
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => setShowWizardModal(true)}
+            id="create-wizard-agent-btn"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md flex items-center gap-2 transition-all cursor-pointer ring-1 ring-emerald-400/40"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
+            <span>⚡ Create Agent in 2 Mins</span>
+            <span className="px-1.5 py-0.5 rounded bg-white text-emerald-800 text-[9px] font-black uppercase">NEW</span>
+          </button>
+
           <button
             onClick={() => {
               const blank = createBlankVoiceTemplate();
@@ -556,6 +626,14 @@ export default function VoiceAgentsTemplatesView({
             );
           })}
         </div>
+      )}
+      {/* Wizard Modal */}
+      {showWizardModal && (
+        <CreateCallingAgentWizardModal
+          isOpen={showWizardModal}
+          onClose={() => setShowWizardModal(false)}
+          onAgentCreated={handleWizardAgentCreated}
+        />
       )}
     </div>
   );

@@ -31,9 +31,13 @@ import {
   ChevronRight,
   Headphones,
   Sliders,
-  Send
+  Send,
+  Eye,
+  Maximize2
 } from 'lucide-react';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
+import CreateCallingAgentWizardModal from '../calling_agents/CreateCallingAgentWizardModal';
+import LiveCallMonitorView from '../calling_agents/LiveCallMonitorView';
 
 export interface CallLogItem {
   id: string;
@@ -87,6 +91,9 @@ export default function BusinessVoiceAgentDashboard({
   const [playingTurnIndex, setPlayingTurnIndex] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [exotelStatus, setExotelStatus] = useState<any>(null);
+  const [showWizardModal, setShowWizardModal] = useState<boolean>(false);
+  const [dashboardTab, setDashboardTab] = useState<'overview' | 'live-monitor'>('overview');
+  const [showLiveMonitorModal, setShowLiveMonitorModal] = useState<boolean>(false);
 
   // Active call live elapsed duration ticker
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -312,6 +319,21 @@ export default function BusinessVoiceAgentDashboard({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Live Call Monitor Switcher Button */}
+          <button
+            onClick={() => setDashboardTab(dashboardTab === 'live-monitor' ? 'overview' : 'live-monitor')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+              dashboardTab === 'live-monitor'
+                ? 'bg-emerald-600 text-white ring-2 ring-emerald-400/40'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+            }`}
+            title="Open real-time Live Call Monitor view"
+          >
+            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>Live Call Monitor</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          </button>
+
           {/* Polling Toggle */}
           <button
             onClick={() => setAutoPoll(!autoPoll)}
@@ -333,6 +355,15 @@ export default function BusinessVoiceAgentDashboard({
             title="Refresh logs now"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-600' : ''}`} />
+          </button>
+
+          {/* Create Calling Agent in 2 Mins */}
+          <button
+            onClick={() => setShowWizardModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 ring-1 ring-emerald-400/40"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
+            <span>+ Create Agent in 2 Mins</span>
           </button>
 
           {/* Direct Dial Outbound Button */}
@@ -435,24 +466,78 @@ export default function BusinessVoiceAgentDashboard({
         </div>
       </div>
 
-      {/* SECTION 1: ACTIVE OUTBOUND CALLS MONITOR */}
-      <div className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">
-              Active Outbound Calls Monitor
-            </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-              {activeCalls.length} in session
-            </span>
-          </div>
+      {/* SUB-NAVIGATION TABS: OVERVIEW VS LIVE CALL MONITOR */}
+      <div className="flex items-center gap-2 border-b border-black/[0.08] dark:border-white/[0.08] pb-1">
+        <button
+          onClick={() => setDashboardTab('overview')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dashboardTab === 'overview'
+              ? 'bg-purple-600 text-white shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800/60'
+          }`}
+        >
+          <Bot className="w-3.5 h-3.5" />
+          <span>Calling Dashboard &amp; Logs</span>
+        </button>
 
-          <span className="text-xs text-zinc-400 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>TRAI DND Scrubbed • 09:00 AM – 09:00 PM Window</span>
+        <button
+          onClick={() => setDashboardTab('live-monitor')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dashboardTab === 'live-monitor'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800/60'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+          <span>Live Call Monitor</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-400 text-emerald-950 uppercase animate-pulse">
+            LIVE
           </span>
+        </button>
+      </div>
+
+      {/* RENDER DEDICATED LIVE CALL MONITOR VIEW */}
+      {dashboardTab === 'live-monitor' && (
+        <div className="space-y-4 animate-fade-in">
+          <LiveCallMonitorView
+            isModal={false}
+            onOpenDialer={onOpenDialer}
+            onOpenSimulator={onOpenSimulator}
+          />
         </div>
+      )}
+
+      {/* RENDER MAIN OVERVIEW TAB */}
+      {dashboardTab === 'overview' && (
+        <>
+          {/* SECTION 1: ACTIVE OUTBOUND CALLS MONITOR */}
+          <div className="bg-white dark:bg-[#121214] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                <h2 className="text-sm font-bold text-zinc-900 dark:text-white">
+                  Active Outbound Calls Monitor
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                  {activeCalls.length} in session
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowLiveMonitorModal(true)}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  <span>Expand Live Monitor</span>
+                </button>
+
+                <span className="text-xs text-zinc-400 hidden sm:flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>TRAI DND Scrubbed • 09:00 AM – 09:00 PM Window</span>
+                </span>
+              </div>
+            </div>
 
         {activeCalls.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -949,6 +1034,29 @@ export default function BusinessVoiceAgentDashboard({
           )}
         </div>
       </div>
+        </>
+      )}
+
+      {/* Fullscreen Live Call Monitor Modal */}
+      {showLiveMonitorModal && (
+        <LiveCallMonitorView
+          isModal={true}
+          onClose={() => setShowLiveMonitorModal(false)}
+          onOpenDialer={onOpenDialer}
+          onOpenSimulator={onOpenSimulator}
+        />
+      )}
+
+      {/* Create Calling Agent in 2 Mins Wizard Modal */}
+      {showWizardModal && (
+        <CreateCallingAgentWizardModal
+          isOpen={showWizardModal}
+          onClose={() => setShowWizardModal(false)}
+          onAgentCreated={(agent) => {
+            showToast(`🎉 Created & deployed "${agent.name}" to calling fleet!`);
+          }}
+        />
+      )}
     </div>
   );
 }

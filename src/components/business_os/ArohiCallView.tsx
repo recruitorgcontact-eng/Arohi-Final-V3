@@ -42,6 +42,7 @@ import DualModeVoiceTestModal from './DualModeVoiceTestModal';
 import ExotelDirectDialerModal from './ExotelDirectDialerModal';
 import ArohiPhoneDialerModal from '../ArohiPhoneDialerModal';
 import BusinessVoiceAgentDashboard from './BusinessVoiceAgentDashboard';
+import LiveCallMonitorView from '../calling_agents/LiveCallMonitorView';
 import {
   ENTERPRISE_VOICE_TEMPLATES,
   VoiceAgentTemplate,
@@ -53,6 +54,7 @@ import { IndianLanguageOption } from './telephonyData';
 
 type ArohiCallTab =
   | 'voice-dashboard'
+  | 'live-monitor'
   | 'templates'
   | 'prompt-studio'
   | 'flow-canvas'
@@ -210,6 +212,21 @@ export default function ArohiCallView() {
         </button>
 
         <button
+          onClick={() => setActiveTab('live-monitor')}
+          className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'live-monitor'
+              ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-xs ring-1 ring-emerald-500/30'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+          <span>Live Call Monitor</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">
+            Real-Time
+          </span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('templates')}
           className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'templates'
@@ -336,6 +353,17 @@ export default function ArohiCallView() {
           onOpenDialer={() => setShowPhoneDialer(true)}
           onOpenSimulator={() => handleOpenSimulator(activeAgent)}
         />
+      )}
+
+      {/* TAB: DEDICATED LIVE CALL MONITOR VIEW */}
+      {activeTab === 'live-monitor' && (
+        <div className="space-y-4 animate-fade-in">
+          <LiveCallMonitorView
+            isModal={false}
+            onOpenDialer={() => setShowPhoneDialer(true)}
+            onOpenSimulator={() => handleOpenSimulator(activeAgent)}
+          />
+        </div>
       )}
 
       {/* TAB: AGENT TEMPLATES (Arohi Voice OS) */}

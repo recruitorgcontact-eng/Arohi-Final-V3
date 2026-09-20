@@ -45,6 +45,9 @@ interface ArohiVoiceCallProps {
   language?: string;
   onNavigateTab?: (tab: string) => void;
   uid?: string;
+  mode?: string;
+  species?: string;
+  callTitle?: string;
   onCallComplete?: (summary: {
     duration: number;
     turns: SpeechTurn[];
@@ -54,7 +57,7 @@ interface ArohiVoiceCallProps {
   }) => void;
 }
 
-export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab, uid, onCallComplete }: ArohiVoiceCallProps) {
+export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab, uid, mode, species, callTitle, onCallComplete }: ArohiVoiceCallProps) {
   const [status, setStatus] = useState<'connecting' | 'listening' | 'speaking' | 'muted' | 'error' | 'ended'>('connecting');
   const [errorMessage, setErrorMessage] = useState('');
   const [isMuted, setIsMuted] = useState(false);
@@ -631,7 +634,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         hasReceivedAudioStreamRef.current = false;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(activeLanguage || language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(activeLanguage || language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}${mode ? `&mode=${encodeURIComponent(mode)}` : ''}${species ? `&species=${encodeURIComponent(species)}` : ''}`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -1134,10 +1137,10 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       {/* ========================================================================= */}
       <header className="relative z-20 flex flex-col items-center justify-center w-full max-w-md mx-auto pt-2 sm:pt-4 px-4 text-center">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-          <span>Arohi</span>
+          <span>{callTitle || 'Arohi'}</span>
         </h1>
         <p className="text-[11px] sm:text-xs text-slate-400 font-medium tracking-tight mt-0.5">
-          In call with Arohi by Arohi Xaldra 7.0
+          {mode === 'vetmitra' ? 'Clinical Veterinary & Dairy Nutrition Companion' : 'In call with Arohi by Arohi Xaldra 7.0'}
         </p>
         
         {/* Call Timer directly below the subtitle */}

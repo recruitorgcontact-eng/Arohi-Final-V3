@@ -21,10 +21,24 @@ import {
   Zap,
   Phone,
   Loader2,
-  CreditCard
+  CreditCard,
+  Plus,
+  Sliders,
+  Check,
+  Radio
 } from 'lucide-react';
 import { playArohiVoice, stopArohiVoice } from '../../utils/arohiVoicePlayer';
 import ArohiPhoneDialerModal from '../ArohiPhoneDialerModal';
+import CreateCallingAgentWizardModal from '../calling_agents/CreateCallingAgentWizardModal';
+import LiveCallMonitorView from '../calling_agents/LiveCallMonitorView';
+import {
+  INDIAN_VOICE_AVATARS,
+  ALL_INDUSTRY_CATEGORIES,
+  IndianVoiceAvatar,
+  IndustryCategoryMeta,
+  CustomCallingAgentConfig,
+  getSavedCustomCallingAgents
+} from '../../data/indianVoiceAgentsCatalog';
 
 interface ArohiCallingAgentsProductPageProps {
   onLaunchLiveDashboard: () => void;
@@ -45,6 +59,36 @@ export default function ArohiCallingAgentsProductPage({
   const [selectedAgentIndex, setSelectedAgentIndex] = useState(0);
   const [showPhoneDialer, setShowPhoneDialer] = useState(false);
   const [dialerDefaultTopic, setDialerDefaultTopic] = useState('Customer Advisory & Lead Qualification');
+
+  // Wizard state
+  const [showWizardModal, setShowWizardModal] = useState(false);
+  const [showLiveMonitorModal, setShowLiveMonitorModal] = useState(false);
+  const [wizardPrefillIndustry, setWizardPrefillIndustry] = useState<string | undefined>(undefined);
+  const [wizardPrefillAvatar, setWizardPrefillAvatar] = useState<string | undefined>(undefined);
+
+  // Custom Created Agents from LocalStorage
+  const [customAgents, setCustomAgents] = useState<CustomCallingAgentConfig[]>([]);
+  const [selectedAvatarPreviewId, setSelectedAvatarPreviewId] = useState<string>(INDIAN_VOICE_AVATARS[0].id);
+  const [activeIndustryFilter, setActiveIndustryFilter] = useState<string>('all');
+  const [toastNotification, setToastNotification] = useState<string | null>(null);
+
+  const loadSavedAgents = () => {
+    setCustomAgents(getSavedCustomCallingAgents());
+  };
+
+  useEffect(() => {
+    loadSavedAgents();
+  }, []);
+
+  const triggerToast = (msg: string) => {
+    setToastNotification(msg);
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const handleAgentCreated = (agent: CustomCallingAgentConfig) => {
+    loadSavedAgents();
+    triggerToast(`🎉 Created and deployed "${agent.name}" successfully!`);
+  };
 
   const badges = [
     'Natural Conversations',
@@ -188,31 +232,44 @@ export default function ArohiCallingAgentsProductPage({
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             onClick={() => {
+              setWizardPrefillAvatar(undefined);
+              setWizardPrefillIndustry(undefined);
+              setShowWizardModal(true);
+            }}
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-sm uppercase tracking-wider shadow-xl hover:shadow-emerald-500/30 transition-all cursor-pointer flex items-center gap-2.5 ring-2 ring-emerald-400/40 animate-pulse hover:animate-none"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-100" />
+            <span>⚡ Create Calling Agent in 2 Mins</span>
+            <span className="px-1.5 py-0.5 rounded bg-white text-emerald-800 text-[9px] font-black uppercase">FREE</span>
+          </button>
+          <button
+            onClick={() => {
               setDialerDefaultTopic(agentProfiles[selectedAgentIndex]?.title || 'Customer Advisory & Lead Qualification');
               setShowPhoneDialer(true);
             }}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-teal-500/25 transition-all cursor-pointer flex items-center gap-2"
+            className="px-6 py-3.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white/10 dark:hover:bg-white/20 border border-black/10 dark:border-white/15 font-black text-sm uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-2"
           >
-            <PhoneCall className="w-4 h-4 text-emerald-200" />
-            <span>Dial Any Phone Number (GSM / VoLTE)</span>
-          </button>
-          <button
-            onClick={() => onNavigatePricing ? onNavigatePricing('calling_agents') : onNavigateTab('pricing')}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <CreditCard className="w-4 h-4 text-slate-950" />
-            <span>Fleet Plans &amp; Minutes (From ₹2,999)</span>
+            <PhoneCall className="w-4 h-4 text-emerald-400" />
+            <span>Dial Any Phone Number</span>
           </button>
           <button
             onClick={onLaunchLiveDashboard}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
+            className="px-5 py-3.5 rounded-2xl bg-white/80 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/15 text-zinc-800 dark:text-zinc-200 font-bold text-sm transition-all cursor-pointer flex items-center gap-2"
           >
-            <Phone className="w-4 h-4" />
-            <span>Launch Calling Agent Cockpit</span>
+            <Phone className="w-4 h-4 text-emerald-500" />
+            <span>Calling Cockpit</span>
+          </button>
+          <button
+            onClick={() => setShowLiveMonitorModal(true)}
+            className="px-5 py-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-black text-sm transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <span>Live Call Monitor</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
           </button>
           <button
             onClick={() => handleToggleAudio()}
-            className="px-5 py-3 rounded-2xl bg-white/80 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/15 text-zinc-800 dark:text-zinc-200 font-bold text-sm transition-all cursor-pointer flex items-center gap-2"
+            className="px-5 py-3.5 rounded-2xl bg-white/80 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/15 text-zinc-800 dark:text-zinc-200 font-bold text-sm transition-all cursor-pointer flex items-center gap-2"
           >
             {audioLoading ? (
               <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
@@ -226,7 +283,7 @@ export default function ArohiCallingAgentsProductPage({
                 ? 'Connecting Voice Preview...' 
                 : isPlayingAudio 
                   ? 'Stop Voice Demo' 
-                  : 'Hear Voice Sample (0:45)'}
+                  : 'Hear Voice (0:45)'}
             </span>
           </button>
         </div>
@@ -347,14 +404,270 @@ export default function ArohiCallingAgentsProductPage({
         </div>
       </section>
 
-      {/* 2. 6 Pre-Tuned Voice Agent Profiles */}
+      {/* 2. Custom User-Created Agents Section (If Any) */}
+      {customAgents.length > 0 && (
+        <section className="max-w-5xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
+                  My Deployed Calling Agents
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono">
+                  {customAgents.length} Active
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Custom voice workflows created and saved in your autonomous calling fleet.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setWizardPrefillAvatar(undefined);
+                setWizardPrefillIndustry(undefined);
+                setShowWizardModal(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Another</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+            {customAgents.map((agent) => (
+              <div
+                key={agent.id}
+                className="p-4 rounded-2xl bg-white dark:bg-[#15171e] border border-emerald-500/30 hover:border-emerald-500/60 shadow-md text-left flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono">
+                      {agent.industryName}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      {agent.primaryLanguage}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-zinc-900 dark:text-white">
+                    {agent.name}
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5 font-medium">
+                    {agent.roleTitle} • {agent.companyName}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 italic line-clamp-2">
+                    &ldquo;{agent.greetingText}&rdquo;
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
+                  <button
+                    onClick={() => handleToggleAudio(agent.greetingText)}
+                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Play className="w-3 h-3" />
+                    <span>Audition</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDialerDefaultTopic(`${agent.roleTitle} for ${agent.companyName}`);
+                      setShowPhoneDialer(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <PhoneCall className="w-3 h-3" />
+                    <span>Dial Test</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 3. Indian Voice Avatars Catalog (Named Regional Personas) */}
+      <section className="max-w-5xl mx-auto px-4">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest mb-1.5">
+              <span>AUTHENTIC INDIAN ACCENTS &amp; DIALECTS</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
+              Ready-to-Deploy Indian Voice Avatars
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              Select an avatar below to audition their regional greeting or click &quot;Use Avatar&quot; to build a custom agent in seconds.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setWizardPrefillAvatar(undefined);
+              setShowWizardModal(true);
+            }}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Customize Any Avatar</span>
+          </button>
+        </div>
+
+        {/* Avatars Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+          {INDIAN_VOICE_AVATARS.map((avatar) => {
+            const isPlayingThis = isPlayingAudio && selectedAvatarPreviewId === avatar.id;
+            return (
+              <div
+                key={avatar.id}
+                className="p-4 rounded-2xl bg-white dark:bg-[#15171e] border border-black/8 dark:border-white/8 hover:border-emerald-500/40 hover:shadow-lg transition-all text-left flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${avatar.avatarBg} text-white flex items-center justify-center text-2xl shadow-sm shrink-0`}>
+                      {avatar.avatarEmoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-black text-zinc-900 dark:text-white truncate">
+                        {avatar.name}
+                      </h3>
+                      <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                        {avatar.region}
+                      </p>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/10 text-zinc-500">
+                        {avatar.gender === 'female' ? 'Female' : 'Male'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium line-clamp-2 leading-relaxed">
+                    {avatar.roleTag}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {avatar.languages.map((l, i) => (
+                      <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-400">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedAvatarPreviewId(avatar.id);
+                      handleToggleAudio(avatar.sampleGreeting);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                      isPlayingThis
+                        ? 'bg-rose-500 text-white shadow-xs'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {isPlayingThis ? (
+                      <>
+                        <Pause className="w-3.5 h-3.5" />
+                        <span>Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Audition</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setWizardPrefillAvatar(avatar.id);
+                      setShowWizardModal(true);
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white/10 dark:hover:bg-white/20 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Use Avatar</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 4. All Industry Categories Architecture (1-Click Launch) */}
+      <section className="max-w-5xl mx-auto px-4">
+        <div className="bg-gradient-to-r from-emerald-950/20 via-teal-950/20 to-slate-950/30 rounded-3xl border border-emerald-500/20 p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                ALL-INDUSTRY PREDEFINED BLUEPRINTS
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mt-1">
+                Calling Workflows for Every Industry Category
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Every vertical comes pre-equipped with domain questions, compliance guardrails, and CRM integrations.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setWizardPrefillIndustry(undefined);
+                setShowWizardModal(true);
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Create Custom Workflow</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+            {ALL_INDUSTRY_CATEGORIES.map((ind) => (
+              <div 
+                key={ind.id}
+                onClick={() => {
+                  setWizardPrefillIndustry(ind.id);
+                  setShowWizardModal(true);
+                }}
+                className="bg-white/80 dark:bg-[#12141c]/80 hover:bg-emerald-500/5 hover:border-emerald-500/40 rounded-2xl p-4 border border-black/6 dark:border-white/8 cursor-pointer transition-all flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-2xl">{ind.icon}</div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-zinc-500 group-hover:text-emerald-500 transition-colors">
+                      1-Click Ready
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-500 transition-colors">
+                    {ind.name}
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    {ind.description}
+                  </p>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-xs">
+                  <span className="text-[11px] font-medium text-zinc-400">
+                    Goal: {ind.defaultGoal.slice(0, 32)}...
+                  </span>
+                  <span className="text-emerald-500 font-bold flex items-center gap-1">
+                    <span>Deploy</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. 6 Pre-Tuned Voice Agent Profiles */}
       <section className="max-w-5xl mx-auto px-4">
         <div className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
-            Pre-Trained Voice Agents Ready in Minutes
+            Enterprise Fleet Templates
           </h2>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Choose from ready-made personas or customize tone, language, knowledge and webhook actions.
+            Standard inbound and outbound templates with live studio audition.
           </p>
         </div>
 
@@ -413,33 +726,6 @@ export default function ArohiCallingAgentsProductPage({
               </div>
             );
           })}
-        </div>
-      </section>
-
-      {/* 3. Built for Every Industry */}
-      <section className="max-w-5xl mx-auto px-4">
-        <div className="bg-gradient-to-r from-emerald-950/20 via-teal-950/20 to-slate-950/30 rounded-3xl border border-emerald-500/20 p-6 sm:p-8">
-          <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-              INDUSTRY ARCHITECTURES
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mt-1">
-              Built for Every Indian Industry
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {industries.map((ind, i) => (
-              <div 
-                key={i}
-                className="bg-white/80 dark:bg-[#12141c]/80 rounded-2xl p-4 border border-black/6 dark:border-white/8"
-              >
-                <div className="text-2xl mb-2">{ind.icon}</div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{ind.name}</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{ind.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -503,6 +789,37 @@ export default function ArohiCallingAgentsProductPage({
           defaultLanguage={activeVoiceLanguage}
           defaultTopic={dialerDefaultTopic}
         />
+      )}
+
+      {/* CREATE CALLING AGENT IN 2-MINUTES WIZARD MODAL */}
+      {showWizardModal && (
+        <CreateCallingAgentWizardModal
+          isOpen={showWizardModal}
+          onClose={() => setShowWizardModal(false)}
+          onAgentCreated={handleAgentCreated}
+          initialIndustryId={wizardPrefillIndustry}
+          initialAvatarId={wizardPrefillAvatar}
+        />
+      )}
+
+      {/* LIVE CALL MONITOR MODAL */}
+      {showLiveMonitorModal && (
+        <LiveCallMonitorView
+          isModal={true}
+          onClose={() => setShowLiveMonitorModal(false)}
+          onOpenDialer={() => {
+            setShowLiveMonitorModal(false);
+            setShowPhoneDialer(true);
+          }}
+        />
+      )}
+
+      {/* TOAST CONFIRMATION */}
+      {toastNotification && (
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-zinc-900 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black text-sm shadow-2xl flex items-center gap-2 border border-white/20 animate-bounce">
+          <Check className="w-4 h-4 text-emerald-400 dark:text-zinc-950" />
+          <span>{toastNotification}</span>
+        </div>
       )}
     </div>
   );

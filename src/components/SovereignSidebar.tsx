@@ -24,7 +24,8 @@ import {
   HeartHandshake,
   CreditCard,
   Zap,
-  Box
+  Box,
+  Stethoscope
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -142,6 +143,14 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       badge: 'CAD / 3D',
       badgeGold: true,
       description: 'AI 3D Mesh & .blend Export'
+    },
+    {
+      id: 'vetmitra',
+      label: 'Arohi VetMitra™',
+      icon: Stethoscope,
+      badge: 'NASEM 2021',
+      badgeGold: false,
+      description: 'Dairy Ration, Cattle, Goat, Dog & Cat'
     },
     {
       id: 'pricing',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Package, LayoutGrid, Compass, MoreHorizontal, X, User, Sparkles, MessageSquare, ShieldCheck, Briefcase, FileText, CreditCard, HelpCircle, Phone, Globe } from 'lucide-react';
+import { Home, Package, LayoutGrid, Compass, MoreHorizontal, X, User, Sparkles, MessageSquare, ShieldCheck, Briefcase, FileText, CreditCard, HelpCircle, Phone, Globe, Stethoscope } from 'lucide-react';
 import { Language } from '../translations';
 
 interface BottomNavBarProps {
@@ -172,6 +172,17 @@ export default function BottomNavBar({
               >
                 <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Mission 87 Portal</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onTabChange('vetmitra');
+                  setIsMoreMenuOpen(false);
+                }}
+                className="p-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:border-teal-500/40 text-left flex items-center gap-2.5 transition-all"
+              >
+                <Stethoscope className="w-4 h-4 text-teal-500 shrink-0" />
+                <span>Arohi VetMitra™</span>
               </button>
 
               <button

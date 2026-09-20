@@ -22,7 +22,8 @@ import {
   PhoneCall,
   Search,
   CheckCircle2,
-  Cpu
+  Cpu,
+  Stethoscope
 } from 'lucide-react';
 
 interface ToolsHubProps {
@@ -37,6 +38,17 @@ export default function ToolsHub({ onNavigateTab, onQuickChat, isDarkMode = true
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const toolsList = [
+    {
+      id: 'vetmitra',
+      title: 'Arohi VetMitra™ — Livestock & Veterinary Care',
+      category: 'DAIRY, LIVESTOCK & PETS',
+      catFilter: 'AGRICULTURE & VET',
+      description: 'NASEM 2021 Dairy Ration Studio, clinical probing consult, 50 Odia farmer scenarios, and specialized care for Cattle, Goats, Dogs & Cats.',
+      icon: Stethoscope,
+      color: 'from-emerald-600 via-teal-600 to-cyan-600',
+      badge: 'NASEM 2021',
+      tabId: 'vetmitra'
+    },
     {
       id: 'business-os',
       title: 'AROHI ONE — Your Business OS',

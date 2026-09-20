@@ -12,6 +12,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { WebSocketServer, WebSocket } from 'ws';
 import { setupLiveWebSocketServer } from './src/server/live-ws.ts';
 import { telephonyRouter } from './src/server/telephony-bridge.ts';
+import { AROHI_VETMITRA_SYSTEM_PROMPT } from './src/server/vetmitra-prompt.ts';
 
 dotenv.config();
 
@@ -7028,7 +7029,7 @@ function requiresRealtimeSearch(text: string): boolean {
 
 // 1. Chat with AROHI Endpoint
 app.post('/api/chat', async (req, res) => {
-  const { message, history, file, language, uid, systemContext } = req.body || {};
+  const { message, history, file, language, uid, systemContext, mode } = req.body || {};
 
   const messageText = typeof message === 'string' ? message : (message ? String(message) : '');
 
@@ -7067,7 +7068,9 @@ app.post('/api/chat', async (req, res) => {
       }
 
       // Build dynamic system instruction based on chosen interface language
-      let dynamicInstruction = AROHI_SYSTEM_INSTRUCTION;
+      let dynamicInstruction = (mode === 'vetmitra' || req.body?.mode === 'vetmitra')
+        ? AROHI_VETMITRA_SYSTEM_PROMPT
+        : AROHI_SYSTEM_INSTRUCTION;
 
       // Load user memory context if uid is provided
       if (uid) {
@@ -7480,7 +7483,7 @@ app.post('/api/chat-stream', async (req, res) => {
     res.end();
   };
 
-  const { message, history, file, language, uid, systemContext } = req.body || {};
+  const { message, history, file, language, uid, systemContext, mode } = req.body || {};
   const messageText = typeof message === 'string' ? message : (message ? String(message) : '');
 
   if (!messageText.trim() && !file) {
@@ -7504,7 +7507,9 @@ app.post('/api/chat-stream', async (req, res) => {
   let accumulatedResponse = '';
   let liveSearchData: any[] = [];
   let streamedSuccess = false;
-  let dynamicInstruction = AROHI_SYSTEM_INSTRUCTION;
+  let dynamicInstruction = (mode === 'vetmitra' || req.body?.mode === 'vetmitra')
+    ? AROHI_VETMITRA_SYSTEM_PROMPT
+    : AROHI_SYSTEM_INSTRUCTION;
   let formattedHistory: any[] = [];
 
   try {
