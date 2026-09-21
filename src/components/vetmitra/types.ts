@@ -102,3 +102,65 @@ export interface VetScenarioItem {
   redFlags: string[];
   suggestedTests: string[];
 }
+
+export type PetPostVisibility = 'public' | 'followers' | 'private';
+
+export interface PetSocialComment {
+  id: string;
+  authorName: string;
+  authorAvatar: string;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+}
+
+export interface PetSocialPost {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorLocation: string;
+  petId?: string;
+  petName: string;
+  petSpecies: VetSpecies;
+  petBreed?: string;
+  petAge?: string;
+  content: string;
+  contentOdia?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
+  visibility: PetPostVisibility;
+  tags: string[];
+  taggedProductIds?: string[];
+  likesCount: number;
+  isLiked?: boolean;
+  commentsCount: number;
+  comments: PetSocialComment[];
+  createdAt: string;
+  askVetMitraContext?: string;
+}
+
+export type PetIndustryCategory = 'nutrition' | 'wellness' | 'accessories' | 'services' | 'clinic';
+
+export interface PetIndustryProduct {
+  id: string;
+  name: string;
+  nameOdia?: string;
+  brand: string;
+  category: PetIndustryCategory;
+  species: VetSpecies[];
+  rating: number;
+  reviewsCount: number;
+  price: string;
+  originalPrice?: string;
+  description: string;
+  descriptionOdia?: string;
+  imageUrl: string;
+  verifiedBadge: boolean;
+  deliveryInfo?: string;
+  bookingAvailable?: boolean;
+  keyBenefits: string[];
+  keyBenefitsOdia?: string[];
+  contactOrAction?: string;
+}
+

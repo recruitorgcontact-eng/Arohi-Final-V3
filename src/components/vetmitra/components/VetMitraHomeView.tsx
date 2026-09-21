@@ -16,21 +16,82 @@ interface Props {
   onOpenScanner: (mode?: 'animal' | 'milk' | 'lab') => void;
   onOpenEmergency: () => void;
   onViewPassport: () => void;
+  onViewHistory?: () => void;
+  onOpenCommunity?: () => void;
+  onOpenFeed?: () => void;
 }
 
-export const VetMitraHomeView: React.FC<Props> = ({
-  activeSpecies,
-  onSelectSpecies,
-  language,
-  onStartConsult,
-  onStartVoiceCall,
-  onOpenScanner,
-  onOpenEmergency,
-  onViewPassport,
-}) => {
-  const isOdia = language === 'or';
+const SPECIES_HERO_CONFIG: Record<VetSpecies, {
+  image: string;
+  alt: string;
+  headlineEn: string;
+  headlineOr: string;
+  subtextEn: string;
+  subtextOr: string;
+  promptPlaceholderEn: string;
+  promptPlaceholderOr: string;
+  taglineEn: string;
+  taglineOr: string;
+}> = {
+  cattle: {
+    image: VET_STOCK_IMAGES.cattleJersey,
+    alt: 'Dairy Cattle & Cow',
+    headlineEn: "Tell me what's happening with your cow or cattle today...",
+    headlineOr: 'ଆପଣଙ୍କ ଗାଈ ବା ମଇଁଷିର କଣ ସମସ୍ୟା ଅଛି କୁହନ୍ତୁ...',
+    subtextEn: 'Milk drop, rumination / cud chewing, mastitis check, or NASEM ration balance — Arohi is ready.',
+    subtextOr: 'କ୍ଷୀର କମିବା, ଜାବର କାଟିବା, ଥନ ଫୁଲିବା (ମାଷ୍ଟାଇଟିସ୍) ବା NASEM ରେସନ୍ ସନ୍ତୁଳନ — ଆରୋହୀ ପ୍ରସ୍ତୁତ।',
+    promptPlaceholderEn: 'Talk to Arohi about your cow or buffalo...',
+    promptPlaceholderOr: 'ଆରୋହୀ ସହିତ ଗାଈ କିମ୍ବା ମଇଁଷି ସମ୍ପର୍କରେ କଥା ହୁଅନ୍ତୁ...',
+    taglineEn: 'Dairy & Cattle Care',
+    taglineOr: 'ଦୁଗ୍ଧ ଓ ଗୋ-ପାଳନ ଯତ୍ନ',
+  },
+  goat: {
+    image: VET_STOCK_IMAGES.goatPortrait,
+    alt: 'Goat & Sheep',
+    headlineEn: "Tell me what's happening with your goats or sheep today...",
+    headlineOr: 'ଆପଣଙ୍କ ଛେଳି ବା ମେଣ୍ଢାର କଣ ସମସ୍ୟା ଅଛି କୁହନ୍ତୁ...',
+    subtextEn: 'Rumen bloat, PPR vaccination, bottle jaw anemia, kid care, or weight gain diet — Arohi is ready.',
+    subtextOr: 'ପେଟ ଫୁଲିବା (Bloat), PPR ଟିକାକରଣ, ବୋତଲ ଜଡ୍ କୃମି, ଛୁଆ ଯତ୍ନ ବା ଓଜନ ବୃଦ୍ଧି — ଆରୋହୀ ପ୍ରସ୍ତୁତ।',
+    promptPlaceholderEn: 'Talk to Arohi about your goats or sheep...',
+    promptPlaceholderOr: 'ଆରୋହୀ ସହିତ ଛେଳି ବା ମେଣ୍ଢା ସମ୍ପର୍କରେ କଥା ହୁଅନ୍ତୁ...',
+    taglineEn: 'Goat & Sheep Care',
+    taglineOr: 'ଛେଳି ଓ ମେଣ୍ଢା ପାଳନ ଯତ୍ନ',
+  },
+  dog: {
+    image: VET_STOCK_IMAGES.dogLabrador,
+    alt: 'Dog & Canine Care',
+    headlineEn: "Tell me what's happening with your dog today...",
+    headlineOr: 'ଆପଣଙ୍କ କୁକୁରର କଣ ସମସ୍ୟା ଅଛି କୁହନ୍ତୁ...',
+    subtextEn: 'Vomiting & loose stool, tick prevention, parvo alert, skin itching, or core vaccines — Arohi is ready.',
+    subtextOr: 'ବାନ୍ତି ଓ ପତଳା ଝାଡ଼ା, ବାହାଙ୍ଗିଆ (Ticks), ପାର୍ଭୋଭାଇରସ୍ ସତର୍କତା, ଚର୍ମ କୁଣ୍ଡାଇ ବା ଟିକା — ଆରୋହୀ ପ୍ରସ୍ତୁତ।',
+    promptPlaceholderEn: 'Talk to Arohi about your dog or puppy...',
+    promptPlaceholderOr: 'ଆରୋହୀ ସହିତ କୁକୁର ବା ଛୁଆ ସମ୍ପର୍କରେ କଥା ହୁଅନ୍ତୁ...',
+    taglineEn: 'Canine Health & Nutrition',
+    taglineOr: 'କୁକୁର ସ୍ୱାସ୍ଥ୍ୟ ଓ ଯତ୍ନ',
+  },
+  cat: {
+    image: VET_STOCK_IMAGES.catPortrait,
+    alt: 'Cat & Feline Care',
+    headlineEn: "Tell me what's happening with your cat today...",
+    headlineOr: 'ଆପଣଙ୍କ ବିରାଡ଼ିର କଣ ସମସ୍ୟା ଅଛି କୁହନ୍ତୁ...',
+    subtextEn: 'Urinary straining (FLUTD), hairballs & vomiting, taurine nutrition, hydration, or Tricat vaccines — Arohi is ready.',
+    subtextOr: 'ମୂତ୍ର ସମସ୍ୟା (FLUTD), ହେୟାରବଲ୍ ବାନ୍ତି, ଟରିନ୍ ପୋଷଣ, ପାଣି ପିଇବା ବା ଟ୍ରାଇକ୍ୟାଟ୍ ଟିକା — ଆରୋହୀ ପ୍ରସ୍ତୁତ।',
+    promptPlaceholderEn: 'Talk to Arohi about your cat or kitten...',
+    promptPlaceholderOr: 'ଆରୋହୀ ସହିତ ବିରାଡ଼ି ସମ୍ପର୍କରେ କଥା ହୁଅନ୍ତୁ...',
+    taglineEn: 'Feline Health & Wellness',
+    taglineOr: 'ବିରାଡ଼ି ସ୍ୱାସ୍ଥ୍ୟ ଓ ଯତ୍ନ',
+  },
+};
 
-  const COMMON_CONCERNS = [
+const SPECIES_COMMON_CONCERNS: Record<VetSpecies, Array<{
+  id: string;
+  titleEn: string;
+  titleOr: string;
+  icon: string;
+  query: string;
+  bg: string;
+}>> = {
+  cattle: [
     {
       id: 'off_feed',
       titleEn: 'Off-feed / No Cudding',
@@ -58,20 +119,187 @@ export const VetMitraHomeView: React.FC<Props> = ({
     {
       id: 'scours',
       titleEn: 'Calf Scours / Diarrhea',
-      titleOr: 'ଝାଡ଼ା / ଡାଇରିଆ',
+      titleOr: 'ବାଛୁରୀ ଝାଡ଼ା',
       icon: '🐂',
       query: 'ଛୋଟ ବାଛୁରୀର ପତଳା ଝାଡ଼ା ହେଉଛି ଏବଂ ସେ ଛିଡ଼ା ହୋଇପାରୁନାହିଁ। କଣ ତୁରନ୍ତ କରିବି?',
       bg: 'bg-amber-50 border-amber-100 text-amber-950',
     },
     {
       id: 'bloat',
-      titleEn: 'Bloat / Stomach Swelling',
+      titleEn: 'Bloat / Gas Swelling',
       titleOr: 'ପେଟ ଫୁଲିବା',
       icon: '🫁',
       query: 'ପଶୁର ବାମ ପଟ ପେଟ ଢୋଲ ପରି ଫୁଲିଯାଇଛି ଓ ନିଶ୍ୱାସ ନେବାରେ କଷ୍ଟ ହେଉଛି (Acute Bloat)।',
       bg: 'bg-red-50 border-red-100 text-red-950',
     },
-  ];
+  ],
+  goat: [
+    {
+      id: 'acute_bloat',
+      titleEn: 'Acute Bloat / Gas',
+      titleOr: 'ପେଟ ଫୁଲିବା',
+      icon: '🌾',
+      query: 'ମୋ ଛେଳିର ପେଟ ଢୋଲ ପରି ଫୁଲିଯାଇଛି ଏବଂ ସେ ନିଶ୍ୱାସ ନେଇପାରୁନାହିଁ। ତୁରନ୍ତ କଣ ଜରୁରୀ ଉପଚାର କରିବି?',
+      bg: 'bg-red-50 border-red-100 text-red-950',
+    },
+    {
+      id: 'ppr_fever',
+      titleEn: 'PPR Fever & Sores',
+      titleOr: 'ପିପିଆର (PPR)',
+      icon: '💉',
+      query: 'ଛେଳିକୁ ତୀବ୍ର ଜ୍ୱର ସହ ପାଟିରୁ ଲାଳ ଓ ଘା ହୋଇଛି (PPR ଲକ୍ଷଣ)। କିପରି ସୁରକ୍ଷା ଓ ଚିକିତ୍ସା କରିବି?',
+      bg: 'bg-rose-50 border-rose-100 text-rose-950',
+    },
+    {
+      id: 'bottle_jaw',
+      titleEn: 'Bottle Jaw / Worms',
+      titleOr: 'ତଳ ମୁଣ୍ଡ ଫୁଲିବା',
+      icon: '🐐',
+      query: 'ଛେଳିର ତଳ ମୁଣ୍ଡ/କଣ୍ଠ ତଳେ ପାଣି ଜମି ଫୁଲିଯାଇଛି (Bottle Jaw)। କୃମିନାଶକ ଡୋଜ୍ କଣ ଦେବି?',
+      bg: 'bg-amber-50 border-amber-100 text-amber-950',
+    },
+    {
+      id: 'kid_scours',
+      titleEn: 'Kid Scours & Care',
+      titleOr: 'ଛୁଆଙ୍କ ଝାଡ଼ା',
+      icon: '🍼',
+      query: 'ଛୋଟ ଛେଳି ଛୁଆର ହଳଦିଆ ପତଳା ଝାଡ଼ା ହେଉଛି। ଡିହାଇଡ୍ରେସନ୍ ଓ ORS କିପରି ଦେବି?',
+      bg: 'bg-blue-50 border-blue-100 text-blue-950',
+    },
+    {
+      id: 'weight_gain',
+      titleEn: 'Weight Gain Nutrition',
+      titleOr: 'ଓଜନ ବୃଦ୍ଧି ଖାଦ୍ୟ',
+      icon: '🌿',
+      query: 'ଛେଳିର ସୁସ୍ଥ ଓଜନ ବୃଦ୍ଧି ପାଇଁ ଶସ୍ତା ଦାନା ଓ ସୁବାବୁଲ/ନେପିୟର ଖାଦ୍ୟ ଯୋଜନା ଦିଅନ୍ତୁ।',
+      bg: 'bg-emerald-50 border-emerald-100 text-emerald-950',
+    },
+  ],
+  dog: [
+    {
+      id: 'vomit_diarrhea',
+      titleEn: 'Vomiting & Diarrhea',
+      titleOr: 'ବାନ୍ତି ଓ ଝାଡ଼ା',
+      icon: '🤢',
+      query: 'ମୋ କୁକୁର ବାନ୍ତି ଓ ପତଳା ଝାଡ଼ା କରୁଛି। ତୁରନ୍ତ କଣ ପ୍ରାଥମିକ ଚିକିତ୍ସା ଓ ORS ଦେବି?',
+      bg: 'bg-rose-50 border-rose-100 text-rose-950',
+    },
+    {
+      id: 'ticks_fleas',
+      titleEn: 'Ticks & Skin Rash',
+      titleOr: 'ବାହାଙ୍ଗିଆ ଓ କୁଣ୍ଡାଇ',
+      icon: '🕷️',
+      query: 'କୁକୁର ଦେହରେ ବାହାଙ୍ଗିଆ (Ticks) ହୋଇଛି ଏବଂ ଚର୍ମ କୁଣ୍ଡାଉଛି। କିପରି ସୁରକ୍ଷିତ ଚିକିତ୍ସା କରିବି?',
+      bg: 'bg-amber-50 border-amber-100 text-amber-950',
+    },
+    {
+      id: 'parvo_alert',
+      titleEn: 'Parvo Red Flags',
+      titleOr: 'ପାର୍ଭୋ ସତର୍କତା',
+      icon: '⚠️',
+      query: 'କୁକୁର ଛୁଆ ପାଇଁ ପାର୍ଭୋଭାଇରସ୍ ସତର୍କତା ଏବଂ ଡିଏଚପିପିଆଇ (DHPPi) ଟିକାକରଣ ନିୟମ କଣ?',
+      bg: 'bg-red-50 border-red-100 text-red-950',
+    },
+    {
+      id: 'dog_diet',
+      titleEn: 'Diet & Toxic Foods',
+      titleOr: 'ଖାଦ୍ୟ ଚାର୍ଟ',
+      icon: '🍗',
+      query: 'କୁକୁର ପାଇଁ କେଉଁ ଖାଦ୍ୟ ବିଷାକ୍ତ ଏବଂ ଘରେ କିପରି ସୁସ୍ଥ ପ୍ରୋଟିନ୍ ଯୁକ୍ତ ଦାନା ତିଆରି କରିବି?',
+      bg: 'bg-emerald-50 border-emerald-100 text-emerald-950',
+    },
+    {
+      id: 'dog_vaccine',
+      titleEn: 'Core Vaccines & ARV',
+      titleOr: 'ଟିକା ଓ କୃମିନାଶକ',
+      icon: '💉',
+      query: 'କୁକୁର ପାଇଁ ରେବିଜ୍ ଏବଂ ୭-ଇନ୍-୧ ଟିକା ଏବଂ କୃମି ଔଷଧ ଦେବାର ସଠିକ୍ ସମୟ କଣ?',
+      bg: 'bg-blue-50 border-blue-100 text-blue-950',
+    },
+  ],
+  cat: [
+    {
+      id: 'cat_urinary',
+      titleEn: 'Urinary Straining (FLUTD)',
+      titleOr: 'ମୂତ୍ର ସମସ୍ୟା (FLUTD)',
+      icon: '🚽',
+      query: 'ମୋ ବିରାଡ଼ି ପରିସ୍ରା କରିବାରେ କଷ୍ଟ ପାଉଛି ବା ବାରମ୍ବାର ଲିଟର ବକ୍ସ ଯାଉଛି। ଏହା କଣ ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି?',
+      bg: 'bg-red-50 border-red-100 text-red-950',
+    },
+    {
+      id: 'cat_hairballs',
+      titleEn: 'Hairballs & Vomiting',
+      titleOr: 'ହେୟାରବଲ୍ ଓ ବାନ୍ତି',
+      icon: '🧶',
+      query: 'ମୋ ବିରାଡ଼ି ବାନ୍ତି କରୁଛି ଓ ଲୋମ ବାହାରୁଛି। ଏଥିପାଇଁ କି ପ୍ରକାର ଖାଦ୍ୟ ଓ ପ୍ରାଥମିକ ଚିକିତ୍ସା ଦରକାର?',
+      bg: 'bg-amber-50 border-amber-100 text-amber-950',
+    },
+    {
+      id: 'cat_taurine',
+      titleEn: 'Taurine & Diet Plan',
+      titleOr: 'ଟରିନ୍ ଓ ସନ୍ତୁଳିତ ଖାଦ୍ୟ',
+      icon: '🐟',
+      query: 'ବିରାଡ଼ି ପାଇଁ ଟରିନ୍ (Taurine) ଓ ପ୍ରୋଟିନ୍ ଯୁକ୍ତ ସନ୍ତୁଳିତ ଖାଦ୍ୟ କିପରି ପ୍ରସ୍ତୁତ କରିବି?',
+      bg: 'bg-emerald-50 border-emerald-100 text-emerald-950',
+    },
+    {
+      id: 'cat_fleas',
+      titleEn: 'Fleas & Ear Mites',
+      titleOr: 'ଚର୍ମ କୁଣ୍ଡାଇ ଓ ପୋକ',
+      icon: '🐱',
+      query: 'ବିରାଡ଼ି କାନ କୁଣ୍ଡାଉଛି ଏବଂ ଦେହରେ ଫ୍ଲି (Fleas) ଅଛି। କେଉଁ ସୁରକ୍ଷିତ ଔଷଧ ଦେବି?',
+      bg: 'bg-purple-50 border-purple-100 text-purple-950',
+    },
+    {
+      id: 'cat_vaccine',
+      titleEn: 'Tricat & Core Vaccines',
+      titleOr: 'ଟ୍ରାଇକ୍ୟାଟ୍ ଟିକା',
+      icon: '💉',
+      query: 'ବିରାଡ଼ି ପାଇଁ ଟ୍ରାଇଭେକ୍ (Tricat) ଓ ରେବିଜ୍ ଟିକା ଏବଂ କୃମିନାଶକ ସମୟସାରଣୀ କୁହନ୍ତୁ।',
+      bg: 'bg-blue-50 border-blue-100 text-blue-950',
+    },
+  ],
+};
+
+export const VetMitraHomeView: React.FC<Props> = ({
+  activeSpecies,
+  onSelectSpecies,
+  language,
+  onStartConsult,
+  onStartVoiceCall,
+  onOpenScanner,
+  onOpenEmergency,
+  onViewPassport,
+  onViewHistory,
+  onOpenCommunity,
+  onOpenFeed,
+}) => {
+  const isOdia = language === 'or';
+
+  const heroConfig = SPECIES_HERO_CONFIG[activeSpecies] || SPECIES_HERO_CONFIG.cattle;
+  const currentConcerns = SPECIES_COMMON_CONCERNS[activeSpecies] || SPECIES_COMMON_CONCERNS.cattle;
+
+  const speciesQuickQueries = {
+    cattle: {
+      health: isOdia ? 'ମୋ ଗାଈର ସ୍ୱାସ୍ଥ୍ୟ ଯାଞ୍ଚ କରିବାକୁ ଚାହେଁ' : 'Check cow health',
+      nutrition: isOdia ? 'ଦୈନିକ NASEM ଖାଦ୍ୟ ରେସନ୍ ପ୍ଲାନ୍ ଦିଅନ୍ତୁ' : 'Calculate daily dairy ration',
+    },
+    goat: {
+      health: isOdia ? 'ମୋ ଛେଳିର ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ ଚାହେଁ' : 'Check goat health',
+      nutrition: isOdia ? 'ଛେଳିଙ୍କ ପାଇଁ ଶସ୍ତା ଦାନା ଓ ସୁବାବୁଲ ରାସନ୍ ପ୍ଲାନ୍ ଦିଅନ୍ତୁ' : 'Goat feeding & ration plan',
+    },
+    dog: {
+      health: isOdia ? 'ମୋ କୁକୁରର ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ ଚାହେଁ' : 'Check dog health',
+      nutrition: isOdia ? 'କୁକୁର ପାଇଁ ସୁସ୍ଥ ପ୍ରୋଟିନ୍ ଯୁକ୍ତ ଖାଦ୍ୟ ଚାର୍ଟ ଦିଅନ୍ତୁ' : 'Dog diet & nutrition chart',
+    },
+    cat: {
+      health: isOdia ? 'ମୋ ବିରାଡ଼ିର ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ ଚାହେଁ' : 'Check cat health',
+      nutrition: isOdia ? 'ବିରାଡ଼ି ପାଇଁ ଟରିନ୍ ଓ ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଚାର୍ଟ ଦିଅନ୍ତୁ' : 'Cat nutrition & taurine plan',
+    },
+  }[activeSpecies] || {
+    health: isOdia ? 'ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ ଚାହେଁ' : 'Check animal health',
+    nutrition: isOdia ? 'ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଯୋଜନା' : 'Balanced diet plan',
+  };
 
   return (
     <div className="space-y-4 pb-20 animate-in fade-in-50 duration-300">
@@ -89,36 +317,35 @@ export const VetMitraHomeView: React.FC<Props> = ({
 
         <div className="p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="space-y-2 text-left w-full md:w-1/2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100/90 text-emerald-900 text-[11px] font-bold">
+              <Sparkles className="w-3 h-3 text-emerald-700" />
+              <span>{isOdia ? heroConfig.taglineOr : heroConfig.taglineEn}</span>
+            </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-emerald-950 font-sans">
               {isOdia ? 'ନମସ୍କାର!' : 'Namaskar!'}
             </h2>
             <p className="text-base sm:text-lg font-bold text-slate-800 leading-snug">
-              {isOdia
-                ? 'ଆପଣଙ୍କ ଗାଈ ବା ପଶୁର କଣ ସମସ୍ୟା ଅଛି କୁହନ୍ତୁ...'
-                : "Tell me what's happening with your animal today..."}
+              {isOdia ? heroConfig.headlineOr : heroConfig.headlineEn}
             </p>
-            <p className="text-xs text-slate-600">
-              {isOdia
-                ? 'କ୍ଷୀର କମିବା, ଜାବର କାଟିବା, ଥନ ଫୁଲିବା ବା ରେସନ୍ ସନ୍ତୁଳନ — ଆରୋହୀ ପ୍ରସ୍ତୁତ।'
-                : 'Milk drop, rumination, udder check, or NASEM ration balance — Arohi is ready.'}
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {isOdia ? heroConfig.subtextOr : heroConfig.subtextEn}
             </p>
           </div>
 
-          {/* Real Photo Montage Banner */}
+          {/* Real Photo Montage Banner dynamically matching selected species */}
           <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg border-2 border-white max-w-sm w-full h-44 sm:h-52">
+            <div className="relative rounded-2xl overflow-hidden shadow-md border-2 border-white max-w-sm w-full h-44 sm:h-52 bg-slate-100">
               <img
-                src={VET_STOCK_IMAGES.heroGroup}
-                alt="Livestock and Pets"
-                className="w-full h-full object-cover object-center"
+                src={heroConfig.image}
+                alt={heroConfig.alt}
+                className="w-full h-full object-cover object-center transition-all duration-300"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-[11px] text-white font-medium">
-                    {isOdia ? '୨୪x୭ ଲାଇଭ୍ AI ଚିକିତ୍ସକ ଉପଲବ୍ଧ' : '24x7 Live AI Veterinary Available'}
-                  </span>
-                </div>
+              {/* Compact floating live status pill without dark shadow over photo */}
+              <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/20 text-white shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide">
+                  {isOdia ? '୨୪x୭ ଲାଇଭ୍ AI ଚିକିତ୍ସକ ଉପଲବ୍ଧ' : '24x7 Live AI Veterinary Available'}
+                </span>
               </div>
             </div>
           </div>
@@ -166,7 +393,7 @@ export const VetMitraHomeView: React.FC<Props> = ({
             onClick={() => onStartConsult()}
             className="flex-1 text-left px-3 py-2 text-slate-500 text-sm bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors truncate"
           >
-            {isOdia ? 'ଆରୋହୀ ସହିତ କଥା ହୁଅନ୍ତୁ (Talk to Arohi)...' : 'Talk to Arohi about your animal...'}
+            {isOdia ? heroConfig.promptPlaceholderOr : heroConfig.promptPlaceholderEn}
           </button>
           <button
             onClick={() => onOpenScanner('animal')}
@@ -190,16 +417,27 @@ export const VetMitraHomeView: React.FC<Props> = ({
             {isOdia ? 'ତ୍ୱରିତ ପ୍ରଶ୍ନ:' : 'Quick:'}
           </span>
           <button
-            onClick={() => onStartConsult(isOdia ? 'ମୋ ଗାଈର ସ୍ୱାସ୍ଥ୍ୟ ଯାଞ୍ଚ କରିବାକୁ ଚାହେଁ' : 'Check animal health')}
+            onClick={() => onStartConsult(speciesQuickQueries.health)}
             className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
           >
-            {isOdia ? 'ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ' : 'Get health advice'}
+            {isOdia ? 'ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ' : 'Health consultation'}
           </button>
           <button
-            onClick={() => onStartConsult(isOdia ? 'ଦୈନିକ NASEM ଖାଦ୍ୟ ରେସନ୍ ପ୍ଲାନ୍ ଦିଅନ୍ତୁ' : 'Calculate daily ration')}
-            className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
+            onClick={() => {
+              if (onOpenFeed) {
+                onOpenFeed();
+              } else {
+                onStartConsult(speciesQuickQueries.nutrition);
+              }
+            }}
+            className="px-3 py-1 rounded-xl bg-emerald-100/70 hover:bg-emerald-200/80 text-emerald-900 border border-emerald-300 font-bold shrink-0 whitespace-nowrap flex items-center gap-1"
           >
-            {isOdia ? 'ରେସନ୍ ପ୍ଲାନ୍ (NASEM)' : 'Nutrition plan'}
+            <span>🌾</span>
+            <span>
+              {activeSpecies === 'cattle' 
+                ? (isOdia ? 'ରେସନ୍ ଷ୍ଟୁଡିଓ (NASEM)' : 'Dairy Ration Studio')
+                : (isOdia ? 'ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଯୋଜନା' : 'Feed & Nutrition Studio')}
+            </span>
           </button>
           <button
             onClick={() => onViewPassport()}
@@ -207,6 +445,14 @@ export const VetMitraHomeView: React.FC<Props> = ({
           >
             {isOdia ? 'ଟିକାକରଣ ରେକର୍ଡ' : 'Vaccinations'}
           </button>
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="px-3 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold shrink-0 whitespace-nowrap flex items-center gap-1"
+            >
+              <span>{isOdia ? 'ପୂର୍ବ ପରାମର୍ଶ (Offline)' : 'Past Consultations (Offline)'}</span>
+            </button>
+          )}
           <button
             onClick={() => onOpenScanner('lab')}
             className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
@@ -237,27 +483,30 @@ export const VetMitraHomeView: React.FC<Props> = ({
           </div>
         </div>
 
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            window.open('tel:1962');
-          }}
-          className="px-5 py-2.5 rounded-2xl bg-white text-rose-700 hover:bg-rose-50 font-black text-sm flex items-center justify-center gap-2 shadow-sm shrink-0 self-start sm:self-auto"
+        <a 
+          href="tel:1962"
+          onClick={(e) => e.stopPropagation()}
+          className="px-5 py-2.5 rounded-2xl bg-white text-rose-700 hover:bg-rose-50 font-black text-sm flex items-center justify-center gap-2 shadow-sm shrink-0 self-start sm:self-auto no-underline"
         >
           <PhoneCall className="w-4 h-4" />
           <span>Call 1962</span>
-        </button>
+        </a>
       </div>
 
-      {/* Common Concerns Horizontal Carousel */}
-      <div className="space-y-2.5">
+      {/* Common Concerns Card Container (Wrapped in clean white surface for perfect contrast and readability) */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-3.5 sm:p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-900">
-            {isOdia ? 'ସାଧାରଣ ସମସ୍ୟା (Common Concerns)' : 'Common Concerns'}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900">
+              {isOdia ? 'ସାଧାରଣ ସମସ୍ୟା (Common Concerns)' : 'Common Concerns'}
+            </h3>
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase">
+              {activeSpecies}
+            </span>
+          </div>
           <button
             onClick={() => onStartConsult()}
-            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer transition-colors"
           >
             <span>{isOdia ? 'ସବୁ ଦେଖନ୍ତୁ' : 'See All'}</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -265,11 +514,11 @@ export const VetMitraHomeView: React.FC<Props> = ({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-          {COMMON_CONCERNS.map((c) => (
+          {currentConcerns.map((c) => (
             <button
               key={c.id}
               onClick={() => onStartConsult(c.query)}
-              className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all hover:shadow-md ${c.bg}`}
+              className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all hover:shadow-md cursor-pointer ${c.bg}`}
             >
               <span className="text-2xl">{c.icon}</span>
               <span className="text-xs font-bold leading-tight line-clamp-1">
@@ -282,6 +531,88 @@ export const VetMitraHomeView: React.FC<Props> = ({
           ))}
         </div>
       </div>
+
+      {/* Pet Community & Industry Showcase Banner */}
+      {onOpenCommunity && (
+        <div 
+          onClick={onOpenCommunity}
+          className="cursor-pointer rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-4 sm:p-5 shadow-lg border border-emerald-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-transform hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-xl shrink-0 group-hover:bg-emerald-500/30 transition-colors">
+              🐾
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+                  Pet Social Media & Products
+                </span>
+                <span className="text-emerald-400 text-xs font-bold">• New</span>
+              </div>
+              <h4 className="text-sm sm:text-base font-black text-white mt-0.5">
+                {isOdia ? 'ପୋଷା ପଶୁ ସାମାଜିକ କମ୍ୟୁନିଟି ଓ ଉତ୍ପାଦ ବଜାର' : 'Pet Parents Community & Industry Showcase'}
+              </h4>
+              <p className="text-xs text-emerald-100/80">
+                {isOdia
+                  ? 'ପୋଷ୍ଟ ଓ ଫଟୋ ସେୟାର କରନ୍ତୁ (ପବ୍ଲିକ୍/ପ୍ରାଇଭେଟ୍), ପଶୁ ସ୍ୱାସ୍ଥ୍ୟ ଡାଏରୀ ଲେଖନ୍ତୁ ଏବଂ ଯାଞ୍ଚିତ ଖାଦ୍ୟ ଓ ସେବା ଦେଖନ୍ତୁ।'
+                  : 'Share public/private photos, keep a pet diary, and discover certified foods, grooming & clinics.'}
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenCommunity();
+            }}
+            className="px-4 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shrink-0 self-start sm:self-auto transition-colors"
+          >
+            <span>{isOdia ? 'କମ୍ୟୁନିଟି ଦେଖନ୍ତୁ' : 'Explore Community'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Universal Feed & Ration Studio Feature Banner */}
+      {onOpenFeed && (
+        <div
+          onClick={onOpenFeed}
+          className="cursor-pointer rounded-3xl bg-gradient-to-r from-amber-900/80 via-emerald-900/90 to-teal-950 text-white p-4 sm:p-5 shadow-lg border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-transform hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shrink-0 group-hover:bg-amber-500/30 transition-colors">
+              🌾
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+                  Ration & Feeding Engine
+                </span>
+                <span className="text-emerald-400 text-xs font-bold">• 4 Species</span>
+              </div>
+              <h4 className="text-sm sm:text-base font-black text-white mt-0.5">
+                {isOdia ? 'ପଶୁ ଖାଦ୍ୟ ଓ ରାସନ୍ ଷ୍ଟୁଡିଓ (Feed & Ration Studio)' : 'Universal Feed & Ration Formulation Studio'}
+              </h4>
+              <p className="text-xs text-amber-100/80">
+                {isOdia
+                  ? 'ଗାଈ (NASEM ୨୦୨୧), ଛେଳି (ଓଜନ ବୃଦ୍ଧି), କୁକୁର (କ୍ୟାଲୋରୀ/ପ୍ରୋଟିନ୍) ଓ ବିରାଡ଼ି (ଟରିନ୍) ପାଇଁ ବୈଜ୍ଞାନିକ ଖାଦ୍ୟ ଯୋଜନା।'
+                  : 'Formulate precision rations: NASEM dairy balancer, goat fattening diets, canine calories, and feline carnivore plans.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenFeed();
+            }}
+            className="px-4 py-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shrink-0 self-start sm:self-auto transition-colors"
+          >
+            <span>{isOdia ? 'ରାସନ୍ ଗଣନା କରନ୍ତୁ' : 'Open Feed Studio'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Mission Banner with Rural Farmer & Cow Visual */}
       <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-800 to-teal-900 text-white relative shadow-md">

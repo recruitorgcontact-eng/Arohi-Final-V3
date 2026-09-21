@@ -130,6 +130,8 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
     let selectedVoice = 'Zypher';
     let uid = '';
     let reqLang = 'en';
+    let speciesParam = '';
+    let animalParam = '';
     if (request.url) {
       const match = request.url.match(/[?&]voice=([^&]+)/);
       if (match) {
@@ -142,6 +144,14 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
       const langMatch = request.url.match(/[?&]lang=([^&]+)/);
       if (langMatch) {
         reqLang = decodeURIComponent(langMatch[1]);
+      }
+      const speciesMatch = request.url.match(/[?&]species=([^&]+)/);
+      if (speciesMatch) {
+        speciesParam = decodeURIComponent(speciesMatch[1]);
+      }
+      const animalMatch = request.url.match(/[?&]animal=([^&]+)/);
+      if (animalMatch) {
+        animalParam = decodeURIComponent(animalMatch[1]);
       }
     }
 
@@ -219,6 +229,10 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
         "\n- AS SOON AS THE USER SPEAKS IN ANY REGIONAL OR GLOBAL LANGUAGE (such as Odia, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, etc., or spoken/transliterated words like 'kemiti achha', 'mote business kariba ku achhi', 'mujhe guidance chahiye', 'state schemes bisayare kuha'), YOU MUST IMMEDIATELY AND SEAMLESSLY PIVOT TO REPLY IN THAT EXACT USER'S SPOKEN LANGUAGE with native fluency, sweet tone, and warmth! NEVER respond in English when the user speaks in Odia, Hindi, or any regional Indian language!" +
         "\n- If the user speaks English, continue answering in English. If the user changes language at any time during the conversation, switch immediately to match their spoken language on that very turn!" +
         "\n- REAL-TIME GOOGLE SEARCH & NEWS DIRECTIVE: You have active Google Search grounding tools enabled! Whenever the user asks about current events, news, parliament, politics, ministers, appointments, resignations (such as news about the Education Minister of India or parliament discussions), sports, or live updates, YOU MUST USE GOOGLE SEARCH TO FETCH THE LATEST TOP HEADLINES AND SEARCH RESULTS BEFORE ANSWERING! NEVER say 'I don't know' or 'I don't have real-time access'—ALWAYS search Google and provide accurate, up-to-the-second news!";
+
+      if (isVetMitra && speciesParam && speciesParam !== 'universal') {
+        voiceSystemInstruction += `\n\nTARGET ANIMAL PATIENT FOR THIS CALL: The caller is consulting specifically regarding their ${speciesParam}${animalParam ? ` named "${animalParam}"` : ''}. Focus your clinical questions, temperature checks, and feeding/management advice strictly on ${speciesParam}.`;
+      }
 
       if (uid && !isReadAloud) {
         try {
@@ -426,7 +440,21 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
           } else if (!isReadAloud && session) {
             try {
               let greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
-              if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
+              if (isVetMitra) {
+                if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
+                  greetingInstruction = speciesParam && speciesParam !== 'universal'
+                    ? `Say a warm, reassuring 1-sentence welcome in Odia introducing yourself as Arohi VetMitra (ଆରୋହୀ ଭେଟମିତ୍ର) and asking what health or feeding symptom the caller is noticing in their ${speciesParam} ${animalParam ? `named "${animalParam}"` : ''} today.`
+                    : "Say a warm, reassuring 1-sentence welcome in Odia introducing yourself as Arohi VetMitra (ଆରୋହୀ ଭେଟମିତ୍ର) and asking what animal or symptom the caller needs veterinary help with today (e.g. 'ନମସ୍କାର! ମୁଁ ଆରୋହୀ ଭେଟମିତ୍ର। ଆପଣଙ୍କ ପଶୁ କିମ୍ବା ପୋଷା ଜୀବର କଣ ସମସ୍ୟା ହୋଇଛି, କୁହନ୍ତୁ।').";
+                } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
+                  greetingInstruction = speciesParam && speciesParam !== 'universal'
+                    ? `Say a warm, reassuring 1-sentence welcome in Hindi introducing yourself as Arohi VetMitra and asking what problem the caller's ${speciesParam} has today.`
+                    : "Say a warm, reassuring 1-sentence welcome in Hindi introducing yourself as Arohi VetMitra and asking what animal or symptom the caller has today.";
+                } else {
+                  greetingInstruction = speciesParam && speciesParam !== 'universal'
+                    ? `Say a warm, reassuring 1-sentence welcome in English introducing yourself as Arohi VetMitra and asking how you can help with their ${speciesParam} today.`
+                    : "Say a warm, reassuring 1-sentence welcome in English introducing yourself as Arohi VetMitra, your veterinary and dairy AI companion, and asking how you can help today.";
+                }
+              } else if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
                 greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Odia (ଓଡ଼ିଆ) introducing yourself as Arohi (ଆରୋହୀ) and asking how you can help today (e.g. 'ନମସ୍କାର! ମୁଁ ଆରୋହୀ, ଆପଣଙ୍କ AI ସାଥୀ। ଆଜି ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?').";
               } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
                 greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Hindi (हिंदी) introducing yourself as Arohi (आरोही) and asking how you can help today (e.g. 'नमस्ते! मैं आरोही हूँ, आपकी AI साथी। आज मैं आपकी क्या मदद कर सकती हूँ?').";

@@ -1,108 +1,273 @@
-// Screen 2: Consult Chat View with Interactive Pills & Nutrition Card matching Mockup 2
-// Clean light canvas with active animal header, interactive numbered probing pills, NASEM nutrition result card, and audio pill
+// Arohi VetMitra - Dynamic Clinical & Consultation Chat View
+// Provides species-specific, individualized chats for each animal (Cattle, Buffalo, Goat, Dog, Cat)
+// Clean typography without markdown hashtag symbols (###, ##), horizontal rules (---), or asterisk clutter (* **Item:**)
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Mic, Volume2, VolumeX, Paperclip, 
-  Sparkles, AlertTriangle, PhoneCall, Stethoscope, RefreshCw,
-  Image as ImageIcon, Loader2, Camera, Upload, FileText, ChevronRight, CheckCircle2, Play, Pause
+  PhoneCall, RefreshCw, Loader2, Camera, Upload, FileText, 
+  Copy, Check, Sparkles, AlertTriangle, Play, Pause, Trash2,
+  Stethoscope
 } from 'lucide-react';
 import { VetChatMessage, VetSpecies, VetLanguage } from '../types';
 import { playArohiVoice, stopArohiVoice } from '../../../utils/arohiVoicePlayer';
 import { AROHI_VETMITRA_SYSTEM_PROMPT } from '../engine/vetMitraSystemPrompt';
-import { VET_STOCK_IMAGES } from '../data/vetStockImages';
 import { UniversalAnimalRecord, SAMPLE_ANIMAL_RECORDS } from '../data/mockAnimalsData';
+import { VetMessageRenderer, cleanTextForVoice } from './VetMessageRenderer';
+import { vetOfflineStorage, VetConsultationSummary } from '../utils/vetOfflineStorage';
 
 interface Props {
   species: VetSpecies;
   language: VetLanguage;
   activeAnimal?: UniversalAnimalRecord;
+  initialQuery?: string;
+  onClearInitialQuery?: () => void;
   onStartVoiceCall: () => void;
   onOpenEmergencyGuide?: () => void;
   onChangeAnimal?: () => void;
 }
 
+/**
+ * Builds a dynamic, personalized welcome message tailored to the specific animal or universal mode
+ */
+function createWelcomeMessage(animal: UniversalAnimalRecord | undefined, species: VetSpecies, isOdia: boolean): VetChatMessage {
+  if (animal) {
+    const speciesLabelsOdia: Record<string, string> = {
+      cattle: 'ଗାଈ (Cattle)',
+      goat: 'ଛେଳି (Goat)',
+      dog: 'କୁକୁର (Dog)',
+      cat: 'ବିରାଡ଼ି (Cat)',
+    };
+    const spOdia = speciesLabelsOdia[animal.species] || animal.species;
+
+    const text = isOdia
+      ? `ନମସ୍କାର! ମୁଁ ଆରୋହୀ ଭେଟମିତ୍ର (Arohi VetMitra) ଅଟେ। ଆପଣଙ୍କ ${spOdia} '${animal.name}' (${animal.breed}, ଓଜନ: ${animal.weightKg} କିଲୋ, ଟ୍ୟାଗ୍: ${animal.tagNumber}) ର ସ୍ୱାସ୍ଥ୍ୟ, ଖାଦ୍ୟ କିମ୍ବା ରୋଗ ଲକ୍ଷଣ ସମ୍ପର୍କରେ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?
+
+ଆପଣଙ୍କ ପ୍ରଶ୍ନ ଲେଖନ୍ତୁ, ଭଏସ୍ ମେସେଜ୍ ପଠାନ୍ତୁ କିମ୍ବା ଫଟୋ/ରିପୋର୍ଟ ଅପଲୋଡ୍ କରନ୍ତୁ।`
+      : `Hello! I am Arohi VetMitra. How can I assist you with your ${animal.species} '${animal.name}' (${animal.breed}, ${animal.weightKg} kg, Tag: ${animal.tagNumber}) today?
+
+Feel free to describe any symptoms, dietary needs, or upload a photo or medical report.`;
+
+    return {
+      id: `welcome_${animal.id}_${Date.now()}`,
+      sender: 'arohi',
+      text,
+      timestamp: new Date(),
+      species: animal.species,
+    };
+  }
+
+  // Universal Welcome:
+  const text = isOdia
+    ? `ନମସ୍କାର! ମୁଁ ଆରୋହୀ ଭେଟମିତ୍ର (Arohi VetMitra) - ଆପଣଙ୍କ ୨୪x୭ AI ପଶୁ ଚିକିତ୍ସକ।
+
+ଆପଣଙ୍କ ଗାଈ, ମଇଁଷି, ଛେଳି, କୁକୁର, ବିରାଡ଼ି କିମ୍ବା ଅନ୍ୟ ଯେକୌଣସି ପଶୁପକ୍ଷୀଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ, ଖାଦ୍ୟ ଯୋଜନା, ରୋଗ ଲକ୍ଷଣ କିମ୍ବା ଟିକାକରଣ ବିଷୟରେ ଯେକୌଣସି ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ।
+
+ଆପଣ ଓଡ଼ିଆରେ କହିପାରିବେ, ଟାଇପ୍ କରିପାରିବେ କିମ୍ବା ଫଟୋ/ରିପୋର୍ଟ ଅପଲୋଡ୍ କରିପାରିବେ।`
+    : `Namaskar! I am Arohi VetMitra, your 24x7 AI Veterinary Doctor.
+
+Ask me any clinical, diagnostic, or feeding questions about cattle, buffalo, goats, dogs, cats, or any other livestock and pets.
+
+Type your query in Odia, English, or Hindi, or send a voice message / upload a photo.`;
+
+  return {
+    id: `welcome_universal_${Date.now()}`,
+    sender: 'arohi',
+    text,
+    timestamp: new Date(),
+    species,
+  };
+}
+
+/**
+ * Returns dynamic suggested prompts specific to the animal species
+ */
+function getSpeciesSuggestions(species: VetSpecies, isOdia: boolean) {
+  switch (species) {
+    case 'cat':
+      return [
+        {
+          label: isOdia ? '🚽 ମୂତ୍ର ସମସ୍ୟା (FLUTD)' : 'Urination / Straining',
+          query: isOdia 
+            ? 'ମୋ ବିରାଡ଼ି ପରିସ୍ରା କରିବାରେ କଷ୍ଟ ପାଉଛି ବା ବାରମ୍ବାର ଲିଟର ବକ୍ସ ଯାଉଛି। ଏହା କଣ ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି?' 
+            : 'My cat is straining to urinate or frequenting the litter box. Is this a medical emergency?'
+        },
+        {
+          label: isOdia ? '🧶 ବାନ୍ତି ଓ ହେୟାରବଲ୍' : 'Hairballs & Vomiting',
+          query: isOdia 
+            ? 'ମୋ ବିରାଡ଼ି ବାନ୍ତି କରୁଛି ଓ ଲୋମ ବାହାରୁଛି। ଏଥିପାଇଁ କି ପ୍ରକାର ଖାଦ୍ୟ ଓ ପ୍ରାଥମିକ ଚିକିତ୍ସା ଦରକାର?' 
+            : 'My cat is vomiting hairballs. What dietary adjustments and care should I provide?'
+        },
+        {
+          label: isOdia ? '🐟 ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଯୋଜନା' : 'Diet & Taurine Needs',
+          query: isOdia 
+            ? 'ବିରାଡ଼ି ପାଇଁ ଟରିନ୍ (Taurine) ଓ ପ୍ରୋଟିନ୍ ଯୁକ୍ତ ସନ୍ତୁଳିତ ଖାଦ୍ୟ କିପରି ପ୍ରସ୍ତୁତ କରିବି?' 
+            : 'What is a balanced diet plan with essential taurine and protein for a domestic cat?'
+        },
+        {
+          label: isOdia ? '💉 ଟିକାକରଣ ଓ କୃମି' : 'Vaccines & Deworming',
+          query: isOdia 
+            ? 'ବିରାଡ଼ି ପାଇଁ ଟ୍ରାଇଭେକ୍ (Tricat) ଓ ରେବିଜ୍ ଟିକା ଏବଂ କୃମିନାଶକ ସମୟସାରଣୀ କୁହନ୍ତୁ।' 
+            : 'What is the recommended core vaccination (Tricat, Rabies) and deworming schedule for my cat?'
+        },
+      ];
+    case 'dog':
+      return [
+        {
+          label: isOdia ? '🤢 ବାନ୍ତି ଓ ଝାଡ଼ା (Vomiting)' : 'Vomiting & Diarrhea',
+          query: isOdia 
+            ? 'ମୋ କୁକୁର ବାନ୍ତି ଓ ପତଳା ଝାଡ଼ା କରୁଛି। ତୁରନ୍ତ କଣ ପ୍ରାଥମିକ ଚିକିତ୍ସା ଓ ORS ଦେବି?' 
+            : 'My dog is vomiting and having loose stool. What immediate first aid, ORS, and bland diet should I give?'
+        },
+        {
+          label: isOdia ? '🕷️ ବାହାଙ୍ଗିଆ ଓ ଚର୍ମ କୁଣ୍ଡାଇ' : 'Ticks & Skin Allergy',
+          query: isOdia 
+            ? 'କୁକୁର ଦେହରେ ବାହାଙ୍ଗିଆ (Ticks) ହୋଇଛି ଏବଂ ଚର୍ମ କୁଣ୍ଡାଉଛି। କିପରି ସୁରକ୍ଷିତ ଚିକିତ୍ସା କରିବି?' 
+            : 'How should I safely treat tick infestation and relieve itching in my dog?'
+        },
+        {
+          label: isOdia ? '🍗 କୁକୁର ଖାଦ୍ୟ ଚାର୍ଟ' : 'Safe Diet & Toxic Foods',
+          query: isOdia 
+            ? 'କୁକୁର ପାଇଁ କେଉଁ ଖାଦ୍ୟ ବିଷାକ୍ତ ଏବଂ ଘରେ କିପରି ସୁସ୍ଥ ପ୍ରୋଟିନ୍ ଯୁକ୍ତ ଦାନା ତିଆରି କରିବି?' 
+            : 'Which human foods are toxic to dogs, and how do I formulate a healthy homemade meal?'
+        },
+        {
+          label: isOdia ? '💉 ପାର୍ଭୋ ଓ ଟିକା ନିୟମ' : 'Parvovirus & Vaccines',
+          query: isOdia 
+            ? 'କୁକୁର ଛୁଆ ପାଇଁ ପାର୍ଭୋଭାଇରସ୍ ସତର୍କତା ଏବଂ ଡିଏଚପିପିଆଇ (DHPPi) ଟିକାକରଣ ନିୟମ କଣ?' 
+            : 'What are the red flag symptoms of puppy parvovirus and the 9-in-1 vaccine schedule?'
+        },
+      ];
+    case 'goat':
+      return [
+        {
+          label: isOdia ? '🌾 ପେଟ ଫୁଲିବା (Bloat)' : 'Rumen Bloat / Gas',
+          query: isOdia 
+            ? 'ମୋ ଛେଳିର ପେଟ ଫୁଲିଯାଇଛି (Acute Bloat) ଏବଂ ସେ କଷ୍ଟ ପାଉଛି। ତୁରନ୍ତ କଣ ଜରୁରୀ ପ୍ରାଥମିକ ଚିକିତ୍ସା କରିବି?' 
+            : 'My goat has acute bloat from grains/greens. What is the immediate emergency first aid?'
+        },
+        {
+          label: isOdia ? '💉 PPR ଓ କୃମିନାଶକ' : 'PPR Vaccine & Deworming',
+          query: isOdia 
+            ? 'ଛେଳିଙ୍କ ପାଇଁ PPR ଓ ଏଣ୍ଟେରୋଟକ୍ସେମିଆ ଟିକା ଏବଂ ବୋତଲ ଜଡ୍ (Bottle Jaw) କୃମି ନିୟନ୍ତ୍ରଣ କିପରି କରିବି?' 
+            : 'How do I prevent PPR disease and treat parasitic bottle jaw anemia in goats?'
+        },
+        {
+          label: isOdia ? '🐐 ଛୁଆ ଯତ୍ନ ଓ ଖାଦ୍ୟ' : 'Kid Care & Nutrition',
+          query: isOdia 
+            ? 'ନବଜାତ ଛେଳି ଛୁଆକୁ କୋଲୋଷ୍ଟ୍ରମ୍ କେତେ ଦେବି ଏବଂ ଝାଡ଼ା ହେଲେ କିପରି ଯତ୍ନ ନେବି?' 
+            : 'How to manage colostrum feeding and prevent diarrhea in young goat kids?'
+        },
+        {
+          label: isOdia ? '🌿 ଓଜନ ବୃଦ୍ଧି ରାସନ୍' : 'Weight Gain Diet',
+          query: isOdia 
+            ? 'ଛେଳିର ସୁସ୍ଥ ଓଜନ ବୃଦ୍ଧି ପାଇଁ ଶସ୍ତା ଦାନା ଓ ସୁବାବୁଲ/ନେପିୟର ଖାଦ୍ୟ ଯୋଜନା ଦିଅନ୍ତୁ।' 
+            : 'What is a balanced and economical feeding ration for healthy goat weight gain?'
+        },
+      ];
+    case 'cattle':
+    default:
+      return [
+        {
+          label: isOdia ? '🥛 ଦୁଗ୍ଧ ବୃଦ୍ଧି ଓ ଖାଦ୍ୟ' : 'Milk Yield & Diet',
+          query: isOdia 
+            ? 'ମୋ ଗାଈର ଦୁଧ କମିଯାଇଛି। NASEM ଅନୁସାରେ ସନ୍ତୁଳିତ ନେପିୟର, ନଡ଼ା ଓ ଦାନା ଯୋଜନା ଦିଅନ୍ତୁ।' 
+            : 'My cow\'s milk yield has dropped. Please provide a balanced NASEM feeding plan to restore production.'
+        },
+        {
+          label: isOdia ? '🌿 ଜାବର କାଟିବା ଯାଞ୍ଚ' : 'Cud Chewing & Rumen',
+          query: isOdia 
+            ? 'ଗାଈ ଜାବର କମ କାଟୁଛି କିମ୍ବା ହଜମ ଠିକ ହେଉନାହିଁ। ରୁମେନ୍ ସ୍ୱାସ୍ଥ୍ୟ ପାଇଁ କଣ ଉପଚାର କରିବି?' 
+            : 'My cow is chewing cud less frequently. How do I restore rumen microbial digestion?'
+        },
+        {
+          label: isOdia ? '🩺 ଥନ ଫୁଲିବା (Mastitis)' : 'Mastitis Prevention',
+          query: isOdia 
+            ? 'ଗାଈର ଥନ ଟାଣ ଅଛି ବା କ୍ଷୀରରେ ଛିଣ୍ଡା ପଡ଼ୁଛି। ମାଷ୍ଟାଇଟିସ୍ ଚିକିତ୍ସା ଓ ପରୀକ୍ଷା କିପରି କରିବି?' 
+            : 'Udder quarter is swollen or milk has flakes. How to test for mastitis and care for it?'
+        },
+        {
+          label: isOdia ? '🌡️ ଜ୍ୱର ଓ ଟିକବାହିତ ରୋଗ' : 'Fever & Tick Disease',
+          query: isOdia 
+            ? 'ଗାଈକୁ ଜ୍ୱର ଅଛି ଏବଂ ସେ ଖାଇବା ବନ୍ଦ କରିଛି। କେଉଁ ଲକ୍ଷଣ ଦେଖି ଡାକ୍ତରଙ୍କୁ ଡାକିବି?' 
+            : 'My cow has high fever and is off-feed. What signs indicate tick-borne hemoprotozoa?'
+        },
+      ];
+  }
+}
+
 export const VetMitraChatView: React.FC<Props> = ({
   species,
   language,
-  activeAnimal = SAMPLE_ANIMAL_RECORDS[0],
+  activeAnimal,
+  initialQuery,
+  onClearInitialQuery,
   onStartVoiceCall,
   onOpenEmergencyGuide,
   onChangeAnimal,
 }) => {
   const isOdia = language === 'or';
-  const [messages, setMessages] = useState<VetChatMessage[]>([]);
+
+  // Per-animal conversation storage to prevent cross-animal contamination
+  const [messagesByAnimal, setMessagesByAnimal] = useState<Record<string, VetChatMessage[]>>({});
   const [inputText, setInputText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ name: string; type: string; base64: string; previewUrl: string } | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
-  // Probing interactive states (Matching Mockup 2)
-  const [q1Answer, setQ1Answer] = useState<string | null>('reduced');
-  const [q2Answer, setQ2Answer] = useState<string | null>('reduced');
-  const [isPlayingDemoAudio, setIsPlayingDemoAudio] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<any>(null);
 
-  // Initialize with initial conversation resembling Mockup 2
+  const currentAnimalId = activeAnimal ? activeAnimal.id : 'universal_chat';
+  const currentMessages = messagesByAnimal[currentAnimalId] || [];
+
+  // Initialize and load cached conversation for active animal or universal session
   useEffect(() => {
-    setMessages([
-      {
-        id: 'msg_1',
-        sender: 'user',
-        text: isOdia 
-          ? 'ମୋ ଗାଈ ର ଦୁଧ ୧୨ ଲିଟର ରୁ ୯ ଲିଟର କୁ କମିଯାଇଛି। ଏହି ଘାସ (ଫଦ୍ଦର) ଠିକ୍ ଅଛି କି?\nMy cow’s milk has dropped from 12 liters to 9 liters. Is this fodder okay?'
-          : 'My cow’s milk has dropped from 12 liters to 9 liters. Is this fodder okay?',
-        timestamp: new Date(Date.now() - 120000),
-        species: 'cattle',
-        attachments: [
-          {
-            type: 'image',
-            url: VET_STOCK_IMAGES.greenFodderNapier,
-            name: 'napier_grass_sample.jpg'
+    let isMounted = true;
+    const loadCachedConversation = async () => {
+      try {
+        const cached = await vetOfflineStorage.getAnimalChatHistory(currentAnimalId);
+        if (isMounted) {
+          if (cached && cached.length > 0) {
+            setMessagesByAnimal((prev) => ({
+              ...prev,
+              [currentAnimalId]: cached,
+            }));
+          } else if (!messagesByAnimal[currentAnimalId] || messagesByAnimal[currentAnimalId].length === 0) {
+            const welcomeMsg = createWelcomeMessage(activeAnimal, species, isOdia);
+            setMessagesByAnimal((prev) => ({
+              ...prev,
+              [currentAnimalId]: [welcomeMsg],
+            }));
           }
-        ]
-      },
-      {
-        id: 'msg_2',
-        sender: 'arohi',
-        text: isOdia
-          ? 'ନମସ୍କାର! ମୁଁ Arohi VetMitra ଅଟେ। ଆପଣଙ୍କ ଗାଈର ଦୁଧ କମିଯିବାର କାରଣ ଜାଣିବା ପାଇଁ କିଛି ପ୍ରଶ୍ନ ପଚାରିବି।\nHello! I am Arohi VetMitra. Let’s understand what is happening. Please tell me:'
-          : 'Hello! I am Arohi VetMitra. Let’s understand what is happening. Please tell me:',
-        timestamp: new Date(Date.now() - 90000),
-        species: 'cattle',
-      },
-      {
-        id: 'msg_3',
-        sender: 'user',
-        text: isOdia
-          ? 'ତାର ଖାଦ୍ୟ ରୁଚି କିଛି କମିଛି ଏବଂ ଜାବର କମିଛି। ସେ ୧୨୦ ଦିନ ଦୁଧ ଦେଉଛି।\nAppetite is slightly reduced and cud chewing is less. She is 120 days in milk.'
-          : 'Appetite is slightly reduced and cud chewing is less. She is 120 days in milk.',
-        timestamp: new Date(Date.now() - 60000),
-        species: 'cattle',
-      },
-      {
-        id: 'msg_4',
-        sender: 'arohi',
-        text: isOdia
-          ? 'ଧନ୍ୟବାଦ! ମୁଁ ଆପଣଙ୍କ ଗାଈ ପାଇଁ ଏକ ସୁପାରିଶିତ ରାସନ୍ ପ୍ଲାନ୍ ତିଆରି କରିଛି (NASEM 2021 ଅନୁସାରେ)।\nThanks! I have prepared a recommended daily ration for your cow based on NASEM 2021.'
-          : 'Thanks! I have prepared a recommended daily ration for your cow based on NASEM 2021.',
-        timestamp: new Date(Date.now() - 30000),
-        species: 'cattle',
+        }
+      } catch (err) {
+        console.warn('Failed to load cached conversation:', err);
       }
-    ]);
-  }, [species, isOdia]);
+    };
 
+    loadCachedConversation();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentAnimalId, isOdia, activeAnimal?.id, species]);
+
+  // Handle incoming initial query if passed from Home view
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      handleSendMessage(initialQuery.trim());
+      if (onClearInitialQuery) onClearInitialQuery();
+    }
+  }, [initialQuery]);
+
+  // Scroll to bottom on updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiThinking]);
+  }, [currentMessages.length, isAiThinking]);
 
-  // Audio Playback
+  // Clean Audio Playback
   const handlePlayVoice = (message: VetChatMessage) => {
     if (activeSpeechMessageId === message.id) {
       stopArohiVoice();
@@ -112,7 +277,11 @@ export const VetMitraChatView: React.FC<Props> = ({
 
     stopArohiVoice();
     setActiveSpeechMessageId(message.id);
-    playArohiVoice(message.text, {
+
+    // Clean text of all markdown artifacts (###, **, bullets, ---) so voice is completely natural
+    const cleanSpeech = cleanTextForVoice(message.text);
+
+    playArohiVoice(cleanSpeech, {
       language: language === 'or' ? 'or-IN' : language === 'hi' ? 'hi-IN' : 'en-IN',
       voice: 'Zypher',
       onEnd: () => setActiveSpeechMessageId(null),
@@ -120,25 +289,24 @@ export const VetMitraChatView: React.FC<Props> = ({
     });
   };
 
-  // Toggle demo audio
-  const toggleDemoAudio = () => {
-    if (isPlayingDemoAudio) {
-      stopArohiVoice();
-      setIsPlayingDemoAudio(false);
-    } else {
-      setIsPlayingDemoAudio(true);
-      playArohiVoice(
-        isOdia 
-          ? 'ଆପଣଙ୍କ ଗାଈ ପାଇଁ ଦୈନିକ ୧୫ କିଲୋ ନେପିୟର ସହିତ ୪ କିଲୋ ଶୁଖିଲା ନଡ଼ା, ୨.୫ କିଲୋ ମକା ଚୂନା, ୧.୮ କିଲୋ ସୋରିଷ ଖଳି ଏବଂ ୫୦ ଗ୍ରାମ ମିନେରାଲ ମିକ୍ସଚର ଦିଅନ୍ତୁ। ଏହା ଦ୍ୱାରା ଜାବର କାଟିବା ସ୍ୱାଭାବିକ ହେବ ଏବଂ କ୍ଷୀର ୧୧ ରୁ ୧୩ ଲିଟରକୁ ବୃଦ୍ଧି ପାଇବ।'
-          : 'For your cow, provide 15kg Napier green fodder, 4kg dry straw, 2.5kg maize grain, 1.8kg mustard cake, and 50g mineral mixture. This balances rumen fiber and restores milk yield to 11-13 liters daily.',
-        {
-          language: language === 'or' ? 'or-IN' : 'en-IN',
-          voice: 'Zypher',
-          onEnd: () => setIsPlayingDemoAudio(false),
-          onError: () => setIsPlayingDemoAudio(false),
-        }
-      );
-    }
+  // Copy Clean Text
+  const handleCopyText = (message: VetChatMessage) => {
+    const clean = cleanTextForVoice(message.text);
+    navigator.clipboard.writeText(clean);
+    setCopiedMessageId(message.id);
+    setTimeout(() => setCopiedMessageId(null), 2000);
+  };
+
+  // Reset conversation for this animal
+  const handleClearAnimalChat = async () => {
+    const freshWelcome = createWelcomeMessage(activeAnimal, species, isOdia);
+    setMessagesByAnimal((prev) => ({
+      ...prev,
+      [currentAnimalId]: [freshWelcome],
+    }));
+    await vetOfflineStorage.saveAnimalChatHistory(currentAnimalId, [freshWelcome]);
+    stopArohiVoice();
+    setActiveSpeechMessageId(null);
   };
 
   // Send Message Flow
@@ -149,9 +317,9 @@ export const VetMitraChatView: React.FC<Props> = ({
     const userMessage: VetChatMessage = {
       id: `usr_${Date.now()}`,
       sender: 'user',
-      text: query,
+      text: query || (selectedFile ? `[Attached: ${selectedFile.name}]` : ''),
       timestamp: new Date(),
-      species,
+      species: activeAnimal?.species || species,
       attachments: selectedFile
         ? [
             {
@@ -163,7 +331,12 @@ export const VetMitraChatView: React.FC<Props> = ({
         : undefined,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    // Append to current animal's conversation
+    setMessagesByAnimal((prev) => ({
+      ...prev,
+      [currentAnimalId]: [...(prev[currentAnimalId] || []), userMessage],
+    }));
+
     setInputText('');
     const currentFile = selectedFile;
     setSelectedFile(null);
@@ -171,13 +344,40 @@ export const VetMitraChatView: React.FC<Props> = ({
     setIsAiThinking(true);
 
     try {
-      const historyPayload = messages
-        .filter((m) => m.id !== 'msg_welcome')
+      // Build conversation history excluding welcome greeting
+      const historyPayload = currentMessages
+        .filter((m) => !m.id.startsWith('welcome_'))
         .slice(-6)
         .map((m) => ({
           role: m.sender === 'user' ? 'user' : 'model',
           parts: [{ text: m.text }],
         }));
+
+      const animalContextSummary = activeAnimal ? `
+CURRENT CONSULTATION ANIMAL:
+- Name: ${activeAnimal.name} (${activeAnimal.nameOdia || activeAnimal.name})
+- Species: ${activeAnimal.species.toUpperCase()}
+- Breed: ${activeAnimal.breed}
+- Age: ${activeAnimal.ageYears} years
+- Body Weight: ${activeAnimal.weightKg} kg
+- Identification Tag: ${activeAnimal.tagNumber}
+- General Status: ${activeAnimal.status}
+- Rectal Temperature: ${activeAnimal.temperatureC}°C
+- Appetite: ${activeAnimal.appetite}
+- Rumination / Activity: ${activeAnimal.ruminationOrActivity}
+${activeAnimal.milkYieldLDay ? `- Daily Milk Yield: ${activeAnimal.milkYieldLDay} L/day (recent yield: ${activeAnimal.recentYieldDropLDay || activeAnimal.milkYieldLDay} L/day)` : ''}
+${activeAnimal.vaccinations?.length ? `- Last Vaccines: ${activeAnimal.vaccinations.map(v => `${v.name} (${v.status})`).join(', ')}` : ''}
+
+USER LANGUAGE: ${language === 'or' ? 'Odia (ଓଡ଼ିଆ)' : language === 'hi' ? 'Hindi' : 'English'}.
+Address the animal as '${activeAnimal.name}'. Give tailored, compassionate, clinical advice specific to this ${activeAnimal.species}.
+MANDATORY FORMATTING: NEVER output raw "###" or "##" hashes or "---" lines or "* **" combos. Write clean, natural sentences, clear headings without symbols, and simple numbered points.
+` : `
+UNIVERSAL VETERINARY CONSULTATION:
+The user is asking a veterinary question about any livestock or pet (cattle, buffalo, goat, sheep, dog, cat, poultry, etc.).
+Do NOT assume any fixed animal profile like Ganga or Bruno. Identify the animal species and symptoms directly from what the user describes, and give clear clinical triage.
+USER LANGUAGE: ${language === 'or' ? 'Odia (ଓଡ଼ିଆ)' : language === 'hi' ? 'Hindi' : 'English'}.
+MANDATORY FORMATTING: NEVER output raw "###" or "##" hashes or "---" lines or "* **" combos. Write clean, natural sentences, clear headings without symbols, and simple numbered points.
+`;
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -187,7 +387,7 @@ export const VetMitraChatView: React.FC<Props> = ({
           history: historyPayload,
           language: language,
           mode: 'vetmitra',
-          systemContext: `${AROHI_VETMITRA_SYSTEM_PROMPT}\nCURRENT CONTEXT: Animal is ${activeAnimal.name} (${activeAnimal.breed}, ${activeAnimal.weightKg}kg). Species: ${species.toUpperCase()}. User language is ${language}. Internalize all NASEM 2021 equations into practical advice without showing raw spreadsheets.`,
+          systemContext: `${AROHI_VETMITRA_SYSTEM_PROMPT}\n${animalContextSummary}`,
           file: currentFile
             ? {
                 name: currentFile.name,
@@ -204,25 +404,85 @@ export const VetMitraChatView: React.FC<Props> = ({
       const botMessage: VetChatMessage = {
         id: `arohi_${Date.now()}`,
         sender: 'arohi',
-        text: data.response || 'I have analyzed the symptoms and updated the nutritional plan.',
+        text: data.response || (isOdia 
+          ? (activeAnimal ? `ମୁଁ ${activeAnimal.name} ର ଲକ୍ଷଣ ବିଶ୍ଳେଷଣ କଲି। ତାର ସ୍ୱାସ୍ଥ୍ୟ ବଜାୟ ରଖିବା ପାଇଁ ପରାମର୍ଶ ଧ୍ୟାନ ଦିଅନ୍ତୁ।` : `ମୁଁ ଲକ୍ଷଣ ବିଶ୍ଳେଷଣ କଲି। ପଶୁଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ ବଜାୟ ରଖିବା ପାଇଁ ତଳେ ଉଲ୍ଲିଖିତ ପରାମର୍ଶ ଅନୁସରଣ କରନ୍ତୁ।`)
+          : (activeAnimal ? `I have evaluated ${activeAnimal.name}'s condition and provided clinical recommendations above.` : `I have evaluated the symptoms and provided clinical recommendations above.`)),
         timestamp: new Date(),
-        species,
+        species: activeAnimal?.species || species,
       };
 
-      setMessages((prev) => [...prev, botMessage]);
+      const updatedList = [...(currentMessages), userMessage, botMessage];
+      setMessagesByAnimal((prev) => ({
+        ...prev,
+        [currentAnimalId]: updatedList,
+      }));
       setIsAiThinking(false);
+
+      // Persist conversation to offline storage (IndexedDB + LocalStorage)
+      vetOfflineStorage.saveAnimalChatHistory(currentAnimalId, updatedList).catch((err) => {
+        console.warn('Failed to cache chat offline:', err);
+      });
+
+      // Auto-save/update consultation summary for active animal so it is viewable offline
+      if (activeAnimal && query) {
+        const consultSummary: VetConsultationSummary = {
+          id: `consult_${activeAnimal.id}_${Date.now()}`,
+          animalId: activeAnimal.id,
+          animalName: activeAnimal.name,
+          animalNameOdia: activeAnimal.nameOdia,
+          species: activeAnimal.species,
+          timestamp: new Date().toISOString(),
+          formattedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          chiefComplaint: query.slice(0, 140),
+          chiefComplaintOdia: isOdia ? query.slice(0, 140) : undefined,
+          symptoms: [query.slice(0, 60)],
+          diagnosisOrAssessment: botMessage.text.slice(0, 300) + '...',
+          diagnosisOrAssessmentOdia: isOdia ? botMessage.text.slice(0, 300) + '...' : undefined,
+          clinicalAdvice: botMessage.text.slice(0, 450),
+          medicinesOrFirstAid: [
+            query.toLowerCase().includes('mastitis') || query.includes('ଥନ') 
+              ? 'Teat dip & veterinary antibiotic intramammary tube (under vet advice)'
+              : query.toLowerCase().includes('bloat') || query.includes('ପେଟ')
+              ? 'Tympanil / Turpentine oil emulsion + withhold concentrates'
+              : 'Hydration with electrolytes & supportive feed',
+            'Follow-up in 24-48 hours if fever/symptoms persist'
+          ],
+          status: 'completed',
+          messagesCount: updatedList.length,
+          lastMessageSnippet: botMessage.text.slice(0, 100),
+          channel: 'chat',
+          history: updatedList.map((m) => ({
+            sender: m.sender,
+            text: m.text,
+            timestamp: m.timestamp instanceof Date ? m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : String(m.timestamp),
+          })),
+        };
+
+        vetOfflineStorage.saveConsultationSummary(consultSummary).catch((err) => {
+          console.warn('Failed to cache consultation summary:', err);
+        });
+      }
     } catch (err) {
       setIsAiThinking(false);
       const fallbackMsg: VetChatMessage = {
         id: `arohi_fb_${Date.now()}`,
         sender: 'arohi',
         text: isOdia
-          ? 'ମୁଁ ଆପଣଙ୍କ ଗାଈର ଲକ୍ଷଣ ବୁଝିଲି। ସନ୍ତୁଳିତ ନେପିୟର ଓ ଶୁଖିଲା ନଡ଼ା ସହିତ ୫୦ ଗ୍ରାମ ମିନେରାଲ ମିକ୍ସଚର ନିୟମିତ ଦିଅନ୍ତୁ। ଅଧିକ ଜରୁରୀ ପରାମର୍ଶ ପାଇଁ "ଭଏସ୍ କଲ୍" ଦବାନ୍ତୁ।'
-          : 'Understood. Maintaining 40-50% dry matter from fiber ensures healthy rumination. Tap Voice Call if you need live guidance.',
+          ? (activeAnimal 
+              ? `ମୁଁ ${activeAnimal.name} ର ସମସ୍ୟା ବୁଝିଲି। ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଓ ସ୍ୱଚ୍ଛ ପାଣି ନିୟମିତ ଦିଅନ୍ତୁ। ଅଧିକ ଜରୁରୀ ପରାମର୍ଶ ପାଇଁ "ଭଏସ୍ କଲ୍" (Voice Call) ବଟନ୍ ଦବାନ୍ତୁ କିମ୍ବା ୧୯୬୨ ରେ ଯୋଗାଯୋଗ କରନ୍ତୁ।`
+              : `ମୁଁ ଆପଣଙ୍କ ପଶୁଙ୍କ ସମସ୍ୟା ବୁଝିଲି। ସନ୍ତୁଳିତ ଖାଦ୍ୟ ଓ ସ୍ୱଚ୍ଛ ପାଣି ନିୟମିତ ଦିଅନ୍ତୁ। ଜରୁରୀ ପରାମର୍ଶ ପାଇଁ "ଭଏସ୍ କଲ୍" (Voice Call) ବଟନ୍ ଦବାନ୍ତୁ କିମ୍ବା ୧୯୬୨ ରେ ଯୋଗାଯୋଗ କରନ୍ତୁ।`)
+          : (activeAnimal
+              ? `I have noted the details for ${activeAnimal.name}. Ensure access to clean water and supportive care. Tap Voice Call if you need live guidance or dial 1962.`
+              : `I have noted the details for your animal. Ensure access to clean water and supportive care. Tap Voice Call if you need live guidance or dial 1962.`),
         timestamp: new Date(),
-        species,
+        species: activeAnimal?.species || species,
       };
-      setMessages((prev) => [...prev, fallbackMsg]);
+      const updatedList = [...(currentMessages), userMessage, fallbackMsg];
+      setMessagesByAnimal((prev) => ({
+        ...prev,
+        [currentAnimalId]: updatedList,
+      }));
+      vetOfflineStorage.saveAnimalChatHistory(currentAnimalId, updatedList).catch(() => {});
     }
   };
 
@@ -245,30 +505,56 @@ export const VetMitraChatView: React.FC<Props> = ({
     reader.readAsDataURL(file);
   };
 
+  const quickSuggestions = getSpeciesSuggestions(activeAnimal?.species || species, isOdia);
+
   return (
     <div className="flex flex-col h-[780px] bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl animate-in fade-in-50 duration-300">
-      {/* Top Active Animal Context Header (Matching Mockup 2) */}
+      {/* Top Active Animal Context Header */}
       <div className="p-3.5 sm:p-4 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm shrink-0">
-            <img
-              src={activeAnimal.photoUrl}
-              alt={activeAnimal.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black text-slate-900 uppercase">
-                {activeAnimal.species.toUpperCase()} • {activeAnimal.breed}
-              </h3>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-emerald-700 font-bold">Online</span>
-            </div>
-            <p className="text-xs text-slate-600 font-medium">
-              {activeAnimal.name} • {activeAnimal.milkYieldLDay ? `${activeAnimal.milkYieldLDay} L/day (recent: ${activeAnimal.recentYieldDropLDay || 9} L)` : 'Normal'} • Tag: {activeAnimal.tagNumber}
-            </p>
-          </div>
+          {activeAnimal ? (
+            <>
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm shrink-0">
+                <img
+                  src={activeAnimal.photoUrl}
+                  alt={activeAnimal.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-slate-900 uppercase">
+                    {activeAnimal.species.toUpperCase()} • {activeAnimal.breed}
+                  </h3>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] text-emerald-700 font-bold">Active</span>
+                </div>
+                <p className="text-xs text-slate-600 font-medium">
+                  <strong className="text-slate-900">{activeAnimal.name}</strong> • {activeAnimal.weightKg} kg • Tag: {activeAnimal.tagNumber}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white shadow-sm shrink-0">
+                <Stethoscope className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-slate-900">
+                    Arohi VetMitra™ • {isOdia ? 'ପଶୁ ଚିକିତ୍ସା ଓ ପରାମର୍ଶ' : 'AI Veterinary Doctor'}
+                  </h3>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] text-emerald-700 font-bold">24x7 Live</span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  {isOdia 
+                    ? 'ସମସ୍ତ ପଶୁପକ୍ଷୀଙ୍କ ପାଇଁ ଉନ୍ମୁକ୍ତ ପରାମର୍ଶ (ଗାଈ, ମଇଁଷି, ଛେଳି, କୁକୁର, ବିରାଡ଼ି)' 
+                    : 'Universal Veterinary Care for All Livestock & Pets'}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -276,11 +562,20 @@ export const VetMitraChatView: React.FC<Props> = ({
             <button
               onClick={onChangeAnimal}
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+              title={activeAnimal ? "Select different animal" : "Open Animal Passport"}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Change Animal</span>
+              <span className="hidden sm:inline">{activeAnimal ? "Change Animal" : "Animal Passport"}</span>
             </button>
           )}
+
+          <button
+            onClick={handleClearAnimalChat}
+            className="p-1.5 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 transition-colors"
+            title="Reset conversation"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
 
           <button
             onClick={onStartVoiceCall}
@@ -294,18 +589,20 @@ export const VetMitraChatView: React.FC<Props> = ({
 
       {/* Messages Stream */}
       <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50">
-        {messages.map((msg) => {
+        {currentMessages.map((msg) => {
           const isUser = msg.sender === 'user';
+          const isSpeechActive = activeSpeechMessageId === msg.id;
+
           return (
             <div
               key={msg.id}
               className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in-50 duration-200`}
             >
               <div
-                className={`max-w-[90%] sm:max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed space-y-2.5 ${
+                className={`max-w-[92%] sm:max-w-[82%] rounded-2xl p-4 text-sm leading-relaxed space-y-2.5 ${
                   isUser
-                    ? 'bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-br-none shadow-xs'
-                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-sm'
+                    ? 'bg-emerald-600 text-white rounded-br-none shadow-sm'
+                    : 'bg-white text-slate-900 border border-slate-200/90 rounded-bl-none shadow-sm'
                 }`}
               >
                 {/* Photo Attachments */}
@@ -319,192 +616,65 @@ export const VetMitraChatView: React.FC<Props> = ({
                   </div>
                 )}
 
-                <div className="whitespace-pre-line font-normal">{msg.text}</div>
+                {/* Clean Message Content (no raw ###, ##, --- or asterisk debris) */}
+                <VetMessageRenderer content={msg.text} isUser={isUser} />
 
-                {/* If bot message is msg_2, render interactive numbered questions (Matching Mockup 2) */}
-                {msg.id === 'msg_2' && (
-                  <div className="space-y-3 pt-2">
-                    {/* Question 1 */}
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                      <div className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                          1
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">
-                            ତାର ଖାଦ୍ୟ ରୁଚି କମିଛି କି?
-                          </p>
-                          <p className="text-[11px] text-slate-500">Has her appetite reduced?</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pl-7">
-                        <button
-                          onClick={() => setQ1Answer('yes')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q1Answer === 'yes' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          ହଁ / Yes
-                        </button>
-                        <button
-                          onClick={() => setQ1Answer('no')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q1Answer === 'no' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          ନା / No
-                        </button>
-                        <button
-                          onClick={() => setQ1Answer('not_sure')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q1Answer === 'not_sure' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          ନିଶ୍ଚିତ ନୁହେଁ / Not sure
-                        </button>
-                      </div>
+                {/* Bot action bar: Voice playback & Copy buttons */}
+                {!isUser && (
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePlayVoice(msg)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                          isSpeechActive 
+                            ? 'bg-emerald-600 text-white shadow-xs' 
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                        title="Listen to advice"
+                      >
+                        {isSpeechActive ? (
+                          <>
+                            <Pause className="w-3 h-3 animate-pulse" />
+                            <span>{isOdia ? 'ବନ୍ଦ କରନ୍ତୁ' : 'Stop'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3 text-emerald-600" />
+                            <span>{isOdia ? 'ଶୁଣନ୍ତୁ' : 'Listen'}</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleCopyText(msg)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                        title="Copy clean advice text"
+                      >
+                        {copiedMessageId === msg.id ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-[11px] text-emerald-600">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" />
+                            <span className="text-[11px]">Copy</span>
+                          </>
+                        )}
+                      </button>
                     </div>
 
-                    {/* Question 2 */}
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                      <div className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                          2
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">
-                            ସେ ଏବେ ଜାବର କାଟୁଛି କି? (ଦିନକୁ କେତେଥର?)
-                          </p>
-                          <p className="text-[11px] text-slate-500">Is she chewing cud properly?</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pl-7">
-                        <button
-                          onClick={() => setQ2Answer('normal')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q2Answer === 'normal' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          ହଁ, ସାଧାରଣ / Yes, normal
-                        </button>
-                        <button
-                          onClick={() => setQ2Answer('reduced')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q2Answer === 'reduced' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          କମିଛି / Reduced
-                        </button>
-                        <button
-                          onClick={() => setQ2Answer('none')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                            q2Answer === 'none' ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'
-                          }`}
-                        >
-                          ଜାବର କାଟୁନାହିଁ / Not chewing
-                        </button>
-                      </div>
+                    <div className="text-[10px] text-slate-400">
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 )}
 
-                {/* If bot message is msg_4, render the Recommended Daily Ration Card (Matching Mockup 2) */}
-                {msg.id === 'msg_4' && (
-                  <div className="space-y-3 pt-2">
-                    <div className="rounded-2xl bg-white border-2 border-emerald-500/40 p-4 shadow-sm space-y-3">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">🌿</span>
-                          <div>
-                            <h4 className="text-sm font-black text-slate-900">Recommended Daily Ration</h4>
-                            <p className="text-[11px] text-slate-500">For Crossbred Jersey (12 L/day target)</p>
-                          </div>
-                        </div>
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          NASEM 2021
-                        </span>
-                      </div>
-
-                      {/* Ingredients Breakdown */}
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                          <span className="font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🌱</span> Napier / Green Fodder (ନେପିୟର)
-                          </span>
-                          <span className="font-black text-slate-900">15 kg</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                          <span className="font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🌾</span> Dry Paddy Straw (ଶୁଖିଲା ନଡ଼ା)
-                          </span>
-                          <span className="font-black text-slate-900">4 kg</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                          <span className="font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🌽</span> Maize Grain Crushed (ମକା ଚୂନା)
-                          </span>
-                          <span className="font-black text-slate-900">2.5 kg</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                          <span className="font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🌰</span> Mustard Cake / DOC (ସୋରିଷ ଖଳି)
-                          </span>
-                          <span className="font-black text-slate-900">1.8 kg</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1">
-                          <span className="font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🧂</span> Mineral Mixture (ମିନେରାଲ ମିକ୍ସ)
-                          </span>
-                          <span className="font-black text-slate-900">50 g</span>
-                        </div>
-                      </div>
-
-                      {/* Expected Result Strip */}
-                      <div className="bg-emerald-50/80 rounded-xl p-2.5 border border-emerald-200 space-y-1 text-xs">
-                        <span className="font-black text-emerald-900 block">📈 Expected Clinical Result:</span>
-                        <div className="grid grid-cols-2 gap-1 text-[11px] text-emerald-800">
-                          <span>✓ Improved rumen chewing</span>
-                          <span>✓ Milk target: 11 - 13 L/day</span>
-                          <span>✓ Better body condition</span>
-                          <span>✓ Reproductive health cycle</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Audio Playback Pill (Matching Mockup 2) */}
-                    <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          onClick={toggleDemoAudio}
-                          className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs hover:bg-emerald-500 transition-colors"
-                        >
-                          {isPlayingDemoAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                        </button>
-                        <div>
-                          <span className="text-xs font-bold text-emerald-950 block">
-                            {isOdia ? 'ଓଡ଼ିଆରେ ଶୁଣନ୍ତୁ' : 'Listen in Odia'} (1:12)
-                          </span>
-                          <span className="text-[10px] text-emerald-700">Arohi Spoken Nutrition Guide</span>
-                        </div>
-                      </div>
-
-                      {/* Audio waveform mockup */}
-                      <div className="flex items-center gap-0.5">
-                        {[40, 70, 30, 90, 60, 100, 45, 80, 50, 75, 30].map((h, i) => (
-                          <div
-                            key={i}
-                            className={`w-1 rounded-full ${isPlayingDemoAudio ? 'bg-emerald-600 animate-pulse' : 'bg-emerald-300'}`}
-                            style={{ height: `${h * 0.22}px` }}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                {isUser && (
+                  <div className="text-[10px] text-emerald-100 text-right pt-0.5">
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 )}
-
-                <div className="text-[10px] text-slate-400 text-right pt-1">
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
               </div>
             </div>
           );
@@ -514,74 +684,85 @@ export const VetMitraChatView: React.FC<Props> = ({
           <div className="flex justify-start">
             <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-none p-3.5 flex items-center gap-2 text-xs text-emerald-700 shadow-sm">
               <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-              <span>{isOdia ? 'ଆରୋହୀ ବିଶ୍ଳେଷଣ କରୁଛନ୍ତି...' : 'Arohi is calculating...'}</span>
+              <span>
+                {isOdia 
+                  ? (activeAnimal 
+                      ? `ଆରୋହୀ ${activeAnimal.name} ର ସମସ୍ୟା ବିଶ୍ଳେଷଣ କରୁଛନ୍ତି...` 
+                      : 'ଆରୋହୀ ଲକ୍ଷଣ ବିଶ୍ଳେଷଣ କରୁଛନ୍ତି...')
+                  : (activeAnimal 
+                      ? `Arohi is analyzing symptoms for ${activeAnimal.name}...` 
+                      : 'Arohi is analyzing symptoms...')}
+              </span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Quick Followup Chips */}
-      <div className="px-3 py-1.5 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
-        <span className="text-[11px] font-bold text-slate-400 shrink-0">You may also like:</span>
-        <button
-          onClick={() => handleSendMessage('Give me optimal feeding schedule hours')}
-          className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
-        >
-          Feeding Schedule
-        </button>
-        <button
-          onClick={() => handleSendMessage('Which minerals and supplements should I buy?')}
-          className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
-        >
-          Minerals & Supplements
-        </button>
-        <button
-          onClick={() => handleSendMessage('Heat stress prevention in high temperature')}
-          className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
-        >
-          Heat Stress Tips
-        </button>
-        <button
-          onClick={() => handleSendMessage('Show similar clinical cases in dairy cattle')}
-          className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium shrink-0 whitespace-nowrap"
-        >
-          Similar Cases
-        </button>
+      {/* Species-Specific Suggested Quick Consult Chips */}
+      <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
+        <span className="text-[11px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-emerald-600" />
+          {isOdia ? 'ଦ୍ରୁତ ପରାମର୍ଶ:' : 'Quick:'}
+        </span>
+        {quickSuggestions.map((item, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleSendMessage(item.query)}
+            className="px-3 py-1 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-900 font-medium shrink-0 whitespace-nowrap transition-all shadow-2xs"
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
-      {/* Bottom Input Dock with Attachment Drawer (Matching Mockup 2) */}
+      {/* Bottom Input Dock with Attachment Drawer */}
       <div className="p-3 bg-white border-t border-slate-200 relative">
+        {/* Selected file badge preview */}
+        {selectedFile && (
+          <div className="mb-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900">
+            <div className="flex items-center gap-2 truncate">
+              <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="font-semibold truncate">{selectedFile.name}</span>
+            </div>
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-rose-600 font-bold hover:bg-rose-50"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
         {/* Attachment Menu Popup */}
         {showAttachMenu && (
-          <div className="absolute bottom-16 left-4 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 w-56 space-y-1 z-20 animate-in slide-in-from-bottom-2">
+          <div className="absolute bottom-16 left-4 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 w-64 space-y-1 z-20 animate-in slide-in-from-bottom-2">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
+              className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
             >
-              <Camera className="w-4 h-4 text-emerald-600" />
-              <span>Take Photo (ଫଟୋ ଉଠାନ୍ତୁ)</span>
+              <Camera className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                {isOdia ? 'ଫଟୋ ଉଠାନ୍ତୁ (Take Photo)' : 'Take Animal / Symptom Photo'}
+              </span>
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
+              className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
             >
-              <Upload className="w-4 h-4 text-blue-600" />
-              <span>Choose Image from Gallery</span>
+              <Upload className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>
+                {isOdia ? 'ଗ୍ୟାଲେରୀରୁ ଫଟୋ ବାଛନ୍ତୁ' : 'Choose from Gallery'}
+              </span>
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
+              className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
             >
-              <FileText className="w-4 h-4 text-purple-600" />
-              <span>Upload Lab Report / CBC</span>
-            </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-700"
-            >
-              <FileText className="w-4 h-4 text-amber-600" />
-              <span>Upload Milk Slip</span>
+              <FileText className="w-4 h-4 text-purple-600 shrink-0" />
+              <span>
+                {isOdia ? 'ଲାବ୍ ରିପୋର୍ଟ / CBC ଅପଲୋଡ୍' : 'Upload Lab Report / CBC'}
+              </span>
             </button>
           </div>
         )}
@@ -602,22 +783,31 @@ export const VetMitraChatView: React.FC<Props> = ({
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleSendMessage();
             }}
-            placeholder={isOdia ? 'ଏଠାରେ ଲେଖନ୍ତୁ (Type your message)...' : 'Type your message or ask Arohi...'}
+            placeholder={
+              isOdia 
+                ? (activeAnimal 
+                    ? `${activeAnimal.name} ପାଇଁ ଲକ୍ଷଣ ବା ପ୍ରଶ୍ନ ଲେଖନ୍ତୁ...` 
+                    : 'ପଶୁପକ୍ଷୀଙ୍କ ଲକ୍ଷଣ, ରୋଗ ବା ଖାଦ୍ୟ ବିଷୟରେ ଲେଖନ୍ତୁ...')
+                : (activeAnimal 
+                    ? `Type symptoms or questions for ${activeAnimal.name}...` 
+                    : 'Type symptoms, feeding, or veterinary questions...')
+            }
             className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-50 focus:bg-white rounded-2xl border border-transparent focus:border-emerald-500 text-xs sm:text-sm text-slate-900 focus:outline-none transition-all"
           />
 
           <button
             onClick={onStartVoiceCall}
             className="w-11 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-800/30 transition-transform active:scale-95 shrink-0"
-            title="Speak to Arohi"
+            title={isOdia ? 'ଭଏସ୍ କଲ୍ ମାଧ୍ୟମରେ କଥା ହୁଅନ୍ତୁ' : 'Live Voice Call'}
           >
             <Mic className="w-5 h-5" />
           </button>
 
-          {inputText.trim() && (
+          {(inputText.trim() || selectedFile) && (
             <button
               onClick={() => handleSendMessage()}
               className="w-11 h-11 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shadow-md transition-transform active:scale-95 shrink-0"
+              title="Send message"
             >
               <Send className="w-4 h-4" />
             </button>

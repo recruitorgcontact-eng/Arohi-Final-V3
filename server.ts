@@ -5741,6 +5741,73 @@ async function fetchGoogleNewsLive(query: string = 'India latest news') {
   return results.slice(0, 10);
 }
 
+// Helper to sanitize Gemini multi-turn conversation contents
+function sanitizeGeminiContents(contents: any): Array<{ role: 'user' | 'model'; parts: any[] }> {
+  if (typeof contents === 'string') {
+    return [{ role: 'user', parts: [{ text: contents }] }];
+  }
+  if (!Array.isArray(contents) || contents.length === 0) {
+    return [{ role: 'user', parts: [{ text: 'Hello Arohi AI' }] }];
+  }
+  const cleanedTurns: Array<{ role: 'user' | 'model'; parts: any[] }> = [];
+  for (const turn of contents) {
+    if (!turn) continue;
+    const role: 'user' | 'model' = (turn.role === 'model' || turn.speaker === 'arohi' || turn.speaker === 'assistant') ? 'model' : 'user';
+    const rawParts = Array.isArray(turn.parts) ? turn.parts : turn.text ? [{ text: turn.text }] : [];
+    const validParts: any[] = [];
+    for (const part of rawParts) {
+      if (!part) continue;
+      if (typeof part === 'string' && part.trim()) {
+        validParts.push({ text: part.trim() });
+      } else if (part.text && typeof part.text === 'string' && part.text.trim()) {
+        validParts.push({ text: part.text.trim() });
+      } else if (part.inlineData && part.inlineData.data && typeof part.inlineData.data === 'string' && part.inlineData.data.length > 50) {
+        const cleanMime = (part.inlineData.mimeType || 'audio/webm').split(';')[0].trim();
+        let cleanData = part.inlineData.data;
+        if (cleanData.includes('base64,')) {
+          cleanData = cleanData.split('base64,')[1].trim();
+        }
+        validParts.push({
+          inlineData: {
+            mimeType: cleanMime,
+            data: cleanData
+          }
+        });
+      }
+    }
+    if (validParts.length === 0) continue;
+
+    // Merge consecutive turns with the SAME role to strictly satisfy Gemini alternating turn requirement
+    if (cleanedTurns.length > 0 && cleanedTurns[cleanedTurns.length - 1].role === role) {
+      cleanedTurns[cleanedTurns.length - 1].parts.push(...validParts);
+    } else {
+      cleanedTurns.push({ role, parts: validParts });
+    }
+  }
+
+  // Ensure conversation ends with a 'user' turn
+  while (cleanedTurns.length > 0 && cleanedTurns[cleanedTurns.length - 1].role !== 'user') {
+    cleanedTurns.pop();
+  }
+
+  if (cleanedTurns.length === 0) {
+    return [{ role: 'user', parts: [{ text: 'Hello Arohi AI' }] }];
+  }
+  return cleanedTurns;
+}
+
+function stripInlineDataFromContents(contents: any) {
+  if (!Array.isArray(contents)) return contents;
+  return contents.map(turn => {
+    if (!turn || !Array.isArray(turn.parts)) return turn;
+    const textOnlyParts = turn.parts.filter((p: any) => p && p.text && typeof p.text === 'string' && p.text.trim());
+    return {
+      ...turn,
+      parts: textOnlyParts.length > 0 ? textOnlyParts : [{ text: 'User voice inquiry' }]
+    };
+  });
+}
+
 // Resilient API calling helper with automatic fallback models to prevent 503 "High Demand" or 429 "Quota Exhausted" errors
 async function generateContentWithFallback(aiClientInstance: GoogleGenAI, options: any) {
   // Official valid Gemini models for text and multimodal tasks according to @google/genai guidelines
@@ -5751,7 +5818,22 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   ];
 
   let lastError = null;
-  const hasTools = !!(options?.config?.tools || options?.tools);
+
+  // Sanitize contents to guarantee valid multi-turn alternating structure and clean parts
+  if (options?.contents) {
+    options.contents = sanitizeGeminiContents(options.contents);
+  }
+
+  // Remove empty tools to prevent Gemini 400 INVALID_ARGUMENT error
+  if (options?.config && Array.isArray(options.config.tools) && options.config.tools.length === 0) {
+    delete options.config.tools;
+  }
+  if (Array.isArray(options?.tools) && options.tools.length === 0) {
+    delete options.tools;
+  }
+
+  const toolsList = options?.config?.tools || options?.tools;
+  const hasTools = Array.isArray(toolsList) && toolsList.length > 0;
   const unavailableModels = new Set<string>();
 
   // 1. If tools are requested (e.g. googleSearch), attempt tool-compatible models FIRST with tools enabled
@@ -5812,7 +5894,24 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
       lastError = err;
       const isQuotaError = err?.status === 429 || errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('quota') || errStr.includes('Quota');
       const isUnavailableOr503 = err?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') || errStr.includes('overloaded');
-      
+      const is400Invalid = err?.status === 400 || errStr.includes('400') || errStr.includes('INVALID_ARGUMENT');
+
+      // If multimodal audio/image failed with 400 (e.g. unsupported audio stream), retry with text-only contents
+      if (is400Invalid && Array.isArray(optionsWithoutTools?.contents) && optionsWithoutTools.contents.some((t: any) => t?.parts?.some((p: any) => p?.inlineData))) {
+        try {
+          console.log(`Model ${model} 400 on multimodal input, retrying with stripped text-only prompt...`);
+          const textOnlyContents = stripInlineDataFromContents(optionsWithoutTools.contents);
+          const textResponse = await aiClientInstance.models.generateContent({
+            ...optionsWithoutTools,
+            contents: textOnlyContents,
+            model: model,
+          });
+          if (textResponse) return textResponse;
+        } catch (innerErr) {
+          console.warn(`Model ${model} text-only retry also failed:`, innerErr);
+        }
+      }
+
       if (isQuotaError) {
         console.warn(`[Gemini API] Quota limit reached on model ${model}. Trying next alternative model...`);
       } else if (isUnavailableOr503) {
@@ -5904,7 +6003,9 @@ async function callGroqChatFallback(
   const groqModels = [
     'llama-3.3-70b-versatile',
     'llama-3.1-8b-instant',
-    'deepseek-r1-distill-llama-70b'
+    'llama3-70b-8192',
+    'llama3-8b-8192',
+    'gemma2-9b-it'
   ];
 
   const chatMessages: Array<{ role: string; content: string }> = [];
@@ -5980,7 +6081,9 @@ async function callGroqChatStreamFallback(
   const groqModels = [
     'llama-3.3-70b-versatile',
     'llama-3.1-8b-instant',
-    'deepseek-r1-distill-llama-70b'
+    'llama3-70b-8192',
+    'llama3-8b-8192',
+    'gemma2-9b-it'
   ];
 
   const chatMessages: Array<{ role: string; content: string }> = [];
@@ -7444,22 +7547,51 @@ Deliver a rigorous, high-level, production-grade intelligence report. Never outp
           systemInstruction: dynamicInstruction,
           temperature: 0.7,
           maxOutputTokens: 8192,
-          tools: isSearchNeeded ? [{ googleSearch: {} }] : []
+          ...(isSearchNeeded ? { tools: [{ googleSearch: {} }] } : {})
         }
       });
 
-      return res.json({ response: response.text });
+      let finalText = response.text || '';
+      if (mode === 'vetmitra' || req.body?.mode === 'vetmitra') {
+        // Strip markdown hashes (###, ##), horizontal lines (---), and messy asterisk bullets
+        finalText = finalText
+          .replace(/^#{1,6}\s+/gm, '')
+          .replace(/^[-*_]{3,}\s*$/gm, '')
+          .replace(/^\s*[\*\-•]\s+\*\*([^*]+)\*\*:?/gm, '• $1:')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+
+      return res.json({ response: finalText });
     } else {
       // Fallback response generator if API key is not present
+      let fbText = getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData);
+      if (mode === 'vetmitra' || req.body?.mode === 'vetmitra') {
+        fbText = fbText
+          .replace(/^#{1,6}\s+/gm, '')
+          .replace(/^[-*_]{3,}\s*$/gm, '')
+          .replace(/^\s*[\*\-•]\s+\*\*([^*]+)\*\*:?/gm, '• $1:')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
       return res.json({
-        response: getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData),
+        response: fbText,
         fallback: true
       });
     }
   } catch (error: any) {
     console.error('Error in /api/chat:', error);
+    let errFbText = getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData);
+    if (mode === 'vetmitra' || req.body?.mode === 'vetmitra') {
+      errFbText = errFbText
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/^[-*_]{3,}\s*$/gm, '')
+        .replace(/^\s*[\*\-•]\s+\*\*([^*]+)\*\*:?/gm, '• $1:')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
     return res.json({
-      response: getArohiFallbackResponse(messageText, file ? file.name : undefined, liveSearchData),
+      response: errFbText,
       fallback: true
     });
   }
@@ -7943,11 +8075,11 @@ app.get('/api/live-news', async (req, res) => {
 
 // Resilient Live Voice Turn Endpoint for Voice Call UI
 app.post('/api/live-voice-turn', async (req, res) => {
-  const { prompt, history = [], language = 'en', uid } = req.body;
+  const { prompt, audioBase64, mimeType, history = [], language = 'or', uid, mode, species, animalName } = req.body;
   try {
     const userPrompt = (prompt || '').trim();
-    if (!userPrompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
+    if (!userPrompt && !audioBase64) {
+      return res.status(400).json({ error: 'Prompt or audio is required' });
     }
 
     let dynamicInstruction = `You are AROHI, an empathetic, highly intelligent AI companion and Opportunity Guide on Arohi AI.
@@ -7959,6 +8091,40 @@ Never use robotic meta-commentary like "As an AI model" or "According to my data
 ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
 - Automatically detect the language of what the user is speaking (Odia/ଓଡ଼ିଆ, Bengali/বাংলা, Hindi/हिंदी, Telugu/తెలుగు, Tamil/தமிழ், Marathi/मराठी, Gujarati/ગુજરાતી, Punjabi, English, or Romanized transliterations like "kemiti achha", "kemon achho", "kaise ho").
 - YOU MUST RESPOND IN THE EXACT SAME SPOKEN LANGUAGE that the user used on that turn. If the user speaks Odia, reply in natural fluent Odia. If Bengali, reply in Bengali. If Hindi, reply in Hindi. If English, reply in English.`;
+
+    if (mode === 'veterinary' || species) {
+      const spContext = species && species !== 'all' && species !== 'universal'
+        ? `The user is specifically inquiring about a ${species}${animalName ? ` named '${animalName}'` : ''}.`
+        : `This is a UNIVERSAL veterinary voice consultation. The user can ask about ANY animal (cow, buffalo, calf, goat, sheep, dog, puppy, cat, kitten, poultry/chicken, duck, or any other livestock/pet). Do NOT assume any single animal profile like Ganga or Bruno unless the user specifies it. Intelligently identify the animal from the user's speech.`;
+
+      dynamicInstruction = `You are AROHI VETMITRA (ଆରୋହୀ ଭେଟମିତ୍ର), a dedicated, highly compassionate, and experienced Veterinary AI Doctor (ପଶୁ ଚିକିତ୍ସକ ତଥା ପରାମର୍ଶଦାତା) on a live phone call with a farmer, villager, or pet parent in Odisha / India.
+${spContext}
+
+VETMITRA PERSONA & CLINICAL ROLE:
+1. You are Dr. Arohi VetMitra. You speak with warm rural empathy, medical responsibility, and encouraging reassurance. You are not a generic AI bot; you are their trusted personal veterinary doctor on the line.
+2. LIVE CALL AUDIO / GREETING / CONNECTION CHECKS:
+   - If the user is checking audio, asking if they are audible, or testing the line (e.g. "mu kan kahuchi subuchi na subhuni", "subhuchi ki?", "kan kahuchi suna jauchi", "hello arohi suni parucha", "hello doctor babu", "can you hear me?", "am I audible?", or if browser STT mistakenly captured "I'm going to college tomorrow", "going to college", or random background noise):
+   - You MUST immediately recognize this as a live voice connection check!
+   - Reply warmly and instantly in natural spoken Odia as an attentive doctor on call:
+     TRANSCRIPT: ମୁଁ କଣ କହୁଛି ଶୁଭୁଛି ନା ଶୁଭୁନି?
+     REPLY: ହଁ ଆଜ୍ଞା, ଆପଣଙ୍କ କଥା ମୋତେ ଏକଦମ୍ ସ୍ପଷ୍ଟ ଭାବେ ଶୁଭୁଛି! ମୁଁ ଡାକ୍ତର ଆରୋହୀ ଭେଟମିତ୍ର କହୁଛି। ଆପଣଙ୍କ ଗାଈ, ମଇଁଷି, ଛେଳି କିମ୍ବା କୁକୁର-ବିରାଡ଼ିଙ୍କର କିଛି ଅସୁବିଧା ହୋଇଛି କି? କୁହନ୍ତୁ, ମୁଁ ଶୁଣୁଛି।
+3. CLINICAL TRIAGE & ANIMAL CONSULTATION:
+   - When the user mentions any animal symptom (fever, off-feed, milk drop, bloat, diarrhea, vomiting, cough, mastitis, tick fever, limping, wounds, poisoning):
+   - Step 1: Reassure the caller calmly ("ବ୍ୟସ୍ତ ହୁଅନ୍ତୁ ନାହିଁ...").
+   - Step 2: Ask 1-2 focused diagnostic triage questions (fever, rumination/cud chewing, hydration, stool/milk consistency).
+   - Step 3: Give immediate safe home first-aid (boiled warm water, electrolyte/ORS solution, dry bedding, separation of sick animals).
+   - Step 4: For emergency red flags (severe bloating, recumbency, heavy breathing, seizures), advise calling the government 1962 Veterinary Ambulance (ମୋବାଇଲ୍ ଭେଟେରିନାରୀ ୟୁନିଟ୍) or nearest dispensary.
+4. CRITICAL SPOKEN ODIA (ଓଡ଼ିଆ) VOICE & PHONETIC RECOGNITION RULES:
+   - The user may speak in pure Odia (ଓଡ଼ିଆ), Sambalpuri, Hindi, or Romanized/phonetic Odia.
+   - If browser speech-to-text sent phonetic mishearings (like "mo gai dudha kami gala", "kukura banti karuchi", "more guy does not eat"), intelligently deduce what they meant.
+   - Spoken length: 2 to 3 short, conversational, natural spoken sentences (strictly NO asterisks *, NO markdown headers #, NO numbered bullets).
+   - If the user spoke Odia, YOU MUST REPLY IN WARM, NATURAL SPOKEN ODIA SCRIPT (ଓଡ଼ିଆ).
+
+RESPONSE FORMAT:
+Always format your response as:
+TRANSCRIPT: [Clean sentence of what the user spoke, in pure Odia script if Odia, e.g. "ମୋ ଗାଈ ଘାସ ଖାଉନାହିଁ"]
+REPLY: [Your warm, spoken clinical advice in 2-3 sentences in the same language]`;
+    }
 
     if (uid) {
       try {
@@ -7989,12 +8155,12 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
     };
 
     if (language && languageNames[language]) {
-      dynamicInstruction += `\nSpoken conversation language preference: ${languageNames[language]}. Respond naturally in this language.`;
+      dynamicInstruction += `\nSpoken conversation language preference: ${languageNames[language]}. Default to this language unless the user clearly speaks another.`;
     }
 
     let liveVoiceSearchData: any[] = [];
-    const isVoiceSearchNeeded = requiresRealtimeSearch(userPrompt);
-    if (isVoiceSearchNeeded) {
+    const isVoiceSearchNeeded = userPrompt ? requiresRealtimeSearch(userPrompt) : false;
+    if (isVoiceSearchNeeded && userPrompt) {
       try {
         liveVoiceSearchData = await fetchGoogleNewsLive(userPrompt);
         if (liveVoiceSearchData && liveVoiceSearchData.length > 0) {
@@ -8006,18 +8172,47 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
       }
     }
 
-    const formattedContents: any[] = [];
+    const rawTurnContents: any[] = [];
     if (Array.isArray(history)) {
       history.slice(-6).forEach((turn: any) => {
         if (turn.speaker === 'user' && turn.text) {
-          formattedContents.push({ role: 'user', parts: [{ text: turn.text }] });
+          rawTurnContents.push({ role: 'user', parts: [{ text: turn.text }] });
         } else if ((turn.speaker === 'arohi' || turn.speaker === 'assistant') && turn.text) {
-          formattedContents.push({ role: 'model', parts: [{ text: turn.text }] });
+          rawTurnContents.push({ role: 'model', parts: [{ text: turn.text }] });
         }
       });
     }
 
-    formattedContents.push({ role: 'user', parts: [{ text: userPrompt }] });
+    const userParts: any[] = [];
+    if (audioBase64 && typeof audioBase64 === 'string' && audioBase64.length > 50) {
+      const cleanBase64 = audioBase64.includes('base64,')
+        ? audioBase64.split('base64,')[1].trim()
+        : audioBase64.replace(/^data:[^;]+;base64,/, '').trim();
+      let cleanMime = (mimeType || 'audio/webm').split(';')[0].trim();
+      if (!cleanMime || cleanMime === 'undefined') cleanMime = 'audio/webm';
+
+      if (cleanBase64.length > 100) {
+        userParts.push({
+          inlineData: {
+            mimeType: cleanMime,
+            data: cleanBase64
+          }
+        });
+      }
+      userParts.push({
+        text: `Listen to this live voice call audio from the user. It is spoken in Odia (ଓଡ଼ିଆ), Sambalpuri, Hindi, or English.
+${userPrompt ? `Client interim text hint: "${userPrompt}". Note: Browser speech recognition may have misheard regional Odia speech; trust your acoustic understanding of the audio.` : ''}
+Transcribe accurately what the user said in pure Odia script (or Hindi/English if spoken in those languages) as:
+TRANSCRIPT: [Accurate transcription in Odia script]
+Then as AROHI VETMITRA (the dedicated Veterinary AI Doctor on call), reply directly in 2-3 spoken sentences in that same language as:
+REPLY: [Your warm, clinical spoken advice]`
+      });
+    } else {
+      userParts.push({ text: userPrompt || 'ପଶୁ ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ' });
+    }
+
+    rawTurnContents.push({ role: 'user', parts: userParts });
+    const formattedContents = sanitizeGeminiContents(rawTurnContents);
 
     let responseText = '';
     if (aiClient) {
@@ -8026,9 +8221,9 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
           contents: formattedContents,
           config: {
             systemInstruction: dynamicInstruction,
-            temperature: 0.7,
-            maxOutputTokens: 600,
-            tools: isVoiceSearchNeeded ? [{ googleSearch: {} }] : []
+            temperature: 0.65,
+            maxOutputTokens: 1000,
+            ...(isVoiceSearchNeeded ? { tools: [{ googleSearch: {} }] } : {})
           }
         });
         responseText = response?.text || response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -8038,10 +8233,35 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
     }
 
     if (!responseText || !responseText.trim()) {
-      responseText = getArohiFallbackResponse(userPrompt, undefined, liveVoiceSearchData);
+      if (mode === 'veterinary' || species) {
+        if (language === 'or' || /[\u0B00-\u0B7F]/.test(userPrompt)) {
+          responseText = `TRANSCRIPT: ${userPrompt || 'ପଶୁ ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶ'}\nREPLY: ଆପଣଙ୍କ ପଶୁଙ୍କ ସମସ୍ୟା ବୁଝିଲି। ତାଙ୍କୁ ଉଷ୍ମ ଓ ଶାନ୍ତ ସ୍ଥାନରେ ରଖନ୍ତୁ, ସଫା ପାଣି ଦିଅନ୍ତୁ। ଯଦି ଅଧିକ ଅସୁବିଧା ହେଉଛି ତେବେ ତୁରନ୍ତ ୧୯୬୨ ଭେଟେରିନାରୀ ଆମ୍ବୁଲାନ୍ସ କଲ୍ କରନ୍ତୁ କିମ୍ବା ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।`;
+        } else {
+          responseText = `TRANSCRIPT: ${userPrompt || 'Animal health query'}\nREPLY: I understand the symptoms with your animal. Keep them resting in a clean, shaded space with fresh water, and if acute distress continues, consult your local veterinarian or dial 1962.`;
+        }
+      } else {
+        responseText = getArohiFallbackResponse(userPrompt, undefined, liveVoiceSearchData);
+      }
     }
 
-    const cleanReply = responseText
+    // Parse out TRANSCRIPT: and REPLY: if structured
+    let recognizedUserSpeech = userPrompt;
+    let spokenReply = responseText;
+
+    if (responseText.includes('TRANSCRIPT:') && responseText.includes('REPLY:')) {
+      const match = responseText.match(/TRANSCRIPT:\s*([\s\S]*?)\s*REPLY:\s*([\s\S]*)/i);
+      if (match) {
+        recognizedUserSpeech = match[1].trim();
+        spokenReply = match[2].trim();
+      }
+    } else if (responseText.includes('REPLY:')) {
+      spokenReply = responseText.split('REPLY:')[1].trim();
+    } else if (responseText.startsWith('TRANSCRIPT:')) {
+      const withoutPrefix = responseText.replace(/^TRANSCRIPT:\s*/i, '').trim();
+      spokenReply = withoutPrefix;
+    }
+
+    const cleanReply = spokenReply
       .replace(/\[.*?\]\(.*?\)/g, '')
       .replace(/[*#`_~]/g, '')
       .trim();
@@ -8050,6 +8270,7 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
       success: true,
       speaker: 'arohi',
       transcript: cleanReply,
+      userTranscript: recognizedUserSpeech,
       rawText: responseText
     });
   } catch (error: any) {
@@ -8059,6 +8280,7 @@ ZERO-SHOT AUTOMATIC SPOKEN LANGUAGE DETECTION & MIRRORING:
       success: true,
       speaker: 'arohi',
       transcript: fallback,
+      userTranscript: req.body?.prompt || '',
       rawText: fallback
     });
   }
