@@ -116,11 +116,12 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       description: 'Live Voice Simulator & Resumes'
     },
     {
-      id: 'mocktests',
-      label: 'Arohi Exams™',
+      id: 'tutor',
+      label: 'Arohi AI Tutor™',
       icon: GraduationCap,
-      badge: 'CBT Arena',
-      description: 'UPSC, SSC, Banking & NEET'
+      badge: 'Smart Board',
+      badgeGold: true,
+      description: 'Live Classes & Arohi Exams™'
     },
     {
       id: 'solutions',

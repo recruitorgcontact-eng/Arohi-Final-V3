@@ -45,6 +45,7 @@ import ArohiGuideView from './components/ArohiGuideView';
 import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
+import ArohiAiTutor from './components/tutor/ArohiAiTutor';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
 import PartnerPortal from './components/PartnerPortal';
@@ -147,7 +148,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'tutor', 'aitutor', 'arohi-tutor', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2139,7 +2140,12 @@ export default function App() {
       case 'jobs':
         return renderJobsBoard();
       case 'career':
-        return <CareerPage onOpenAuth={() => setIsAuthModalOpen(true)} />;
+        return (
+          <CareerPage 
+            onOpenAuth={() => setIsAuthModalOpen(true)} 
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        );
       case 'resume':
         return <ResumePage />;
       case 'interview':
@@ -2468,6 +2474,20 @@ export default function App() {
               window.history.pushState(null, '', `/audience/${slug}`);
             }}
             onOpenDirectory={() => setIsRegionModalOpen(true)}
+          />
+        );
+      }
+      case 'tutor':
+      case 'aitutor':
+      case 'arohi-tutor': {
+        return (
+          <ArohiAiTutor
+            isDarkMode={isDarkMode}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              setHasEntered(true);
+            }}
           />
         );
       }
@@ -4154,7 +4174,7 @@ export default function App() {
                   </button>
                   <span className="text-zinc-300 dark:text-zinc-700">/</span>
                   <span className="font-semibold text-[#d4af37] uppercase tracking-widest text-[10px] px-2.5 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30">
-                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'mocktests' ? 'Arohi Exams' : activeTab === 'business-os' ? 'Business OS' : activeTab === 'mission87' ? 'Mission 87' : activeTab === 'career' ? 'Career & Interview' : activeTab === 'resume' ? 'Resume Builder' : activeTab}
+                    {activeTab === 'courses' ? 'Skills' : activeTab === 'arohi' ? 'Arohi AI' : activeTab === 'tutor' || activeTab === 'aitutor' ? 'Arohi AI Tutor' : activeTab === 'mocktests' ? 'Arohi Exams' : activeTab === 'business-os' ? 'Business OS' : activeTab === 'mission87' ? 'Mission 87' : activeTab === 'career' ? 'Career & Interview' : activeTab === 'resume' ? 'Resume Builder' : activeTab}
                   </span>
                 </div>
 

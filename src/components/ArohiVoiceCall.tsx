@@ -48,6 +48,12 @@ interface ArohiVoiceCallProps {
   mode?: string;
   species?: string;
   callTitle?: string;
+  domain?: string;
+  persona?: string;
+  roleName?: string;
+  candidateName?: string;
+  subject?: string;
+  topic?: string;
   onCallComplete?: (summary: {
     duration: number;
     turns: SpeechTurn[];
@@ -57,11 +63,31 @@ interface ArohiVoiceCallProps {
   }) => void;
 }
 
-export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab, uid, mode, species, callTitle, onCallComplete }: ArohiVoiceCallProps) {
+export default function ArohiVoiceCall({ 
+  onClose, 
+  language = 'en', 
+  onNavigateTab, 
+  uid, 
+  mode, 
+  species, 
+  callTitle, 
+  domain,
+  persona,
+  roleName,
+  candidateName,
+  subject,
+  topic,
+  onCallComplete 
+}: ArohiVoiceCallProps) {
   const [status, setStatus] = useState<'connecting' | 'listening' | 'speaking' | 'muted' | 'error' | 'ended'>('connecting');
   const [errorMessage, setErrorMessage] = useState('');
   const [isMuted, setIsMuted] = useState(false);
   const selectedVoice = 'Zypher'; // Preferred Zypher voice persona for Arohi
+  const interviewerDisplayName = mode === 'interview'
+    ? (persona === 'vikram' ? 'Vikram' : persona === 'sharma' ? 'Dr. Sharma' : persona === 'rajesh' ? 'Rajesh' : 'Pooja')
+    : mode === 'tutor'
+    ? (persona === 'satyajit' ? 'Master Satyajit' : persona === 'radhika' ? 'Dr. Radhika' : persona === 'verma' ? 'Acharya Verma' : 'Prof. Ananya')
+    : (mode === 'vetmitra' ? 'VetMitra' : 'Arohi');
   const [activeLanguage, setActiveLanguage] = useState<string>(() => {
     if (language && language !== 'auto') return language;
     return 'en'; // Default to English; Arohi dynamically adapts to whatever language user speaks
@@ -634,7 +660,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         hasReceivedAudioStreamRef.current = false;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(activeLanguage || language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}${mode ? `&mode=${encodeURIComponent(mode)}` : ''}${species ? `&species=${encodeURIComponent(species)}` : ''}`;
+        const wsUrl = `${protocol}//${window.location.host}/api/live-ws?voice=${selectedVoice}&lang=${encodeURIComponent(activeLanguage || language)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}${mode ? `&mode=${encodeURIComponent(mode)}` : ''}${species ? `&species=${encodeURIComponent(species)}` : ''}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}${persona ? `&persona=${encodeURIComponent(persona)}` : ''}${roleName ? `&role=${encodeURIComponent(roleName)}` : ''}${candidateName ? `&candidate=${encodeURIComponent(candidateName)}` : ''}${subject ? `&subject=${encodeURIComponent(subject)}` : ''}${topic ? `&topic=${encodeURIComponent(topic)}` : ''}`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -1137,10 +1163,24 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
       {/* ========================================================================= */}
       <header className="relative z-20 flex flex-col items-center justify-center w-full max-w-md mx-auto pt-2 sm:pt-4 px-4 text-center">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-          <span>{callTitle || 'Arohi'}</span>
+          <span>
+            {callTitle || (
+              mode === 'interview' 
+                ? (persona === 'vikram' ? 'Vikram · Technical Bar-Raiser' : persona === 'sharma' ? 'Dr. Sharma · Civil Services Board' : persona === 'rajesh' ? 'Rajesh · Sales & Business Head' : 'Pooja · Talent Acquisition Lead')
+                : mode === 'tutor'
+                ? (persona === 'satyajit' ? 'Master Satyajit · State Board & Science Mentor' : persona === 'radhika' ? 'Dr. Radhika · Medical & NEET Biology' : persona === 'verma' ? 'Acharya Verma · UPSC & Polity Faculty' : 'Prof. Ananya · STEM & Mathematics')
+                : 'Arohi'
+            )}
+          </span>
         </h1>
         <p className="text-[11px] sm:text-xs text-slate-400 font-medium tracking-tight mt-0.5">
-          {mode === 'vetmitra' ? 'Clinical Veterinary & Dairy Nutrition Companion' : 'In call with Arohi by Arohi Xaldra 7.0'}
+          {mode === 'vetmitra' 
+            ? 'Clinical Veterinary & Dairy Nutrition Companion' 
+            : mode === 'interview'
+            ? `${roleName || 'Live Voice Mock Interview'} · Sovereign Talent Assessor`
+            : mode === 'tutor'
+            ? `${subject || 'Interactive Masterclass'} · Arohi AI Smart Board Classroom`
+            : 'In call with Arohi by Arohi Xaldra 7.0'}
         </p>
         
         {/* Call Timer directly below the subtitle */}
@@ -1188,14 +1228,14 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
         <div className="flex flex-col items-center gap-2">
           <p className="text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-300">
             {isArohiSpeaking 
-              ? <span className="text-fuchsia-300 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]">Arohi is speaking...</span> 
+              ? <span className="text-fuchsia-300 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]">{interviewerDisplayName} is speaking...</span> 
               : isUserSpeaking 
               ? <span className="text-emerald-300 font-bold drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">Listening to you...</span> 
               : isConnecting
-              ? <span className="text-amber-300 font-bold">Connecting to Arohi...</span>
+              ? <span className="text-amber-300 font-bold">Connecting to {interviewerDisplayName}...</span>
               : isMutedState
               ? <span className="text-slate-400">Call Paused / Muted</span>
-              : <span className="text-cyan-200">Arohi is listening...</span>}
+              : <span className="text-cyan-200">{interviewerDisplayName} is listening...</span>}
           </p>
 
           {/* 7 Pulsating Step Dots (Kimi Visual Signature) */}
@@ -1298,7 +1338,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendTextPrompt()}
-                placeholder="Ask or tell Arohi anything..."
+                placeholder={mode === 'interview' ? `Respond to ${interviewerDisplayName}...` : mode === 'tutor' ? `Ask ${interviewerDisplayName} a question...` : "Ask or tell Arohi anything..."}
                 autoFocus
                 className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
               />
@@ -1442,7 +1482,7 @@ export default function ArohiVoiceCall({ onClose, language = 'en', onNavigateTab
                 >
                   <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
                     <span className="font-bold text-cyan-400">
-                      {turn.speaker === 'user' ? 'You' : 'Arohi'}
+                      {turn.speaker === 'user' ? 'You' : interviewerDisplayName}
                     </span>
                     <span>{turn.timestamp}</span>
                   </div>

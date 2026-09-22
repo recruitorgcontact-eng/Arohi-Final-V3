@@ -2,6 +2,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Modality } from '@google/genai';
 import { phoneWss, initTelephonyBridgeOptions } from './telephony-bridge.ts';
 import { AROHI_VETMITRA_SYSTEM_PROMPT } from './vetmitra-prompt.ts';
+import { AROHI_INTERVIEW_SYSTEM_PROMPT } from './interview-prompt.ts';
+import { AROHI_TUTOR_SYSTEM_PROMPT } from './tutor-prompt.ts';
 
 export interface LiveWsOptions {
   getAiClient: (apiVersion?: 'v1alpha' | 'v1beta') => any;
@@ -155,8 +157,54 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
       }
     }
 
+    let domainParam = '';
+    let personaParam = 'pooja';
+    let roleParam = '';
+    let candidateParam = '';
+    if (request.url) {
+      const domainMatch = request.url.match(/[?&]domain=([^&]+)/);
+      if (domainMatch) domainParam = decodeURIComponent(domainMatch[1]);
+      const personaMatch = request.url.match(/[?&]persona=([^&]+)/);
+      if (personaMatch) personaParam = decodeURIComponent(personaMatch[1]);
+      const roleMatch = request.url.match(/[?&]role=([^&]+)/);
+      if (roleMatch) roleParam = decodeURIComponent(roleMatch[1]);
+      const candidateMatch = request.url.match(/[?&]candidate=([^&]+)/);
+      if (candidateMatch) candidateParam = decodeURIComponent(candidateMatch[1]);
+    }
+
+    const INTERVIEWER_PERSONA_MAP: Record<string, { name: string; title: string }> = {
+      vikram: { name: 'Vikram', title: 'Principal Technical Bar-Raiser' },
+      sharma: { name: 'Dr. Sharma', title: 'Civil Services & Administration Board Member' },
+      rajesh: { name: 'Rajesh', title: 'Commercial & Sales Head' },
+      pooja: { name: 'Pooja', title: 'Senior Talent Acquisition & HR Lead' }
+    };
+    const activeInterviewer = INTERVIEWER_PERSONA_MAP[(personaParam || '').toLowerCase()] || INTERVIEWER_PERSONA_MAP.pooja;
+    const interviewerName = activeInterviewer.name;
+    const interviewerTitle = activeInterviewer.title;
+
     const isReadAloud = /[?&](mode=read_aloud|tts=true|read_aloud=true)/i.test(request.url || '');
     const isVetMitra = /[?&](mode=vetmitra|app=vetmitra|vet=true)/i.test(request.url || '');
+    const isInterview = /[?&](mode=interview|app=interview|mockinterview=true)/i.test(request.url || '');
+    const isTutor = /[?&](mode=tutor|app=tutor|classroom=true|smartboard=true)/i.test(request.url || '');
+
+    let subjectParam = 'Mathematics & Coding';
+    let topicParam = '';
+    if (request.url) {
+      const subjectMatch = request.url.match(/[?&]subject=([^&]+)/);
+      if (subjectMatch) subjectParam = decodeURIComponent(subjectMatch[1]);
+      const topicMatch = request.url.match(/[?&]topic=([^&]+)/);
+      if (topicMatch) topicParam = decodeURIComponent(topicMatch[1]);
+    }
+
+    const TUTOR_PERSONA_MAP: Record<string, { name: string; title: string; defaultSubject: string }> = {
+      ananya: { name: 'Prof. Ananya', title: 'Senior Professor of STEM & Computational Science', defaultSubject: 'Mathematics & Coding' },
+      satyajit: { name: 'Master Satyajit', title: 'State Board & Vernacular Pedagogy Mentor', defaultSubject: 'Odia, Science & State Exams' },
+      radhika: { name: 'Dr. Radhika', title: 'Medical Sciences & NEET Biology Faculty', defaultSubject: 'NEET Biology & Medical Sciences' },
+      verma: { name: 'Acharya Verma', title: 'UPSC & General Studies Historian & Jurist', defaultSubject: 'Polity, History & Civil Services' }
+    };
+    const activeTutor = TUTOR_PERSONA_MAP[(personaParam || '').toLowerCase()] || TUTOR_PERSONA_MAP.ananya;
+    const tutorName = activeTutor.name;
+    const tutorTitle = activeTutor.title;
 
     // Prebuilt voice options accepted by Gemini Live API: 'Aoede', 'Kore', 'Puck', 'Charon', 'Fenrir'
     const ALLOWED_GEMINI_LIVE_VOICES = ['Aoede', 'Kore', 'Puck', 'Charon', 'Fenrir'];
@@ -184,6 +232,66 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
 
       let voiceSystemInstruction = isReadAloud
         ? "You are Arohi — India's sweet, warm, loving, multi-lingual AI voice guide (voice persona: Zypher). YOUR SOLE MANDATE IS TO READ ALOUD THE EXACT TEXT SENT BY THE USER WORD-FOR-WORD WITH FLAWLESS, NATURAL NATIVE PRONUNCIATION IN WHICHEVER LANGUAGE OR SCRIPT IT IS WRITTEN IN (including Odia - ଓଡ଼ିଆ, Bengali - বাংলা, Hindi - हिंदी, Tamil - தமிழ், Telugu - తెలుగు, Marathi, Gujarati, Punjabi, Urdu, Chinese - 中文, Japanese - 日本語, Korean, Spanish, French, German, Arabic, English, or any script). DO NOT TRANSLATE. DO NOT ADD ANY PREAMBLE, GREETING, INTRO, OUTRO, OR COMMENTARY. DO NOT ALTER, SUMMARIZE, OR SKIP ANY WORDS. SIMPLY READ THE ENTIRE PROVIDED TEXT ALOUD OUT LOUD IN ITS ORIGINAL SPOKEN LANGUAGE WITH PERFECT NATIVE ACCENT AND PRONUNCIATION."
+        : isInterview
+          ? AROHI_INTERVIEW_SYSTEM_PROMPT +
+            `\n\n=================================================================` +
+            `\nACTIVE INTERVIEW SPECIFICATIONS:` +
+            `\n- YOUR NAME: ${interviewerName}` +
+            `\n- YOUR ROLE / TITLE: ${interviewerTitle}` +
+            `\n- TARGET TRACK: ${roleParam || domainParam || 'Software & Technical Engineering'}` +
+            `\n- CANDIDATE NAME: ${candidateParam || 'Candidate'}` +
+            `\n=================================================================` +
+            `\nSTRICT IDENTITY MANDATE (CRITICAL - ZERO EXCEPTIONS):` +
+            `\n1. YOU ARE STRICTLY ${interviewerName.toUpperCase()}, THE ${interviewerTitle.toUpperCase()}.` +
+            `\n2. NEVER SAY "I am Arohi", "Arohi AI", OR WELCOME THE USER AS AROHI. You are a real professional interviewer named ${interviewerName}.` +
+            `\n3. DO NOT ASK "How can I help you today?". You are NOT customer support. You are leading a job/career interview.` +
+            `\n4. ALWAYS INTRODUCE YOURSELF BY YOUR WRITTEN NAME: "${interviewerName}, ${interviewerTitle}".` +
+            "\n\nCRITICAL REAL-TIME VOICE BARGE-IN & INTERACTIVE LISTENING MANDATE:" +
+            "\n- ALWAYS REMAIN 100% ATTENTIVE AND RESPONSIVE TO THE CANDIDATE'S SPOKEN VOICE IN REAL-TIME!" +
+            "\n- IF THE CANDIDATE SPEAKS, PAUSES, OR INTERRUPTS YOU AT ANY MOMENT, IMMEDIATELY PAUSE YOUR SPEAKING, LISTEN ATTENTIVELY, AND RESPOND NATURALLY!" +
+            "\n- NEVER talk over the candidate or give long monologues. Keep your turns concise (2-3 spoken sentences)." +
+            "\n- ASK EXACTLY ONE QUESTION AT A TIME, wait for their spoken answer, and probe dynamically based on what they say." +
+            "\n\n=== INITIAL CALL WELCOME ===" +
+            (reqLang === 'or' || reqLang.toLowerCase().includes('odia')
+              ? `\n- Greet warmly in Odia: 'ନମସ୍କାର${candidateParam ? ' ' + candidateParam : ''}! ମୁଁ ${interviewerName}, ${interviewerTitle}। ଆପଣଙ୍କ ${roleParam || domainParam || 'ଏହି ପଦ'} ପାଇଁ ଇଣ୍ଟରଭିୟୁ ରାଉଣ୍ଡକୁ ସ୍ଵାଗତ। ଆରମ୍ଭ କରିବା ପାଇଁ, ଦୟାକରି ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଅଭିଜ୍ଞତା ବିଷୟରେ ସଂକ୍ଷେପରେ କୁହନ୍ତୁ। (ମନେରଖନ୍ତୁ: ଆପଣ କେବେହେଲେ ନିଜକୁ ଆରୋହୀ କହିବେ ନାହିଁ)'`
+              : (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')
+                ? `\n- Greet warmly in Hindi: 'नमस्ते${candidateParam ? ' ' + candidateParam : ''}! मैं ${interviewerName} हूँ, ${interviewerTitle}। आपके ${roleParam || domainParam || 'इस पद'} के इंटरव्यू राउंड में स्वागत है। शुरुआत करने के लिए, कृपया अपना संक्षिप्त परिचय दें और अपने मुख्य अनुभव के बारे में बताएं। (याद रखें: कभी भी खुद को आरोही न कहें)'`
+                : (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')
+                  ? `\n- Greet warmly in Bengali: 'নমস্কার${candidateParam ? ' ' + candidateParam : ''}! আমি ${interviewerName}, ${interviewerTitle}। আপনার ইন্টারভিউ রাউন্ডে আপনাকে স্বাগত। শুরুতে অনুগ্রহ করে আপনার সংক্ষিপ্ত পরিচয় ও অভিজ্ঞতা সম্পর্কে বলুন।'`
+                  : `\n- Greet warmly in English: 'Hello${candidateParam ? ' ' + candidateParam : ''}! I am ${interviewerName}, ${interviewerTitle}. Welcome to your interview round for ${roleParam || domainParam || 'this position'}. To begin, could you walk me through your background and key experience?'`
+                )
+              )
+            )
+        : isTutor
+          ? AROHI_TUTOR_SYSTEM_PROMPT +
+            `\n\n=================================================================` +
+            `\nACTIVE CLASSROOM & SMART BOARD SPECIFICATIONS:` +
+            `\n- YOUR NAME: ${tutorName}` +
+            `\n- YOUR FACULTY ROLE: ${tutorTitle}` +
+            `\n- ACTIVE SUBJECT: ${subjectParam || activeTutor.defaultSubject}` +
+            `\n- TOPIC / CHAPTER: ${topicParam || 'Fundamental Concepts & Core Problem Solving'}` +
+            `\n- STUDENT NAME: ${candidateParam || 'Student'}` +
+            `\n=================================================================` +
+            `\nSTRICT IDENTITY MANDATE (CRITICAL - ZERO EXCEPTIONS):` +
+            `\n1. YOU ARE STRICTLY ${tutorName.toUpperCase()}, ${tutorTitle.toUpperCase()}.` +
+            `\n2. NEVER SAY "I am Arohi", "Arohi AI", OR INTRODUCE YOURSELF AS AROHI. You are a passionate academic teacher named ${tutorName}.` +
+            `\n3. DO NOT ASK "How can I help you?". Instead, welcome your student to class, introduce the lesson topic on the smart board, and invite their curiosity.` +
+            `\n4. ALWAYS INTRODUCE YOURSELF BY YOUR WRITTEN FACULTY NAME: "${tutorName}".` +
+            "\n\nCRITICAL REAL-TIME VOICE BARGE-IN & INTERACTIVE TEACHING MANDATE:" +
+            "\n- ALWAYS REMAIN 100% ATTENTIVE AND RESPONSIVE TO THE STUDENT'S SPOKEN VOICE IN REAL-TIME!" +
+            "\n- IF THE STUDENT INTERRUPTS, ASKS A QUESTION, OR EXPRESSES DOUBT AT ANY MOMENT, IMMEDIATELY PAUSE, ACKNOWLEDGE THEM WARMLY, AND EXPLAIN WITH PATIENCE!" +
+            "\n- NEVER lecture in long monologues. Teach 1 concept at a time (2-3 spoken sentences), then ask a quick check-for-understanding question." +
+            "\n\n=== INITIAL CLASSROOM WELCOME ===" +
+            (reqLang === 'or' || reqLang.toLowerCase().includes('odia')
+              ? `\n- Greet warmly in Odia: 'ନମସ୍କାର${candidateParam ? ' ' + candidateParam : ''}! ମୁଁ ${tutorName}। ଆଜି ଆମ ${subjectParam || 'ଏହି ବିଷୟ'} କ୍ଲାସକୁ ସ୍ଵାଗତ। ଆଜି ଆମେ ସ୍ମାର୍ଟ ବୋର୍ଡରେ ମୁଖ୍ୟ ଧାରଣା ଶିଖିବା। ଆପଣ ପ୍ରସ୍ତୁତ ତ? ଆରମ୍ଭ କରିବା!'`
+              : (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')
+                ? `\n- Greet warmly in Hindi: 'नमस्ते${candidateParam ? ' ' + candidateParam : ''}! मैं ${tutorName} हूँ। आज की ${subjectParam || 'क्लास'} में आपका स्वागत है। आज हम स्मार्ट बोर्ड पर मुख्य कॉन्सेप्ट्स को विस्तार से समझेंगे। क्या आप तैयार हैं? चलिए शुरू करते हैं!'`
+                : (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')
+                  ? `\n- Greet warmly in Bengali: 'নমস্কার${candidateParam ? ' ' + candidateParam : ''}! আমি ${tutorName}। আমাদের আজকের ক্লাসে আপনাকে স্বাগত। আসুন শুরু করা যাক!'`
+                  : `\n- Greet warmly in English: 'Hello${candidateParam ? ' ' + candidateParam : ''}! I am ${tutorName}, your teacher for ${subjectParam || "today's masterclass"}. Welcome to our live smart board session. Are you ready to dive into ${topicParam || 'the core concepts'}?'`
+                )
+              )
+            )
         : isVetMitra
           ? AROHI_VETMITRA_SYSTEM_PROMPT +
             "\n\nCRITICAL REAL-TIME VOICE BARGE-IN & INTERACTIVE LISTENING MANDATE:" +
@@ -440,7 +548,27 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
           } else if (!isReadAloud && session) {
             try {
               let greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in English introducing yourself as Arohi and asking how you can help today.";
-              if (isVetMitra) {
+              if (isTutor) {
+                if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
+                  greetingInstruction = `Say a warm, energetic 1-2 sentence classroom opening in Odia (ଓଡ଼ିଆ). Introduce yourself strictly as ${tutorName}. Welcome ${candidateParam ? candidateParam : 'the student'} to today's ${subjectParam || 'interactive'} class. Invite them to look at the smart board as we begin. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${tutorName}.`;
+                } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
+                  greetingInstruction = `Say a warm, inspiring 1-2 sentence classroom opening in Hindi (हिंदी). Introduce yourself strictly as ${tutorName}. Welcome ${candidateParam ? candidateParam : 'the student'} to today's ${subjectParam || 'interactive'} class. Invite them to look at the smart board as we start the lesson. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${tutorName}.`;
+                } else if (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')) {
+                  greetingInstruction = `Say a warm, encouraging 1-2 sentence classroom opening in Bengali (বাংলা). Introduce yourself strictly as ${tutorName}. Welcome ${candidateParam ? candidateParam : 'the student'} to today's class. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${tutorName}.`;
+                } else {
+                  greetingInstruction = `Say a warm, inspiring 1-2 sentence classroom opening in English. Introduce yourself strictly as ${tutorName}. Welcome ${candidateParam ? candidateParam : 'the student'} to today's ${subjectParam || 'live'} class on the smart board. Ask if they are ready to dive in. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${tutorName}.`;
+                }
+              } else if (isInterview) {
+                if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
+                  greetingInstruction = `Say a polite, professional 1-2 sentence interview opening in Odia (ଓଡ଼ିଆ). Introduce yourself strictly as ${interviewerName}, ${interviewerTitle}. Welcome ${candidateParam ? candidateParam : 'the candidate'} to this interview round for ${roleParam || domainParam || 'this position'}. Ask them to briefly introduce themselves and their core background. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${interviewerName}.`;
+                } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
+                  greetingInstruction = `Say a polite, professional 1-2 sentence interview opening in Hindi (हिंदी). Introduce yourself strictly as ${interviewerName}, ${interviewerTitle}. Welcome ${candidateParam ? candidateParam : 'the candidate'} to this interview round for ${roleParam || domainParam || 'this position'}. Ask them to briefly introduce themselves and their core experience. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${interviewerName}.`;
+                } else if (reqLang === 'bn' || reqLang.toLowerCase().includes('bengali')) {
+                  greetingInstruction = `Say a polite, professional 1-2 sentence interview opening in Bengali (বাংলা). Introduce yourself strictly as ${interviewerName}, ${interviewerTitle}. Welcome ${candidateParam ? candidateParam : 'the candidate'} to this interview round for ${roleParam || domainParam || 'this position'}. Ask them to briefly introduce themselves. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${interviewerName}.`;
+                } else {
+                  greetingInstruction = `Say a polite, professional 1-2 sentence interview opening in English. Introduce yourself strictly as ${interviewerName}, ${interviewerTitle}. Welcome ${candidateParam ? candidateParam : 'the candidate'} to this interview round for ${roleParam || domainParam || 'this position'}. Ask them to walk you through their background and key experience. CRITICAL MANDATE: DO NOT use the name Arohi. You are strictly ${interviewerName}.`;
+                }
+              } else if (isVetMitra) {
                 if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
                   greetingInstruction = speciesParam && speciesParam !== 'universal'
                     ? `Say a warm, reassuring 1-sentence welcome in Odia introducing yourself as Arohi VetMitra (ଆରୋହୀ ଭେଟମିତ୍ର) and asking what health or feeding symptom the caller is noticing in their ${speciesParam} ${animalParam ? `named "${animalParam}"` : ''} today.`

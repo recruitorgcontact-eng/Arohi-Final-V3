@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Sparkles, Map, TrendingUp, HelpCircle, Clipboard, ChevronRight, BookOpen, Clock, Award, ShieldCheck } from 'lucide-react';
+import { Sparkles, Map, TrendingUp, HelpCircle, Clipboard, ChevronRight, BookOpen, Clock, Award, ShieldCheck, Mic, FileText, Bot } from 'lucide-react';
 import InteractiveD3Roadmap from './InteractiveD3Roadmap';
+import InterviewPage from './InterviewPage';
+import ResumePage from './ResumePage';
 import { useAuth } from '../context/AuthContext';
 
 interface RoadmapPhase {
@@ -20,8 +22,19 @@ interface CareerRoadmap {
   salaryExpectation: string;
 }
 
-export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) {
+interface CareerPageProps {
+  onOpenAuth?: () => void;
+  onNavigateTab?: (tab: string) => void;
+  initialSubTab?: 'interview' | 'roadmap' | 'resume';
+}
+
+export default function CareerPage({ 
+  onOpenAuth, 
+  onNavigateTab,
+  initialSubTab = 'interview' 
+}: CareerPageProps) {
   const { user } = useAuth();
+  const [activeSubTab, setActiveSubTab] = useState<'interview' | 'roadmap' | 'resume'>(initialSubTab);
   const [targetField, setTargetField] = useState('Technology');
   const [targetRole, setTargetRole] = useState('Full Stack Web Developer');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -171,51 +184,116 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
       
       {/* Title */}
       <div className="bg-gradient-to-br from-[#0a0718] via-[#0d0922] to-[#06040e] border border-slate-800/80 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden text-left">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute left-1/3 -top-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
         
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#091515] border border-teal-500/30 text-teal-300 px-3.5 py-1 rounded-full text-[11px] font-bold tracking-wide shadow-sm mb-3">
+          <div className="inline-flex items-center gap-2 bg-[#091515] border border-emerald-500/30 text-emerald-300 px-3.5 py-1 rounded-full text-[11px] font-bold tracking-wide shadow-sm mb-3">
             <span className="w-2 h-2 rounded-full bg-[#00e676] animate-pulse"></span>
-            AROHI Career Module
+            Career, Mock Interview & Resume Hub
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-            AI Career Counselor & <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">Pathfinder</span>
+            Career Intelligence & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Mock Interview Arena</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
-            Take a smart personality/skills assessment or directly input your career goal to let AROHI blueprint a personalized roadmap to landing your dream job.
+            Practice real-time interactive voice mock interviews with AI panel specialists, craft ATS 100/100 resumes, or chart your personalized D3 career pathway.
           </p>
+
+          {/* 3-Pillar Tab Switcher */}
+          <div className="flex flex-wrap items-center gap-2 mt-5 p-1.5 bg-[#080514]/90 border border-slate-800/90 rounded-2xl backdrop-blur-xl shadow-lg w-fit">
+            <button
+              onClick={() => setActiveSubTab('interview')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeSubTab === 'interview'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-900/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Mic className="w-4 h-4 text-emerald-300" />
+              <span>Live Voice Mock Interview</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-950/80 border border-emerald-400/40 text-emerald-300">
+                Live Simulator
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveSubTab('roadmap')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeSubTab === 'roadmap'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Map className="w-4 h-4 text-purple-300" />
+              <span>Career Roadmap & Compass</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-950/80 border border-purple-400/40 text-purple-300">
+                D3 Interactive
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onNavigateTab) {
+                  onNavigateTab('resume');
+                } else {
+                  setActiveSubTab('resume');
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeSubTab === 'resume'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md shadow-blue-900/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <FileText className="w-4 h-4 text-cyan-300" />
+              <span>ATS 100/100 Resume Studio</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-950/80 border border-blue-400/40 text-cyan-300">
+                ATS 100/100
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* SECURITY REGISTRATION NOTICE BANNER FOR ROADMAPS */}
-      {!user && (
-        <div className="bg-gradient-to-r from-rose-950/40 via-[#3a1520]/40 to-rose-950/40 border border-rose-500/30 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left shadow-lg">
-          <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase text-rose-400 font-mono tracking-widest block">🎓 AI CAREER COUNSELOR REGISTRY</span>
-            <h4 className="text-xs font-black text-white">
-              Save Your AI Career Assessments & D3 Skill Roadmaps
-            </h4>
-            <p className="text-[11px] text-slate-300 font-medium max-w-2xl">
-              You are currently using career counselor roadmaps as a Guest. Connect with Google Sign-In to backup your assessment results, preserve customized skill pathways, and sync speech-evaluated mock interviews!
-            </p>
-          </div>
-          <button 
-            onClick={onOpenAuth}
-            className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shrink-0 active:scale-95 hover:scale-[1.02]"
-          >
-            Create Counselor Account
-          </button>
-        </div>
+      {/* Render Active Sub-Module */}
+      {activeSubTab === 'interview' && (
+        <InterviewPage />
       )}
 
-      {/* D3-based Interactive Career Roadmap Visualization */}
-      <InteractiveD3Roadmap initialField={targetField} onFieldChange={setTargetField} />
+      {activeSubTab === 'resume' && (
+        <ResumePage />
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Side: Assessment questionnaire */}
-        <div className="lg:col-span-5 space-y-6">
+      {activeSubTab === 'roadmap' && (
+        <div className="space-y-6">
+          {/* SECURITY REGISTRATION NOTICE BANNER FOR ROADMAPS */}
+          {!user && (
+            <div className="bg-gradient-to-r from-rose-950/40 via-[#3a1520]/40 to-rose-950/40 border border-rose-500/30 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-left shadow-lg">
+              <div className="space-y-1">
+                <span className="text-[9px] font-black uppercase text-rose-400 font-mono tracking-widest block">🎓 AI CAREER COUNSELOR REGISTRY</span>
+                <h4 className="text-xs font-black text-white">
+                  Save Your AI Career Assessments & D3 Skill Roadmaps
+                </h4>
+                <p className="text-[11px] text-slate-300 font-medium max-w-2xl">
+                  You are currently using career counselor roadmaps as a Guest. Connect with Google Sign-In to backup your assessment results, preserve customized skill pathways, and sync speech-evaluated mock interviews!
+                </p>
+              </div>
+              <button 
+                onClick={onOpenAuth}
+                className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shrink-0 active:scale-95 hover:scale-[1.02]"
+              >
+                Create Counselor Account
+              </button>
+            </div>
+          )}
+
+          {/* D3-based Interactive Career Roadmap Visualization */}
+          <InteractiveD3Roadmap initialField={targetField} onFieldChange={setTargetField} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Side: Assessment questionnaire */}
+            <div className="lg:col-span-5 space-y-6">
           
           <div className="bg-[#0c091f]/80 backdrop-blur-xl p-5 md:p-6 rounded-2xl border border-slate-800/80 shadow-xl text-slate-100">
             <h3 className="text-xs font-black uppercase tracking-wider text-purple-300 mb-4 flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
@@ -410,6 +488,8 @@ export default function CareerPage({ onOpenAuth }: { onOpenAuth?: () => void }) 
         </div>
 
       </div>
+    </div>
+  )}
 
     </div>
   );
