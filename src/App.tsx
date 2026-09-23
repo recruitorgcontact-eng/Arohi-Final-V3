@@ -46,11 +46,14 @@ import AudienceLandingPage from './components/AudienceLandingPage';
 import UniversalSolutionsHub from './components/UniversalSolutionsHub';
 import MockTestsHub from './components/mocktests/MockTestsHub';
 import ArohiAiTutor from './components/tutor/ArohiAiTutor';
+import ArohiSpeaksHub from './components/speaks/ArohiSpeaksHub';
+import ArohiMeetHub from './components/meet/ArohiMeetHub';
 import BusinessOSShell from './components/business_os/BusinessOSShell';
 import Mission87Portal from './components/mission87/Mission87Portal';
 import PartnerPortal from './components/PartnerPortal';
 import Blender3DStudio from './components/blender3d/Blender3DStudio';
 import ArohiVetMitraApp from './components/vetmitra/ArohiVetMitraApp';
+import { ArohiVanaVedaApp } from './components/vanaveda/ArohiVanaVedaApp';
 import ArohiAssistantProductPage from './components/products/ArohiAssistantProductPage';
 import ArohiCallingAgentsProductPage from './components/products/ArohiCallingAgentsProductPage';
 import ArohiExamsProductPage from './components/products/ArohiExamsProductPage';
@@ -119,7 +122,7 @@ export default function App() {
       if (p0 === 'mocktests' || p0 === 'mocktest') return true;
       if (p0 === 'mission87' || p0 === 'mission-87' || p0 === 'mission') return true;
       if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'delete-account'].includes(p0)) {
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'delete-account'].includes(p0)) {
         return true;
       }
     }
@@ -148,7 +151,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'tutor', 'aitutor', 'arohi-tutor', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'tutor', 'aitutor', 'arohi-tutor', 'speaks', 'arohi-speaks', 'polyglot', 'languages', 'meet', 'arohi-meet', 'conference', 'meeting', 'meetings', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -331,6 +334,9 @@ export default function App() {
     const search = window.location.search.toLowerCase();
     const urlParams = new URLSearchParams(window.location.search);
     const appQuery = urlParams.get('app')?.toLowerCase();
+    if (appQuery === 'vanaveda' || appQuery === 'vana-veda' || appQuery === 'ayurveda' || appQuery === 'botanical') {
+      return 'vanaveda';
+    }
     if (appQuery === 'vetmitra' || appQuery === 'vet' || appQuery === 'dairy') {
       return 'vetmitra';
     }
@@ -342,6 +348,9 @@ export default function App() {
     }
     if (appQuery === 'calling' || appQuery === 'calling-agents' || appQuery === 'voice') {
       return 'calling-agents';
+    }
+    if (appQuery === 'speaks' || appQuery === 'arohi-speaks' || appQuery === 'polyglot' || appQuery === 'speak' || appQuery === 'languages') {
+      return 'speaks';
     }
     if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/') || hash === '#admin' || search.includes('admin')) {
       return 'admin';
@@ -2491,6 +2500,36 @@ export default function App() {
           />
         );
       }
+      case 'speaks':
+      case 'arohi-speaks':
+      case 'polyglot':
+      case 'languages': {
+        return (
+          <ArohiSpeaksHub
+            isDarkMode={isDarkMode}
+            onOpenVoiceCall={() => setIsDirectVoiceCallOpen(true)}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              setHasEntered(true);
+            }}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+          />
+        );
+      }
+      case 'meet':
+      case 'arohi-meet':
+      case 'conference':
+      case 'meeting':
+      case 'meetings': {
+        return (
+          <ArohiMeetHub
+            onExit={() => {
+              setActiveTab('home');
+              setHasEntered(true);
+            }}
+          />
+        );
+      }
       case 'mocktests':
       case 'mocktest': {
         return (
@@ -2590,6 +2629,20 @@ export default function App() {
           <ArohiVetMitraApp
             initialSpecies="cattle"
             initialTab="home"
+            onBackToArohi={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        );
+      }
+      case 'vanaveda':
+      case 'vana-veda':
+      case 'ayurveda':
+      case 'botanical': {
+        return (
+          <ArohiVanaVedaApp
+            initialTab="herbarium"
             onBackToArohi={() => {
               setActiveTab('home');
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4077,9 +4130,9 @@ export default function App() {
       </AnimatePresence>
 
       {/* Main Body */}
-      <main className={`flex-1 w-full ${activeTab === 'home' || ['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'].includes(activeTab) ? 'p-0' : 'max-w-7xl mx-auto px-4 py-8'}`}>
+      <main className={`flex-1 w-full ${activeTab === 'home' || ['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical'].includes(activeTab) ? 'p-0' : 'max-w-7xl mx-auto px-4 py-8'}`}>
         {/* Integrated 2-Day Free Trial Banner inside Main Screen UI for non-home tabs */}
-        {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'].includes(activeTab) && (
+        {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical'].includes(activeTab) && (
           <div className={`mb-6 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
             isDarkMode 
               ? 'bg-gradient-to-r from-[#0a1228] via-[#0f1e42] to-[#172e66] border-blue-500/30 text-white shadow-[0_8px_30px_rgba(37,99,235,0.2)]' 
@@ -4149,7 +4202,7 @@ export default function App() {
                   </a>
                 </div>
               </div>
-            ) : activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'].includes(activeTab) ? (
+            ) : activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical'].includes(activeTab) ? (
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-2 sm:p-2.5 rounded-2xl bg-white/80 dark:bg-[#12131a]/80 border border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.03)] select-none animate-in fade-in duration-200">
                 {/* Left: Workspace Drawer Button + Breadcrumb */}
                 <div className="flex items-center gap-2 text-xs">
@@ -4257,7 +4310,7 @@ export default function App() {
       </main>
 
       {/* Footer verified seal and info */}
-      {!['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'].includes(activeTab) && (
+      {!['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical'].includes(activeTab) && (
       <footer id="contact-section" className="max-w-7xl mx-auto px-4 mt-12 mb-8 space-y-6 scroll-mt-20">
         {/* Expanded Footer Grid */}
         <div className="bg-white/80 dark:bg-[#0c1224]/90 rounded-2xl border border-slate-200/90 dark:border-blue-950/60 p-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-left shadow-sm backdrop-blur-md">
@@ -4283,6 +4336,18 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Links &amp; Documents</h4>
             <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <button 
+                  onClick={() => {
+                    setActiveTab('vanaveda');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }} 
+                  className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer text-left font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"
+                >
+                  <span>🌿 VanaVeda (Ayurvedic AI)</span>
+                  <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">New</span>
+                </button>
+              </li>
               <li>
                 <button 
                   onClick={() => {

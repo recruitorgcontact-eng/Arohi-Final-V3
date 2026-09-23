@@ -23,7 +23,8 @@ import {
   Search,
   CheckCircle2,
   Cpu,
-  Stethoscope
+  Stethoscope,
+  Languages
 } from 'lucide-react';
 
 interface ToolsHubProps {
@@ -38,6 +39,28 @@ export default function ToolsHub({ onNavigateTab, onQuickChat, isDarkMode = true
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const toolsList = [
+    {
+      id: 'meet',
+      title: 'Arohi MEET™ — Intelligent Video Conferencing & AI Minutes',
+      category: 'ENTERPRISE & PRODUCTIVITY',
+      catFilter: 'BUSINESS & ENTERPRISE',
+      description: 'Meet • Decide • Remember • Act. 6-person video grid, real-time multilingual transcription, automated Minutes of Meeting (MoM) in 28 seconds, and interactive meeting copilot.',
+      icon: Video,
+      color: 'from-cyan-500 via-blue-600 to-indigo-600',
+      badge: 'AI MEETINGS',
+      tabId: 'meet'
+    },
+    {
+      id: 'speaks',
+      title: 'Arohi Speaks™ — Universal Polyglot Academy',
+      category: 'POLYGLOT VOICE & LANGUAGES',
+      catFilter: 'CAREER & EXAMS',
+      description: 'Zero-hesitation spoken fluency for 22+ Indian and 150+ global languages. 4-Week visual gamified roadmap, syllable pronunciation analyzer, and real-world roleplay simulations.',
+      icon: Languages,
+      color: 'from-orange-500 via-amber-500 to-yellow-500',
+      badge: '170+ LANGUAGES',
+      tabId: 'speaks'
+    },
     {
       id: 'vetmitra',
       title: 'Arohi VetMitra™ — Livestock & Veterinary Care',

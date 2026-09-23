@@ -25,7 +25,10 @@ import {
   CreditCard,
   Zap,
   Box,
-  Stethoscope
+  Stethoscope,
+  Languages,
+  Video,
+  Leaf
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -124,6 +127,22 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       description: 'Live Classes & Arohi Exams™'
     },
     {
+      id: 'speaks',
+      label: 'Arohi Speaks™',
+      icon: Languages,
+      badge: '170+ Langs',
+      badgeGold: true,
+      description: 'Zero-Hesitation Polyglot Academy'
+    },
+    {
+      id: 'meet',
+      label: 'Arohi MEET™',
+      icon: Video,
+      badge: 'AI Meetings',
+      badgeGold: true,
+      description: 'Meet • Decide • Remember • Act'
+    },
+    {
       id: 'solutions',
       label: 'Solutions Directory',
       icon: Layers,
@@ -152,6 +171,14 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       badge: 'NASEM 2021',
       badgeGold: false,
       description: 'Dairy Ration, Cattle, Goat, Dog & Cat'
+    },
+    {
+      id: 'vanaveda',
+      label: 'VanaVeda (वनवेद)',
+      icon: Leaf,
+      badge: 'Vedic AI',
+      badgeGold: true,
+      description: 'Sushruta Matrix, 10 Trees & Herbal Vaidya'
     },
     {
       id: 'pricing',

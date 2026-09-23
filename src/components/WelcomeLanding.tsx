@@ -67,6 +67,7 @@ import HeaderNotifications from './HeaderNotifications';
 import ArohiExamsButtonBanner from './mocktests/ArohiExamsButtonBanner';
 import ArohiOneBusinessOSButtonBanner from './business_os/ArohiOneBusinessOSButtonBanner';
 import Mission87HeroBanner from './mission87/Mission87HeroBanner';
+import ArohiSpeaksBanner from './speaks/ArohiSpeaksBanner';
 import {
   Icon3DBusinessOS,
   Icon3DAssistantOrb,
