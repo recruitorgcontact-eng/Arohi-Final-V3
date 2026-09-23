@@ -109,8 +109,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
   const isSpeakerOnRef = useRef(isSpeakerOn);
   const callStatusRef = useRef(callStatus);
   const activeArohiAccumulatorRef = useRef<string>('');
-  const callDurationRef = useRef(callDuration);
-  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     isMutedRef.current = isMuted;
@@ -123,10 +121,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
   useEffect(() => {
     callStatusRef.current = callStatus;
   }, [callStatus]);
-
-  useEffect(() => {
-    callDurationRef.current = callDuration;
-  }, [callDuration]);
 
   // Format MM:SS timer
   const formatTimer = (seconds: number) => {
@@ -194,8 +188,8 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
     stopArohiVoice();
   };
 
-  // Play incoming 24kHz PCM chunk (supports Base64 string or binary ArrayBuffer)
-  const playLiveAudioChunk = (pcmData: string | ArrayBuffer) => {
+  // Play incoming 24kHz PCM chunk
+  const playLiveAudioChunk = (pcmData: ArrayBuffer) => {
     if (!isSpeakerOnRef.current) return;
     try {
       const ctx = outputAudioCtxRef.current;
@@ -205,33 +199,13 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
         ctx.resume().catch(() => {});
       }
 
-      let float32Array: Float32Array;
-      let sampleCount = 0;
+      const sampleCount = pcmData.byteLength / 2;
+      const dataView = new DataView(pcmData);
+      const float32Array = new Float32Array(sampleCount);
 
-      if (typeof pcmData === 'string') {
-        const binary = window.atob(pcmData);
-        const len = binary.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-        sampleCount = Math.floor(len / 2);
-        if (sampleCount <= 0) return;
-        float32Array = new Float32Array(sampleCount);
-        const dataView = new DataView(bytes.buffer, bytes.byteOffset, sampleCount * 2);
-        for (let i = 0; i < sampleCount; i++) {
-          const pcm16 = dataView.getInt16(i * 2, true);
-          float32Array[i] = pcm16 / 32768.0;
-        }
-      } else {
-        sampleCount = Math.floor(pcmData.byteLength / 2);
-        if (sampleCount <= 0) return;
-        const dataView = new DataView(pcmData);
-        float32Array = new Float32Array(sampleCount);
-        for (let i = 0; i < sampleCount; i++) {
-          const pcm16 = dataView.getInt16(i * 2, true);
-          float32Array[i] = pcm16 / 32768.0;
-        }
+      for (let i = 0; i < sampleCount; i++) {
+        const int16 = dataView.getInt16(i * 2, true);
+        float32Array[i] = int16 < 0 ? int16 / 0x8000 : int16 / 0x7fff;
       }
 
       const audioBuffer = ctx.createBuffer(1, sampleCount, 24000);
@@ -258,30 +232,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
     }
   };
 
-  // Commit user spoken text to persistent transcript dialogue history
-  const commitUserSpeech = (userSpokenText: string) => {
-    const clean = (userSpokenText || '').trim();
-    if (!clean) return;
-
-    setDialogueHistory(prev => {
-      const last = prev[prev.length - 1];
-      if (last && last.speaker === 'user' && (last.text === clean || clean.startsWith(last.text))) {
-        return [...prev.slice(0, -1), { ...last, text: clean }];
-      }
-      return [
-        ...prev,
-        {
-          id: 'user-' + Date.now(),
-          speaker: 'user',
-          text: clean,
-          time: formatTimer(callDurationRef.current),
-        }
-      ];
-    });
-    setActiveUserTurn(null);
-    setInterimSpeech('');
-  };
-
   // Send textual query over open WebSocket or failover to REST
   const sendQuery = async (queryText: string) => {
     const cleanText = (queryText || '').trim();
@@ -291,12 +241,11 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
     setInterimSpeech('');
     setCallStatus('thinking');
 
-    const currentTimeStr = formatTimer(callDurationRef.current);
+    const currentTimeStr = formatTimer(callDuration);
     setActiveUserTurn({
       text: cleanText,
       time: currentTimeStr,
     });
-    commitUserSpeech(cleanText);
     setActiveArohiTurn(null);
     activeArohiAccumulatorRef.current = '';
 
@@ -326,47 +275,28 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
       if (res.ok) {
         const data = await res.json();
         const replyText = data.transcript || data.reply || (isOdia ? 'ହରି ଓଁ, ମୁଁ ଆପଣଙ୍କ କଥା ଶୁଣିଲି।' : 'Harih Om, I have noted your concern.');
-        const spokenTime = formatTimer(callDurationRef.current + 1);
-        const cleanReply = replyText.replace(/[*#_`~]/g, '').trim();
+        const spokenTime = formatTimer(callDuration + 1);
 
         setActiveArohiTurn({
-          text: cleanReply,
+          text: replyText.replace(/[*#_`~]/g, ''),
           time: spokenTime,
         });
 
-        setDialogueHistory(prev => [
-          ...prev,
-          {
-            id: 'arohi-' + Date.now(),
-            speaker: 'arohi',
-            text: cleanReply,
-            time: spokenTime,
-          }
-        ]);
-
         if (isSpeakerOnRef.current) {
           setCallStatus('speaking');
-          playArohiVoice(cleanReply, {
+          playArohiVoice(replyText, {
             language: isOdia ? 'or-IN' : isHindi ? 'hi-IN' : 'en-IN',
             voice: 'Zypher',
-            onEnd: () => {
-              setCallStatus('listening');
-              setActiveArohiTurn(null);
-            },
-            onError: () => {
-              setCallStatus('listening');
-              setActiveArohiTurn(null);
-            },
+            onEnd: () => setCallStatus('listening'),
+            onError: () => setCallStatus('listening'),
           });
         } else {
           setCallStatus('listening');
-          setActiveArohiTurn(null);
         }
       }
     } catch (err) {
       console.warn('REST fallback error:', err);
       setCallStatus('listening');
-      setActiveArohiTurn(null);
     }
   };
 
@@ -486,7 +416,13 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
             // 1. Spoken base64 audio
             if (data.audio) {
               setCallStatus('speaking');
-              playLiveAudioChunk(data.audio);
+              const binaryString = window.atob(data.audio);
+              const len = binaryString.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              playLiveAudioChunk(bytes.buffer);
             }
 
             // 2. Real-time Transcript
@@ -499,18 +435,13 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
                 const cleaned = textChunk.replace(/[*#`_~]/g, '');
                 if (cleaned) {
                   setCallStatus('speaking');
-                  // If there was an active user speech bubble, commit it before Arohi speaks
-                  if (activeUserTurn) {
-                    commitUserSpeech(activeUserTurn.text);
-                  }
-
                   activeArohiAccumulatorRef.current = activeArohiAccumulatorRef.current 
                     ? (activeArohiAccumulatorRef.current.endsWith(' ') ? activeArohiAccumulatorRef.current + cleaned : activeArohiAccumulatorRef.current + ' ' + cleaned)
                     : cleaned;
 
                   setActiveArohiTurn({
                     text: activeArohiAccumulatorRef.current,
-                    time: formatTimer(callDurationRef.current),
+                    time: formatTimer(callDuration),
                   });
                 }
               } else if (speaker === 'user') {
@@ -519,7 +450,7 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
                   setInterimSpeech(userCleaned);
                   setActiveUserTurn({
                     text: userCleaned,
-                    time: formatTimer(callDurationRef.current),
+                    time: formatTimer(callDuration),
                   });
                 }
               }
@@ -530,8 +461,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
               stopAllPlayback();
               setCallStatus('listening');
               setInterimSpeech('');
-              activeArohiAccumulatorRef.current = '';
-              setActiveArohiTurn(null);
             }
 
             // 4. Turn Completion
@@ -547,15 +476,11 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
                     id: 'arohi-' + Date.now(),
                     speaker: 'arohi',
                     text: finalArohi,
-                    time: formatTimer(callDurationRef.current),
+                    time: formatTimer(callDuration),
                   }
                 ]);
               }
               activeArohiAccumulatorRef.current = '';
-              setActiveArohiTurn(null);
-              if (audioQueueRef.current.length === 0 && !isMutedRef.current) {
-                setCallStatus('listening');
-              }
             } else if (data.error) {
               console.warn('[VanaVeda Live Voice] WebSocket notice:', data.error);
             }
@@ -577,70 +502,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
             setCallStatus('listening');
           }
         };
-
-        // Initialize SpeechRecognition for zero-latency local Odia transcription
-        const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRec) {
-          try {
-            const recognition = new SpeechRec();
-            recognitionRef.current = recognition;
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = isOdia ? 'or-IN' : isHindi ? 'hi-IN' : 'en-IN';
-
-            recognition.onresult = (evt: any) => {
-              if (callStatusRef.current === 'speaking') return;
-
-              let interim = '';
-              let finalTranscript = '';
-              for (let i = evt.resultIndex; i < evt.results.length; ++i) {
-                const transcript = evt.results[i][0].transcript;
-                if (evt.results[i].isFinal) {
-                  finalTranscript += transcript;
-                } else {
-                  interim += transcript;
-                }
-              }
-
-              const displayInterim = (interim || finalTranscript).trim();
-              if (displayInterim) {
-                setInterimSpeech(displayInterim);
-                setActiveUserTurn({
-                  text: displayInterim,
-                  time: formatTimer(callDurationRef.current),
-                });
-              }
-
-              if (finalTranscript.trim()) {
-                const finalClean = finalTranscript.trim();
-                commitUserSpeech(finalClean);
-                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                  try {
-                    wsRef.current.send(JSON.stringify({ text: finalClean }));
-                  } catch (e) {}
-                }
-              }
-            };
-
-            recognition.onerror = (recErr: any) => {
-              if (recErr.error !== 'no-speech' && recErr.error !== 'aborted') {
-                console.warn('[VanaVeda STT notice]:', recErr.error);
-              }
-            };
-
-            recognition.onend = () => {
-              if (active && !isMutedRef.current && callStatusRef.current !== 'connecting') {
-                try {
-                  recognition.start();
-                } catch (e) {}
-              }
-            };
-
-            recognition.start();
-          } catch (sttErr) {
-            console.warn('[VanaVeda STT] SpeechRecognition not active:', sttErr);
-          }
-        }
 
         // Microphone Setup
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -687,12 +548,11 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
             lastVolumeUpdateRef.current = now;
           }
 
-          // Voice barge-in: If caller speaks clearly into mic while Arohi is speaking, halt voice immediately
-          if (rawVol > 22 && (audioQueueRef.current.length > 0 || callStatusRef.current === 'speaking' || (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking))) {
+          // Voice barge-in: If caller speaks into mic while Arohi is speaking, halt voice immediately
+          if (rawVol > 18 && (audioQueueRef.current.length > 0 || callStatusRef.current === 'speaking' || (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking))) {
             stopAllPlayback();
             setCallStatus('listening');
             activeArohiAccumulatorRef.current = '';
-            setActiveArohiTurn(null);
             if (ws && ws.readyState === WebSocket.OPEN) {
               try {
                 ws.send(JSON.stringify({ interrupted: true }));
@@ -747,13 +607,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
         wsRef.current.close();
         wsRef.current = null;
       }
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.onend = null;
-          recognitionRef.current.abort();
-        } catch (e) {}
-        recognitionRef.current = null;
-      }
 
       // Closing singing bowl overtone
       vanavedaAudio.playSingingBowl(528);
@@ -761,13 +614,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
   }, []);
 
   const handleEndCall = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.onend = null;
-        recognitionRef.current.abort();
-      } catch (e) {}
-      recognitionRef.current = null;
-    }
     stopAllPlayback();
     onEndCall();
   };
@@ -978,13 +824,6 @@ export const VanaVedaVoiceCallScreen: React.FC<Props> = ({
               <span>{item.text}</span>
             </div>
           ))}
-
-          {activeUserTurn && (
-            <div className="text-xs text-amber-200 bg-amber-950/30 p-1.5 rounded border border-amber-800/40">
-              <span className="font-bold text-[10px] text-amber-300 mr-1.5">👤 YOU:</span>
-              <span>{activeUserTurn.text}</span>
-            </div>
-          )}
 
           {activeArohiTurn && (
             <div className="text-xs text-emerald-200 bg-emerald-950/40 p-1.5 rounded border border-emerald-800/40">

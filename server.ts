@@ -5993,62 +5993,9 @@ async function generateContentWithFallback(aiClientInstance: GoogleGenAI, option
   };
 }
 
-// Ultra-fast Groq API Fallback Engine with Dynamic Model Discovery & Token Optimization
+// Ultra-fast Groq API Fallback Engine with Dynamic Model Discovery
 let cachedGroqModels: string[] | null = null;
 let lastGroqModelFetch = 0;
-
-function optimizeMessagesForGroq(
-  contents: any[],
-  systemInstruction?: string
-): Array<{ role: string; content: string }> {
-  const chatMessages: Array<{ role: string; content: string }> = [];
-
-  // Condense system instruction to avoid blowing Groq free-tier 7,000 ITPM limit
-  let condensedSystem = (systemInstruction || '').trim();
-  if (condensedSystem) {
-    if (condensedSystem.length > 1000) {
-      condensedSystem = condensedSystem.slice(0, 1000) + '... (Be concise, accurate, and helpful as Arohi AI)';
-    }
-    chatMessages.push({ role: 'system', content: condensedSystem });
-  }
-
-  const extracted: Array<{ role: string; content: string }> = [];
-  if (Array.isArray(contents)) {
-    for (const c of contents) {
-      if (!c) continue;
-      const role = c.role === 'model' || c.role === 'assistant' ? 'assistant' : 'user';
-      let text = '';
-      if (typeof c === 'string') {
-        text = c;
-      } else if (Array.isArray(c.parts)) {
-        text = c.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).join(' ');
-      } else if (typeof c.content === 'string') {
-        text = c.content;
-      }
-      if (text.trim()) {
-        extracted.push({ role, content: text.trim() });
-      }
-    }
-  }
-
-  // Keep only the most recent conversation turns (max 4 turns, max 2500 chars total)
-  let totalChars = 0;
-  const recentTurns: Array<{ role: string; content: string }> = [];
-  for (let i = extracted.length - 1; i >= 0; i--) {
-    const turn = extracted[i];
-    if (recentTurns.length >= 4 || totalChars + turn.content.length > 2500) {
-      if (recentTurns.length === 0) {
-        recentTurns.unshift({ role: turn.role, content: turn.content.slice(-1500) });
-      }
-      break;
-    }
-    recentTurns.unshift(turn);
-    totalChars += turn.content.length;
-  }
-
-  chatMessages.push(...recentTurns);
-  return chatMessages;
-}
 
 async function getAvailableGroqModels(apiKey: string): Promise<string[]> {
   const now = Date.now();
@@ -6062,7 +6009,7 @@ async function getAvailableGroqModels(apiKey: string): Promise<string[]> {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data)) {
-        const exclude = ['whisper', 'prompt-guard', 'safeguard', 'orpheus', 'allam'];
+        const exclude = ['whisper', 'prompt-guard', 'safeguard', 'orpheus'];
         const activeChatModels = data.data
           .map((m: any) => m.id)
           .filter((id: string) => !exclude.some(ex => id.includes(ex)) && id.length > 0);
@@ -6082,7 +6029,7 @@ async function getAvailableGroqModels(apiKey: string): Promise<string[]> {
       }
     }
   } catch (e) {}
-  return ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+  return ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'allam-2-7b'];
 }
 
 async function callGroqChatFallback(
@@ -6093,7 +6040,29 @@ async function callGroqChatFallback(
   if (!apiKey || !apiKey.trim()) return null;
 
   const groqModels = await getAvailableGroqModels(apiKey);
-  const chatMessages = optimizeMessagesForGroq(contents, systemInstruction);
+
+  const chatMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction && systemInstruction.trim()) {
+    chatMessages.push({ role: 'system', content: systemInstruction.trim() });
+  }
+
+  if (Array.isArray(contents)) {
+    for (const c of contents) {
+      if (!c) continue;
+      const role = c.role === 'model' || c.role === 'assistant' ? 'assistant' : 'user';
+      let text = '';
+      if (typeof c === 'string') {
+        text = c;
+      } else if (Array.isArray(c.parts)) {
+        text = c.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).join(' ');
+      } else if (typeof c.content === 'string') {
+        text = c.content;
+      }
+      if (text.trim()) {
+        chatMessages.push({ role, content: text.trim() });
+      }
+    }
+  }
 
   if (chatMessages.length === 0) return null;
 
@@ -6110,7 +6079,7 @@ async function callGroqChatFallback(
           model: model,
           messages: chatMessages,
           temperature: 0.7,
-          max_tokens: 1024
+          max_tokens: 4096
         })
       });
 
@@ -6128,11 +6097,7 @@ async function callGroqChatFallback(
             cachedGroqModels = cachedGroqModels.filter(m => m !== model);
           }
         }
-        if (resp.status === 413 || resp.status === 429) {
-          console.warn(`[Groq Engine] Model ${model} rate/token limit (${resp.status}), trying next fallback.`);
-        } else {
-          console.warn(`[Groq Engine] Model ${model} returned status ${resp.status}:`, errText);
-        }
+        console.warn(`[Groq Engine] Model ${model} returned status ${resp.status}:`, errText);
       }
     } catch (err: any) {
       console.warn(`[Groq Engine] Network error on ${model}:`, err?.message || err);
@@ -6152,7 +6117,29 @@ async function callGroqChatStreamFallback(
   if (!apiKey || !apiKey.trim()) return null;
 
   const groqModels = await getAvailableGroqModels(apiKey);
-  const chatMessages = optimizeMessagesForGroq(contents, systemInstruction);
+
+  const chatMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction && systemInstruction.trim()) {
+    chatMessages.push({ role: 'system', content: systemInstruction.trim() });
+  }
+
+  if (Array.isArray(contents)) {
+    for (const c of contents) {
+      if (!c) continue;
+      const role = c.role === 'model' || c.role === 'assistant' ? 'assistant' : 'user';
+      let text = '';
+      if (typeof c === 'string') {
+        text = c;
+      } else if (Array.isArray(c.parts)) {
+        text = c.parts.map((p: any) => (typeof p === 'string' ? p : p.text || '')).join(' ');
+      } else if (typeof c.content === 'string') {
+        text = c.content;
+      }
+      if (text.trim()) {
+        chatMessages.push({ role, content: text.trim() });
+      }
+    }
+  }
 
   if (chatMessages.length === 0) return null;
 
@@ -6169,7 +6156,7 @@ async function callGroqChatStreamFallback(
           model: model,
           messages: chatMessages,
           temperature: 0.7,
-          max_tokens: 1024,
+          max_tokens: 4096,
           stream: true
         })
       });
@@ -6222,9 +6209,6 @@ async function callGroqChatStreamFallback(
           if (cachedGroqModels) {
             cachedGroqModels = cachedGroqModels.filter(m => m !== model);
           }
-        }
-        if (resp.status === 413 || resp.status === 429) {
-          console.warn(`[Groq Stream Engine] Model ${model} rate/token limit (${resp.status}), trying next fallback.`);
         }
       }
     } catch (err: any) {
@@ -15306,7 +15290,6 @@ Include:
     safeUserDb,
     getArohiFallbackResponse,
     logWsEvent,
-    callGroqChatFallback,
   });
 }
 

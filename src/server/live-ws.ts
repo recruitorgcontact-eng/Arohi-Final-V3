@@ -12,7 +12,6 @@ export interface LiveWsOptions {
   safeUserDb: any;
   getArohiFallbackResponse: (prompt: string) => string;
   logWsEvent: (event: string, data: any) => void;
-  callGroqChatFallback?: (contents: any[], systemInstruction?: string) => Promise<string | null>;
 }
 
 export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
@@ -136,7 +135,6 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
     let reqLang = 'en';
     let speciesParam = '';
     let animalParam = '';
-    let leafParam = '';
     if (request.url) {
       const match = request.url.match(/[?&]voice=([^&]+)/);
       if (match) {
@@ -157,10 +155,6 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
       const animalMatch = request.url.match(/[?&]animal=([^&]+)/);
       if (animalMatch) {
         animalParam = decodeURIComponent(animalMatch[1]);
-      }
-      const leafMatch = request.url.match(/[?&]leaf=([^&]+)/);
-      if (leafMatch) {
-        leafParam = decodeURIComponent(leafMatch[1]);
       }
     }
 
@@ -616,20 +610,6 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                     ? `Say a warm, reassuring 1-sentence welcome in English introducing yourself as Arohi VetMitra and asking how you can help with their ${speciesParam} today.`
                     : "Say a warm, reassuring 1-sentence welcome in English introducing yourself as Arohi VetMitra, your veterinary and dairy AI companion, and asking how you can help today.";
                 }
-              } else if (isVanaVeda) {
-                if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
-                  greetingInstruction = leafParam
-                    ? `Say a warm, compassionate 1-sentence Ayurvedic greeting in Odia (ଓଡ଼ିଆ) introducing yourself as Arohi Veda-Vaidya (ଆରୋହୀ ବେଦ-ବୈଦ୍ୟ). State you are ready to discuss the sacred properties and clinical remedies of ${leafParam}. Ask the caller how they would like to use this herb today.`
-                    : "Say a warm, compassionate 1-sentence opening in Odia (ଓଡ଼ିଆ) introducing yourself as Arohi Veda-Vaidya (ଆରୋହୀ ବେଦ-ବୈଦ୍ୟ) and asking what health symptom, dosha balance, or sacred healing leaf (ବୃକ୍ଷ ଔଷଧୀ) they wish to consult about today (e.g. 'ହରି ଓଁ! ମୁଁ ଆରୋହୀ — ଆପଣଙ୍କ ବେଦ-ବୈଦ୍ୟ। କୁହନ୍ତୁ, ଆଜି ଆପଣଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ ବା କେଉଁ ବୃକ୍ଷ ଔଷଧୀ ବିଷୟରେ ଜାଣିବାକୁ ଚାହାଁନ୍ତି?').";
-                } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
-                  greetingInstruction = leafParam
-                    ? `Say a warm, compassionate 1-sentence Ayurvedic greeting in Hindi (हिंदी) introducing yourself as Arohi Veda-Vaidya and asking what remedies or properties of ${leafParam} they wish to explore today.`
-                    : "Say a warm, compassionate 1-sentence opening in Hindi (हिंदी) introducing yourself as Arohi Veda-Vaidya and asking what health concern or medicinal herb they wish to consult about today.";
-                } else {
-                  greetingInstruction = leafParam
-                    ? `Say a warm, compassionate 1-sentence Ayurvedic greeting in English introducing yourself as Arohi Veda-Vaidya and asking what properties of ${leafParam} you can help explain today.`
-                    : "Say a warm, compassionate 1-sentence opening in English introducing yourself as Arohi Veda-Vaidya, their Ayurvedic botanical health companion, and asking what health symptom or sacred healing herb they would like guidance on today.";
-                }
               } else if (reqLang === 'or' || reqLang.toLowerCase().includes('odia')) {
                 greetingInstruction = "Say a warm, sweet, cheerful 1-sentence welcome in Odia (ଓଡ଼ିଆ) introducing yourself as Arohi (ଆରୋହୀ) and asking how you can help today (e.g. 'ନମସ୍କାର! ମୁଁ ଆରୋହୀ, ଆପଣଙ୍କ AI ସାଥୀ। ଆଜି ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?').";
               } else if (reqLang === 'hi' || reqLang.toLowerCase().includes('hindi')) {
@@ -678,7 +658,6 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
               // Ensure connection is strictly OPEN (readyState 1) before sending audio chunks
               if (!rawWs || rawWs.readyState === 1) {
                 session.sendRealtimeInput({
-                  media: [{ data: incomingAudio, mimeType: "audio/pcm;rate=16000" }],
                   audio: { data: incomingAudio, mimeType: "audio/pcm;rate=16000" },
                 });
               } else {
@@ -749,37 +728,14 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                       replyText = response.text;
                       break;
                     }
-                  } catch (fmErr: any) {
-                    const errMsg = fmErr?.message || String(fmErr);
-                    const isQuotaOrDemand = errMsg.includes('429') || errMsg.includes('503') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('UNAVAILABLE');
-                    if (isQuotaOrDemand) {
-                      console.log(`[Arohi Live Engine] Model ${fm} quota or high demand reached, switching to next fallback...`);
-                    } else {
-                      console.warn(`Fallback model ${fm} notice in live-ws:`, errMsg);
-                    }
+                  } catch (fmErr) {
+                    console.warn(`Fallback model ${fm} failed in live-ws:`, fmErr);
                   }
                 }
-
-                // If Gemini models are rate-limited (429) or unavailable (503), use Groq secondary engine
-                if (!replyText && options.callGroqChatFallback) {
-                  try {
-                    const groqReply = await options.callGroqChatFallback(
-                      [{ role: 'user', content: parsed.text }],
-                      voiceSystemInstruction
-                    );
-                    if (groqReply && groqReply.trim()) {
-                      replyText = groqReply.trim();
-                      console.log("[Arohi Live Engine] Successfully generated voice response via Groq secondary engine.");
-                    }
-                  } catch (groqErr) {
-                    console.log("[Arohi Live Engine] Groq secondary engine unavailable, proceeding to sovereign knowledge fallback.");
-                  }
-                }
-
                 if (!replyText) {
                   replyText = getArohiFallbackResponse(parsed.text || '');
                 }
-                safeSendClient({ transcript: replyText, speaker: 'arohi', turnComplete: true });
+                safeSendClient({ transcript: replyText, speaker: 'arohi' });
               } catch (fallbackErr: any) {
                 console.warn("Notice in Arohi Voice Fallback Engine:", fallbackErr?.message || fallbackErr);
               }
