@@ -23,7 +23,9 @@ import {
   Users,
   TrendingUp,
   Target,
-  Bot
+  Bot,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { isBiometricSupported } from '../lib/webauthn';
 import { PRICING_TIERS } from '../data/pricingData';
@@ -88,6 +90,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
   const [role, setRole] = useState<'candidate' | 'recruiter'>('candidate');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
   const [selectedPlanName, setSelectedPlanName] = useState<string>('Starter Plan');
@@ -281,26 +286,47 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
 
     try {
       if (activeTab === 'signin') {
-        if (!email || !password) {
-          throw new Error('Please fill in all fields.');
+        const identifier = email.trim();
+        if (!identifier || !password) {
+          throw new Error('Please enter your email or mobile number and password.');
         }
-        await signIn(email, password);
+
+        // Check if identifier is digits: ensure at least 10 digits if phone number
+        const cleanDigits = identifier.replace(/\s+/g, '');
+        if (/^[+]?[0-9]+$/.test(cleanDigits) && cleanDigits.replace(/\D/g, '').length < 10) {
+          throw new Error('Please enter a valid 10-digit mobile number or email address.');
+        }
+
+        await signIn(identifier, password);
         setSuccess('Successfully signed in! Welcome back.');
         setTimeout(() => {
           onClose();
         }, 1000);
       } else if (activeTab === 'signup') {
-        if (!email || !password || !name) {
-          throw new Error('Please fill in all fields.');
+        if (!name.trim()) {
+          throw new Error('Please enter your full name.');
         }
-        if (!signupPhone || signupPhone.trim().length !== 10) {
-          throw new Error('Please enter your valid 10-digit mobile number.');
+        if (!email.trim()) {
+          throw new Error('Please enter your email address.');
+        }
+        const cleanMobile = signupPhone.replace(/\D/g, '');
+        if (!cleanMobile || cleanMobile.length !== 10) {
+          throw new Error('Please enter a valid 10-digit mobile number.');
+        }
+        if (!password) {
+          throw new Error('Please enter a password.');
         }
         if (password.length < 6) {
           throw new Error('Password must be at least 6 characters.');
         }
-        const formattedPhone = `+91 ${signupPhone.trim().slice(0, 5)} ${signupPhone.trim().slice(5)}`;
-        await signUp(email, password, name, role, formattedPhone);
+        if (!confirmPassword) {
+          throw new Error('Please confirm your password.');
+        }
+        if (password !== confirmPassword) {
+          throw new Error('Passwords do not match. Please re-enter the same password.');
+        }
+        const formattedPhone = `+91 ${cleanMobile.slice(0, 5)} ${cleanMobile.slice(5)}`;
+        await signUp(email.trim(), password, name.trim(), role, formattedPhone);
 
         const chosenPlan = PRICING_TIERS.find(p => p.name === selectedPlanName) || PRICING_TIERS[0];
         try {
@@ -313,10 +339,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
           localStorage.setItem('arohi_subscriptions', JSON.stringify(savedSubs));
         } catch (e) {}
 
-        setSuccess(`Account created successfully with ${chosenPlan.name} (₹${chosenPlan.price}/mo)! Welcome to Arohi AI.`);
+        setSuccess(`🎉 Account created instantly! Welcome to Arohi AI, ${name.trim()}.`);
         setTimeout(() => {
           onClose();
-        }, 1500);
+        }, 1200);
       }
     } catch (err: any) {
       console.error(err);
@@ -667,20 +693,38 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
                 </div>
               </button>
 
-              {/* Email / Password Button */}
+              {/* Email / Mobile Login Button */}
               <button
                 type="button"
                 id="luxury-email-auth-btn"
-                onClick={() => setViewState('email_form')}
+                onClick={() => {
+                  setActiveTab('signin');
+                  setViewState('email_form');
+                }}
                 className="w-full relative group overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 active:scale-[0.98]"
               >
                 <div className="flex items-center justify-between px-5 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all shadow-sm">
                   <div className="flex items-center gap-3.5">
                     <Mail className="w-5 h-5 text-zinc-300 shrink-0" />
-                    <span className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-white tracking-tight">Continue with Email</span>
+                    <span className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-white tracking-tight">Sign In with Email or Mobile</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                 </div>
+              </button>
+            </div>
+
+            {/* Quick Create Account switch in Portal */}
+            <div className="mt-3 text-center">
+              <span className="text-xs text-zinc-400">Don't have an account? </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signup');
+                  setViewState('email_form');
+                }}
+                className="text-xs font-bold text-amber-300 hover:text-amber-200 underline underline-offset-4 cursor-pointer transition-colors"
+              >
+                Create Account Instantly
               </button>
             </div>
 
@@ -715,7 +759,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
               </button>
 
               <span className="text-xs font-mono font-bold text-amber-300">
-                {activeTab === 'signin' ? 'Email Sign In' : 'New Account'}
+                {activeTab === 'signin' ? 'Sign In' : 'Create Account'}
               </span>
             </div>
 
@@ -752,102 +796,81 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
             </div>
 
             {/* Main Form */}
-            <form onSubmit={handleAuthSubmit} className="space-y-3">
+            <form onSubmit={handleAuthSubmit} className="space-y-3.5">
               
-              {/* Full name & Phone on Signup */}
+              {/* Full Name & Mobile on Sign Up */}
               {activeTab === 'signup' && (
                 <>
+                  {/* 1. Full Name */}
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
                       <input
                         type="text"
-                        placeholder="Enter your name"
+                        placeholder="e.g. Rahul Sharma"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
                         required
+                        autoFocus
                       />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
-                    <div className="relative flex">
-                      <div className="flex items-center justify-center bg-[#0a0518] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-slate-300">
-                        +91
-                      </div>
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                        <input
-                          type="tel"
-                          placeholder="9876543210"
-                          value={signupPhone}
-                          onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                          className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
-                          required
-                          pattern="[0-9]{10}"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Plan selector preview */}
-                  <div className="space-y-1 pt-1">
-                    <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-bold text-amber-300 uppercase">Subscription Plan</label>
-                      <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                        2-Day Free Trial
-                      </span>
-                    </div>
-                    <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                      {PRICING_TIERS.map(tier => {
-                        const isSelected = selectedPlanName === tier.name;
-                        return (
-                          <div
-                            key={tier.name}
-                            onClick={() => setSelectedPlanName(tier.name)}
-                            className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-                              isSelected
-                                ? 'bg-purple-900/40 border-amber-400/80 text-white'
-                                : 'bg-[#0a0518] border-purple-900/50 text-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                                isSelected ? 'border-amber-400 bg-amber-500 text-black' : 'border-slate-600'
-                              }`}>
-                                {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                              </div>
-                              <span className="text-xs font-bold">{tier.name}</span>
-                            </div>
-                            <span className="text-xs font-bold text-amber-300">₹{tier.price}/mo</span>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Email */}
+              {/* 2. Email or Mobile Number on Sign In, Email Address on Sign Up */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Email Address</label>
+                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                  {activeTab === 'signin' ? 'Email or Mobile Number' : 'Email Address'}
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  {activeTab === 'signin' ? (
+                    /^[+]?[0-9\s]+$/.test(email.trim()) ? (
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                    ) : (
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                    )
+                  ) : (
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                  )}
                   <input
-                    type="email"
-                    placeholder="name@example.com"
+                    type={activeTab === 'signin' ? 'text' : 'email'}
+                    placeholder={activeTab === 'signin' ? 'name@example.com or 9876543210' : 'name@example.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password */}
+              {/* 3. Mobile Number (on Sign Up) */}
+              {activeTab === 'signup' && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Mobile Number</label>
+                  <div className="relative flex">
+                    <div className="flex items-center justify-center bg-[#0e0722] border border-purple-500/30 border-r-0 rounded-l-xl px-3 text-xs font-bold text-amber-300">
+                      🇮🇳 +91
+                    </div>
+                    <div className="relative flex-1">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                      <input
+                        type="tel"
+                        placeholder="9876543210"
+                        value={signupPhone}
+                        onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        className="w-full bg-[#0a0518] border border-purple-500/30 rounded-r-xl py-2.5 pl-9 pr-4 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
+                        required
+                        pattern="[0-9]{10}"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. Password */}
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Password</label>
@@ -862,32 +885,79 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
                   <input
-                    type="password"
-                    placeholder="••••••••"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="At least 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2 pl-10 pr-4 text-xs font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 transition-all"
+                    className="w-full bg-[#0a0518] border border-purple-500/30 rounded-xl py-2.5 pl-10 pr-10 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
                     required
                     minLength={6}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
+
+              {/* 5. Confirm Password (on Sign Up) */}
+              {activeTab === 'signup' && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Re-enter your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`w-full bg-[#0a0518] border rounded-xl py-2.5 pl-10 pr-10 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none transition-all shadow-inner ${
+                        confirmPassword && confirmPassword !== password
+                          ? 'border-red-500/80 focus:border-red-500'
+                          : confirmPassword && confirmPassword === password
+                            ? 'border-emerald-500/80 focus:border-emerald-500'
+                            : 'border-purple-500/30 focus:border-amber-400'
+                      }`}
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {confirmPassword && confirmPassword !== password && (
+                    <span className="text-[10px] text-red-400 block pt-0.5">Passwords do not match</span>
+                  )}
+                  {confirmPassword && confirmPassword === password && (
+                    <span className="text-[10px] text-emerald-400 block pt-0.5">✓ Passwords match</span>
+                  )}
+                </div>
+              )}
 
               {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                className="w-full py-3 px-4 mt-2 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Authenticating...</span>
+                    <span>{activeTab === 'signin' ? 'Signing In...' : 'Creating Account...'}</span>
                   </>
                 ) : (
-                  <span>{activeTab === 'signin' ? 'Sign In to Arohi' : 'Create My Account'}</span>
+                  <span>{activeTab === 'signin' ? 'Sign In to Arohi AI' : 'Create My Account Instantly'}</span>
                 )}
               </button>
 

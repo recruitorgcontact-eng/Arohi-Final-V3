@@ -3,8 +3,6 @@ import {
   getCurrentMeeting, 
   saveMeeting, 
   getStoredMeetings, 
-  DEFAULT_MEETING, 
-  DEMO_MEETING,
   createRealMeetingSession,
   MeetingSession 
 } from './meetData';
@@ -15,7 +13,7 @@ import MeetRoomView from './MeetRoomView';
 import MeetTranscriptView from './MeetTranscriptView';
 import MeetPostMeetingView from './MeetPostMeetingView';
 import MeetAskArohiView from './MeetAskArohiView';
-import { X, Video, Users } from 'lucide-react';
+import { X, Video, Users, Sparkles } from 'lucide-react';
 
 export type ArohiMeetView = 
   | 'splash' 
@@ -43,6 +41,29 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [joinCodeInput, setJoinCodeInput] = useState('');
 
+  // Handle URL room param on mount (e.g. ?room=ARM-883-912 or ?meet=ARM-...)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room') || params.get('meet') || params.get('join');
+      if (roomParam) {
+        const code = roomParam.trim().toUpperCase();
+        const existing = getStoredMeetings().find(
+          (m) => m.code.toUpperCase() === code || m.id === code
+        );
+        if (existing) {
+          setCurrentMeeting(existing);
+        } else {
+          const freshJoined = createRealMeetingSession(`Room ${code}`);
+          freshJoined.code = code;
+          setCurrentMeeting(freshJoined);
+        }
+        // Take them to setup / green room so they can preview their camera & mic
+        setCurrentView('setup');
+      }
+    } catch {}
+  }, []);
+
   // Save changes whenever currentMeeting updates
   useEffect(() => {
     saveMeeting(currentMeeting);
@@ -50,21 +71,17 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
 
   // Handler for Start Instant Real Clean Meeting
   const handleStartInstantMeeting = () => {
-    const freshRealSession = createRealMeetingSession('Live Strategy Session');
+    const savedName = localStorage.getItem('arohi_meet_user_name') || 'Host';
+    const freshRealSession = createRealMeetingSession('Live Strategy Session', savedName, 'Host');
     setCurrentMeeting(freshRealSession);
-    setCurrentView('room');
-  };
-
-  // Handler for Opening Mock Showcase Demo Meeting
-  const handleOpenDemoShowcase = () => {
-    setCurrentMeeting(DEMO_MEETING);
-    setCurrentView('post');
+    setCurrentView('setup');
   };
 
   // Handler for Launching from Setup Configurator
   const handleLaunchFromSetup = (config: Partial<MeetingSession>) => {
+    const savedName = localStorage.getItem('arohi_meet_user_name') || config.organizer || 'Host';
     const freshSession: MeetingSession = {
-      ...createRealMeetingSession(config.title || 'Scheduled Meeting', config.agenda),
+      ...createRealMeetingSession(config.title || 'Live Strategy Session', savedName, 'Host', config.agenda),
       ...config,
       status: 'live'
     };
@@ -76,21 +93,31 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
   const handleJoinWithCode = (e: React.FormEvent) => {
     e.preventDefault();
     if (joinCodeInput.trim()) {
-      const code = joinCodeInput.trim();
+      let code = joinCodeInput.trim();
+      // Extract code if user pasted link
+      if (code.includes('room=')) {
+        const match = code.match(/room=([A-Za-z0-9\-]+)/);
+        if (match) code = match[1];
+      } else if (code.includes('/')) {
+        const parts = code.split('/');
+        code = parts[parts.length - 1];
+      }
+      code = code.toUpperCase();
+
       const existing = getStoredMeetings().find(
-        (m) => m.code.toLowerCase() === code.toLowerCase() || m.id === code
+        (m) => m.code.toUpperCase() === code || m.id === code
       );
       if (existing) {
         setCurrentMeeting(existing);
       } else {
-        // Create joined fresh session
-        const freshJoined = createRealMeetingSession(`Room ${code.toUpperCase()}`);
-        freshJoined.code = code.toUpperCase();
+        const savedName = localStorage.getItem('arohi_meet_user_name') || 'Participant';
+        const freshJoined = createRealMeetingSession(`Room ${code}`, savedName, 'Participant');
+        freshJoined.code = code;
         setCurrentMeeting(freshJoined);
       }
       setIsJoinModalOpen(false);
       setJoinCodeInput('');
-      setCurrentView('room');
+      setCurrentView('setup');
     }
   };
 
@@ -108,7 +135,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
 
   return (
     <div className="relative w-full min-h-screen bg-[#070B14] text-white">
-      {/* 1. Splash Screen (Screen 2) */}
+      {/* 1. Splash Screen */}
       {currentView === 'splash' && (
         <MeetLandingView
           onGetStarted={() => setCurrentView('home')}
@@ -116,7 +143,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 2. Executive Dashboard (Screen 3) */}
+      {/* 2. Executive Dashboard */}
       {currentView === 'home' && (
         <MeetDashboardView
           currentMeeting={currentMeeting}
@@ -128,7 +155,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
           onOpenSettings={() => setCurrentView('setup')}
           onOpenUpcomingMeeting={(m) => {
             setCurrentMeeting(m);
-            setCurrentView('room');
+            setCurrentView('setup');
           }}
           onOpenMinutesOfMeeting={() => setCurrentView('post')}
           onOpenLiveTranscript={() => setCurrentView('transcript')}
@@ -142,7 +169,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 3. New Meeting / Schedule Setup (Screen 7) */}
+      {/* 3. New Meeting / Pre-Call Green Room Setup */}
       {currentView === 'setup' && (
         <MeetSetupView
           onBack={() => setCurrentView('home')}
@@ -151,7 +178,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 4. Active In-Call Room: Grid or Split (Screens 4 & 5) */}
+      {/* 4. Active In-Call Room: Real Multi-Party WebRTC Grid or Split */}
       {currentView === 'room' && (
         <MeetRoomView
           meeting={currentMeeting}
@@ -161,7 +188,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 5. Dedicated Live Transcript & Linguistic Hub (Screen 8) */}
+      {/* 5. Dedicated Live Transcript Hub */}
       {currentView === 'transcript' && (
         <MeetTranscriptView
           meeting={currentMeeting}
@@ -171,7 +198,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 6. Post-Meeting Intelligence & MOM Hub (Screen 6) */}
+      {/* 6. Post-Meeting Intelligence & MOM Hub */}
       {currentView === 'post' && (
         <MeetPostMeetingView
           meeting={currentMeeting}
@@ -181,7 +208,7 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
         />
       )}
 
-      {/* 7. Dedicated "Ask Arohi" Meeting Assistant (Screen 9) */}
+      {/* 7. Dedicated "Ask Arohi" Meeting Assistant */}
       {currentView === 'ask-arohi' && (
         <MeetAskArohiView
           meeting={currentMeeting}
@@ -208,8 +235,8 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Join a Meeting</h3>
-                <p className="text-xs text-slate-400">Enter your code or invite link</p>
+                <h3 className="text-base font-bold text-white">Join Meeting</h3>
+                <p className="text-xs text-slate-400">Enter room code or meeting link</p>
               </div>
             </div>
 
@@ -222,28 +249,17 @@ export const ArohiMeetHub: React.FC<ArohiMeetHubProps> = ({
                   type="text"
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value)}
-                  placeholder="e.g. ARM-883-912 or https://meet.arohi.ai/..."
+                  placeholder="e.g. ARM-482-917 or https://.../?room=ARM-482-917"
                   className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
                   autoFocus
                 />
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
-                <span>Demo Code: <strong className="text-cyan-400 font-mono">ARM-883-912</strong></span>
-                <button
-                  type="button"
-                  onClick={() => setJoinCodeInput('ARM-883-912')}
-                  className="text-cyan-400 hover:underline text-[11px]"
-                >
-                  Insert
-                </button>
               </div>
 
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)] transition active:scale-95"
               >
-                Join Meeting Now →
+                Continue to Room →
               </button>
             </form>
           </div>

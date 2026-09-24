@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import ArohiMeetLogo from './ArohiMeetLogo';
 import ArohiMeetAvatar from './ArohiMeetAvatar';
-import { MeetingSession } from './meetData';
+import { MeetingSession, getInitials, getAvatarColor } from './meetData';
 
 interface MeetDashboardViewProps {
   currentMeeting: MeetingSession;
@@ -55,6 +55,9 @@ export const MeetDashboardView: React.FC<MeetDashboardViewProps> = ({
   onNavTabChange
 }) => {
   const [askInput, setAskInput] = useState('');
+  const [currentUserName] = useState(() => localStorage.getItem('arohi_meet_user_name') || 'Leader');
+  const userAvatarColor = getAvatarColor(currentUserName);
+  const userInitials = getInitials(currentUserName);
 
   const handleAskSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +87,18 @@ export const MeetDashboardView: React.FC<MeetDashboardViewProps> = ({
             </button>
 
             {/* User Profile Pill */}
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                alt="Junoon"
-                className="w-6 h-6 rounded-full object-cover"
-              />
+            <div 
+              onClick={onOpenSettings}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-cyan-500/40 transition"
+            >
+              <div
+                style={{ backgroundColor: userAvatarColor }}
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow"
+              >
+                {userInitials}
+              </div>
               <span className="text-xs font-medium text-slate-200">
-                Hello, <span className="font-semibold text-white">Junoon</span>
+                Hello, <span className="font-semibold text-white">{currentUserName}</span>
               </span>
               <span className="text-[10px] text-slate-400">⌵</span>
             </div>
@@ -243,8 +250,10 @@ export const MeetDashboardView: React.FC<MeetDashboardViewProps> = ({
             <div className="flex items-start gap-3.5">
               {/* Date Box */}
               <div className="w-14 h-14 rounded-xl bg-slate-900 border border-slate-700/80 flex flex-col items-center justify-center text-center flex-shrink-0">
-                <span className="text-lg font-black text-white leading-none">23</span>
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">SEP</span>
+                <span className="text-lg font-black text-white leading-none">{new Date().getDate()}</span>
+                <span className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider mt-0.5">
+                  {new Date().toLocaleString('en-US', { month: 'short' }).toUpperCase()}
+                </span>
               </div>
 
               {/* Info Block */}

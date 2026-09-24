@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Modality } from '@google/genai';
 import { phoneWss, initTelephonyBridgeOptions } from './telephony-bridge.ts';
+import { meetWss } from './meet-signaling.ts';
 import { AROHI_VETMITRA_SYSTEM_PROMPT } from './vetmitra-prompt.ts';
 import { AROHI_INTERVIEW_SYSTEM_PROMPT } from './interview-prompt.ts';
 import { AROHI_TUTOR_SYSTEM_PROMPT } from './tutor-prompt.ts';
@@ -814,6 +815,11 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
                             pathname === '/api/phone-call/stream' ||
                             pathname.endsWith('/api/phone-call/stream');
 
+      const isMeetWsPath = pathname === '/api/meet-ws' ||
+                           pathname === '/api/meet-ws/' ||
+                           pathname.endsWith('/api/meet-ws') ||
+                           pathname.endsWith('/api/meet-ws/');
+
       if (isLiveWsPath) {
         logWsEvent('upgrade_matched_live', { pathname });
         wss.handleUpgrade(request, socket, head, (ws) => {
@@ -821,6 +827,14 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
             console.warn('Client WebSocket error after upgrade:', wsErr?.message || wsErr);
           });
           wss.emit('connection', ws, request);
+        });
+      } else if (isMeetWsPath) {
+        logWsEvent('upgrade_matched_meet', { pathname });
+        meetWss.handleUpgrade(request, socket, head, (ws) => {
+          ws.on('error', (wsErr: any) => {
+            console.warn('Meet WebSocket error after upgrade:', wsErr?.message || wsErr);
+          });
+          meetWss.emit('connection', ws, request);
         });
       } else if (isPhoneWsPath) {
         logWsEvent('upgrade_matched_phone', { pathname });

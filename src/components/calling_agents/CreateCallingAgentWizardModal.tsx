@@ -354,8 +354,12 @@ export default function CreateCallingAgentWizardModal({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${avatar.avatarBg} text-white flex items-center justify-center text-2xl shadow-sm shrink-0`}>
-                          {avatar.avatarEmoji}
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${avatar.avatarBg} text-white flex items-center justify-center text-2xl shadow-sm shrink-0 overflow-hidden relative border border-white/10`}>
+                          {avatar.avatarImage ? (
+                            <img src={avatar.avatarImage} alt={avatar.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            avatar.avatarEmoji
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
@@ -713,8 +717,12 @@ export default function CreateCallingAgentWizardModal({
               {/* Master Summary Card */}
               <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/30 space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${selectedAvatar.avatarBg} text-white flex items-center justify-center text-3xl shadow-lg shrink-0`}>
-                    {selectedAvatar.avatarEmoji}
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${selectedAvatar.avatarBg} text-white flex items-center justify-center text-3xl shadow-lg shrink-0 overflow-hidden relative border border-emerald-500/20`}>
+                    {selectedAvatar.avatarImage ? (
+                      <img src={selectedAvatar.avatarImage} alt={selectedAvatar.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      selectedAvatar.avatarEmoji
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

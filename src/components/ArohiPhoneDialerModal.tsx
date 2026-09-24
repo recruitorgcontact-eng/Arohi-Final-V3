@@ -1144,18 +1144,18 @@ export default function ArohiPhoneDialerModal({
                   <div className="absolute w-44 h-44 rounded-full bg-fuchsia-500/20 animate-pulse pointer-events-none" />
                 )}
                 
-                <div className={`relative w-28 h-28 rounded-full border-2 flex items-center justify-center transition-all ${
+                <div className={`relative w-28 h-28 rounded-full border-2 overflow-hidden flex items-center justify-center transition-all ${
                   speakerStatus === 'arohi_speaking'
                     ? (isBright ? 'border-fuchsia-500 bg-fuchsia-100 shadow-[0_0_30px_rgba(217,70,239,0.3)]' : 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_30px_rgba(217,70,239,0.4)]')
                     : speakerStatus === 'listening'
                     ? (isBright ? 'border-emerald-500 bg-emerald-100 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_30px_rgba(16,185,129,0.4)]')
                     : (isBright ? 'border-slate-300 bg-slate-100 shadow-md' : 'border-white/20 bg-slate-900')
                 }`}>
-                  <Phone className={`w-10 h-10 ${
-                    callState === 'connected'
-                      ? (isBright ? 'text-emerald-600' : 'text-emerald-400')
-                      : (isBright ? 'text-slate-600' : 'text-slate-300')
-                  }`} />
+                  <img 
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" 
+                    alt="Arohi Voice Agent" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
               </div>
 

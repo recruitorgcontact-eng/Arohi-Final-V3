@@ -48,43 +48,18 @@ export const MeetAskArohiView: React.FC<MeetAskArohiViewProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // Chat message thread seeded with authentic Screen 9 interaction
-  const [messages, setMessages] = useState<ArohiChatMessage[]>([
+  // Chat message thread initialized with dynamic contextual greeting
+  const [messages, setMessages] = useState<ArohiChatMessage[]>(() => [
     {
-      id: 'm-1',
-      sender: 'user',
-      text: 'What were the key decisions in today\'s meeting?',
-      timestamp: '10:22 AM'
-    },
-    {
-      id: 'm-2',
+      id: 'm-welcome',
       sender: 'arohi',
-      text: 'Here are the key decisions taken in the General Body Meeting:',
-      timestamp: '10:22 AM',
-      decisions: [
-        { number: 1, text: 'Approval for ₹25 lakh allocation for the digital marketing campaign.', status: 'Approved' },
-        { number: 2, text: 'Infrastructure upgrade approved to be executed in phases, beginning with Phase 1.', status: 'Approved' },
-        { number: 3, text: 'Formation of vendor evaluation committee comprising Rakesh, Anita and S. Khan.', status: 'Approved' },
-        { number: 4, text: 'Next governance review meeting scheduled for 30 October 2026.', status: 'Approved' }
-      ],
+      text: `Hello! I am Arohi, your real-time meeting intelligence copilot. I am actively tracking "${meeting.title}". You can ask me to summarize discussion points, extract decisions, look up speaker statements, or draft an email update.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
-        { label: 'View Full Summary', action: 'summary' },
-        { label: 'Create Action Items', action: 'actions' },
-        { label: 'Share Decisions', action: 'share' }
+        { label: 'Summarize Discussion', action: 'summary' },
+        { label: 'Show Key Decisions', action: 'decisions' },
+        { label: 'List Action Items', action: 'actions' }
       ]
-    },
-    {
-      id: 'm-3',
-      sender: 'user',
-      text: 'Who is responsible for the infrastructure upgrade?',
-      timestamp: '10:24 AM'
-    },
-    {
-      id: 'm-4',
-      sender: 'arohi',
-      text: 'The infrastructure upgrade will be led by Dr. S. Mohanty, with support from the operations and procurement teams. It will be executed in phases, starting with Phase 1 by December 2026.',
-      timestamp: '10:24 AM',
-      actionPills: ['Show timeline', 'Show related discussions', 'Add to tasks']
     }
   ]);
 
@@ -149,16 +124,22 @@ export const MeetAskArohiView: React.FC<MeetAskArohiViewProps> = ({
         let pills = ['Show timeline', 'Add to tasks'];
 
         if (queryText.toLowerCase().includes('decision')) {
-          reply = "The meeting confirmed ₹25L for digital marketing, approved phased infrastructure upgrades, created a vendor evaluation panel, and set the next meeting for 30 Oct 2026.";
+          if (meeting.decisions && meeting.decisions.length > 0) {
+            reply = `Recorded Decisions in ${meeting.title}:\n` + meeting.decisions.map((d, i) => `${i + 1}. [${d.status}] ${d.title}`).join('\n');
+          } else {
+            reply = `No formal decisions have been logged yet for "${meeting.title}". You can extract them using the "AI Live Summarize" button in the meeting room.`;
+          }
         } else if (queryText.toLowerCase().includes('action') || queryText.toLowerCase().includes('task')) {
-          reply = "Anita Das is preparing the digital proposal by Oct 5; S. Khan is reviewing vendor comparisons by Oct 10; Rakesh Verma is preparing the capex plan by Oct 20.";
-        } else if (queryText.toLowerCase().includes('vendor')) {
-          reply = "S. Khan and Anita Das proposed reviewing multiple vendor quotes before final contract signing. A 3-member committee has been formed.";
+          if (meeting.actionItems && meeting.actionItems.length > 0) {
+            reply = `Action Items for ${meeting.title}:\n` + meeting.actionItems.map((a, i) => `${i + 1}. ${a.task} (Assignee: ${a.assignee}, Due: ${a.dueDate})`).join('\n');
+          } else {
+            reply = `No action items have been assigned yet for "${meeting.title}".`;
+          }
         } else if (queryText.toLowerCase().includes('email')) {
-          reply = `Subject: Summary & Action Items - ${meeting.title}\n\nDear Team,\n\nThank you for attending today's session. Key decisions included approval of ₹25L digital campaign and phased infrastructure capex.\n\nAction items are due starting Oct 5.\n\nWarm regards,\nArohi AI`;
+          reply = `Subject: Summary & Action Items - ${meeting.title}\n\nDear Team,\n\nThank you for participating in today's session (${meeting.title}).\n\nMinutes and transcripts have been compiled securely.\n\nWarm regards,\nArohi AI Copilot`;
           pills = ['Copy Email', 'Send via Gmail', 'Edit Draft'];
         } else {
-          reply = `In ${meeting.title}, the team discussed quarterly performance and agreed on strategic budget allocations. All key resolutions were approved unanimously.`;
+          reply = `For "${meeting.title}", Arohi is actively monitoring discussion transcripts and agenda points to keep your executive records structured.`;
         }
 
         const fallbackMsg: ArohiChatMessage = {

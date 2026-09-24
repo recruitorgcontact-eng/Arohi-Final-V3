@@ -200,7 +200,10 @@ export default function ArohiCallingAgentsProductPage({
   }, []);
 
   return (
-    <div className="w-full space-y-12 pb-20 font-sans">
+    <div className="relative w-full space-y-12 pb-20 font-sans">
+      {/* Fluidic Ambient Glow Background */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-gradient-to-b from-emerald-500/10 via-teal-500/5 to-transparent blur-3xl -z-10" />
+
       {/* 1. Hero Section */}
       <section className="text-center pt-4 sm:pt-8 max-w-4xl mx-auto px-4">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-4">
@@ -289,7 +292,7 @@ export default function ArohiCallingAgentsProductPage({
         </div>
 
         {/* Interactive Caller Showcase Card with Waveform & Gender Switcher */}
-        <div className="mt-10 max-w-2xl mx-auto rounded-3xl p-6 bg-gradient-to-b from-white to-slate-50 dark:from-[#15171e] dark:to-[#0c0d12] border border-emerald-500/30 shadow-2xl text-left relative overflow-hidden">
+        <div className="mt-10 max-w-2xl mx-auto rounded-3xl p-6 bg-gradient-to-b from-white/95 to-slate-50/95 dark:from-[#15171e]/95 dark:to-[#0c0d12]/95 backdrop-blur-xl border border-emerald-500/30 shadow-2xl text-left relative overflow-hidden transition-all duration-300">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-black/5 dark:border-white/8">
             <div className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${isPlayingAudio ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500/70'}`}></span>
@@ -306,10 +309,17 @@ export default function ArohiCallingAgentsProductPage({
           </div>
 
           <div className="flex items-start gap-4 my-5">
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-2xl shadow-lg shrink-0 ${
-              isPlayingAudio ? 'ring-4 ring-emerald-500/30 animate-pulse' : ''
+            <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xl shrink-0 overflow-hidden border border-emerald-400/30 ${
+              isPlayingAudio ? 'ring-4 ring-emerald-500/40 animate-pulse' : ''
             }`}>
-              🎙️
+              <img 
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" 
+                alt="Arohi Voice Specialist" 
+                className="w-full h-full object-cover" 
+              />
+              {isPlayingAudio && (
+                <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-zinc-950 animate-ping" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center justify-between gap-1">
@@ -518,12 +528,28 @@ export default function ArohiCallingAgentsProductPage({
             return (
               <div
                 key={avatar.id}
-                className="p-4 rounded-2xl bg-white dark:bg-[#15171e] border border-black/8 dark:border-white/8 hover:border-emerald-500/40 hover:shadow-lg transition-all text-left flex flex-col justify-between"
+                className="group p-4 rounded-2xl bg-white/90 dark:bg-[#15171e]/90 backdrop-blur-md border border-black/8 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start gap-3 mb-3">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${avatar.avatarBg} text-white flex items-center justify-center text-2xl shadow-sm shrink-0`}>
-                      {avatar.avatarEmoji}
+                    <div className={`relative w-13 h-13 rounded-2xl overflow-hidden shadow-md shrink-0 border border-white/20 dark:border-white/10 bg-zinc-800 ${
+                      isPlayingThis ? 'ring-4 ring-emerald-500/40 animate-pulse' : ''
+                    }`}>
+                      {avatar.avatarImage ? (
+                        <img 
+                          src={avatar.avatarImage} 
+                          alt={avatar.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                          loading="lazy" 
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${avatar.avatarBg} text-white flex items-center justify-center text-2xl`}>
+                          {avatar.avatarEmoji}
+                        </div>
+                      )}
+                      {isPlayingThis && (
+                        <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-zinc-950 animate-ping" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-black text-zinc-900 dark:text-white truncate">

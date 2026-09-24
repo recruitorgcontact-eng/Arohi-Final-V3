@@ -28,7 +28,8 @@ import {
   Stethoscope,
   Languages,
   Video,
-  Leaf
+  Leaf,
+  Headphones
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -179,6 +180,22 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       badge: 'Vedic AI',
       badgeGold: true,
       description: 'Sushruta Matrix, 10 Trees & Herbal Vaidya'
+    },
+    {
+      id: 'saksham',
+      label: 'Arohi Saksham™',
+      icon: ShieldCheck,
+      badge: 'ODITREE',
+      badgeGold: true,
+      description: 'Divyangjan Assistive Mobility & IoT'
+    },
+    {
+      id: 'voice-studio',
+      label: 'Arohi Voice Labs™',
+      icon: Headphones,
+      badge: 'AI Audio Suite',
+      badgeGold: true,
+      description: 'TTS, Cloning, Dubbing, STT & Music'
     },
     {
       id: 'pricing',
@@ -342,20 +359,22 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
             <div className="pt-2">
               <button
                 onClick={() => {
-                  setActiveTab('home');
-                  onNewChat();
-                  // Pre-fill Divyangjan inquiry
+                  setActiveTab('saksham');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="w-full p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-left transition-all cursor-pointer group"
+                className="w-full p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-left transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs">♿</span>
-                  <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                    Divyangjan Portal (PwD)
+                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                    Arohi Saksham (Divyangjan)
+                  </span>
+                  <span className="text-[9px] px-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold ml-auto">
+                    Portal
                   </span>
                 </div>
                 <p className="text-[9px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                  RPwD Act 2016 4% job reservation, UDID &amp; ADIP aid guides.
+                  Natural AI Companion, 4% RPwD reservation, UDID &amp; ADIP free aids.
                 </p>
               </button>
             </div>

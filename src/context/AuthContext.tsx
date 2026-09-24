@@ -964,9 +964,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
+    const trimmed = identifier.trim();
+    const cleanDigits = trimmed.replace(/\s+/g, '');
+    const isMobile = /^[+]?[0-9]{10,13}$/.test(cleanDigits);
+
+    // If it's a mobile number, send directly to server proxy which resolves phone to user account
+    if (isMobile) {
+      try {
+        const response = await fetch('/api/auth/signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: trimmed, password, entrySource: getEntrySource() })
+        });
+        
+        const resData = await response.json();
+        if (response.ok && resData?.success && resData?.user) {
+          const loggedUser: User = {
+            uid: resData.user.uid,
+            email: resData.user.email,
+            displayName: resData.user.displayName
+          };
+          setUser(loggedUser);
+          localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+          setUserData(resData.userData);
+          return resData.userData;
+        } else {
+          throw new Error(resData?.error || 'Invalid mobile number or password.');
+        }
+      } catch (err: any) {
+        throw new Error(err.message || 'Mobile number sign-in failed.');
+      }
+    }
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, trimmed, password);
       const firebaseUser = userCredential.user;
 
       const loggedUser: User = {
@@ -988,7 +1020,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/auth/signin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim(), password, entrySource: getEntrySource() })
+          body: JSON.stringify({ identifier: trimmed, email: trimmed, password, entrySource: getEntrySource() })
         });
         
         const resData = await response.json();
@@ -1003,23 +1035,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserData(resData.userData);
           return resData.userData;
         } else {
-          let errText = resData?.error || 'Invalid email or password.';
+          let errText = resData?.error || 'Invalid email/mobile or password.';
           if (errText.includes('INVALID_PASSWORD') || errText.includes('INVALID_LOGIN_CREDENTIALS')) {
-            errText = 'Invalid email or password. Please check your credentials.';
+            errText = 'Invalid email/mobile or password. Please check your credentials.';
           } else if (errText.includes('EMAIL_NOT_FOUND')) {
-            errText = 'No account found with this email. Please click CREATE ACCOUNT to register.';
+            errText = 'No account found with this email/mobile. Please click CREATE ACCOUNT to register.';
           }
           throw new Error(errText);
         }
       } catch (serverErr: any) {
         console.error("Server-side proxy fallback failed:", serverErr);
-        // Use server error if available, or clean message instead of raw technical domain error
         let finalMessage = serverErr.message || 'Authentication failed.';
         if (finalMessage.includes('auth/unauthorized-domain') || clientErr.message?.includes('auth/unauthorized-domain')) {
           if (serverErr.message && !serverErr.message.includes('auth/unauthorized-domain')) {
             finalMessage = serverErr.message;
           } else {
-            finalMessage = `Domain Authorization Required: To sign in with client SDK on ${window.location.hostname}, please add this domain to Firebase Console -> Auth -> Settings -> Authorized Domains. Otherwise, verify your email and password to use server authentication.`;
+            finalMessage = `Domain Authorization Required: To sign in with client SDK on ${window.location.hostname}, please add this domain to Firebase Console -> Auth -> Settings -> Authorized Domains. Otherwise, verify your credentials to use server authentication.`;
           }
         } else if (finalMessage.includes('api-key-not-valid')) {
           finalMessage = 'Firebase Client Error: (auth/api-key-not-valid). Please check if your Google Cloud API Key is restricted in your GCP Console -> Credentials!';

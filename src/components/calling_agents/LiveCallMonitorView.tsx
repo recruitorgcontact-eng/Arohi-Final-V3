@@ -868,8 +868,16 @@ export default function LiveCallMonitorView({
               <div className="p-4 border-b border-black/8 dark:border-white/8 bg-gradient-to-r from-zinc-50 to-white dark:from-[#13151d] dark:to-[#111319] shrink-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-2xl bg-purple-600/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center font-bold">
-                      <Bot className="w-5 h-5" />
+                    <div className="relative w-11 h-11 rounded-2xl overflow-hidden border border-purple-500/30 shrink-0 shadow-md">
+                      <img 
+                        src={selectedCall.agentName?.toLowerCase().includes('arjun') 
+                          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
+                          : selectedCall.agentName?.toLowerCase().includes('ananya')
+                          ? 'https://images.unsplash.com/photo-1594824813524-6997a06240d9?auto=format&fit=crop&w=400&q=80'
+                          : 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'}
+                        alt={selectedCall.agentName || 'Arohi Calling Agent'}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
