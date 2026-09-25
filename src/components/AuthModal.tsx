@@ -325,8 +325,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match. Please re-enter the same password.');
         }
+        const cleanName = name.trim();
         const formattedPhone = `+91 ${cleanMobile.slice(0, 5)} ${cleanMobile.slice(5)}`;
-        await signUp(email.trim(), password, name.trim(), role, formattedPhone);
+
+        try {
+          localStorage.setItem('arohi_user_name', cleanName);
+          localStorage.setItem('recruit_user_name', cleanName);
+          localStorage.setItem('recruit_user_email', email.trim());
+          localStorage.setItem('recruit_user_phone', formattedPhone);
+        } catch (e) {}
+
+        await signUp(email.trim(), password, cleanName, role, formattedPhone);
 
         const chosenPlan = PRICING_TIERS.find(p => p.name === selectedPlanName) || PRICING_TIERS[0];
         try {
@@ -339,7 +348,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', upg
           localStorage.setItem('arohi_subscriptions', JSON.stringify(savedSubs));
         } catch (e) {}
 
-        setSuccess(`🎉 Account created instantly! Welcome to Arohi AI, ${name.trim()}.`);
+        setSuccess(`🎉 Account created instantly! Welcome to Arohi AI, ${cleanName}.`);
         setTimeout(() => {
           onClose();
         }, 1200);

@@ -278,22 +278,35 @@ function executeFallbackSpeech(
     const shortLang = detectedLang.langCode.toLowerCase();
     const tagLower = detectedLang.langTag.toLowerCase();
 
-    const strictlyFemaleVoices = voices.filter((v) => {
-      const nameLower = v.name.toLowerCase();
-      const isExplicitMale =
-        /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(
-          nameLower
-        ) || /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
-      return !isExplicitMale;
-    });
+    const requestedVoiceLower = (options.voice || '').toLowerCase();
+    const isMaleRequested = ['fenrir', 'arjun', 'amit', 'subrat', 'gurpreet', 'rohan', 'venkatesh', 'suresh', 'vikram', 'male'].some(m => requestedVoiceLower.includes(m));
 
-    const pool = strictlyFemaleVoices.length > 0 ? strictlyFemaleVoices : voices;
+    let pool = voices;
+    if (isMaleRequested) {
+      const maleVoices = voices.filter(v => {
+        const nameLower = v.name.toLowerCase();
+        return /\b(male|david|mark|george|ravi|hemant|prakash|guy|daniel|alex|rishi)\b/i.test(nameLower);
+      });
+      if (maleVoices.length > 0) pool = maleVoices;
+    } else {
+      const strictlyFemaleVoices = voices.filter((v) => {
+        const nameLower = v.name.toLowerCase();
+        const isExplicitMale =
+          /\b(male|david|mark|george|ravi|hemant|prakash|richard|james|guy|stefan|daniel|alex|fred|thomas|nil|bruce|stefanos|adult|system)\b/i.test(
+            nameLower
+          ) || /google us english|google uk english male|microsoft david|microsoft mark/i.test(nameLower);
+        return !isExplicitMale;
+      });
+      if (strictlyFemaleVoices.length > 0) pool = strictlyFemaleVoices;
+    }
+
     const bestVoice =
       pool.find(
         (v) =>
           v.lang.toLowerCase() === tagLower &&
-          /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(
-            v.name
+          (isMaleRequested
+            ? /\b(male|ravi|hemant|prakash|rishi|google)\b/i.test(v.name)
+            : /\b(female|woman|girl|google|sangeeta|kalpana|veena|neerja|zira|samantha|victoria|helena|monica|luciana|karen|siri|natural|online)\b/i.test(v.name)
           )
       ) ||
       pool.find((v) => v.lang.toLowerCase() === tagLower) ||

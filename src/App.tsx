@@ -55,6 +55,7 @@ import Blender3DStudio from './components/blender3d/Blender3DStudio';
 import ArohiVetMitraApp from './components/vetmitra/ArohiVetMitraApp';
 import { ArohiVanaVedaApp } from './components/vanaveda/ArohiVanaVedaApp';
 import { SakshamMarketplace } from './components/saksham/SakshamMarketplace';
+import ArohiRadioApp from './components/radio/ArohiRadioApp';
 import ArohiAssistantProductPage from './components/products/ArohiAssistantProductPage';
 import ArohiCallingAgentsProductPage from './components/products/ArohiCallingAgentsProductPage';
 import ArohiExamsProductPage from './components/products/ArohiExamsProductPage';
@@ -74,6 +75,7 @@ import TokenWarningToastContainer from './components/TokenWarningToastContainer'
 import { openRazorpayCheckout } from './lib/razorpay';
 import ArohiConnectModal from './components/connectors/ArohiConnectModal';
 import { ArohiVoiceStudio } from './components/voice-studio/ArohiVoiceStudio';
+import { UnifiedPlatformFooter } from './components/UnifiedPlatformFooter';
 
 import { initialPostings } from './data/initialData';
 import { INITIAL_REVIEWS, Review } from './data/reviewsData';
@@ -124,7 +126,7 @@ export default function App() {
       if (p0 === 'mocktests' || p0 === 'mocktest') return true;
       if (p0 === 'mission87' || p0 === 'mission-87' || p0 === 'mission') return true;
       if (p0 === 'audience' || p0 === 'solution' || p0 === 'solutions' || p0 === 'directory') return true;
-      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'delete-account'].includes(p0)) {
+      if (['jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'radio', 'arohi-radio', 'arohiradio', 'delete-account'].includes(p0)) {
         return true;
       }
     }
@@ -153,7 +155,7 @@ export default function App() {
   }, [hasEntered, user]);
 
   const VALID_LANGUAGES: Language[] = ALL_150_PLUS_LANGUAGES.map(l => l.code);
-  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'tutor', 'aitutor', 'arohi-tutor', 'speaks', 'arohi-speaks', 'polyglot', 'languages', 'meet', 'arohi-meet', 'conference', 'meeting', 'meetings', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'divyangjan', 'saksham-marketplace', 'arohi-care', 'oditree', 'voice-studio', 'voice-labs', 'tts-studio', 'audio-studio'];
+  const VALID_TABS = ['home', 'jobs', 'career', 'resume', 'interview', 'business', 'schemes', 'courses', 'syllabus', 'mocktests', 'mocktest', 'tutor', 'aitutor', 'arohi-tutor', 'speaks', 'arohi-speaks', 'polyglot', 'languages', 'meet', 'arohi-meet', 'conference', 'meeting', 'meetings', 'dashboard', 'employer', 'admin', 'arohi', 'privacy', 'terms', 'refunds', 'payments', 'contact', 'faqs', 'franchise', 'blogs', 'pricing', 'plans', 'subscriptions', 'tools', 'audience', 'solutions', 'solution', 'directory', 'business-os', 'businessos', 'arohione', 'one', 'mission87', 'mission-87', 'mission', 'partner', 'partners', 'influencer', 'affiliate', 'assistant', 'arohi-assistant', 'calling-agents', 'calling', 'exams', 'institutions', 'govt', 'opportunities', 'arohi-one-product', 'blender-3d', '3d', 'blender', 'vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'divyangjan', 'saksham-marketplace', 'arohi-care', 'oditree', 'voice-studio', 'voice-labs', 'tts-studio', 'audio-studio', 'radio', 'arohi-radio', 'arohiradio'];
 
   const [selectedPartnerCode, setSelectedPartnerCode] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -294,11 +296,34 @@ export default function App() {
   const [currency, setCurrency] = useState<'INR' | 'USD'>(() => detectUserCurrency());
 
   const [userName, setUserName] = useState(() => {
-    return getStorageItem('arohi_user_name') || 'Honored Guest';
+    return getStorageItem('arohi_user_name') || getStorageItem('recruit_user_name') || 'Honored Guest';
   });
   
   // Dynamically derive current user's display name
-  const currentUserName = user ? (userData?.profile?.name || user.displayName || 'Honored Guest') : userName;
+  const currentUserName = useMemo(() => {
+    const localSaved = (typeof window !== 'undefined') ? (getStorageItem('arohi_user_name') || getStorageItem('recruit_user_name')) : null;
+    const validLocal = (localSaved && localSaved !== 'Honored Guest' && localSaved !== 'Candidate Profile' && localSaved !== 'Guest Candidate' && localSaved !== 'User') ? localSaved : null;
+    const profileName = userData?.profile?.name;
+    const authDisplayName = user?.displayName;
+    const userDocDisplayName = (userData as any)?.displayName;
+
+    const candidates = [profileName, userDocDisplayName, authDisplayName, validLocal];
+    for (const c of candidates) {
+      if (c && c !== 'Honored Guest' && c !== 'Candidate Profile' && c !== 'Guest Candidate' && c !== 'User') {
+        return c;
+      }
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return validLocal || userName || 'Honored Guest';
+  }, [user, userData, userName]);
+
+  useEffect(() => {
+    if (currentUserName && currentUserName !== 'Honored Guest') {
+      setUserName(currentUserName);
+    }
+  }, [currentUserName]);
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDetails, setShareDetails] = useState({
@@ -336,6 +361,9 @@ export default function App() {
     const search = window.location.search.toLowerCase();
     const urlParams = new URLSearchParams(window.location.search);
     const appQuery = urlParams.get('app')?.toLowerCase();
+    if (appQuery === 'radio' || appQuery === 'arohi-radio' || appQuery === 'arohiradio') {
+      return 'radio';
+    }
     if (appQuery === 'vanaveda' || appQuery === 'vana-veda' || appQuery === 'ayurveda' || appQuery === 'botanical') {
       return 'vanaveda';
     }
@@ -2687,6 +2715,19 @@ export default function App() {
           />
         );
       }
+      case 'radio':
+      case 'arohi-radio':
+      case 'arohiradio': {
+        return (
+          <ArohiRadioApp
+            onBackToArohi={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            isDarkMode={isDarkMode}
+          />
+        );
+      }
       default:
         return renderHomeHero();
     }
@@ -4167,9 +4208,9 @@ export default function App() {
       </AnimatePresence>
 
       {/* Main Body */}
-      <main className={`flex-1 w-full ${activeTab === 'home' || ['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree'].includes(activeTab) ? 'p-0' : 'max-w-7xl mx-auto px-4 py-8'}`}>
+      <main className={`flex-1 w-full ${activeTab === 'home' || ['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree', 'radio', 'arohi-radio', 'arohiradio'].includes(activeTab) ? 'p-0' : 'max-w-7xl mx-auto px-4 py-8'}`}>
         {/* Integrated 2-Day Free Trial Banner inside Main Screen UI for non-home tabs */}
-        {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree'].includes(activeTab) && (
+        {!hasActiveSubscription && isTrialActive && activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree', 'radio', 'arohi-radio', 'arohiradio'].includes(activeTab) && (
           <div className={`mb-6 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border transition-all shadow-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-3 ${
             isDarkMode 
               ? 'bg-gradient-to-r from-[#0a1228] via-[#0f1e42] to-[#172e66] border-blue-500/30 text-white shadow-[0_8px_30px_rgba(37,99,235,0.2)]' 
@@ -4239,7 +4280,7 @@ export default function App() {
                   </a>
                 </div>
               </div>
-            ) : activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree'].includes(activeTab) ? (
+            ) : activeTab !== 'home' && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree', 'radio', 'arohi-radio', 'arohiradio'].includes(activeTab) ? (
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-2 sm:p-2.5 rounded-2xl bg-white/80 dark:bg-[#12131a]/80 border border-black/[0.06] dark:border-white/[0.08] backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.03)] select-none animate-in fade-in duration-200">
                 {/* Left: Workspace Drawer Button + Breadcrumb */}
                 <div className="flex items-center gap-2 text-xs">
@@ -4346,223 +4387,14 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Footer verified seal and info */}
-      {!['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'divyangjan', 'saksham-marketplace', 'arohi-care', 'oditree', 'voice-studio', 'voice-labs', 'tts-studio', 'audio-studio'].includes(activeTab) && (
-      <footer id="contact-section" className="max-w-7xl mx-auto px-4 mt-12 mb-8 space-y-6 scroll-mt-20">
-        {/* Expanded Footer Grid */}
-        <div className="bg-white/80 dark:bg-[#0c1224]/90 rounded-2xl border border-slate-200/90 dark:border-blue-950/60 p-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-left shadow-sm backdrop-blur-md">
-          {/* Col 1: Platform identity */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">✨</span>
-              <span className="font-black text-slate-900 dark:text-white text-base tracking-tight">Arohi AI</span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              Arohi AI — One AI. Infinite Opportunities. Built by Bharat, Built for Bharat. 🇮🇳 India’s sovereign LLM cum LMM AI ecosystem built for the ambition of young Bharat. Powered by real-time voice in 150+ languages, visual intelligence, and 24/7 guidance for Class 1–12 students, career aspirants, innovators, startups, and businesses. Your dreams, your language, your future—because anyone can be whoever they want to be.
-            </p>
-            <button
-              onClick={() => handleOpenShare()}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 hover:border-blue-400/60 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-white rounded-xl transition-all text-xs font-black uppercase tracking-wider cursor-pointer shadow-sm w-full justify-center"
-            >
-              <Share2 className="w-3.5 h-3.5 text-blue-500 dark:text-cyan-400" />
-              <span>Share Platform</span>
-            </button>
-          </div>
-
-          {/* Col 2: Legal Documents & Opportunities */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Links &amp; Documents</h4>
-            <ul className="space-y-2 text-xs font-semibold">
-              <li>
-                <button 
-                  onClick={() => {
-                    setActiveTab('saksham');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer text-left font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"
-                >
-                  <span>♿ Arohi Saksham (Divyangjan)</span>
-                  <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">ODITREE</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    setActiveTab('vanaveda');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer text-left font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"
-                >
-                  <span>🌿 VanaVeda (Ayurvedic AI)</span>
-                  <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">New</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    setActiveTab('partner');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-1.5"
-                >
-                  <span>Partner &amp; Influencer Hub</span>
-                  <span className="bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">15% Comm.</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('solutions')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5"
-                >
-                  <span>100+ Solutions Directory</span>
-                  <span className="bg-blue-600/15 dark:bg-blue-600/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">23 Audiences</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('blogs')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-1.5"
-                >
-                  <span>Blogs &amp; SEO Knowledge Hub</span>
-                  <span className="bg-amber-600/20 border border-amber-500/30 text-amber-500 dark:text-amber-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">100+</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('franchise')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5"
-                >
-                  <span>AECN Franchise Hub</span>
-                  <span className="bg-blue-600/15 dark:bg-blue-600/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full animate-pulse">New</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('privacy')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Privacy Policy
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('terms')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Terms & Conditions
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('refunds')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Refund & Cancellation Policy
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 3: Compliance & Security */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Compliance & Security</h4>
-            <ul className="space-y-2 text-xs font-semibold">
-              <li>
-                <button 
-                  onClick={() => setActiveTab('payments')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Pricing & RBI Guidelines
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('payments')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left flex items-center gap-1"
-                >
-                  <span>PCI-DSS Encryption</span>
-                  <span className="bg-[#00e676]/10 text-[#00e676] text-[9px] px-1.5 py-0.5 rounded-full border border-[#00e676]/20 uppercase font-black tracking-wider">Active</span>
-                </button>
-              </li>
-              <li>
-                <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">
-                  Official Razorpay Standard Web Gateway
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 4: Support & Grievance */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Help Desk</h4>
-            <ul className="space-y-2 text-xs font-semibold">
-              <li>
-                <button 
-                  onClick={() => setActiveTab('faqs')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                >
-                  Frequently Asked FAQs
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('contact')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Contact Us
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('contact')} 
-                  className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Grievance Redressal
-                </button>
-              </li>
-              <li>
-                <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px] block leading-relaxed">
-                  Support Email: <a href="mailto:support@arohiai.com" className="hover:underline text-blue-600 dark:text-blue-400">support@arohiai.com</a>
-                </span>
-              </li>
-              <li className="pt-2 flex flex-wrap items-center gap-2">
-                <a 
-                  href="https://wa.me/919090455555" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center gap-2 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/30 px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-sm"
-                >
-                  <MessageCircle className="w-4 h-4 shrink-0" />
-                  <span>WhatsApp Chat</span>
-                </a>
-
-                <button
-                  onClick={() => setIsRegionModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/15 to-indigo-600/15 hover:from-blue-600/25 hover:to-indigo-600/25 text-blue-700 dark:text-blue-200 border border-blue-500/30 px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-sm"
-                  title="Select Country, State or Regional Language"
-                >
-                  <Globe className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" />
-                  <span>Country, State & Language</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom copyright/security banner */}
-        <div className="bg-white/80 dark:bg-[#0c1224]/90 rounded-2xl border border-slate-200/90 dark:border-blue-950/60 p-6 flex flex-col lg:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-sm backdrop-blur-md">
-          <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
-            <ShieldCheck className="w-5 h-5 text-[#00e676] shrink-0" /> Verified Career & Opportunity Platform
-          </span>
-          <div className="text-center lg:text-right space-y-1">
-            <p className="text-slate-700 dark:text-slate-300 font-bold">Copyright © 2026 Arohi AI (Arohiai.com). All Rights Reserved.</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">
-              Development and Maintenance by <span className="text-slate-600 dark:text-slate-400 font-bold">BRAGA TECHNOLOGIES PRIVATE LIMITED</span> in association with <span className="text-slate-600 dark:text-slate-400 font-bold">ODITREE SERVICES</span>
-            </p>
-          </div>
-        </div>
-      </footer>
-      )}
+      {/* Unified Big-Tech Platform Footer (Google / Claude / ChatGPT style: clean separation of workspace vs hub) */}
+      <UnifiedPlatformFooter
+        activeTab={activeTab}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onOpenShare={() => handleOpenShare()}
+        onOpenRegionModal={() => setIsRegionModalOpen(true)}
+        isDarkMode={isDarkMode}
+      />
 
       {/* Arohi AI Chat Container - Full Screen Size on Desktop and Laptop */}
       {isChatOpen && !isChatMinimized && (
@@ -5056,7 +4888,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Persistent Global Bottom Navigation Bar on Mobile */}
-      {(!isChatOpen || isChatMinimized) && !standaloneApp && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare'].includes(activeTab) && (
+      {(!isChatOpen || isChatMinimized) && !standaloneApp && !['vetmitra', 'vet-mitra', 'vet', 'dairy', 'animalcare', 'vanaveda', 'vana-veda', 'ayurveda', 'botanical', 'saksham', 'saksham-marketplace', 'arohi-care', 'oditree', 'radio', 'arohi-radio', 'arohiradio'].includes(activeTab) && (
         <BottomNavBar
           activeTab={activeTab}
           onTabChange={(tab) => {

@@ -29,6 +29,8 @@ import { ArohiVedaVaidyaChat } from './ArohiVedaVaidyaChat';
 import { VanaVedaVoiceCallScreen } from './VanaVedaVoiceCallScreen';
 import { vanavedaAudio } from './vanavedaAudio';
 import { BotanicalLeafSvg } from './BotanicalLeafSvg';
+import { TempleBellIcon } from './TempleBellIcon';
+import { SanctuaryAcousticRipple } from './SanctuaryAcousticRipple';
 
 interface Props {
   onBackToArohi: () => void;
@@ -44,6 +46,8 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
     return localStorage.getItem('arohi_vanaveda_lang') || 'or'; // Odia default as requested
   });
   const [isDronePlaying, setIsDronePlaying] = useState(false);
+  const [isBellRinging, setIsBellRinging] = useState(false);
+  const [rippleTriggerKey, setRippleTriggerKey] = useState(0);
   const [activeLeafContext, setActiveLeafContext] = useState<string>('tulsi');
   const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
 
@@ -55,8 +59,18 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
   const toggleDrone = () => {
     const nextState = vanavedaAudio.toggleTanpuraDrone();
     setIsDronePlaying(nextState);
+
+    // Trigger physical temple bell swinging animation
+    setIsBellRinging(true);
+    setTimeout(() => setIsBellRinging(false), 2000);
+
+    // Trigger subtle sacred UI acoustic ripple
+    setRippleTriggerKey(Date.now());
+
     if (nextState) {
-      vanavedaAudio.playTempleBell(587.33);
+      vanavedaAudio.playTempleBell(587.33); // D5 high resonance
+    } else {
+      vanavedaAudio.playTempleBell(440); // A4 calming grounding chime
     }
   };
 
@@ -70,7 +84,13 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0A0F0B] text-[#2B1B10] dark:text-[#EDE6D6] transition-colors font-sans antialiased selection:bg-[#15803D]/20 selection:text-[#15803D]">
+    <div className="relative min-h-screen bg-[#FAF7F2] dark:bg-[#0A0F0B] text-[#2B1B10] dark:text-[#EDE6D6] transition-colors font-sans antialiased selection:bg-[#15803D]/20 selection:text-[#15803D]">
+      {/* Subtle UI Acoustic Ripple Overlay (Triggered by Temple Bell / Tanpura Drone) */}
+      <SanctuaryAcousticRipple
+        triggerKey={rippleTriggerKey}
+        isDroneActive={isDronePlaying}
+      />
+
       {/* Top Sacred Sanctuary Bar */}
       <header className="sticky top-0 z-40 bg-[#FAF5EC]/95 dark:bg-[#0E150F]/95 backdrop-blur-md border-b border-[#E7DEC8] dark:border-[#203022] shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
@@ -105,7 +125,7 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Right Controls: Call Vaidya, Tanpura Drone, Language Picker */}
+          {/* Right Controls: Call Vaidya, Temple Bell & Tanpura Drone, Language Picker */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Live Voice Call Button */}
             <button
@@ -118,19 +138,54 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
               <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping" />
             </button>
 
-            {/* Tanpura Drone Toggle */}
-            <button
-              onClick={toggleDrone}
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
-                isDronePlaying
-                  ? 'bg-[#15803D] text-white animate-pulse shadow-[0_0_15px_rgba(21,128,61,0.3)]'
-                  : 'bg-white dark:bg-[#18231a] text-slate-700 dark:text-slate-300 border border-[#E7DEC8] dark:border-[#283929] hover:border-[#15803D]'
-              }`}
-              title="Toggle 136.1Hz Cosmic OM Tanpura Drone"
-            >
-              {isDronePlaying ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              <span className="hidden md:inline">{isDronePlaying ? 'Drone Active' : 'Tanpura Drone'}</span>
-            </button>
+            {/* Temple Bell & Tanpura Drone Toggle with Interactive Animation & Acoustic Ripple */}
+            <div className="relative inline-flex items-center">
+              {/* Concentric Local Ripple Waves emanating when bell is struck */}
+              {isBellRinging && (
+                <>
+                  <span className="absolute inset-0 rounded-xl border-2 border-amber-400/80 pointer-events-none temple-ripple-ring-1" />
+                  <span className="absolute inset-0 rounded-xl border border-emerald-400/60 pointer-events-none temple-ripple-ring-2" />
+                  <span className="absolute inset-0 rounded-xl border border-amber-500/40 pointer-events-none temple-ripple-ring-3" />
+                </>
+              )}
+
+              <button
+                onClick={toggleDrone}
+                className={`relative px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs active:scale-95 group overflow-visible ${
+                  isDronePlaying
+                    ? 'bg-gradient-to-r from-[#15803D] to-[#166534] text-white shadow-[0_0_20px_rgba(21,128,61,0.35)] ring-1 ring-amber-400/40'
+                    : 'bg-white dark:bg-[#18231a] text-slate-700 dark:text-slate-300 border border-[#E7DEC8] dark:border-[#283929] hover:border-amber-500/70 hover:shadow-sm'
+                }`}
+                title="Ring Sacred Temple Bell & Toggle 136.1Hz Cosmic OM Tanpura Drone"
+                aria-pressed={isDronePlaying}
+              >
+                {/* Interactive Animated Temple Bell Icon */}
+                <span className="relative flex items-center justify-center p-0.5">
+                  <TempleBellIcon
+                    size={18}
+                    isRinging={isBellRinging}
+                    isDroneActive={isDronePlaying}
+                    className="transition-transform group-hover:rotate-6"
+                  />
+                </span>
+
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-[11px] sm:text-xs font-bold flex items-center gap-1">
+                    {isDronePlaying ? (
+                      <span className="text-amber-200">Drone Active</span>
+                    ) : (
+                      <span>Temple Bell</span>
+                    )}
+                    {isDronePlaying && (
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-300 animate-ping" />
+                    )}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] opacity-75 font-mono hidden sm:inline">
+                    {isDronePlaying ? '136.1Hz OM' : 'Tanpura Drone'}
+                  </span>
+                </div>
+              </button>
+            </div>
 
             {/* Language Selector */}
             <select
@@ -209,6 +264,9 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
               setActiveLeafContext(topic);
               setActiveModule('chat');
             }}
+            isDronePlaying={isDronePlaying}
+            onToggleDrone={toggleDrone}
+            isBellRinging={isBellRinging}
           />
         )}
 
@@ -233,16 +291,16 @@ export const ArohiVanaVedaApp: React.FC<Props> = ({
         />
       )}
 
-      {/* Sacred Botanical Footer */}
-      <footer className="mt-16 border-t border-[#E7DEC8] dark:border-[#203022] bg-[#FAF5EC]/80 dark:bg-[#0E150F]/80 py-8 text-center text-xs text-[#5D4A3A] dark:text-[#9CA3AF] space-y-2">
-        <p className="font-serif font-bold text-sm text-[#15803D] dark:text-[#4ADE80]">
+      {/* Sacred Botanical Sanctuary Ribbon (Clean & Unobtrusive) */}
+      <footer className="mt-16 border-t border-[#E7DEC8]/80 dark:border-[#203022] bg-[#FAF5EC]/60 dark:bg-[#0E150F]/60 py-6 px-4 text-center text-xs text-[#5D4A3A] dark:text-[#9CA3AF] space-y-1.5 backdrop-blur-sm">
+        <p className="font-serif font-bold text-xs sm:text-sm text-[#15803D] dark:text-[#4ADE80]">
           VanaVeda by Arohi AI (वनवेद • ବନବେଦ)
         </p>
-        <p className="max-w-md mx-auto leading-relaxed">
+        <p className="max-w-md mx-auto text-[11px] leading-relaxed opacity-90">
           "Every leaf and tree on earth holds a sacred secret to heal human suffering." Digitizing classical pharmacology from the Rigveda, Atharvaveda, and Maharishi Sushruta into modern sovereign healing sanctuaries.
         </p>
-        <p className="text-[10px] text-slate-400 pt-2">
-          Part of the unified Arohi AI ecosystem • Conceived under the supreme leadership of Commander Junoon with strategic mentorship from Mr. Giridhari Prasad Nayak.
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 pt-1">
+          Part of the unified Arohi AI ecosystem • Digitizing botanical wisdom for a healthier Bharat.
         </p>
       </footer>
     </div>

@@ -9,6 +9,7 @@ import {
   WifiOff, History, FileText, ChevronDown, ChevronUp, MessageSquare
 } from 'lucide-react';
 import { UniversalAnimalRecord, SAMPLE_ANIMAL_RECORDS } from '../data/mockAnimalsData';
+import { SAMPLE_SMILE_FARMER_ODISHA } from '../data/smileOdishaData';
 import { VetLanguage, VetSpecies } from '../types';
 import { vetOfflineStorage, VetConsultationSummary } from '../utils/vetOfflineStorage';
 import { VetMitraAddAnimalModal } from './VetMitraAddAnimalModal';
@@ -33,7 +34,7 @@ export const VetMitraAnimalPassportView: React.FC<Props> = ({
 }) => {
   const [animals, setAnimals] = useState<UniversalAnimalRecord[]>(SAMPLE_ANIMAL_RECORDS);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string>(initialAnimalId);
-  const [activeTab, setActiveTab] = useState<'overview' | 'health' | 'consultations' | 'nutrition' | 'reproduction' | 'records'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'consultations' | 'health' | 'nutrition' | 'reproduction' | 'records' | 'smile_status'>('overview');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAllConsultationsView, setShowAllConsultationsView] = useState(false);
   const [animalConsultations, setAnimalConsultations] = useState<VetConsultationSummary[]>([]);
@@ -247,6 +248,7 @@ export const VetMitraAnimalPassportView: React.FC<Props> = ({
         <div className="flex items-center border-b border-slate-100 px-3 bg-slate-50/70 overflow-x-auto scrollbar-none text-xs font-bold text-slate-600">
           {[
             { id: 'overview', label: 'Overview', odia: 'ସମୀକ୍ଷା' },
+            { id: 'smile_status', label: 'Odisha Status Card (SMILE)', odia: 'ଓଡ଼ିଶା ଷ୍ଟାଟସ୍ କାର୍ଡ (SMILE)' },
             { id: 'consultations', label: `Consultations (${animalConsultations.length})`, odia: `ପୂର୍ବ ପରାମର୍ଶ (${animalConsultations.length})` },
             { id: 'health', label: 'Health', odia: 'ସ୍ୱାସ୍ଥ୍ୟ' },
             { id: 'nutrition', label: 'Nutrition', odia: 'ପୋଷଣ' },
@@ -258,7 +260,7 @@ export const VetMitraAnimalPassportView: React.FC<Props> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`py-3 px-3.5 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-emerald-600 text-emerald-700'
+                  ? 'border-emerald-600 text-emerald-700 font-black'
                   : 'border-transparent hover:text-slate-900'
               }`}
             >
@@ -725,24 +727,231 @@ export const VetMitraAnimalPassportView: React.FC<Props> = ({
             </div>
           )}
 
-          {/* TAB 6: RECORDS */}
-          {activeTab === 'records' && (
-            <div className="space-y-3 text-xs">
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900">
-                    {isOdia ? 'ସମସ୍ତ ପୂର୍ବ ପରାମର୍ଶ ଇତିହାସ ବ୍ରାଉଜ୍ କରନ୍ତୁ' : 'Full Consultation Log Archive'}
-                  </h4>
-                  <p className="text-slate-500 text-[11px] mt-0.5">
-                    {isOdia ? 'ଅଫ୍‌ଲାଇନ୍ ଡାଟାବେସ୍‌ରେ ସଂରକ୍ଷିତ ଥିବା ସମସ୍ତ ପରାମର୍ଶ ଦେଖନ୍ତୁ' : 'Access all past diagnoses and transcripts offline'}
-                  </p>
+          {/* TAB 7: SMILE ODISHA STATUS CARD */}
+          {activeTab === 'smile_status' && (
+            <div className="space-y-6 text-xs">
+              {/* Top Banner: 7-Step Digital Registration Workflow */}
+              <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 shadow-sm text-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-serif font-bold text-sm text-emerald-300">
+                      {isOdia ? 'SMILE ଡିଜିଟାଲ୍ ୭-ସ୍ତରୀୟ ପଞ୍ଜୀକରଣ ପ୍ରଣାଳୀ' : 'SMILE Step-by-Step Digital Registration Process'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">
+                    ODISHA F&ARD
+                  </span>
                 </div>
-                <button
-                  onClick={() => setShowAllConsultationsView(true)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs"
-                >
-                  {isOdia ? 'ଖୋଲନ୍ତୁ' : 'Open Archive'}
-                </button>
+
+                <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 text-center text-[10px]">
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">1. Farmer</span>
+                    <span className="text-slate-300">Name, GP, Aadhaar</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">2. Farm</span>
+                    <span className="text-slate-300">Herd, Fodder land</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">3. Cow Tag</span>
+                    <span className="text-slate-300">Tag, Breed, Age</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">4. Milk</span>
+                    <span className="text-slate-300">Yield, Peak, Stage</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">5. Breeding</span>
+                    <span className="text-slate-300">AI date, Calving</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">6. Health</span>
+                    <span className="text-slate-300">FMD, HS, BQ, Mastitis</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <span className="text-emerald-400 font-bold block mb-0.5">7. Feeds</span>
+                    <span className="text-slate-300">TMR, Fodder, Cost</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample Farmer & Cow Dairy Status Card (Generated by AI) */}
+              <div className="bg-white border-2 border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-md space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-700 font-bold block">
+                      Official AI Extension Artifact
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 font-serif">
+                      {isOdia ? 'ଦୁଗ୍ଧଚାଷୀ ଓ ଗାଈ ଷ୍ଟାଟସ୍ କାର୍ଡ (AI ଦ୍ୱାରା ପ୍ରସ୍ତୁତ)' : 'Sample Farmer & Cow Dairy Status Card (Generated by AI)'}
+                    </h3>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 font-mono font-bold self-start sm:self-auto">
+                    ID: {SAMPLE_SMILE_FARMER_ODISHA.farmerId}
+                  </span>
+                </div>
+
+                {/* 3-Column Profile Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Farmer Profile */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <h4 className="font-bold text-xs text-slate-800 border-b border-slate-200 pb-1 flex items-center justify-between">
+                      <span>Farmer Profile</span>
+                      <span className="text-[10px] text-emerald-600 font-normal">Active</span>
+                    </h4>
+                    <div className="space-y-1 text-[11px] text-slate-700">
+                      <div><strong className="text-slate-900">Name:</strong> {SAMPLE_SMILE_FARMER_ODISHA.name}</div>
+                      <div><strong className="text-slate-900">Village:</strong> {SAMPLE_SMILE_FARMER_ODISHA.village}</div>
+                      <div><strong className="text-slate-900">Block:</strong> {SAMPLE_SMILE_FARMER_ODISHA.block}</div>
+                      <div><strong className="text-slate-900">District:</strong> {SAMPLE_SMILE_FARMER_ODISHA.district}</div>
+                      <div><strong className="text-slate-900">Mobile:</strong> {SAMPLE_SMILE_FARMER_ODISHA.mobile}</div>
+                      <div><strong className="text-slate-900">Experience:</strong> {SAMPLE_SMILE_FARMER_ODISHA.dairyExperienceYears} years</div>
+                    </div>
+                  </div>
+
+                  {/* Farm Profile */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <h4 className="font-bold text-xs text-slate-800 border-b border-slate-200 pb-1 flex items-center justify-between">
+                      <span>Farm Profile</span>
+                      <span className="text-[10px] text-emerald-600 font-normal">Verified</span>
+                    </h4>
+                    <div className="space-y-1 text-[11px] text-slate-700">
+                      <div><strong className="text-slate-900">Herd:</strong> {SAMPLE_SMILE_FARMER_ODISHA.farm.cowsCount} Cows, {SAMPLE_SMILE_FARMER_ODISHA.farm.heifersCount} Heifer, {SAMPLE_SMILE_FARMER_ODISHA.farm.calvesCount} Calves</div>
+                      <div><strong className="text-slate-900">Breeds:</strong> {SAMPLE_SMILE_FARMER_ODISHA.farm.breeds}</div>
+                      <div><strong className="text-slate-900">Housing:</strong> {SAMPLE_SMILE_FARMER_ODISHA.farm.housing}</div>
+                      <div><strong className="text-slate-900">Fodder Land:</strong> {SAMPLE_SMILE_FARMER_ODISHA.farm.fodderLandAcre} acre (Hybrid Napier)</div>
+                      <div><strong className="text-slate-900">Main Feeds:</strong> Napier, straw, wheat bran, mung chuni</div>
+                      <div><strong className="text-slate-900">Marketing:</strong> {SAMPLE_SMILE_FARMER_ODISHA.farm.milkMarketing}</div>
+                    </div>
+                  </div>
+
+                  {/* AI Summary of Key Gaps */}
+                  <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 space-y-1.5">
+                    <h4 className="font-bold text-xs text-amber-900 border-b border-amber-200 pb-1 flex items-center justify-between">
+                      <span>AI Summary of Key Gaps</span>
+                      <span className="text-[10px] text-amber-700 font-bold">Action Needed</span>
+                    </h4>
+                    <ul className="space-y-1 text-[11px] text-amber-900">
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-rose-500 font-bold">⚠️</span>
+                        <span>Low milk production (only 6-8 L/d in 2 cows)</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-amber-500 font-bold">⚠️</span>
+                        <span>Low green fodder, high wheat bran (Ca:P inverted)</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-rose-500 font-bold">⚠️</span>
+                        <span>Delayed heat / not inseminated (Cow 01 at 110 DIM)</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-rose-500 font-bold">⚠️</span>
+                        <span>HS vaccination due (immediate shot required)</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-amber-500 font-bold">⚠️</span>
+                        <span>Mastitis risk (Cow 02 has past subclinical history)</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Individual Cow Details Table */}
+                <div className="space-y-2 pt-2">
+                  <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                    Individual Cow Digital Ledger & AI Warning Flags:
+                  </h4>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                      <thead className="bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                        <tr>
+                          <th className="p-2 border-b border-slate-200">Cow No.</th>
+                          <th className="p-2 border-b border-slate-200">Breed</th>
+                          <th className="p-2 border-b border-slate-200 text-center">Age (yr)</th>
+                          <th className="p-2 border-b border-slate-200 text-center">Parity</th>
+                          <th className="p-2 border-b border-slate-200 text-right">Milk (L/d)</th>
+                          <th className="p-2 border-b border-slate-200 text-right">DIM</th>
+                          <th className="p-2 border-b border-slate-200">Reproductive Status</th>
+                          <th className="p-2 border-b border-slate-200 text-center">Vaccine (F/H/B)</th>
+                          <th className="p-2 border-b border-slate-200">AI Warning Flags</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 text-[11px]">
+                        {SAMPLE_SMILE_FARMER_ODISHA.cows.map((c, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50">
+                            <td className="p-2 font-bold text-slate-900">{c.cowNo}</td>
+                            <td className="p-2 text-slate-700">{c.breed}</td>
+                            <td className="p-2 text-center text-slate-700">{c.ageYears}</td>
+                            <td className="p-2 text-center text-slate-700">{c.parity}</td>
+                            <td className="p-2 text-right font-bold text-emerald-700">{c.milkYieldKgDay} L</td>
+                            <td className="p-2 text-right text-slate-700">{c.daysInMilk}</td>
+                            <td className="p-2 text-slate-800">{c.reproductiveStatus}</td>
+                            <td className="p-2 text-center font-mono text-[10px]">
+                              <span className="text-emerald-600 font-bold">✓</span> / 
+                              <span className={c.vaccinationStatus.hs === 'Due' ? 'text-rose-600 font-bold px-1' : 'text-emerald-600 font-bold px-1'}>
+                                {c.vaccinationStatus.hs === 'Due' ? 'Due' : '✓'}
+                              </span> / 
+                              <span className={c.vaccinationStatus.bq === 'Due' ? 'text-amber-600 font-bold' : 'text-emerald-600 font-bold'}>
+                                {c.vaccinationStatus.bq === 'Due' ? 'Due' : '✓'}
+                              </span>
+                            </td>
+                            <td className="p-2">
+                              <div className="flex flex-wrap gap-1">
+                                {c.aiFlags.map((f, fi) => (
+                                  <span 
+                                    key={fi}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      f.severity === 'red' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                    }`}
+                                  >
+                                    {f.category}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile App Screen Recommendation Mockup */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-300 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-600" />
+                      <span>Direct AI Recommendations for Cow 01 (SMILE App View):</span>
+                    </span>
+                    <button
+                      onClick={() => onStartConsultOnAnimal(currentAnimal)}
+                      className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                    >
+                      Take Action with Arohi
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2.5 rounded-lg bg-white border border-rose-200">
+                      <span className="text-rose-600 font-bold block mb-1">1. Plan Insemination</span>
+                      <span className="text-slate-600 text-[11px]">110 DIM without heat. Administer chelated mineral bolus (P + trace minerals) and schedule veterinary rectal palpation.</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-amber-200">
+                      <span className="text-amber-700 font-bold block mb-1">2. Improve Ration (TMR)</span>
+                      <span className="text-slate-600 text-[11px]">Add energy (crushed maize) and 10 kg green Napier. Cut wheat bran to correct Ca:P ratio and stimulate milk yield.</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-rose-200">
+                      <span className="text-rose-600 font-bold block mb-1">3. Complete HS Vaccine</span>
+                      <span className="text-slate-600 text-[11px]">Hemorrhagic Septicemia booster is due. Contact local Livestock Inspector (LI) or CDVO for vaccination.</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-emerald-200">
+                      <span className="text-emerald-700 font-bold block mb-1">4. Monitor Body Condition</span>
+                      <span className="text-slate-600 text-[11px]">Target BCS 3.0 to sustain regular 21-day oestrus cycles and prevent long calving intervals.</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

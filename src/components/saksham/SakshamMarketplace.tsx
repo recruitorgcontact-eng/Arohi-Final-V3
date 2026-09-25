@@ -938,18 +938,27 @@ export const SakshamMarketplace: React.FC<SakshamMarketplaceProps> = ({
           </button>
         </section>
 
-        {/* Sovereign Governance & Partnership Footer Note */}
-        <footer className="pt-6 border-t border-slate-200 dark:border-slate-800 text-center space-y-4 text-xs text-slate-500 dark:text-slate-400">
-          <div className="max-w-4xl mx-auto leading-relaxed">
-            Arohi Saksham and Arohi Care operate within the unified Arohi AI ecosystem under the supreme leadership of <strong>Commander Junoon (Junoon Nayak)</strong>, with senior strategic mentorship and advisory from <strong>Mr. Giridhari Prasad Nayak</strong>. Assistive hardware supply, manufacturing standards, and pan-India fulfillment are executed by <strong>ODITREE SERVICES</strong> in association with <strong>BRAGA TECHNOLOGIES PRIVATE LIMITED</strong>.
+        {/* Assistive Hardware Fulfillment & Compliance Strip (Clean Big-Tech Standard) */}
+        <footer className="pt-8 pb-4 border-t border-slate-200 dark:border-slate-800 text-center space-y-3 text-xs text-slate-500 dark:text-slate-400">
+          <div className="max-w-2xl mx-auto leading-relaxed space-y-1">
+            <p className="font-semibold text-slate-700 dark:text-slate-300">
+              Arohi Saksham &amp; Arohi Care · Dedicated to Divyangjan Empowerment
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Part of the unified Arohi AI ecosystem. Assistive hardware supply, manufacturing standards, and pan-India fulfillment are executed by <strong>ODITREE SERVICES</strong> in association with <strong>BRAGA TECHNOLOGIES PRIVATE LIMITED</strong>.
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
-            <span className="text-slate-400">Helpline: +91 9090455555</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <a href="tel:+919090455555" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+              Helpline: +91 90904 55555
+            </a>
             <span>·</span>
-            <span className="text-slate-400">Email: oditree.contact@gmail.com</span>
+            <a href="mailto:oditree.contact@gmail.com" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+              Email: oditree.contact@gmail.com
+            </a>
             <span>·</span>
-            <span className="text-slate-400">Website: www.arohiai.com/saksham</span>
+            <span>Portal: www.arohiai.com/saksham</span>
           </div>
         </footer>
       </div>

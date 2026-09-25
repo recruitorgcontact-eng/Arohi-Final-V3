@@ -29,7 +29,8 @@ import {
   Languages,
   Video,
   Leaf,
-  Headphones
+  Headphones,
+  Radio
 } from 'lucide-react';
 import ArohiAvatar from './ArohiAvatar';
 import { Language } from '../translations';
@@ -196,6 +197,14 @@ export const SovereignSidebar: React.FC<SovereignSidebarProps> = ({
       badge: 'AI Audio Suite',
       badgeGold: true,
       description: 'TTS, Cloning, Dubbing, STT & Music'
+    },
+    {
+      id: 'radio',
+      label: 'Arohi Radio 📻',
+      icon: Radio,
+      badge: '7 Channels',
+      badgeGold: true,
+      description: 'AI-Powered Radio, News & Global Explorer'
     },
     {
       id: 'pricing',

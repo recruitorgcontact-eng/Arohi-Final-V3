@@ -1984,7 +1984,7 @@ export default function ArohiChat({
       logActivity('chat', 'AI Session Summary Generated', 'Condensed conversation history into an actionable step-by-step plan.');
 
       const uEmail = user?.email || localStorage.getItem('recruit_user_email') || 'guest@recruitindia.org';
-      const uName = userData?.profile?.name || user?.displayName || localStorage.getItem('recruit_user_name') || 'Honored Guest';
+      const uName = userData?.profile?.name || user?.displayName || localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name') || 'Honored Guest';
       fetch('/api/admin/sync-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2732,7 +2732,7 @@ export default function ArohiChat({
     setIsLoading(true);
 
     const uEmail = user?.email || localStorage.getItem('recruit_user_email') || 'guest@recruitindia.org';
-    const uName = userData?.profile?.name || user?.displayName || localStorage.getItem('recruit_user_name') || 'Honored Guest';
+    const uName = userData?.profile?.name || user?.displayName || localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name') || 'Honored Guest';
     const isBus = /bakery|bake|bread|cake|business|entrepreneur|shop|mudra|loan|startup|venture|funding|finance|retail/.test(text.toLowerCase());
     const activeTopic = isBus ? "Bakery Business Plan" : "General Consultation";
 
@@ -7328,7 +7328,7 @@ ${data.lyrics ? `\`\`\`text\n${data.lyrics}\n\`\`\`\n` : ''}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-slate-400">User: </span>
-                    <span className="text-white font-semibold">{userMemory?.displayName || user?.displayName || 'Honored Guest'}</span>
+                    <span className="text-white font-semibold">{userMemory?.displayName || user?.displayName || (typeof window !== 'undefined' ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null) || 'Honored Guest'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Email: </span>

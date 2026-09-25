@@ -193,6 +193,151 @@ const TAB_SEO_TITLES: Record<string, { title: string; desc: string }> = {
   faqs: {
     title: "Frequently Asked Questions & Support Center | Arohi AI (arohiai.com)",
     desc: "Find quick answers to common questions about Arohi AI, subscription pricing, Mission 87, exams, voice calling, and multilingual capabilities."
+  },
+  // Specialized Vertical Suites & Applications
+  speaks: {
+    title: "Arohi Speaks™ - Zero-Hesitation Spoken Voice AI & Polyglot Academy (arohiai.com)",
+    desc: "Master spoken English, Hindi, Odia, French, Japanese & 150+ languages with zero hesitation. Real-time pronunciation grading, native script transliteration & roleplay arenas."
+  },
+  'arohi-speaks': {
+    title: "Arohi Speaks™ - Zero-Hesitation Spoken Voice AI & Polyglot Academy (arohiai.com)",
+    desc: "Master spoken English, Hindi, Odia, French, Japanese & 150+ languages with zero hesitation. Real-time pronunciation grading, native script transliteration & roleplay arenas."
+  },
+  polyglot: {
+    title: "Arohi Speaks™ - Zero-Hesitation Spoken Voice AI & Polyglot Academy (arohiai.com)",
+    desc: "Master spoken English, Hindi, Odia, French, Japanese & 150+ languages with zero hesitation. Real-time pronunciation grading, native script transliteration & roleplay arenas."
+  },
+  languages: {
+    title: "Arohi Speaks™ - Zero-Hesitation Spoken Voice AI & Polyglot Academy (arohiai.com)",
+    desc: "Master spoken English, Hindi, Odia, French, Japanese & 150+ languages with zero hesitation. Real-time pronunciation grading, native script transliteration & roleplay arenas."
+  },
+  tutor: {
+    title: "Arohi AI Tutor™ - Interactive Smart Board & Adaptive AI Learning Labs | Arohi AI",
+    desc: "Experience personalized interactive 1v1 AI tutoring for Class 1–12, CBSE, ICSE, and College. Instant step-by-step problem derivations, smart board visuals & doubt resolution."
+  },
+  aitutor: {
+    title: "Arohi AI Tutor™ - Interactive Smart Board & Adaptive AI Learning Labs | Arohi AI",
+    desc: "Experience personalized interactive 1v1 AI tutoring for Class 1–12, CBSE, ICSE, and College. Instant step-by-step problem derivations, smart board visuals & doubt resolution."
+  },
+  'arohi-tutor': {
+    title: "Arohi AI Tutor™ - Interactive Smart Board & Adaptive AI Learning Labs | Arohi AI",
+    desc: "Experience personalized interactive 1v1 AI tutoring for Class 1–12, CBSE, ICSE, and College. Instant step-by-step problem derivations, smart board visuals & doubt resolution."
+  },
+  vetmitra: {
+    title: "Arohi VetMitra™ - Sovereign Veterinary & Dairy Nutrition Intelligence (NASEM 2021)",
+    desc: "AI veterinary diagnostics and feed ration balancing for dairy cattle, buffalo, goats, sheep, and pets. Clinical triage, local feed optimization, and vaccination calendars."
+  },
+  'vet-mitra': {
+    title: "Arohi VetMitra™ - Sovereign Veterinary & Dairy Nutrition Intelligence (NASEM 2021)",
+    desc: "AI veterinary diagnostics and feed ration balancing for dairy cattle, buffalo, goats, sheep, and pets. Clinical triage, local feed optimization, and vaccination calendars."
+  },
+  vet: {
+    title: "Arohi VetMitra™ - Sovereign Veterinary & Dairy Nutrition Intelligence (NASEM 2021)",
+    desc: "AI veterinary diagnostics and feed ration balancing for dairy cattle, buffalo, goats, sheep, and pets. Clinical triage, local feed optimization, and vaccination calendars."
+  },
+  dairy: {
+    title: "Arohi VetMitra™ - Sovereign Veterinary & Dairy Nutrition Intelligence (NASEM 2021)",
+    desc: "AI veterinary diagnostics and feed ration balancing for dairy cattle, buffalo, goats, sheep, and pets. Clinical triage, local feed optimization, and vaccination calendars."
+  },
+  animalcare: {
+    title: "Arohi VetMitra™ - Sovereign Veterinary & Dairy Nutrition Intelligence (NASEM 2021)",
+    desc: "AI veterinary diagnostics and feed ration balancing for dairy cattle, buffalo, goats, sheep, and pets. Clinical triage, local feed optimization, and vaccination calendars."
+  },
+  vanaveda: {
+    title: "VanaVeda (वनवेद) - Classical Ayurvedic Botanical AI & Medicinal Herbarium | Arohi AI",
+    desc: "Explore India's sacred botanical heritage: Sushruta Matrix, 10-Tree classical formulation database, herb identification, and authentic holistic Vaidya guidance."
+  },
+  'vana-veda': {
+    title: "VanaVeda (वनवेद) - Classical Ayurvedic Botanical AI & Medicinal Herbarium | Arohi AI",
+    desc: "Explore India's sacred botanical heritage: Sushruta Matrix, 10-Tree classical formulation database, herb identification, and authentic holistic Vaidya guidance."
+  },
+  ayurveda: {
+    title: "VanaVeda (वनवेद) - Classical Ayurvedic Botanical AI & Medicinal Herbarium | Arohi AI",
+    desc: "Explore India's sacred botanical heritage: Sushruta Matrix, 10-Tree classical formulation database, herb identification, and authentic holistic Vaidya guidance."
+  },
+  botanical: {
+    title: "VanaVeda (वनवेद) - Classical Ayurvedic Botanical AI & Medicinal Herbarium | Arohi AI",
+    desc: "Explore India's sacred botanical heritage: Sushruta Matrix, 10-Tree classical formulation database, herb identification, and authentic holistic Vaidya guidance."
+  },
+  saksham: {
+    title: "Arohi Saksham™ - Sovereign Divyangjan Empowerment, UDID & Assistive Mobility Hub",
+    desc: "Official empowerment portal for Divyangjan: UDID card assistance, ADIP scheme free appliances, NHFDC loans, 4% RPwD Act job reservation, and assistive tech marketplace."
+  },
+  divyangjan: {
+    title: "Arohi Saksham™ - Sovereign Divyangjan Empowerment, UDID & Assistive Mobility Hub",
+    desc: "Official empowerment portal for Divyangjan: UDID card assistance, ADIP scheme free appliances, NHFDC loans, 4% RPwD Act job reservation, and assistive tech marketplace."
+  },
+  'saksham-marketplace': {
+    title: "Arohi Saksham™ - Sovereign Divyangjan Empowerment, UDID & Assistive Mobility Hub",
+    desc: "Official empowerment portal for Divyangjan: UDID card assistance, ADIP scheme free appliances, NHFDC loans, 4% RPwD Act job reservation, and assistive tech marketplace."
+  },
+  'arohi-care': {
+    title: "Arohi Saksham™ - Sovereign Divyangjan Empowerment, UDID & Assistive Mobility Hub",
+    desc: "Official empowerment portal for Divyangjan: UDID card assistance, ADIP scheme free appliances, NHFDC loans, 4% RPwD Act job reservation, and assistive tech marketplace."
+  },
+  oditree: {
+    title: "Arohi Saksham™ - Sovereign Divyangjan Empowerment, UDID & Assistive Mobility Hub",
+    desc: "Official empowerment portal for Divyangjan: UDID card assistance, ADIP scheme free appliances, NHFDC loans, 4% RPwD Act job reservation, and assistive tech marketplace."
+  },
+  meet: {
+    title: "Arohi MEET™ - AI Video Conferencing with Live Multilingual Speech Translation",
+    desc: "Next-gen sovereign video conferencing: real-time speech translation across 150+ languages, live captions, automated meeting minutes (MoM), and encrypted workspaces."
+  },
+  'arohi-meet': {
+    title: "Arohi MEET™ - AI Video Conferencing with Live Multilingual Speech Translation",
+    desc: "Next-gen sovereign video conferencing: real-time speech translation across 150+ languages, live captions, automated meeting minutes (MoM), and encrypted workspaces."
+  },
+  conference: {
+    title: "Arohi MEET™ - AI Video Conferencing with Live Multilingual Speech Translation",
+    desc: "Next-gen sovereign video conferencing: real-time speech translation across 150+ languages, live captions, automated meeting minutes (MoM), and encrypted workspaces."
+  },
+  meeting: {
+    title: "Arohi MEET™ - AI Video Conferencing with Live Multilingual Speech Translation",
+    desc: "Next-gen sovereign video conferencing: real-time speech translation across 150+ languages, live captions, automated meeting minutes (MoM), and encrypted workspaces."
+  },
+  meetings: {
+    title: "Arohi MEET™ - AI Video Conferencing with Live Multilingual Speech Translation",
+    desc: "Next-gen sovereign video conferencing: real-time speech translation across 150+ languages, live captions, automated meeting minutes (MoM), and encrypted workspaces."
+  },
+  'voice-studio': {
+    title: "Arohi Voice Labs™ - Multilingual Voice Cloning, TTS & AI Audio Studio | Arohi AI",
+    desc: "High-fidelity text-to-speech, regional voice cloning, and audio dubbing in 150+ languages with native Indian emotional resonance and natural cadence."
+  },
+  'voice-labs': {
+    title: "Arohi Voice Labs™ - Multilingual Voice Cloning, TTS & AI Audio Studio | Arohi AI",
+    desc: "High-fidelity text-to-speech, regional voice cloning, and audio dubbing in 150+ languages with native Indian emotional resonance and natural cadence."
+  },
+  'tts-studio': {
+    title: "Arohi Voice Labs™ - Multilingual Voice Cloning, TTS & AI Audio Studio | Arohi AI",
+    desc: "High-fidelity text-to-speech, regional voice cloning, and audio dubbing in 150+ languages with native Indian emotional resonance and natural cadence."
+  },
+  'audio-studio': {
+    title: "Arohi Voice Labs™ - Multilingual Voice Cloning, TTS & AI Audio Studio | Arohi AI",
+    desc: "High-fidelity text-to-speech, regional voice cloning, and audio dubbing in 150+ languages with native Indian emotional resonance and natural cadence."
+  },
+  radio: {
+    title: "Arohi Radio 📻 - 24/7 AI Multilingual Live Broadcast & Explorer Channels",
+    desc: "Listen to 7 continuous live AI-curated radio streams: Sovereign Bharat, Real-Time Global News, Study Lofi, Spiritual & Bhakti, and World Cultural Explorer."
+  },
+  'arohi-radio': {
+    title: "Arohi Radio 📻 - 24/7 AI Multilingual Live Broadcast & Explorer Channels",
+    desc: "Listen to 7 continuous live AI-curated radio streams: Sovereign Bharat, Real-Time Global News, Study Lofi, Spiritual & Bhakti, and World Cultural Explorer."
+  },
+  arohiradio: {
+    title: "Arohi Radio 📻 - 24/7 AI Multilingual Live Broadcast & Explorer Channels",
+    desc: "Listen to 7 continuous live AI-curated radio streams: Sovereign Bharat, Real-Time Global News, Study Lofi, Spiritual & Bhakti, and World Cultural Explorer."
+  },
+  'blender-3d': {
+    title: "Blender 3D AI Studio - Prompt-to-3D CAD & Mesh Pipeline | Arohi AI (arohiai.com)",
+    desc: "Generate 3D meshes from text prompts, inspect in real-time WebGL, and export directly to Blender Python scripts (.py), universal .OBJ, and 3D-printable .STL formats."
+  },
+  '3d': {
+    title: "Blender 3D AI Studio - Prompt-to-3D CAD & Mesh Pipeline | Arohi AI (arohiai.com)",
+    desc: "Generate 3D meshes from text prompts, inspect in real-time WebGL, and export directly to Blender Python scripts (.py), universal .OBJ, and 3D-printable .STL formats."
+  },
+  blender: {
+    title: "Blender 3D AI Studio - Prompt-to-3D CAD & Mesh Pipeline | Arohi AI (arohiai.com)",
+    desc: "Generate 3D meshes from text prompts, inspect in real-time WebGL, and export directly to Blender Python scripts (.py), universal .OBJ, and 3D-printable .STL formats."
   }
 };
 

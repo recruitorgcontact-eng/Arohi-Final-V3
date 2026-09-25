@@ -20,7 +20,8 @@ import {
   Search, 
   FileCheck, 
   Lightbulb,
-  ChevronRight
+  ChevronRight,
+  Radio
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Posting } from '../types';
@@ -43,6 +44,7 @@ const navigationCategories = [
     title: 'Core Ecosystem',
     items: [
       { id: 'home', label: 'Ecosystem Home', icon: Home, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+      { id: 'radio', label: 'Arohi Radio 📻 (7 Live Channels)', icon: Radio, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20', badge: 'Live Radio' },
       { id: 'solutions', label: 'Universal Solutions Directory', icon: Sparkles, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', badge: '100+ Solutions' },
       { id: 'dashboard', label: 'User Dashboard / Profile', icon: User, color: 'text-[#00e676] bg-[#00e676]/10 border-[#00e676]/20' },
       { id: 'tools', label: 'AI Tools & Utilities Hub', icon: Lightbulb, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', badge: 'Hub' },

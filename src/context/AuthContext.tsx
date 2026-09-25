@@ -229,7 +229,13 @@ export function cleanLegacyProfileDefaults(profile?: Partial<UserProfile>): User
 }
 
 export function buildPersonalizationMemory(data: UserData): UserPersonalizationMemory {
-  const displayName = data.displayName || data.profile?.name || data.email?.split('@')[0] || 'Honored Guest';
+  const cachedLocalName = typeof window !== 'undefined' ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null;
+  const resolvedLocal = (cachedLocalName && cachedLocalName !== 'Honored Guest' && cachedLocalName !== 'Candidate Profile' && cachedLocalName !== 'Guest Candidate') ? cachedLocalName : null;
+  const displayName = (data.profile?.name && data.profile.name !== 'Honored Guest' && data.profile.name !== 'Candidate Profile' && data.profile.name !== 'Guest Candidate')
+    ? data.profile.name
+    : (data.displayName && data.displayName !== 'Honored Guest')
+      ? data.displayName
+      : (resolvedLocal || (data.email?.split('@')[0] || 'User'));
   const email = data.email || '';
   const role = data.role || 'candidate';
   const rawProfile: UserProfile = data.profile || {
@@ -575,11 +581,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadAndSyncUserData = async (firebaseUser: any, role?: 'candidate' | 'recruiter'): Promise<UserData> => {
     const uid = firebaseUser.uid;
     const email = firebaseUser.email || '';
-    const displayName = firebaseUser.displayName || 'Honored Guest';
+    const cachedLocalName = typeof window !== 'undefined' ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null;
+    const resolvedLocal = (cachedLocalName && cachedLocalName !== 'Honored Guest' && cachedLocalName !== 'Candidate Profile' && cachedLocalName !== 'Guest Candidate') ? cachedLocalName : null;
+    const displayName = (firebaseUser.displayName && firebaseUser.displayName !== 'Honored Guest') 
+      ? firebaseUser.displayName 
+      : (resolvedLocal || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'User'));
     const entrySource = getEntrySource();
 
     // Helper to merge local cached chats into fetched user data
     const enrichUserDataWithChats = (data: UserData): UserData => {
+      // Sync resolved full name into user data and local storage
+      const resolvedName = (data.profile?.name && data.profile.name !== 'Honored Guest' && data.profile.name !== 'Candidate Profile' && data.profile.name !== 'Guest Candidate')
+        ? data.profile.name
+        : (data.displayName && data.displayName !== 'Honored Guest')
+          ? data.displayName
+          : (resolvedLocal || '');
+
+      if (resolvedName) {
+        if (!data.displayName || data.displayName === 'Honored Guest') {
+          data.displayName = resolvedName;
+        }
+        if (!data.profile) {
+          data.profile = { name: resolvedName, email, phone: '', location: '', education: '', activeGoal: '' };
+        } else if (!data.profile.name || data.profile.name === 'Honored Guest' || data.profile.name === 'Candidate Profile') {
+          data.profile.name = resolvedName;
+        }
+        try {
+          localStorage.setItem('arohi_user_name', resolvedName);
+          localStorage.setItem('recruit_user_name', resolvedName);
+        } catch (e) {}
+      }
+
       try {
         const cachedChats = localStorage.getItem(`arohi_saved_chats_${uid}`);
         if (cachedChats) {
@@ -760,7 +792,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/me', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, email, entrySource })
+        body: JSON.stringify({ uid, email, entrySource, displayName, name: displayName })
       });
       if (response.ok) {
         const resData = await response.json();
@@ -896,13 +928,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async (firebaseUser) => {
           try {
             if (firebaseUser) {
+              const cachedLocalName = typeof window !== 'undefined' ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null;
+              const resolvedCached = (cachedLocalName && cachedLocalName !== 'Honored Guest' && cachedLocalName !== 'Candidate Profile' && cachedLocalName !== 'Guest Candidate') ? cachedLocalName : null;
+              const initialDisplayName = (firebaseUser.displayName && firebaseUser.displayName !== 'Honored Guest')
+                ? firebaseUser.displayName
+                : (resolvedCached || null);
+
               const loggedUser: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: firebaseUser.displayName,
+                displayName: initialDisplayName,
               };
               setUser(loggedUser);
               localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+              if (initialDisplayName) {
+                localStorage.setItem('arohi_user_name', initialDisplayName);
+                localStorage.setItem('recruit_user_name', initialDisplayName);
+              }
 
               const storedRole = sessionStorage.getItem('recruit_phone_signup_role') as 'candidate' | 'recruiter' | null;
               if (storedRole) {
@@ -912,6 +954,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Fetch up-to-date userData through our multi-layer resilient function
               const data = await loadAndSyncUserData(firebaseUser, storedRole || undefined);
               setUserData(data);
+
+              // If userData has a valid profile name, sync it back to loggedUser if missing or outdated
+              const finalProfileName = data?.profile?.name || data?.displayName;
+              if (finalProfileName && finalProfileName !== 'Honored Guest' && finalProfileName !== 'Candidate Profile' && finalProfileName !== 'Guest Candidate') {
+                if (!loggedUser.displayName || loggedUser.displayName !== finalProfileName) {
+                  const updatedUser = { ...loggedUser, displayName: finalProfileName };
+                  setUser(updatedUser);
+                  localStorage.setItem('recruit_user', JSON.stringify(updatedUser));
+                  localStorage.setItem('arohi_user_name', finalProfileName);
+                  localStorage.setItem('recruit_user_name', finalProfileName);
+                }
+              }
             } else {
               // Check if we already have a logged-in user in localStorage
               const stored = localStorage.getItem('recruit_user');
@@ -1001,17 +1055,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await signInWithEmailAndPassword(auth, trimmed, password);
       const firebaseUser = userCredential.user;
 
-      const loggedUser: User = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName
-      };
-      setUser(loggedUser);
-      localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
-
       // Fetch user document
       const data = await loadAndSyncUserData(firebaseUser);
       setUserData(data);
+
+      const resolvedName = (data?.profile?.name && data.profile.name !== 'Honored Guest' && data.profile.name !== 'Candidate Profile')
+        ? data.profile.name
+        : (data?.displayName && data.displayName !== 'Honored Guest')
+          ? data.displayName
+          : firebaseUser.displayName;
+
+      const loggedUser: User = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: resolvedName
+      };
+      setUser(loggedUser);
+      localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+      if (resolvedName && resolvedName !== 'Honored Guest') {
+        localStorage.setItem('arohi_user_name', resolvedName);
+        localStorage.setItem('recruit_user_name', resolvedName);
+      }
       return data;
     } catch (clientErr: any) {
       console.warn("Client sign-in failed. Trying server-side proxy fallback...", clientErr);
@@ -1025,13 +1089,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const resData = await response.json();
         if (response.ok && resData?.success && resData?.user) {
+          const resolvedName = resData.userData?.profile?.name || resData.userData?.displayName || resData.user.displayName;
           const loggedUser: User = {
             uid: resData.user.uid,
             email: resData.user.email,
-            displayName: resData.user.displayName
+            displayName: resolvedName
           };
           setUser(loggedUser);
           localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+          if (resolvedName && resolvedName !== 'Honored Guest') {
+            localStorage.setItem('arohi_user_name', resolvedName);
+            localStorage.setItem('recruit_user_name', resolvedName);
+          }
           setUserData(resData.userData);
           return resData.userData;
         } else {
@@ -1061,6 +1130,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, role?: 'candidate' | 'recruiter', phone?: string) => {
+    const cleanName = name.trim();
+    try {
+      localStorage.setItem('arohi_user_name', cleanName);
+      localStorage.setItem('recruit_user_name', cleanName);
+      localStorage.setItem('recruit_user_email', email.trim());
+      if (phone) localStorage.setItem('recruit_user_phone', phone);
+    } catch (e) {}
+
     const localCoupon = typeof window !== 'undefined' ? localStorage.getItem('arohi_applied_coupon') : null;
     const validCoupons = ['JUNOON', 'JUNOON399', 'AROHI399', 'PRO399', 'FREE399', 'VIP399', 'ELITE399', 'FOUNDER399'];
     const hasValidLocalCoupon = localCoupon && (
@@ -1078,16 +1155,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const firebaseUser = userCredential.user;
 
       // Update display name in Firebase Auth
-      await updateProfile(firebaseUser, { displayName: name });
+      try {
+        await updateProfile(firebaseUser, { displayName: cleanName });
+      } catch (e) {
+        console.warn('Failed to updateProfile on firebaseUser:', e);
+      }
 
       const initialData: UserData = {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
-        displayName: name,
+        displayName: cleanName,
         role: role || 'candidate',
         entrySource: getEntrySource(),
         profile: {
-          name: name || firebaseUser.email?.split('@')[0] || 'User',
+          name: cleanName || firebaseUser.email?.split('@')[0] || 'User',
           email: firebaseUser.email || '',
           phone: phone || '',
           location: '',
@@ -1131,7 +1212,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: name,
+            displayName: cleanName,
+            name: cleanName,
             role: role || 'candidate',
             mobile: phone || '',
             entrySource: getEntrySource(),
@@ -1142,6 +1224,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.ok) {
           const resData = await response.json();
           if (resData?.success && resData?.userData) {
+            const loggedUser: User = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: cleanName
+            };
+            setUser(loggedUser);
+            localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+            localStorage.setItem('arohi_user_name', cleanName);
+            localStorage.setItem('recruit_user_name', cleanName);
             setUserData(resData.userData);
             localStorage.setItem(`recruit_user_data_${firebaseUser.uid}`, JSON.stringify(resData.userData));
             return;
@@ -1162,10 +1253,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const loggedUser: User = {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: name
+        displayName: cleanName
       };
       setUser(loggedUser);
       setUserData(initialData);
+      localStorage.setItem('arohi_user_name', cleanName);
+      localStorage.setItem('recruit_user_name', cleanName);
       localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
       localStorage.setItem(`recruit_user_data_${firebaseUser.uid}`, JSON.stringify(initialData));
     } catch (clientErr: any) {
@@ -1178,7 +1271,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             email: email.trim(),
             password,
-            name,
+            name: cleanName,
+            displayName: cleanName,
             role: role || 'candidate',
             mobile: phone || '',
             entrySource: getEntrySource(),
@@ -1189,13 +1283,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const resData = await response.json();
         if (response.ok && resData?.success && resData?.user) {
+          const resolvedName = resData.user.displayName || cleanName;
           const loggedUser: User = {
             uid: resData.user.uid,
             email: resData.user.email,
-            displayName: resData.user.displayName
+            displayName: resolvedName
           };
           setUser(loggedUser);
           localStorage.setItem('recruit_user', JSON.stringify(loggedUser));
+          localStorage.setItem('arohi_user_name', resolvedName);
+          localStorage.setItem('recruit_user_name', resolvedName);
           setUserData(resData.userData);
           return;
         } else {

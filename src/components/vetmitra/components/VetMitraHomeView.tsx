@@ -19,6 +19,9 @@ interface Props {
   onViewHistory?: () => void;
   onOpenCommunity?: () => void;
   onOpenFeed?: () => void;
+  onOpenTmrSilage?: () => void;
+  onOpenPoultrySchemes?: () => void;
+  onOpenSixProblems?: () => void;
 }
 
 const SPECIES_HERO_CONFIG: Record<VetSpecies, {
@@ -273,6 +276,9 @@ export const VetMitraHomeView: React.FC<Props> = ({
   onViewHistory,
   onOpenCommunity,
   onOpenFeed,
+  onOpenTmrSilage,
+  onOpenPoultrySchemes,
+  onOpenSixProblems,
 }) => {
   const isOdia = language === 'or';
 
@@ -613,6 +619,104 @@ export const VetMitraHomeView: React.FC<Props> = ({
           </button>
         </div>
       )}
+
+      {/* SMILE & Odisha F&ARD Dairy & Poultry Centers */}
+      <div className="bg-slate-950/90 border border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-lg space-y-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <h3 className="text-sm sm:text-base font-bold text-white font-serif tracking-tight">
+              {isOdia ? 'ଓଡ଼ିଶା ଦୁଗ୍ଧ ଓ କୁକୁଡ଼ା ପାଳନ ମିଶନ (SMILE & F&ARD)' : 'Odisha Dairy & Poultry Mission (SMILE & F&ARD)'}
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-emerald-300 font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+            Govt & Scientific Protocols
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Card 1: TMR & Maize Silage */}
+          {onOpenTmrSilage && (
+            <div
+              onClick={onOpenTmrSilage}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/70 to-slate-900 border border-emerald-500/30 hover:border-emerald-400 transition-all cursor-pointer group flex flex-col justify-between space-y-2 hover:scale-[1.01]"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl">🌽</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
+                    TMR & Silage
+                  </span>
+                </div>
+                <h4 className="font-bold text-xs text-slate-100 mt-2 group-hover:text-emerald-300 transition-colors">
+                  {isOdia ? 'ସମ୍ପୂର୍ଣ୍ଣ ମିଶ୍ରିତ ଖାଦ୍ୟ (TMR) ଓ ମକା ସାଇଲେଜ୍' : 'Total Mixed Ration (TMR) & Corn Silage'}
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  {isOdia ? 'ମକା ସାଇଲେଜ୍, ଆଜୋଲା ଓ ସନ୍ତୁଳିତ Ca:P ରେସିପି (୧୦L ଗାଈ ପାଇଁ)' : 'Balanced TMR recipes, Azolla usage, and silage quality testing.'}
+                </p>
+              </div>
+              <div className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 pt-1">
+                <span>{isOdia ? 'ଷ୍ଟୁଡିଓ ଖୋଲନ୍ତୁ' : 'Open Studio'}</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          )}
+
+          {/* Card 2: Odisha Poultry Schemes */}
+          {onOpenPoultrySchemes && (
+            <div
+              onClick={onOpenPoultrySchemes}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-950/70 to-slate-900 border border-amber-500/30 hover:border-amber-400 transition-all cursor-pointer group flex flex-col justify-between space-y-2 hover:scale-[1.01]"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl">🐥</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+                    50% - 60% Subsidy
+                  </span>
+                </div>
+                <h4 className="font-bold text-xs text-slate-100 mt-2 group-hover:text-amber-300 transition-colors">
+                  {isOdia ? 'ଓଡ଼ିଶା କୁକୁଡ଼ା ପାଳନ ଯୋଜନା (୨୦୨୫-୨୬)' : 'Odisha Poultry Schemes 2025–26'}
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  {isOdia ? 'ବ୍ରଏଲର, ଲେୟାର, ବତକ ଓ ଦାନା ମିଲ୍ ପାଇଁ ସରକାରୀ ସବସିଡି ଗଣନା' : 'Broiler, layer, duck units, and mini feed mills with CDVO process.'}
+                </p>
+              </div>
+              <div className="text-[11px] text-amber-400 font-bold flex items-center gap-1 pt-1">
+                <span>{isOdia ? 'ଯୋଜନା ଦେଖନ୍ତୁ' : 'Explore Schemes'}</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          )}
+
+          {/* Card 3: 6 Major Dairy Problems Hub */}
+          {onOpenSixProblems && (
+            <div
+              onClick={onOpenSixProblems}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-950/70 to-slate-900 border border-blue-500/30 hover:border-blue-400 transition-all cursor-pointer group flex flex-col justify-between space-y-2 hover:scale-[1.01]"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl">🩺</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">
+                    SMILE Training
+                  </span>
+                </div>
+                <h4 className="font-bold text-xs text-slate-100 mt-2 group-hover:text-blue-300 transition-colors">
+                  {isOdia ? 'ଦୁଗ୍ଧଚାଷୀଙ୍କ ୬ଟି ପ୍ରମୁଖ ସମସ୍ୟା ଓ ନିଦାନ' : '6 Major Dairy Problems & Solutions'}
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  {isOdia ? 'ଖାଦ୍ୟ, ଦୁଧ ହ୍ରାସ, ଥନ ରୋଗ, ପ୍ରଜନନ ଓ ବାଛୁରୀ ଯତ୍ନର ସମାଧାନ' : 'Mastitis, repeat breeding, milk persistency, and calf health.'}
+                </p>
+              </div>
+              <div className="text-[11px] text-blue-400 font-bold flex items-center gap-1 pt-1">
+                <span>{isOdia ? 'ସମାଧାନ ଦେଖନ୍ତୁ' : 'View Clinical Hub'}</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Mission Banner with Rural Farmer & Cow Visual */}
       <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-800 to-teal-900 text-white relative shadow-md">

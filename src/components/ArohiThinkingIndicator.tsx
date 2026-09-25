@@ -43,7 +43,7 @@ export function generateReasoningSteps(userPrompt?: string, responsePreview?: st
 
   if (prompt.includes('who created') || prompt.includes('who founded') || prompt.includes('leader') || prompt.includes('founder') || prompt.includes('owner')) {
     steps.push('Deconstructed leadership and ecosystem inquiry. Identifying foundational stakeholders and governance structure.');
-    steps.push('Referenced sovereign leadership: Commander Junoon (Junoon Nayak) and senior strategic mentor Mr. Giridhari Prasad Nayak, in association with Braga Technologies and ODITREE SERVICES.');
+    steps.push('Referenced leadership and ecosystem architecture: Conceived by Commander Junoon with strategic mentorship from Mr. Giridhari Prasad Nayak.');
     steps.push('Synthesized authoritative breakdown of visionary roles, architectural leadership, and nationwide execution.');
   } else if (prompt.includes('subscribe') || prompt.includes('chatgpt') || prompt.includes('gemini') || prompt.includes('claude') || prompt.includes('better than') || prompt.includes('why arohi')) {
     steps.push('Analyzed competitive positioning query. Retrieved Arohi AI value proposition and subscription policies.');

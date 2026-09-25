@@ -265,7 +265,15 @@ export default function UserDashboard({
       }
 
       if (userData.profile) {
-        const rawName = userData.profile.name || user.displayName || user.email?.split('@')[0] || '';
+        const localSavedName = (typeof window !== 'undefined') ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null;
+        const validLocal = (localSavedName && localSavedName !== 'Honored Guest' && localSavedName !== 'Candidate Profile' && localSavedName !== 'Guest Candidate') ? localSavedName : '';
+        const rawName = (userData.profile.name && userData.profile.name !== 'Honored Guest' && userData.profile.name !== 'Candidate Profile') 
+          ? userData.profile.name 
+          : (userData.displayName && userData.displayName !== 'Honored Guest')
+            ? userData.displayName
+            : (user.displayName && user.displayName !== 'Honored Guest')
+              ? user.displayName
+              : validLocal || user.email?.split('@')[0] || '';
         const pName = (rawName === 'Candidate Profile' || rawName === 'Honored Guest' || rawName === 'Guest Candidate') ? '' : rawName;
         const pEmail = userData.profile.email || user.email || '';
         const rawPhone = userData.profile.phone || '';
@@ -279,7 +287,7 @@ export default function UserDashboard({
         const pResume = (userData as any).profile?.resumeUrl || '';
 
         setProfile({
-          name: pName || user.displayName || user.email?.split('@')[0] || 'Candidate Profile',
+          name: pName || validLocal || user.displayName || user.email?.split('@')[0] || 'Candidate Profile',
           email: pEmail,
           phone: pPhone,
           location: pLoc,
@@ -288,7 +296,7 @@ export default function UserDashboard({
           resumeUrl: pResume
         });
         
-        setEditedName(pName || user.displayName || user.email?.split('@')[0] || '');
+        setEditedName(pName || validLocal || user.displayName || user.email?.split('@')[0] || '');
         setEditedPhone(pPhone);
         setEditedLocation(pLoc);
         setEditedEducation(pEdu);
@@ -376,7 +384,7 @@ export default function UserDashboard({
         businessScore: savedBusinessScore ? parseInt(savedBusinessScore, 10) : 0
       });
 
-      const rawGuestName = localStorage.getItem('recruit_user_name') || '';
+      const rawGuestName = localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name') || '';
       const guestName = (rawGuestName === 'Candidate Profile' || rawGuestName === 'Honored Guest' || rawGuestName === 'Guest Candidate') ? '' : rawGuestName;
       const guestEmail = localStorage.getItem('recruit_user_email') || '';
       const rawGuestPhone = localStorage.getItem('recruit_user_phone') || '';

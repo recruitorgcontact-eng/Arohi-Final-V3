@@ -18,6 +18,9 @@ import { VetMitraConsultationHistoryView } from './components/VetMitraConsultati
 import { VetMitraOfflineManagerModal } from './components/VetMitraOfflineManagerModal';
 import { VetMitraPetCommunityView } from './components/VetMitraPetCommunityView';
 import { VetMitraUniversalFeedView } from './components/VetMitraUniversalFeedView';
+import { VetMitraTmrSilageStudio } from './components/VetMitraTmrSilageStudio';
+import { VetMitraOdishaPoultrySchemes } from './components/VetMitraOdishaPoultrySchemes';
+import { VetMitraSixProblemsHub } from './components/VetMitraSixProblemsHub';
 import { UniversalAnimalRecord, SAMPLE_ANIMAL_RECORDS } from './data/mockAnimalsData';
 import { vetOfflineStorage } from './utils/vetOfflineStorage';
 
@@ -28,7 +31,7 @@ interface Props {
   uid?: string;
 }
 
-type VetScreenTab = 'home' | 'consult' | 'feed' | 'voice_call' | 'scanner' | 'passport' | 'history' | 'community' | 'emergency';
+type VetScreenTab = 'home' | 'consult' | 'feed' | 'voice_call' | 'scanner' | 'passport' | 'history' | 'community' | 'emergency' | 'tmr_silage' | 'poultry_schemes' | 'six_problems';
 
 export const ArohiVetMitraApp: React.FC<Props> = ({
   initialSpecies = 'cattle',
@@ -210,6 +213,9 @@ export const ArohiVetMitraApp: React.FC<Props> = ({
             onViewHistory={() => setActiveTab('history')}
             onOpenCommunity={() => setActiveTab('community')}
             onOpenFeed={() => setActiveTab('feed')}
+            onOpenTmrSilage={() => setActiveTab('tmr_silage')}
+            onOpenPoultrySchemes={() => setActiveTab('poultry_schemes')}
+            onOpenSixProblems={() => setActiveTab('six_problems')}
           />
         )}
 
@@ -337,6 +343,41 @@ export const ArohiVetMitraApp: React.FC<Props> = ({
             language={language}
             onClose={() => setActiveTab('home')}
             onStartChat={(symptom) => setActiveTab('consult')}
+          />
+        )}
+
+        {activeTab === 'tmr_silage' && (
+          <VetMitraTmrSilageStudio
+            language={language}
+            onSendToChat={(text) => {
+              setConsultInitialQuery(text);
+              setActiveSpecies('cattle');
+              setActiveTab('consult');
+            }}
+          />
+        )}
+
+        {activeTab === 'poultry_schemes' && (
+          <VetMitraOdishaPoultrySchemes
+            language={language}
+            onSendToChat={(text) => {
+              setConsultInitialQuery(text);
+              setActiveTab('consult');
+            }}
+          />
+        )}
+
+        {activeTab === 'six_problems' && (
+          <VetMitraSixProblemsHub
+            language={language}
+            onSendToChat={(text) => {
+              setConsultInitialQuery(text);
+              setActiveSpecies('cattle');
+              setActiveTab('consult');
+            }}
+            onStartVoiceConsultation={(topic) => {
+              setActiveTab('voice_call');
+            }}
           />
         )}
       </main>

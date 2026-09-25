@@ -19,12 +19,21 @@ import {
   Calendar
 } from 'lucide-react';
 import { vanavedaAudio } from './vanavedaAudio';
+import { TempleBellIcon } from './TempleBellIcon';
 
 interface Props {
   onPrescribeWithArohi: (topic: string) => void;
+  isDronePlaying?: boolean;
+  onToggleDrone?: () => void;
+  isBellRinging?: boolean;
 }
 
-export const PranayamaOjasDinacharyaSuite: React.FC<Props> = ({ onPrescribeWithArohi }) => {
+export const PranayamaOjasDinacharyaSuite: React.FC<Props> = ({ 
+  onPrescribeWithArohi,
+  isDronePlaying = false,
+  onToggleDrone,
+  isBellRinging = false
+}) => {
   const [activeTab, setActiveTab] = useState<'pranayama' | 'ojas' | 'dinacharya'>('pranayama');
 
   // Pranayama Pacer State
@@ -224,7 +233,7 @@ export const PranayamaOjasDinacharyaSuite: React.FC<Props> = ({ onPrescribeWithA
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={toggleBreathing}
               className="px-6 py-3 rounded-2xl bg-[#15803D] hover:bg-[#166534] text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer"
@@ -239,6 +248,26 @@ export const PranayamaOjasDinacharyaSuite: React.FC<Props> = ({ onPrescribeWithA
             >
               <RotateCcw className="w-4 h-4" />
             </button>
+
+            {/* Sacred Temple Bell & Tanpura Drone Toggle */}
+            {onToggleDrone && (
+              <button
+                onClick={onToggleDrone}
+                className={`relative px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center gap-2.5 transition-all active:scale-95 cursor-pointer shadow-sm ${
+                  isDronePlaying
+                    ? 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white shadow-md ring-2 ring-amber-400/40'
+                    : 'bg-white dark:bg-[#18231a] border border-[#E7DEC8] dark:border-[#283929] text-slate-700 dark:text-slate-300 hover:border-amber-500 hover:text-amber-600'
+                }`}
+                title="Ring Sacred Temple Bell & Toggle 136.1Hz Cosmic OM Tanpura Drone"
+              >
+                <TempleBellIcon
+                  size={18}
+                  isRinging={isBellRinging}
+                  isDroneActive={isDronePlaying}
+                />
+                <span>{isDronePlaying ? 'Tanpura: 136.1Hz' : 'Temple Bell & Drone'}</span>
+              </button>
+            )}
           </div>
 
           <p className="text-xs text-[#5D4A3A] dark:text-[#9CA3AF] max-w-md">

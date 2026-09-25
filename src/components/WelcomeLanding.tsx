@@ -159,9 +159,22 @@ export default function WelcomeLanding({
 
   // Intelligent First Name resolution for motivational hero lines
   const cleanFirstName = useMemo(() => {
-    if (!user) return '';
-    const raw = userData?.profile?.name || (userData as any)?.displayName || user.displayName || user.email?.split('@')[0] || '';
-    if (!raw || raw === 'User' || raw === 'Honored Guest') return '';
+    const localSaved = (typeof window !== 'undefined') ? (localStorage.getItem('arohi_user_name') || localStorage.getItem('recruit_user_name')) : null;
+    const profileName = userData?.profile?.name;
+    const userDocDisplayName = (userData as any)?.displayName;
+    const authDisplayName = user?.displayName;
+    const emailName = user?.email ? user.email.split('@')[0] : '';
+
+    let raw = '';
+    const candidates = [profileName, userDocDisplayName, authDisplayName, localSaved, emailName];
+    for (const c of candidates) {
+      if (c && c !== 'User' && c !== 'Honored Guest' && c !== 'Candidate Profile' && c !== 'Guest Candidate') {
+        raw = c;
+        break;
+      }
+    }
+
+    if (!raw) return '';
     let name = raw;
     if (name.toLowerCase().includes('elitetraderjunoon')) {
       name = 'Junoon';

@@ -215,7 +215,9 @@ export function setupLiveWebSocketServer(server: any, options: LiveWsOptions) {
     if (ALLOWED_GEMINI_LIVE_VOICES.includes(selectedVoice)) {
       apiVoiceName = selectedVoice;
     } else {
-      apiVoiceName = 'Aoede';
+      // Map Indian male/female personas to the optimal neural timbre
+      const isMale = ['fenrir', 'arjun', 'amit', 'subrat', 'gurpreet', 'rohan', 'venkatesh', 'suresh', 'vikram', 'male', 'puck', 'charon'].some(m => selectedVoice?.toLowerCase().includes(m));
+      apiVoiceName = isMale ? 'Fenrir' : 'Aoede';
     }
 
     const clientAi = getAiClient('v1alpha');
